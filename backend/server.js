@@ -10,13 +10,18 @@ const database = JSON.parse(fs.readFileSync("./db.json", "utf8"));
 const listeNoms = Object.keys(database).sort();
 
 // Mot de passe unique défini dans le backend
-const ADMIN_KEY = "admin123";
+const ADMIN_KEY = process.env.ADMIN_PASSWORD;
 
 let secretForce = null;
 
 function getSecretDuJour() {
   if (secretForce) return secretForce;
-  const dateStr = new Date().toISOString().split("T")[0];
+
+  // Force le calcul sur le fuseau horaire de Paris au format YYYY-MM-DD
+  const dateStr = new Date().toLocaleDateString("sv-SE", {
+    timeZone: "Europe/Paris",
+  });
+
   let hash = 0;
   for (let i = 0; i < dateStr.length; i++) {
     hash = dateStr.charCodeAt(i) + ((hash << 5) - hash);
