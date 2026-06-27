@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ajouterLigneTableau(data);
   });
 
-  fetch("https://celestedle-api.onrender.com")
+  fetch("https://celestedle-api.onrender.com/api/elements")
     .then((res) => res.json())
     .then((elements) => {
       const datalist = document.getElementById("element-suggestions");
