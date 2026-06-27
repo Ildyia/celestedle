@@ -1,0 +1,240 @@
+/* ==========================================================================
+   1. VARIABLES & CONFIGURATION GENERALE
+   ========================================================================== */
+:root {
+    --bg-main: #0b0f19;
+    --bg-card: #151d30;
+    --bg-input: #1e2942;
+    --text-main: #f3f4f6;
+    --text-muted: #9ca3af;
+    
+    /* Couleurs des verdicts */
+    --color-correct: #10b981;
+    --color-partial: #f59e0b;
+    --color-wrong: #ef4444;
+    --color-indigo: #6366f1;
+    --color-indigo-hover: #4f46e5;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 20px 10px;
+}
+
+/* ==========================================================================
+   2. CONTENEUR PRINCIPAL & EN-TETE
+   ========================================================================== */
+#game-container {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+h1 {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #a5b4fc, #6366f1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #1e293b;
+}
+
+#game-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--bg-card);
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+}
+
+#game-status p {
+    font-size: 1rem;
+    color: var(--text-muted);
+}
+
+#try-count {
+    color: var(--color-indigo);
+    font-size: 1.2rem;
+}
+
+/* Boutons d'action du statut */
+#giveup-btn {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#giveup-btn:hover {
+    background-color: var(--color-wrong);
+    color: white;
+}
+
+/* ==========================================================================
+   3. FORMULAIRE DE SAISIE
+   ========================================================================== */
+#guess-form {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+#element-input {
+    flex: 1;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 2px solid #2e3d5c;
+    background-color: var(--bg-input);
+    color: var(--text-main);
+    font-size: 1rem;
+    font-weight: 500;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+#element-input:focus {
+    border-color: var(--color-indigo);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+}
+
+#guess-form button {
+    padding: 14px 28px;
+    border-radius: 10px;
+    border: none;
+    background-color: var(--color-indigo);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#guess-form button:hover {
+    background-color: var(--color-indigo-hover);
+    transform: translateY(-1px);
+}
+
+#guess-form button:active {
+    transform: translateY(1px);
+}
+
+/* ==========================================================================
+   4. ECRANS DE FIN (VICTOIRE / ABANDON)
+   ========================================================================== */
+@keyframes popIn {
+    0% { transform: scale(0.96); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.win-message, .lose-message {
+    animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.win-message {
+    background: linear-gradient(135deg, #064e3b, #022c22);
+    border: 2px solid var(--color-correct);
+}
+
+.win-message h2 {
+    color: #34d399;
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+}
+
+.lose-message {
+    background: linear-gradient(135deg, #7f1d1d, #450a0a);
+    border: 2px solid var(--color-wrong);
+}
+
+.lose-message h2 {
+    color: #f87171;
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+}
+
+/* ==========================================================================
+   5. TABLEAU DES TENTATIVES
+   ========================================================================== */
+#guesses-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px; /* Espace entre les lignes pour effet de cartes */
+    margin-top: 10px;
+}
+
+#guesses-table th {
+    padding: 8px 12px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+#guesses-table td {
+    padding: 14px 10px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+/* Arrondir les angles de chaque ligne individuelle */
+#guesses-table tr td:first-child {
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+#guesses-table tr td:last-child {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+/* Couleurs dynamiques selon les classes de verdicts */
+.correct {
+    background-color: var(--color-correct) !important;
+    color: white;
+}
+
+.partial {
+    background-color: var(--color-partial) !important;
+    color: white;
+}
+
+.wrong {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+#guesses-body tr {
+    animation: popIn 0.3s ease-out forwards;
+}

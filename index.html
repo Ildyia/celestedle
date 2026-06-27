@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Celestedle</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <h1>Celestedle</h1>
+        
+        <div id="game-status">
+            <p>Tentatives : <span id="try-count">0</span></p>
+            <button id="share-btn" style="display: none; background-color: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer;">Partager</button>
+            <button id="giveup-btn">Abandonner</button>
+        </div>
+
+        <form id="guess-form">
+            <input type="text" id="element-input" list="element-suggestions" placeholder="Tape le nom d'une entité..." autocomplete="off">
+            <datalist id="element-suggestions"></datalist>
+            <button type="submit">Deviner</button>
+        </form>
+
+        <table id="guesses-table">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Type</th>
+                    <th>Lieu</th>
+                    <th>Couleur</th>
+                </tr>
+            </thead>
+            <tbody id="guesses-body">
+                </tbody>
+        </table>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="script-client.js"></script>
+</body>
+</html>
