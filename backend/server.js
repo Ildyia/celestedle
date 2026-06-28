@@ -12,7 +12,7 @@ const listeNoms = Object.keys(database).sort();
 const ADMIN_KEY = process.env.ADMIN_PASSWORD;
 
 let secretForce = null;
-let secretVersion = Date.now(); // Version initiale unique
+let secretVersion = Date.now();
 
 function getSecretDuJour() {
   if (secretForce) return secretForce;
@@ -29,7 +29,20 @@ function getSecretDuJour() {
   return listeNoms[index];
 }
 
-// [ADMIN] Vérification de la clé
+function normaliserListe(donnee) {
+  if (Array.isArray(donnee)) {
+    // Si le tableau contient une seule chaîne avec des virgules ex: ["brown, grey"]
+    if (donnee.length === 1 && donnee[0].includes(",")) {
+      return donnee[0].split(",").map((c) => c.trim());
+    }
+    return donnee.map((c) => c.trim());
+  }
+  if (typeof donnee === "string") {
+    return donnee.split(",").map((c) => c.trim());
+  }
+  return [];
+}
+
 app.post("/api/admin/verifier-key", (req, res) => {
   const { key } = req.body;
   if (key !== ADMIN_KEY) {
@@ -38,7 +51,6 @@ app.post("/api/admin/verifier-key", (req, res) => {
   res.json({ success: true, message: "Accès autorisé" });
 });
 
-// [ADMIN] Changement manuel du secret avec mise à jour de la version
 app.post("/api/admin/set-secret", (req, res) => {
   const { key, nom } = req.body;
 
@@ -47,7 +59,7 @@ app.post("/api/admin/set-secret", (req, res) => {
   }
   if (nom === null) {
     secretForce = null;
-    secretVersion = Date.now(); // Le mot change -> nouvelle version
+    secretVersion = Date.now();
     return res.json({
       message: "Le secret a été réinitialisé sur le mode automatique du jour.",
     });
@@ -57,7 +69,7 @@ app.post("/api/admin/set-secret", (req, res) => {
   }
 
   secretForce = nom;
-  secretVersion = Date.now(); // Le mot change -> nouvelle version
+  secretVersion = Date.now();
   res.json({
     message: `La cible a été forcée manuellement. Nouvelle cible : ${secretForce}`,
   });
@@ -82,28 +94,28 @@ app.post("/api/valider", (req, res) => {
   const choixData = database[choix];
   const secretData = database[secretNom];
 
-  let lieuVerdict = "wrong";
-  const intersectionLieu = choixData.lieu.filter((l) =>
-    secretData.lieu.includes(l),
-  );
+  const choixLieux = normaliserListe(choixData.lieu);
+  const secretLieux = normaliserListe(secretData.lieu);
+  const choixCouleurs = normaliserListe(choixData.couleur);
+  const secretCouleurs = normaliserListe(secretData.couleur);
 
-  if (JSON.stringify(choixData.lieu) === JSON.stringify(secretData.lieu)) {
+  let lieuVerdict = "wrong";
+  const intersectionLieu = choixLieux.filter((l) => secretLieux.includes(l));
+
+  if (JSON.stringify(choixLieux) === JSON.stringify(secretLieux)) {
     lieuVerdict = "correct";
-  } else if (intersectionLieu.length > 0) {
-    lieuVerdict = "partial";
   } else if (
-    choixData.lieu.includes("always") ||
-    secretData.lieu.includes("always")
+    intersectionLieu.length > 0 ||
+    choixLieux.includes("always") ||
+    secretLieux.includes("always")
   ) {
     lieuVerdict = "partial";
   }
 
   let couleurVerdict = "wrong";
-  if (
-    JSON.stringify(choixData.couleur) === JSON.stringify(secretData.couleur)
-  ) {
+  if (JSON.stringify(choixCouleurs) === JSON.stringify(secretCouleurs)) {
     couleurVerdict = "correct";
-  } else if (choixData.couleur.some((c) => secretData.couleur.includes(c))) {
+  } else if (choixCouleurs.some((c) => secretCouleurs.includes(c))) {
     couleurVerdict = "partial";
   }
 
@@ -114,7 +126,7 @@ app.post("/api/valider", (req, res) => {
 
   res.json({
     nom: choix,
-    secretVersion: secretVersion, // Inclus pour permettre la détection côté client
+    secretVersion: secretVersion,
     verdict: {
       isCorrect: choix === secretNom,
       type: choixData.type === secretData.type ? "correct" : "wrong",
@@ -124,8 +136,8 @@ app.post("/api/valider", (req, res) => {
     },
     valeurs: {
       type: choixData.type,
-      lieu: choixData.lieu.join(", "),
-      couleur: choixData.couleur.join(", "),
+      lieu: choixLieux.join(", "),
+      couleur: choixCouleurs.join(", "),
       hitbox: choixData.hitbox,
     },
   });
