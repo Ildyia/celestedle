@@ -239,5 +239,10 @@ function ajouterLigneTableau(data) {
   cellCouleur.className = data.verdict.couleur;
   row.appendChild(cellCouleur);
 
+  const cellHitbox = document.createElement("td");
+  cellHitbox.textContent = data.valeurs.hitbox;
+  cellHitbox.className = data.verdict.hitbox;
+  row.appendChild(cellHitbox);
+  
   tbody.insertBefore(row, tbody.firstChild);
 }

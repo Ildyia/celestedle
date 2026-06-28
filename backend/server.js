@@ -110,8 +110,6 @@ app.post("/api/valider", (req, res) => {
   let hitboxVerdict = "wrong";
   if (choixData.hitbox === secretData.hitbox) {
     hitboxVerdict = "correct";
-  } else if (choixData.hitbox === "variable" || secretData.hitbox === "variable") {
-    hitboxVerdict = "partial";
   }
 
   res.json({
