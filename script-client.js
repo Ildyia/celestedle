@@ -11,21 +11,24 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.removeItem("celestedle_version"); // Reset la version au changement de jour
     localStorage.setItem("celestedle_date", aujourdHui);
   }
-fetch("https://celestedle-api.onrender.com/api/version")
-  .then(res => res.json())
-  .then(data => {
-    const versionSauvegardee = localStorage.getItem("celestedle_version");
-    if (versionSauvegardee && versionSauvegardee !== String(data.secretVersion)) {
-      localStorage.removeItem("celestedle_tries");
-      localStorage.removeItem("celestedle_gameover");
-      localStorage.removeItem("celestedle_status");
-      localStorage.removeItem("celestedle_history");
-      localStorage.setItem("celestedle_version", data.secretVersion);
-      location.reload(); // Recharge proprement avec un tableau vide
-    } else if (!versionSauvegardee) {
-      localStorage.setItem("celestedle_version", data.secretVersion);
-    }
-  });
+  fetch("https://celestedle-api.onrender.com/api/version")
+    .then((res) => res.json())
+    .then((data) => {
+      const versionSauvegardee = localStorage.getItem("celestedle_version");
+      if (
+        versionSauvegardee &&
+        versionSauvegardee !== String(data.secretVersion)
+      ) {
+        localStorage.removeItem("celestedle_tries");
+        localStorage.removeItem("celestedle_gameover");
+        localStorage.removeItem("celestedle_status");
+        localStorage.removeItem("celestedle_history");
+        localStorage.setItem("celestedle_version", data.secretVersion);
+        location.reload(); // Recharge proprement avec un tableau vide
+      } else if (!versionSauvegardee) {
+        localStorage.setItem("celestedle_version", data.secretVersion);
+      }
+    });
   let nbTry = parseInt(localStorage.getItem("celestedle_tries")) || 0;
   const tryCountSpan = document.getElementById("try-count");
   if (tryCountSpan) tryCountSpan.textContent = nbTry;
@@ -45,7 +48,7 @@ fetch("https://celestedle-api.onrender.com/api/version")
     if (gameStatus === "lose") {
       messageContainer.className = "lose-message";
       messageContainer.innerHTML = `
-                <h2>Dommage... Abandon ! ❌</h2>
+                <h2>Dommage... Aba(n)don ! ❌</h2>
                 <p>Tu n'as pas trouvé la cible aujourd'hui.</p>
             `;
     } else {
@@ -98,14 +101,19 @@ fetch("https://celestedle-api.onrender.com/api/version")
         .then((data) => {
           // Détection du changement de mot secret par l'admin
           const versionSauvegardee = localStorage.getItem("celestedle_version");
-          
-          if (versionSauvegardee && versionSauvegardee !== String(data.secretVersion)) {
+
+          if (
+            versionSauvegardee &&
+            versionSauvegardee !== String(data.secretVersion)
+          ) {
             localStorage.removeItem("celestedle_tries");
             localStorage.removeItem("celestedle_gameover");
             localStorage.removeItem("celestedle_status");
             localStorage.removeItem("celestedle_history");
             localStorage.setItem("celestedle_version", data.secretVersion);
-            alert("Le mot secret a été modifié par un administrateur ! Vos essais ont été réinitialisés.");
+            alert(
+              "Le mot secret a été modifié par un administrateur ! Vos essais ont été réinitialisés.",
+            );
             location.reload();
             return;
           }
@@ -173,7 +181,7 @@ fetch("https://celestedle-api.onrender.com/api/version")
       });
 
       navigator.clipboard
-        .writeText(textePartage)
+        .writeText(textePartage + "\nhttps://celestedle.netlify.app/")
         .then(() => {
           shareBtn.textContent = "Copié !";
           setTimeout(() => {
