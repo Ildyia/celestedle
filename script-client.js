@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const aujourdHui = new Date().toISOString().split("T")[0];
-
+  const aujourdHui = new Date().toLocaleDateString("sv-SE", {
+    timeZone: "Europe/Paris",
+  });
   const dateSauvegardee = localStorage.getItem("celestedle_date");
   if (dateSauvegardee !== aujourdHui) {
     localStorage.removeItem("celestedle_tries");
