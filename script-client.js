@@ -11,7 +11,21 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.removeItem("celestedle_version"); // Reset la version au changement de jour
     localStorage.setItem("celestedle_date", aujourdHui);
   }
-
+fetch("https://celestedle-api.onrender.com/api/version")
+  .then(res => res.json())
+  .then(data => {
+    const versionSauvegardee = localStorage.getItem("celestedle_version");
+    if (versionSauvegardee && versionSauvegardee !== String(data.secretVersion)) {
+      localStorage.removeItem("celestedle_tries");
+      localStorage.removeItem("celestedle_gameover");
+      localStorage.removeItem("celestedle_status");
+      localStorage.removeItem("celestedle_history");
+      localStorage.setItem("celestedle_version", data.secretVersion);
+      location.reload(); // Recharge proprement avec un tableau vide
+    } else if (!versionSauvegardee) {
+      localStorage.setItem("celestedle_version", data.secretVersion);
+    }
+  });
   let nbTry = parseInt(localStorage.getItem("celestedle_tries")) || 0;
   const tryCountSpan = document.getElementById("try-count");
   if (tryCountSpan) tryCountSpan.textContent = nbTry;
@@ -243,6 +257,6 @@ function ajouterLigneTableau(data) {
   cellHitbox.textContent = data.valeurs.hitbox;
   cellHitbox.className = data.verdict.hitbox;
   row.appendChild(cellHitbox);
-  
+
   tbody.insertBefore(row, tbody.firstChild);
 }

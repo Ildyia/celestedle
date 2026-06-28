@@ -67,6 +67,10 @@ app.get("/api/elements", (req, res) => {
   res.json(listeNoms);
 });
 
+app.get("/api/version", (req, res) => {
+  res.json({ secretVersion: secretVersion });
+});
+
 app.post("/api/valider", (req, res) => {
   const { choix } = req.body;
 
