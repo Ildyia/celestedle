@@ -92,22 +92,18 @@ app.post("/api/valider", (req, res) => {
   } else if (intersectionLieu.length > 0) {
     lieuVerdict = "partial";
   } else if (
-    choixData.lieu.includes("récurrent") &&
-    secretData.lieu.includes("récurrent")
+    choixData.lieu.includes("always") ||
+    secretData.lieu.includes("always")
   ) {
     lieuVerdict = "partial";
   }
 
   let couleurVerdict = "wrong";
-  const intersectionCouleur = choixData.couleur.filter((x) =>
-    secretData.couleur.includes(x),
-  );
   if (
-    JSON.stringify(choixData.couleur.sort()) ===
-    JSON.stringify(secretData.couleur.sort())
+    JSON.stringify(choixData.couleur) === JSON.stringify(secretData.couleur)
   ) {
     couleurVerdict = "correct";
-  } else if (intersectionCouleur.length > 0) {
+  } else if (choixData.couleur.some((c) => secretData.couleur.includes(c))) {
     couleurVerdict = "partial";
   }
 
