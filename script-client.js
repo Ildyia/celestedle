@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.removeItem("celestedle_gameover");
     localStorage.removeItem("celestedle_status");
     localStorage.removeItem("celestedle_history");
+    localStorage.removeItem("celestedle_version"); // Reset la version au changement de jour
     localStorage.setItem("celestedle_date", aujourdHui);
   }
 
@@ -81,6 +82,24 @@ document.addEventListener("DOMContentLoaded", () => {
           return res.json();
         })
         .then((data) => {
+          // Détection du changement de mot secret par l'admin
+          const versionSauvegardee = localStorage.getItem("celestedle_version");
+          
+          if (versionSauvegardee && versionSauvegardee !== String(data.secretVersion)) {
+            localStorage.removeItem("celestedle_tries");
+            localStorage.removeItem("celestedle_gameover");
+            localStorage.removeItem("celestedle_status");
+            localStorage.removeItem("celestedle_history");
+            localStorage.setItem("celestedle_version", data.secretVersion);
+            alert("Le mot secret a été modifié par un administrateur ! Vos essais ont été réinitialisés.");
+            location.reload();
+            return;
+          }
+
+          if (!versionSauvegardee) {
+            localStorage.setItem("celestedle_version", data.secretVersion);
+          }
+
           nbTry++;
           localStorage.setItem("celestedle_tries", nbTry);
           if (tryCountSpan) tryCountSpan.textContent = nbTry;
@@ -135,7 +154,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const iconType = conversionScore[tryData.verdict.type];
         const iconLieu = conversionScore[tryData.verdict.lieu];
         const iconCouleur = conversionScore[tryData.verdict.couleur];
-        textePartage += `${iconType}${iconLieu}${iconCouleur}\n`;
+        const iconHitbox = conversionScore[tryData.verdict.hitbox];
+        textePartage += `${iconType}${iconLieu}${iconCouleur}${iconHitbox}\n`;
       });
 
       navigator.clipboard
@@ -170,6 +190,7 @@ window.forceReset = function () {
       localStorage.removeItem("celestedle_status");
       localStorage.removeItem("celestedle_history");
       localStorage.removeItem("celestedle_date");
+      localStorage.removeItem("celestedle_version");
       alert("Données locales réinitialisées ! Recharge la page (F5).");
     })
     .catch((err) => alert(err.message));

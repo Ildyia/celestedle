@@ -9,15 +9,14 @@ app.use(express.json());
 const database = JSON.parse(fs.readFileSync("./db.json", "utf8"));
 const listeNoms = Object.keys(database).sort();
 
-// Mot de passe unique défini dans le backend
 const ADMIN_KEY = process.env.ADMIN_PASSWORD;
 
 let secretForce = null;
+let secretVersion = Date.now(); // Version initiale unique
 
 function getSecretDuJour() {
   if (secretForce) return secretForce;
 
-  // Force le calcul sur le fuseau horaire de Paris au format YYYY-MM-DD
   const dateStr = new Date().toLocaleDateString("sv-SE", {
     timeZone: "Europe/Paris",
   });
@@ -30,7 +29,7 @@ function getSecretDuJour() {
   return listeNoms[index];
 }
 
-// [ADMIN] Nouvelle route pour vérifier le mot de passe avant un reset local
+// [ADMIN] Vérification de la clé
 app.post("/api/admin/verifier-key", (req, res) => {
   const { key } = req.body;
   if (key !== ADMIN_KEY) {
@@ -39,7 +38,7 @@ app.post("/api/admin/verifier-key", (req, res) => {
   res.json({ success: true, message: "Accès autorisé" });
 });
 
-// [ADMIN] Route existante pour modifier le secret
+// [ADMIN] Changement manuel du secret avec mise à jour de la version
 app.post("/api/admin/set-secret", (req, res) => {
   const { key, nom } = req.body;
 
@@ -48,6 +47,7 @@ app.post("/api/admin/set-secret", (req, res) => {
   }
   if (nom === null) {
     secretForce = null;
+    secretVersion = Date.now(); // Le mot change -> nouvelle version
     return res.json({
       message: "Le secret a été réinitialisé sur le mode automatique du jour.",
     });
@@ -57,6 +57,7 @@ app.post("/api/admin/set-secret", (req, res) => {
   }
 
   secretForce = nom;
+  secretVersion = Date.now(); // Le mot change -> nouvelle version
   res.json({
     message: `La cible a été forcée manuellement. Nouvelle cible : ${secretForce}`,
   });
@@ -90,7 +91,6 @@ app.post("/api/valider", (req, res) => {
     choixData.lieu.includes("récurrent") &&
     secretData.lieu.includes("récurrent")
   ) {
-    // Devient jaune uniquement si les DEUX sont récurrents
     lieuVerdict = "partial";
   }
 
@@ -107,18 +107,28 @@ app.post("/api/valider", (req, res) => {
     couleurVerdict = "partial";
   }
 
+  let hitboxVerdict = "wrong";
+  if (choixData.hitbox === secretData.hitbox) {
+    hitboxVerdict = "correct";
+  } else if (choixData.hitbox === "variable" || secretData.hitbox === "variable") {
+    hitboxVerdict = "partial";
+  }
+
   res.json({
     nom: choix,
+    secretVersion: secretVersion, // Inclus pour permettre la détection côté client
     verdict: {
       isCorrect: choix === secretNom,
       type: choixData.type === secretData.type ? "correct" : "wrong",
       lieu: lieuVerdict,
       couleur: couleurVerdict,
+      hitbox: hitboxVerdict,
     },
     valeurs: {
       type: choixData.type,
       lieu: choixData.lieu.join(", "),
       couleur: choixData.couleur.join(", "),
+      hitbox: choixData.hitbox,
     },
   });
 });
