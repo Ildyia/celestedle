@@ -13,22 +13,22 @@
         <div id="game-status">
             <p>Tentatives : <span id="try-count">0</span></p>
             <button id="share-btn" style="display: none; background-color: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer;">Partager</button>
-            <button id="giveup-btn">Abandonner</button>
+            <button id="giveup-btn">Forfeit</button>
         </div>
 
         <form id="guess-form">
-            <input type="text" id="element-input" list="element-suggestions" placeholder="Tape le nom d'une entité..." autocomplete="off">
+            <input type="text" id="element-input" list="element-suggestions" placeholder="Type entity name..." autocomplete="off">
             <datalist id="element-suggestions"></datalist>
-            <button type="submit">Deviner</button>
+            <button type="submit">Guess</button>
         </form>
 
         <table id="guesses-table">
             <thead>
                 <tr>
-                    <th>Nom</th>
+                    <th>Name</th>
                     <th>Type</th>
-                    <th>Lieu</th>
-                    <th>Couleur</th>
+                    <th>Chapter</th>
+                    <th>Colour</th>
                     <th>Hitbox</th>
                 </tr>
             </thead>

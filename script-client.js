@@ -48,14 +48,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (gameStatus === "lose") {
       messageContainer.className = "lose-message";
       messageContainer.innerHTML = `
-                <h2>Dommage... Aba(n)don ! ❌</h2>
-                <p>Tu n'as pas trouvé la cible aujourd'hui.</p>
+                <h2>Nice try... Aba(n)don ! ❌</h2>
+                <p>You didn't find today celestedle !</p>
             `;
     } else {
       messageContainer.className = "win-message";
       messageContainer.innerHTML = `
-                <h2>GG ! Victoire ! 🎉</h2>
-                <p>Tu as trouvé l'élément secret en <strong>${nbTry}</strong> tentatives.</p>
+                <h2>GG ! Victory ! 🎉</h2>
+                <p>You found the secret element in <strong>${nbTry}</strong> tries.</p>
             `;
     }
     form.parentNode.insertBefore(messageContainer, form);
@@ -79,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
         datalist.appendChild(option);
       });
     })
-    .catch((err) => console.error("Erreur chargement éléments:", err));
+    .catch((err) => console.error("Error loading elements:", err));
 
   if (form) {
     form.addEventListener("submit", (e) => {
@@ -95,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ choix }),
       })
         .then((res) => {
-          if (!res.ok) throw new Error("Élément invalide ou erreur serveur");
+          if (!res.ok) throw new Error("Invalid entities or server error");
           return res.json();
         })
         .then((data) => {
@@ -112,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
             localStorage.removeItem("celestedle_history");
             localStorage.setItem("celestedle_version", data.secretVersion);
             alert(
-              "Le mot secret a été modifié par un administrateur ! Vos essais ont été réinitialisés.",
+              "The secret word has been changed by an admin ! Your tries has been reseted !",
             );
             location.reload();
             return;
@@ -145,8 +145,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const winContainer = document.createElement("div");
             winContainer.className = "win-message";
             winContainer.innerHTML = `
-                        <h2>GG ! Victoire ! 🎉</h2>
-                        <p>Tu as trouvé l'élément secret en <strong>${nbTry}</strong> tentatives.</p>
+                        <h2>GG ! Victory ! 🎉</h2>
+                        <p>You found the secret word in <strong>${nbTry}</strong> tries.</p>
                     `;
             form.parentNode.insertBefore(winContainer, form);
 
@@ -158,7 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         })
         .catch((err) => {
-          alert("Cet élément n'existe pas dans la liste !");
+          alert("This element does not exist");
           console.error("Erreur submit:", err);
         });
     });
@@ -170,7 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (hist.length === 0) return;
 
       const conversionScore = { correct: "🟩", partial: "🟧", wrong: "🟥" };
-      let textePartage = `Celestedle du jour en ${nbTry} coups\n\n`;
+      let textePartage = `Celestedle of the day in ${nbTry} tries\n\n`;
 
       hist.forEach((tryData) => {
         const iconType = conversionScore[tryData.verdict.type];
@@ -181,20 +181,20 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       navigator.clipboard
-        .writeText(textePartage + "\nhttps://celestedle.netlify.app/")
+        .writeText(textePartage + "\nhttps://celestedle.vercel.app/")
         .then(() => {
-          shareBtn.textContent = "Copié !";
+          shareBtn.textContent = "Copied !";
           setTimeout(() => {
-            shareBtn.textContent = "Partager";
+            shareBtn.textContent = "Share result";
           }, 2000);
         })
-        .catch((err) => console.error("Impossible de copier", err));
+        .catch((err) => console.error("Error, can't copy", err));
     });
   }
 });
 
 window.forceReset = function () {
-  const mdp = prompt("Entrez le mot de passe admin pour le reset :");
+  const mdp = prompt("Please enter admin password :");
   if (!mdp) return;
 
   fetch("https://celestedle-api.onrender.com/api/admin/verifier-key", {
@@ -203,7 +203,7 @@ window.forceReset = function () {
     body: JSON.stringify({ key: mdp }),
   })
     .then((res) => {
-      if (!res.ok) throw new Error("Mot de passe incorrect");
+      if (!res.ok) throw new Error("incorrect password");
       return res.json();
     })
     .then(() => {
@@ -213,13 +213,13 @@ window.forceReset = function () {
       localStorage.removeItem("celestedle_history");
       localStorage.removeItem("celestedle_date");
       localStorage.removeItem("celestedle_version");
-      alert("Données locales réinitialisées ! Recharge la page (F5).");
+      alert("Local data reset ! Please reload page");
     })
     .catch((err) => alert(err.message));
 };
 
 window.setSecret = function (nomElement) {
-  const mdp = prompt("Entrez le mot de passe admin pour changer la cible :");
+  const mdp = prompt("Please enter admin password:");
   if (!mdp) return;
 
   fetch("https://celestedle-api.onrender.com/api/admin/set-secret", {

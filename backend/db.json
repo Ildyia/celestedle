@@ -23,7 +23,7 @@
   "jellyfish": { "type": "movement & propulsion", "lieu": ["farewell"], "couleur": ["blue"], "hitbox": "rectangular" },
   "theo crystal": { "type": "movement & propulsion", "lieu": ["temple"], "couleur": ["blue"], "hitbox": "rectangular" },
   "moving block": { "type": "movement & propulsion", "lieu": ["ridge", "summit", "farewell"], "couleur": ["black"], "hitbox": "rectangular" },
-  "kevin": { "type": "movement & propulsion", "lieu": ["reflection", "core", "farewell"], "couleur": ["blue", "brown"], "hitbox": "rectangular" },
+  "kevin": { "type": "movement & propulsion", "lieu": ["reflection", "farewell"], "couleur": ["blue", "brown"], "hitbox": "rectangular" },
   "pufferfish": { "type": "movement & propulsion", "lieu": ["farewell"], "couleur": ["orange"], "hitbox": "circular" },
   "bird": { "type": "movement & propulsion", "lieu": ["farewell"], "couleur": ["blue"], "hitbox": "circular" },
   "cassette block": { "type": "mechanics", "lieu": ["always"], "couleur": ["blue", "pink", "yellow", "green"], "hitbox": "rectangular" },
