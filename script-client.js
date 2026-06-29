@@ -8,9 +8,11 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.removeItem("celestedle_gameover");
     localStorage.removeItem("celestedle_status");
     localStorage.removeItem("celestedle_history");
-    localStorage.removeItem("celestedle_version"); // Reset la version au changement de jour
+    localStorage.removeItem("celestedle_version");
+    localStorage.removeItem("celestedle_solution");
     localStorage.setItem("celestedle_date", aujourdHui);
   }
+
   fetch("https://celestedle-api.onrender.com/api/version")
     .then((res) => res.json())
     .then((data) => {
@@ -23,12 +25,14 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.removeItem("celestedle_gameover");
         localStorage.removeItem("celestedle_status");
         localStorage.removeItem("celestedle_history");
+        localStorage.removeItem("celestedle_solution");
         localStorage.setItem("celestedle_version", data.secretVersion);
-        location.reload(); // Recharge proprement avec un tableau vide
+        location.reload();
       } else if (!versionSauvegardee) {
         localStorage.setItem("celestedle_version", data.secretVersion);
       }
     });
+
   let nbTry = parseInt(localStorage.getItem("celestedle_tries")) || 0;
   const tryCountSpan = document.getElementById("try-count");
   if (tryCountSpan) tryCountSpan.textContent = nbTry;
@@ -38,27 +42,29 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("guess-form");
   const shareBtn = document.getElementById("share-btn");
   const giveupBtn = document.getElementById("giveup-btn");
-  const listBtn = document.getElementById("list-btn");
 
+  // Affichage factorisé de fin de partie (Win / Lose)
   if (isGameOver && form) {
     form.style.display = "none";
     if (giveupBtn) giveupBtn.style.display = "none";
     if (shareBtn) shareBtn.style.display = "block";
 
     const messageContainer = document.createElement("div");
-    if (gameStatus === "lose") {
-      messageContainer.className = "lose-message";
-      messageContainer.innerHTML = `
-                <h2>Nice try... Aba(n)don ! ❌</h2>
-                <p>You didn't find today celestedle !</p>
-            `;
-    } else {
-      messageContainer.className = "win-message";
-      messageContainer.innerHTML = `
-                <h2>GG ! Victory ! 🎉</h2>
-                <p>You found the secret element in <strong>${nbTry}</strong> tries.</p>
-            `;
-    }
+    const isWin = gameStatus !== "lose";
+
+    messageContainer.className = isWin ? "win-message" : "lose-message";
+
+    const titre = isWin ? "GG ! Victory ! 🎉" : "Nice try... Aba(n)don ! ❌";
+
+    const detail = isWin
+      ? `You found the secret element in <strong>${nbTry}</strong> tries.`
+      : `You didn't find today's celestedle !</strong>`;
+
+    messageContainer.innerHTML = `
+        <h2>${titre}</h2>
+        <p>${detail}</p>
+    `;
+
     form.parentNode.insertBefore(messageContainer, form);
   }
 
@@ -68,13 +74,14 @@ document.addEventListener("DOMContentLoaded", () => {
     ajouterLigneTableau(data);
   });
 
+  // Remplissage de la datalist pour les suggestions
   fetch("https://celestedle-api.onrender.com/api/elements")
     .then((res) => res.json())
     .then((elements) => {
       const datalist = document.getElementById("element-suggestions");
       if (!datalist) return;
 
-      elements.forEach((nom) => {
+      Object.keys(elements).forEach((nom) => {
         const option = document.createElement("option");
         option.value = nom.charAt(0).toUpperCase() + nom.slice(1);
         datalist.appendChild(option);
@@ -100,7 +107,6 @@ document.addEventListener("DOMContentLoaded", () => {
           return res.json();
         })
         .then((data) => {
-          // Détection du changement de mot secret par l'admin
           const versionSauvegardee = localStorage.getItem("celestedle_version");
 
           if (
@@ -111,6 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
             localStorage.removeItem("celestedle_gameover");
             localStorage.removeItem("celestedle_status");
             localStorage.removeItem("celestedle_history");
+            localStorage.removeItem("celestedle_solution");
             localStorage.setItem("celestedle_version", data.secretVersion);
             alert(
               "The secret word has been changed by an admin ! Your tries has been reseted !",
@@ -143,19 +150,9 @@ document.addEventListener("DOMContentLoaded", () => {
               origin: { y: 0.6 },
             });
 
-            const winContainer = document.createElement("div");
-            winContainer.className = "win-message";
-            winContainer.innerHTML = `
-                        <h2>GG ! Victory ! 🎉</h2>
-                        <p>You found the secret word in <strong>${nbTry}</strong> tries.</p>
-                    `;
-            form.parentNode.insertBefore(winContainer, form);
-
             localStorage.setItem("celestedle_gameover", "true");
             localStorage.setItem("celestedle_status", "win");
-            form.style.display = "none";
-            if (giveupBtn) giveupBtn.style.display = "none";
-            if (shareBtn) shareBtn.style.display = "block";
+            location.reload();
           }
         })
         .catch((err) => {
@@ -165,19 +162,52 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Gestion du bouton Abandonner
+  if (giveupBtn) {
+    giveupBtn.addEventListener("click", () => {
+      if (!confirm("Are you sure you want to give up?")) return;
+
+      fetch("https://celestedle-api.onrender.com/api/abandonner", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          localStorage.setItem("celestedle_gameover", "true");
+          localStorage.setItem("celestedle_status", "lose");
+          localStorage.setItem(
+            "celestedle_solution",
+            data.solution || "Unknown",
+          );
+          location.reload();
+        })
+        .catch((err) => {
+          console.error("Error during give up:", err);
+          localStorage.setItem("celestedle_gameover", "true");
+          localStorage.setItem("celestedle_status", "lose");
+          localStorage.setItem("celestedle_solution", "Secret Element");
+          location.reload();
+        });
+    });
+  }
+
+  // Gestion du bouton Partager (adapté au forfeit)
   if (shareBtn) {
     shareBtn.addEventListener("click", () => {
       const hist = JSON.parse(localStorage.getItem("celestedle_history")) || [];
-      if (hist.length === 0) return;
+      const isWin = localStorage.getItem("celestedle_status") !== "lose";
+
+      let textePartage = isWin
+        ? `Celestedle of the day in ${nbTry} tries\n\n`
+        : `Celestedle of the day : Aba(n)don ❌ (${nbTry} tries)\n\n`;
 
       const conversionScore = { correct: "🟩", partial: "🟧", wrong: "🟥" };
-      let textePartage = `Celestedle of the day in ${nbTry} tries\n\n`;
 
       hist.forEach((tryData) => {
-        const iconType = conversionScore[tryData.verdict.type];
-        const iconLieu = conversionScore[tryData.verdict.lieu];
-        const iconCouleur = conversionScore[tryData.verdict.couleur];
-        const iconHitbox = conversionScore[tryData.verdict.hitbox];
+        const iconType = conversionScore[tryData.verdict.type] || "🟥";
+        const iconLieu = conversionScore[tryData.verdict.lieu] || "🟥";
+        const iconCouleur = conversionScore[tryData.verdict.couleur] || "🟥";
+        const iconHitbox = conversionScore[tryData.verdict.hitbox] || "🟥";
         textePartage += `${iconType}${iconLieu}${iconCouleur}${iconHitbox}\n`;
       });
 
@@ -194,6 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+// Fonctions globales Admin
 window.forceReset = function () {
   const mdp = prompt("Please enter admin password :");
   if (!mdp) return;
@@ -214,6 +245,7 @@ window.forceReset = function () {
       localStorage.removeItem("celestedle_history");
       localStorage.removeItem("celestedle_date");
       localStorage.removeItem("celestedle_version");
+      localStorage.removeItem("celestedle_solution");
       alert("Local data reset ! Please reload page");
     })
     .catch((err) => alert(err.message));
