@@ -1,5 +1,5 @@
 {
-  "madeline": { "type": "characters", "lieu": ["always"], "couleur": ["blue", "red", "pink"], "hitbox": "rectangular" },
+    "madeline": { "type": "characters", "lieu": ["always"], "couleur": ["blue", "red", "pink"], "hitbox": "rectangular" },
   "badeline": { "type": "characters", "lieu": ["site", "resort", "ridge", "temple", "reflection", "summit", "farewell"], "couleur": ["purple"], "hitbox": "rectangular" },
   "theo": { "type": "characters", "lieu": ["city", "site", "resort", "ridge", "temple", "reflection"], "couleur": ["green"], "hitbox": "rectangular" },
   "granny": { "type": "characters", "lieu": ["prologue", "ridge", "reflection", "summit", "core", "farewell"], "couleur": ["green", "white"], "hitbox": "rectangular" },
@@ -15,7 +15,7 @@
   "cassette tape": { "type": "collectibles", "lieu": ["always"], "couleur": ["white"], "hitbox": "square" },
   "bumper": { "type": "movement & propulsion", "lieu": ["reflection", "core"], "couleur": ["blue"], "hitbox": "circular" },
   "feather": { "type": "movement & propulsion", "lieu": ["reflection", "summit", "core", "farewell"], "couleur": ["yellow"], "hitbox": "square" },
-  "badeline orb": { "type": "movement & propulsion", "lieu": ["reflection", "summit", "core", "farewell"], "couleur": ["purple"], "hitbox": "circular" },
+  "badeline orb": { "type": "moveme nt & propulsion", "lieu": ["reflection", "summit", "core", "farewell"], "couleur": ["purple"], "hitbox": "circular" },
   "cloud": { "type": "movement & propulsion", "lieu": ["ridge", "summit", "farewell"], "couleur": ["blue", "white", "pink"], "hitbox": "rectangular" },
   "booster": { "type": "movement & propulsion", "lieu": ["ridge", "temple", "summit", "farewell"], "couleur": ["green", "red"], "hitbox": "circular" },
   "refill": { "type": "mechanics", "lieu": ["always"], "couleur": ["green", "pink"], "hitbox": "circular" },
@@ -30,7 +30,7 @@
   "coreblock": { "type": "mechanics", "lieu": ["core", "farewell"], "couleur": ["blue", "red"], "hitbox": "rectangular" },
   "core switch": { "type": "mechanics", "lieu": ["core"], "couleur": ["blue", "red"], "hitbox": "square" },
   "dash switch": { "type": "mechanics", "lieu": ["temple", "summit", "farewell"], "couleur": ["yellow", "green"], "hitbox": "rectangular" },
-  "crumble block": { "type": "mechanics", "lieu": ["always"], "couleur": ["grey"], "hitbox": "rectangular" },
+  "crumble block": { "type": "mechanics", "lieu": ["always"], "couleur": ["grey"], "hitbox": "square" },
   "dream block": { "type": "mechanics", "lieu": ["site", "summit", "farewell"], "couleur": ["black"], "hitbox": "rectangular" },
   "swap block": { "type": "movement & propulsion", "lieu": ["temple", "summit", "farewell"], "couleur": ["grey"], "hitbox": "rectangular" },
   "touch switch": { "type": "mechanics", "lieu": ["site", "resort", "ridge", "temple", "reflection", "summit", "farewell"], "couleur": ["blue", "purple"], "hitbox": "square" },
@@ -65,6 +65,6 @@
  "pico8 computer": {"type":"environment", "lieu": ["resort"], "couleur": ["grey"], "hitbox": "square" },
  "lava/ice": {"type":"hazards", "lieu": ["core"], "couleur": ["red", "blue"], "hitbox": "rectangular" },
  "temple torch": {"type":"environment", "lieu": ["temple"], "couleur": ["yellow, blue"], "hitbox": "square" },
- "bridge": {"type":"environment", "lieu": ["prologue"], "couleur": ["gray"], "hitbox": "rectangular" },
- "conveyor belt/ice wall": {"type":"movement & propulsion", "lieu": ["core", "farewell"], "couleur": ["gray", "blue"], "hitbox": "rectangular" }
+ "bridge": {"type":"environment", "lieu": ["prologue"], "couleur": ["grey"], "hitbox": "rectangular" },
+ "conveyor belt/ice wall": {"type":"movement & propulsion", "lieu": ["core", "farewell"], "couleur": ["grey", "blue"], "hitbox": "rectangular" }
 }

@@ -38,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("guess-form");
   const shareBtn = document.getElementById("share-btn");
   const giveupBtn = document.getElementById("giveup-btn");
+  const listBtn = document.getElementById("list-btn");
 
   if (isGameOver && form) {
     form.style.display = "none";
