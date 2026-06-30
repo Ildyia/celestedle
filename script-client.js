@@ -41,6 +41,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const shareBtn = document.getElementById("share-btn");
   const giveupBtn = document.getElementById("giveup-btn");
 
+  const historique =
+    JSON.parse(localStorage.getItem("celestedle_history")) || [];
+  historique.forEach((data) => {
+    ajouterLigneTableau(data);
+  });
+
   // Affichage factorisé de fin de partie (Win / Lose)
   if (isGameOver && form) {
     form.style.display = "none";
@@ -49,28 +55,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const messageContainer = document.createElement("div");
     const isWin = gameStatus !== "lose";
-
+    
     messageContainer.className = isWin ? "win-message" : "lose-message";
-
     const titre = isWin ? "GG ! Victory ! 🎉" : "Nice try... Aba(n)don ! ❌";
-
-    const detail = isWin
+    
+    const detail = isWin 
       ? `You found the secret element in <strong>${nbTry}</strong> tries.`
-      : `You didn't find today's celestedle !</strong>`;
+      : `You didn't find today's celestedle !`;
 
     messageContainer.innerHTML = `
         <h2>${titre}</h2>
         <p>${detail}</p>
     `;
-
+    
     form.parentNode.insertBefore(messageContainer, form);
   }
-
-  const historique =
-    JSON.parse(localStorage.getItem("celestedle_history")) || [];
-  historique.forEach((data) => {
-    ajouterLigneTableau(data);
-  });
 
   // Remplissage de la datalist pour les suggestions
   fetch("https://celestedle-api.onrender.com/api/elements")
@@ -79,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const datalist = document.getElementById("element-suggestions");
       if (!datalist) return;
 
-            elements.forEach((nom) => {
+      elements.forEach((nom) => {
         const option = document.createElement("option");
         option.value = nom.charAt(0).toUpperCase() + nom.slice(1);
         datalist.appendChild(option);
@@ -116,9 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
             localStorage.removeItem("celestedle_status");
             localStorage.removeItem("celestedle_history");
             localStorage.setItem("celestedle_version", data.secretVersion);
-            alert(
-              "The secret word has been changed by an admin ! Your tries has been reseted !",
-            );
+            alert("The secret word has been changed by an admin ! Your tries has been reseted !");
             location.reload();
             return;
           }
@@ -132,10 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (tryCountSpan) tryCountSpan.textContent = nbTry;
 
           historique.push(data);
-          localStorage.setItem(
-            "celestedle_history",
-            JSON.stringify(historique),
-          );
+          localStorage.setItem("celestedle_history", JSON.stringify(historique));
 
           ajouterLigneTableau(data);
           input.value = "";
@@ -166,41 +160,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
       fetch("https://celestedle-api.onrender.com/api/abandonner", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" }
       })
-        .then((res) => res.json())
-        .then((data) => {
+        .then(() => {
           localStorage.setItem("celestedle_gameover", "true");
           localStorage.setItem("celestedle_status", "lose");
-          localStorage.setItem(
-            "celestedle_solution",
-            data.solution || "Unknown",
-          );
           location.reload();
         })
         .catch((err) => {
           console.error("Error during give up:", err);
           localStorage.setItem("celestedle_gameover", "true");
           localStorage.setItem("celestedle_status", "lose");
-          localStorage.setItem("celestedle_solution", "Secret Element");
           location.reload();
         });
     });
   }
 
-  // Gestion du bouton Partager (adapté au forfeit)
+  // Gestion du bouton Partager
   if (shareBtn) {
     shareBtn.addEventListener("click", () => {
-      const hist = JSON.parse(localStorage.getItem("celestedle_history")) || [];
       const isWin = localStorage.getItem("celestedle_status") !== "lose";
-
-      let textePartage = isWin
+      
+      let textePartage = isWin 
         ? `Celestedle of the day in ${nbTry} tries\n\n`
         : `Celestedle of the day : Aba(n)don ❌ (${nbTry} tries)\n\n`;
 
       const conversionScore = { correct: "🟩", partial: "🟧", wrong: "🟥" };
 
-      hist.forEach((tryData) => {
+      historique.forEach((tryData) => {
+        if (!tryData.verdict) return;
         const iconType = conversionScore[tryData.verdict.type] || "🟥";
         const iconLieu = conversionScore[tryData.verdict.lieu] || "🟥";
         const iconCouleur = conversionScore[tryData.verdict.couleur] || "🟥";
@@ -242,7 +230,6 @@ window.forceReset = function () {
       localStorage.removeItem("celestedle_history");
       localStorage.removeItem("celestedle_date");
       localStorage.removeItem("celestedle_version");
-      localStorage.removeItem("celestedle_solution");
       alert("Local data reset ! Please reload page");
     })
     .catch((err) => alert(err.message));
@@ -273,27 +260,27 @@ function ajouterLigneTableau(data) {
 
   const cellNom = document.createElement("td");
   cellNom.textContent = data.nom.charAt(0).toUpperCase() + data.nom.slice(1);
-  cellNom.className = data.verdict.isCorrect ? "correct" : "wrong";
+  cellNom.className = data.verdict?.isCorrect ? "correct" : "wrong";
   row.appendChild(cellNom);
 
   const cellType = document.createElement("td");
-  cellType.textContent = data.valeurs.type;
-  cellType.className = data.verdict.type;
+  cellType.textContent = data.valeurs?.type || "-";
+  cellType.className = data.verdict?.type || "wrong";
   row.appendChild(cellType);
 
   const cellLieu = document.createElement("td");
-  cellLieu.textContent = data.valeurs.lieu;
-  cellLieu.className = data.verdict.lieu;
+  cellLieu.textContent = data.valeurs?.lieu || "-";
+  cellLieu.className = data.verdict?.lieu || "wrong";
   row.appendChild(cellLieu);
 
   const cellCouleur = document.createElement("td");
-  cellCouleur.textContent = data.valeurs.couleur;
-  cellCouleur.className = data.verdict.couleur;
+  cellCouleur.textContent = data.valeurs?.couleur || "-";
+  cellCouleur.className = data.verdict?.couleur || "wrong";
   row.appendChild(cellCouleur);
 
   const cellHitbox = document.createElement("td");
-  cellHitbox.textContent = data.valeurs.hitbox;
-  cellHitbox.className = data.verdict.hitbox;
+  cellHitbox.textContent = data.valeurs?.hitbox || "-";
+  cellHitbox.className = data.verdict?.hitbox || "wrong";
   row.appendChild(cellHitbox);
 
   tbody.insertBefore(row, tbody.firstChild);
