@@ -9,7 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.removeItem("celestedle_status");
     localStorage.removeItem("celestedle_history");
     localStorage.removeItem("celestedle_version");
-    localStorage.removeItem("celestedle_solution");
     localStorage.setItem("celestedle_date", aujourdHui);
   }
 
@@ -25,7 +24,6 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.removeItem("celestedle_gameover");
         localStorage.removeItem("celestedle_status");
         localStorage.removeItem("celestedle_history");
-        localStorage.removeItem("celestedle_solution");
         localStorage.setItem("celestedle_version", data.secretVersion);
         location.reload();
       } else if (!versionSauvegardee) {
@@ -81,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const datalist = document.getElementById("element-suggestions");
       if (!datalist) return;
 
-      Object.keys(elements).forEach((nom) => {
+            elements.forEach((nom) => {
         const option = document.createElement("option");
         option.value = nom.charAt(0).toUpperCase() + nom.slice(1);
         datalist.appendChild(option);
@@ -117,7 +115,6 @@ document.addEventListener("DOMContentLoaded", () => {
             localStorage.removeItem("celestedle_gameover");
             localStorage.removeItem("celestedle_status");
             localStorage.removeItem("celestedle_history");
-            localStorage.removeItem("celestedle_solution");
             localStorage.setItem("celestedle_version", data.secretVersion);
             alert(
               "The secret word has been changed by an admin ! Your tries has been reseted !",
