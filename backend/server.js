@@ -75,6 +75,16 @@ app.post("/api/admin/set-secret", (req, res) => {
   });
 });
 
+app.post("/api/abandonner", (req, res) => {
+  // Récupère l'élément secret du jour (adapte selon ta logique serveur)
+  const elementSecret = obtenirElementDuJour();
+
+  res.json({
+    success: true,
+    secretElement: elementSecret.nom,
+  });
+});
+
 //obtention liste json
 app.get("/api/elements", (req, res) => {
   res.json(listeNoms);

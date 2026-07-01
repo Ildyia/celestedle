@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.removeItem("celestedle_history");
     localStorage.removeItem("celestedle_version");
     localStorage.setItem("celestedle_date", aujourdHui);
+    localStorage.removeItem("celestedle_solution");
   }
 
   fetch("https://celestedle-api.onrender.com/api/version")
@@ -59,9 +60,13 @@ document.addEventListener("DOMContentLoaded", () => {
     messageContainer.className = isWin ? "win-message" : "lose-message";
     const titre = isWin ? "GG ! Victory ! 🎉" : "Nice try... Aba(n)don ! ❌";
 
+    const solution = localStorage.getItem("celestedle_solution") || "Unknown";
+    const solutionFormatee =
+      solution.charAt(0).toUpperCase() + solution.slice(1);
+
     const detail = isWin
       ? `You found the secret element in <strong>${nbTry}</strong> tries.`
-      : `You didn't find today's celestedle !`;
+      : `You didn't find today's celestedle ! The answer was : <strong>${solutionFormatee}</strong>`;
 
     messageContainer.innerHTML = `
         <h2>${titre}</h2>
@@ -210,9 +215,17 @@ document.addEventListener("DOMContentLoaded", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       })
-        .then(() => {
+        .then((res) => {
+          if (!res.ok) throw new Error("Server error during forfeit");
+          return res.json();
+        })
+        .then((data) => {
           localStorage.setItem("celestedle_gameover", "true");
           localStorage.setItem("celestedle_status", "lose");
+
+          if (data.secretElement) {
+            localStorage.setItem("celestedle_solution", data.secretElement);
+          }
           location.reload();
         })
         .catch((err) => {
