@@ -15,7 +15,7 @@
   "cassette tape": { "type": "collectibles", "lieu": ["always"], "couleur": ["white"], "hitbox": "square" },
   "bumper": { "type": "movement & propulsion", "lieu": ["reflection", "core"], "couleur": ["blue"], "hitbox": "circular" },
   "feather": { "type": "movement & propulsion", "lieu": ["reflection", "summit", "core", "farewell"], "couleur": ["yellow"], "hitbox": "square" },
-  "badeline orb": { "type": "moveme nt & propulsion", "lieu": ["reflection", "summit", "core", "farewell"], "couleur": ["purple"], "hitbox": "circular" },
+  "badeline orb": { "type": "movement & propulsion", "lieu": ["reflection", "summit", "core", "farewell"], "couleur": ["purple"], "hitbox": "circular" },
   "cloud": { "type": "movement & propulsion", "lieu": ["ridge", "summit", "farewell"], "couleur": ["blue", "white", "pink"], "hitbox": "rectangular" },
   "booster": { "type": "movement & propulsion", "lieu": ["ridge", "temple", "summit", "farewell"], "couleur": ["green", "red"], "hitbox": "circular" },
   "refill": { "type": "mechanics", "lieu": ["always"], "couleur": ["green", "pink"], "hitbox": "circular" },

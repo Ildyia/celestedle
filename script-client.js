@@ -55,11 +55,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const messageContainer = document.createElement("div");
     const isWin = gameStatus !== "lose";
-    
+
     messageContainer.className = isWin ? "win-message" : "lose-message";
     const titre = isWin ? "GG ! Victory ! 🎉" : "Nice try... Aba(n)don ! ❌";
-    
-    const detail = isWin 
+
+    const detail = isWin
       ? `You found the secret element in <strong>${nbTry}</strong> tries.`
       : `You didn't find today's celestedle !`;
 
@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <h2>${titre}</h2>
         <p>${detail}</p>
     `;
-    
+
     form.parentNode.insertBefore(messageContainer, form);
   }
 
@@ -115,7 +115,9 @@ document.addEventListener("DOMContentLoaded", () => {
             localStorage.removeItem("celestedle_status");
             localStorage.removeItem("celestedle_history");
             localStorage.setItem("celestedle_version", data.secretVersion);
-            alert("The secret word has been changed by an admin ! Your tries has been reseted !");
+            alert(
+              "The secret word has been changed by an admin ! Your tries has been reseted !",
+            );
             location.reload();
             return;
           }
@@ -129,7 +131,10 @@ document.addEventListener("DOMContentLoaded", () => {
           if (tryCountSpan) tryCountSpan.textContent = nbTry;
 
           historique.push(data);
-          localStorage.setItem("celestedle_history", JSON.stringify(historique));
+          localStorage.setItem(
+            "celestedle_history",
+            JSON.stringify(historique),
+          );
 
           ajouterLigneTableau(data);
           input.value = "";
@@ -152,15 +157,58 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
   }
+  //gestion du bouton Rules
+  const rulesBtn = document.getElementById("rules-btn");
+  if (rulesBtn) {
+    rulesBtn.addEventListener("click", () => {
+      const rulesModal = document.createElement("div");
+      rulesModal.classList.add("rules-modal");
 
-  // Gestion du bouton Abandonner
+      rulesModal.innerHTML = `
+      <div class="rules-content">
+        <button class="close-rules-btn">&times;</button>
+        <h2>Rules of Celestedle</h2>
+        <p>Guess the secret element of the day by entering its name. After each guess, you'll receive feedback on how close your guess is to the secret element based on its type, location, color, and hitbox.</p>
+        <h4> What is the difference between the categories ?</h4>
+        <ul>
+            <li><strong>Collectibles</strong>: These are items that can be collected in the game, such as strawberries or golden strawberries.</li>
+            <li><strong>Characters</strong>: These are the characters that appear in the game, such as Theo, Granny, or Oshi.</li>
+            <li><strong>Environments</strong>: These are the entities that does not affect the gameplay, such as Binoculars or Breakable Walls.</li>
+            <li><strong>Mechanics</strong>: These are the entities that affects the gameplay, such as crumble blocks or core switchs.</li>
+            <li><strong>Movement and propulsion :</strong> These are the entities that the player will use to gain speed or to move in the room, such as moving block or boosters</li>
+        </ul>
+
+        <h4>Verdict Colors:</h4>
+        <ul>
+          <li><span style="color: var(--color-correct);">🟩 Correct</span>: The guessed attribute matches the secret element's attribute.</li>
+          <li><span style="color: var(--color-partial);">🟧 Partial</span>: The guessed attribute is partially correct, i.e. the submitted answer is part of the correct answer. ex: If the correct answer is "Red, Blue" and the guessed attribute is "Red", it would be considered "Partial"</li>
+          <li><span style="color: var(--color-notTotallyWrong);">🟨 Not Totally Wrong</span>: The guessed attribute cointains the correct answer, but contains too wrong elements. ex: If the correct answer is "Red" and the guessed attribute is "Red, Blue", it would be considered "Not Totally Wrong"</li>
+          <li><span style="color: var(--color-wrong);">🟥 Wrong</span>: The guessed attribute is incorrect.</li>
+        </ul>
+        <p>You have unlimited tries, but you can choose to forfeit if you give up. Good luck!</p>
+      </div>
+    `;
+
+      // Fermeture avec la croix ou en cliquant sur le fond flou
+      rulesModal.addEventListener("click", (e) => {
+        if (
+          e.target === rulesModal ||
+          e.target.classList.contains("close-rules-btn")
+        ) {
+          rulesModal.remove();
+        }
+      });
+
+      document.body.appendChild(rulesModal);
+    });
+  }
   if (giveupBtn) {
     giveupBtn.addEventListener("click", () => {
       if (!confirm("Are you sure you want to give up?")) return;
 
       fetch("https://celestedle-api.onrender.com/api/abandonner", {
         method: "POST",
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
       })
         .then(() => {
           localStorage.setItem("celestedle_gameover", "true");
@@ -180,8 +228,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (shareBtn) {
     shareBtn.addEventListener("click", () => {
       const isWin = localStorage.getItem("celestedle_status") !== "lose";
-      
-      let textePartage = isWin 
+
+      let textePartage = isWin
         ? `Celestedle of the day in ${nbTry} tries\n\n`
         : `Celestedle of the day : Aba(n)don ❌ (${nbTry} tries)\n\n`;
 

@@ -244,3 +244,111 @@ h1 {
 #guesses-body tr {
     animation: popIn 0.3s ease-out forwards;
 }
+/* ==========================================================================
+   6. RULES BUTTON & content
+   ========================================================================== */
+
+#rules-btn {
+    background-color: rgba(99, 102, 241, 0.15);
+    color: #6366f1;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#rules-btn:hover {
+    background-color: var(--color-indigo);
+    color: white;
+}
+
+/* rules content */
+
+.rules-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(11, 15, 25, 0.4); /* Fond sombre très léger */
+    backdrop-filter: blur(8px); /* Rend l'arrière-plan flou */
+    -webkit-backdrop-filter: blur(8px); /* Compatibilité Safari */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.rules-content {
+    position: relative; /* Nécessaire pour placer le bouton de fermeture */
+    background-color: var(--bg-card);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    max-width: 600px;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+/* Bouton de fermeture (Croix) */
+/* Bouton de fermeture (Croix) */
+.close-rules-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 2.2rem; /* Taille augmentée */
+    font-weight: 300;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.close-rules-btn:hover {
+    color: var(--color-wrong); /* Passe au rouge au survol */
+    transform: scale(1.15); /* Grossit légèrement au survol */
+}
+
+.close-rules-btn:active {
+    transform: scale(0.95); /* Effet d'enfoncement au clic */
+}
+
+.rules-content h2 {
+    color: var(--color-indigo);
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    text-align: center;
+    padding-right: 20px; /* Évite que le titre touche le bouton fermer */
+}
+
+.rules-content p {
+    color: var(--text-main);
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+.rules-content h4 {
+    color: var(--color-indigo);
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    margin-top: 16px;
+}
+
+.rules-content ul {
+    list-style-type: disc;
+    padding-left: 20px;
+    margin-bottom: 10px;
+}
+
+.rules-content ul li {
+    color: var(--text-main);
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 6px;
+}

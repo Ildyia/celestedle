@@ -121,7 +121,7 @@ app.post("/api/valider", (req, res) => {
     couleurMatch.length === choixCouleurs.length
   ) {
     couleurVerdict = "correct";
-  } else if (couleurMatch.length > 0) {
+  } else if (couleurMatch.length > 0 || secretCouleurs == "always") {
     if (choixCouleurs.every((val, i) => val === couleurMatch[i])) {
       couleurVerdict = "partial";
       console.log(
