@@ -127,6 +127,12 @@ app.post("/api/valider", (req, res) => {
     couleurVerdict = "notTotallyWrong";
   }
 
+  let hitboxVerdict = "wrong";
+
+  if (choixData.hitbox === secretData.hitbox) {
+    hitboxVerdict = "correct";
+  }
+
   res.json({
     nom: choix,
     secretVersion: secretVersion,
