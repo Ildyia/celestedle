@@ -77,7 +77,7 @@ app.post("/api/admin/set-secret", (req, res) => {
 
 app.post("/api/abandonner", (req, res) => {
   // Récupère l'élément secret du jour (adapte selon ta logique serveur)
-  const elementSecret = obtenirElementDuJour();
+  const elementSecret = getSecretDuJour();
 
   res.json({
     success: true,
