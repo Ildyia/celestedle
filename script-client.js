@@ -271,6 +271,25 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Fonctions globales Admin
+window.getSecretWordPlzUwU() = function () {
+  const mdp = prompt("Please enter admin password :");
+  if (!mdp) return;
+  
+  fetch("https://celestedle-api.onrender.com/api/admin/getSecretWord", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key: mdp }),
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error("incorrect password");
+      return res.json();
+    })
+    .then((data) => {
+      if (data.error) alert("Erreur : " + data.error);
+      else alert("Le mot secret du jour est : " + data.secretWord);
+    })
+    .catch((err) => alert(err.message));
+};
 window.forceReset = function () {
   const mdp = prompt("Please enter admin password :");
   if (!mdp) return;
