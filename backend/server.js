@@ -13,6 +13,7 @@ const ADMIN_KEY = process.env.ADMIN_PASSWORD;
 
 let secretForce = null;
 let secretVersion = Date.now();
+let hash = 20250202;
 
 function getSecretDuJour() {
   if (secretForce) return secretForce;
@@ -21,7 +22,6 @@ function getSecretDuJour() {
     timeZone: "Europe/Paris",
   });
 
-  let hash = 20250202;
   for (let i = 0; i < dateStr.length; i++) {
     hash = dateStr.charCodeAt(i) + ((hash << 5) - hash);
   }
