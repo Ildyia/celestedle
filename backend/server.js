@@ -75,10 +75,12 @@ app.post("/api/admin/set-secret", (req, res) => {
   });
 });
 
+//obtention liste json
 app.get("/api/elements", (req, res) => {
   res.json(listeNoms);
 });
 
+//obtentien numéro unique pour pouvoir restaurerle mot si le server shutdown
 app.get("/api/version", (req, res) => {
   res.json({ secretVersion: secretVersion });
 });
@@ -100,28 +102,29 @@ app.post("/api/valider", (req, res) => {
   const secretCouleurs = normaliserListe(secretData.couleur);
 
   let lieuVerdict = "wrong";
-  const intersectionLieu = choixLieux.filter((l) => secretLieux.includes(l));
-
-  if (JSON.stringify(choixLieux) === JSON.stringify(secretLieux)) {
-    lieuVerdict = "correct";
-  } else if (
-    intersectionLieu.length > 0 ||
-    choixLieux.includes("always") ||
-    secretLieux.includes("always")
+  let lieuMatch = choixLieux.filter((l) => secretLieux.includes(l));
+  if (
+    lieuMatch.length === secretLieux.length &&
+    lieuMatch.length === choixLieux.length
   ) {
-    lieuVerdict = "partial";
+    lieuVerdict = "correct";
+  } else if (lieuMatch.length > 0) {
+    if (lieuMatch.length === choixLieux.length) {
+      lieuVerdict = "partial";
+    } else lieuVerdict = "notTotallyWrong";
   }
 
   let couleurVerdict = "wrong";
-  if (JSON.stringify(choixCouleurs) === JSON.stringify(secretCouleurs)) {
+  let couleurMatch = choixCouleurs.filter((c) => secretCouleurs.includes(c));
+  if (
+    couleurMatch.length === secretCouleurs.length &&
+    couleurMatch.length === choixCouleurs.length
+  ) {
     couleurVerdict = "correct";
-  } else if (choixCouleurs.some((c) => secretCouleurs.includes(c))) {
+  } else if (couleurMatch.length > 0) {
     couleurVerdict = "partial";
-  }
-
-  let hitboxVerdict = "wrong";
-  if (choixData.hitbox === secretData.hitbox) {
-    hitboxVerdict = "correct";
+  } else {
+    couleurVerdict = "notTotallyWrong";
   }
 
   res.json({

@@ -63,7 +63,7 @@
  "moving platform": {"type":"mechanics", "lieu": ["resort", "ridge",  "summit"], "couleur": ["brown", "purple"], "hitbox": "rectangular" },
  "mario block": {"type":"mechanics", "lieu": ["ridge"], "couleur": ["white"], "hitbox": "rectangular" },
  "pico8 computer": {"type":"environment", "lieu": ["resort"], "couleur": ["grey"], "hitbox": "square" },
- "lava/ice": {"type":"hazards", "lieu": ["core"], "couleur": ["red", "blue"], "hitbox": "rectangular" },
+  "lava/ice": {"type":"hazards", "lieu": ["core"], "couleur": ["red", "blue"], "hitbox": "rectangular" },
  "temple torch": {"type":"environment", "lieu": ["temple"], "couleur": ["yellow, blue"], "hitbox": "square" },
  "bridge": {"type":"environment", "lieu": ["prologue"], "couleur": ["grey"], "hitbox": "rectangular" },
  "conveyor belt/ice wall": {"type":"movement & propulsion", "lieu": ["core", "farewell"], "couleur": ["grey", "blue"], "hitbox": "rectangular" }
