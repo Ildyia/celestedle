@@ -296,14 +296,15 @@ window.forceReset = function () {
     .catch((err) => alert(err.message));
 };
 
-window.setSecret = function (nomElement) {
+window.randomSecret = function () {
   const mdp = prompt("Please enter admin password:");
   if (!mdp) return;
+  let newHash = Math.random().toString(36).substring(2, 15); // Génère un hash aléatoire
 
-  fetch("https://celestedle-api.onrender.com/api/admin/set-secret", {
+  fetch("https://celestedle-api.onrender.com/api/admin/random-Hash", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ key: mdp, nom: nomElement }),
+    body: JSON.stringify({ key: mdp, nom: newHash }),
   })
     .then((res) => res.json())
     .then((data) => {

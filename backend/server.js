@@ -21,7 +21,7 @@ function getSecretDuJour() {
     timeZone: "Europe/Paris",
   });
 
-  let hash = 0;
+  let hash = 20250202;
   for (let i = 0; i < dateStr.length; i++) {
     hash = dateStr.charCodeAt(i) + ((hash << 5) - hash);
   }
@@ -51,28 +51,20 @@ app.post("/api/admin/verifier-key", (req, res) => {
   res.json({ success: true, message: "Accès autorisé" });
 });
 
-app.post("/api/admin/set-secret", (req, res) => {
-  const { key, nom } = req.body;
+app.post("/api/admin/random-Hash", (req, res) => {
+  const { key, newHash } = req.body;
 
   if (key !== ADMIN_KEY) {
     return res.status(403).json({ error: "Accès refusé" });
   }
-  if (nom === null) {
-    secretForce = null;
+  if (newHash === null) {
+    hash = 20250202;
     secretVersion = Date.now();
     return res.json({
-      message: "Le secret a été réinitialisé sur le mode automatique du jour.",
+      message: "Le hash a été réinitialisé sur le hash par défaut.",
     });
   }
-  if (!database[nom]) {
-    return res.status(400).json({ error: "Élément introuvable dans la DB" });
-  }
-
-  secretForce = nom;
-  secretVersion = Date.now();
-  res.json({
-    message: `La cible a été forcée manuellement. Nouvelle cible : ${secretForce}`,
-  });
+  hash = newHash;
 });
 
 app.post("/api/abandonner", (req, res) => {
