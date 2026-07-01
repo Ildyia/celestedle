@@ -271,10 +271,10 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Fonctions globales Admin
-window.getSecretWordPlzUwU() = function () {
+window.getSecretWordPlzUwU = function () {
   const mdp = prompt("Please enter admin password :");
   if (!mdp) return;
-  
+
   fetch("https://celestedle-api.onrender.com/api/admin/getSecretWord", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
