@@ -272,10 +272,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Fonctions globales Admin
 window.getSecretWordPlzUwU = function () {
+  //check password
   const mdp = prompt("Please enter admin password :");
   if (!mdp) return;
 
-  fetch("https://celestedle-api.onrender.com/api/admin/getSecretWord", {
+  fetch("https://celestedle-api.onrender.com/api/admin/verifier-key", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ key: mdp }),
@@ -284,12 +285,20 @@ window.getSecretWordPlzUwU = function () {
       if (!res.ok) throw new Error("incorrect password");
       return res.json();
     })
-    .then((data) => {
-      if (data.error) alert("Erreur : " + data.error);
-      else alert("Le mot secret du jour est : " + data.secretWord);
+    .then(() => {
+      fetch("https://celestedle-api.onrender.com/api/getSecretWord", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          alert("The secret element of the day is : " + data.secretElement);
+        })
+        .catch((err) => console.error("Error fetching secret word:", err));
     })
     .catch((err) => alert(err.message));
 };
+
 window.forceReset = function () {
   const mdp = prompt("Please enter admin password :");
   if (!mdp) return;

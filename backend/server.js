@@ -13,7 +13,7 @@ const ADMIN_KEY = process.env.ADMIN_PASSWORD;
 
 let secretForce = null;
 let secretVersion = Date.now();
-let hash = 20250202;
+let hash = 20250202; // Servira de graine (seed) de base pour le calcul
 
 function getSecretDuJour() {
   if (secretForce) return secretForce;
@@ -22,16 +22,18 @@ function getSecretDuJour() {
     timeZone: "Europe/Paris",
   });
 
+  // On utilise une variable locale basée sur le hash global pour ne pas altérer la racine
+  let localHash = hash;
+
   for (let i = 0; i < dateStr.length; i++) {
-    hash = dateStr.charCodeAt(i) + ((hash << 5) - hash);
+    localHash = dateStr.charCodeAt(i) + ((localHash << 5) - localHash);
   }
-  const index = Math.abs(hash) % listeNoms.length;
+  const index = Math.abs(localHash) % listeNoms.length;
   return listeNoms[index];
 }
 
 function normaliserListe(donnee) {
   if (Array.isArray(donnee)) {
-    // Si le tableau contient une seule chaîne avec des virgules ex: ["brown, grey"]
     if (donnee.length === 1 && donnee[0].includes(",")) {
       return donnee[0].split(",").map((c) => c.trim());
     }
@@ -66,25 +68,23 @@ app.post("/api/admin/random-Hash", (req, res) => {
   }
   hash = newHash;
   secretVersion = Date.now();
-  res.json({ message: "Le hash a été mis à jour avec succès." });
+  res.json({
+    message: "Le hash a été mis à jour avec succès et le mot a changé.",
+  });
 });
 
 app.post("/api/getSecretWord", (req, res) => {
-  // Récupère l'élément secret du jour (adapte selon ta logique serveur)
   const elementSecret = getSecretDuJour();
-
   res.json({
     success: true,
     secretElement: elementSecret,
   });
 });
 
-//obtention liste json
 app.get("/api/elements", (req, res) => {
   res.json(listeNoms);
 });
 
-//obtentien numéro unique pour pouvoir restaurerle mot si le server shutdown
 app.get("/api/version", (req, res) => {
   res.json({ secretVersion: secretVersion });
 });
@@ -128,24 +128,12 @@ app.post("/api/valider", (req, res) => {
   } else if (couleurMatch.length > 0 || secretCouleurs == "always") {
     if (choixCouleurs.every((val, i) => val === couleurMatch[i])) {
       couleurVerdict = "partial";
-      console.log(
-        "Couleur partiellement correcte : ",
-        choixCouleurs,
-        secretCouleurs,
-        couleurMatch,
-      );
     } else {
       couleurVerdict = "notTotallyWrong";
-      console.log(
-        "Couleur partiellement correcte : ",
-        choixCouleurs,
-        secretCouleurs,
-        couleurMatch,
-      );
     }
   }
-  let hitboxVerdict = "wrong";
 
+  let hitboxVerdict = "wrong";
   if (choixData.hitbox === secretData.hitbox) {
     hitboxVerdict = "correct";
   }
@@ -170,7 +158,6 @@ app.post("/api/valider", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
   console.log(`Serveur démarré sur le port ${PORT}`);
 });
