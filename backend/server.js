@@ -122,7 +122,7 @@ app.post("/api/valider", (req, res) => {
   ) {
     couleurVerdict = "correct";
   } else if (couleurMatch.length > 0) {
-    if (couleurMatch == choixCouleurs) {
+    if (choixCouleurs.every((val, i) => val === couleurMatch[i])) {
       couleurVerdict = "partial";
       console.log(
         "Couleur partiellement correcte : ",
