@@ -177,7 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <h4> What is the difference between the categories ?</h4>
         <ul>
             <li><strong>Collectibles</strong>: These are items that can be collected in the game, such as strawberries or golden strawberries.</li>
-            <li><strong>Characters</strong>: These are the characters that appear in the game, such as Theo, Granny, or Oshi.</li>
+            <li><strong>Characters</strong>: These are the characters that appear in the game, such as Theo, Granny, or Oshiro.</li>
             <li><strong>Environments</strong>: These are the entities that does not affect the gameplay, such as Binoculars or Breakable Walls.</li>
             <li><strong>Mechanics</strong>: These are the entities that affects the gameplay, such as crumble blocks or core switchs.</li>
             <li><strong>Movement and propulsion :</strong> These are the entities that the player will use to gain speed or to move in the room, such as moving block or boosters</li>
