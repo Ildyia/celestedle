@@ -299,7 +299,8 @@ window.forceReset = function () {
 window.randomSecret = function (reset = false) {
   const mdp = prompt("Please enter admin password:");
   if (!mdp) return;
-  let newHash = Math.random() * 1000000000; // Génère un nouveau hash aléatoire
+  let newHash = Math.random() * 1000000000;
+  newHash = Math.floor(newHash); // Génère un nouveau hash aléatoire
   if (reset) newHash = null;
   console.log(newHash); // Si reset, on envoie null pour réinitialiser le hash
   fetch("https://celestedle-api.onrender.com/api/admin/random-Hash", {
