@@ -183,11 +183,11 @@ document.addEventListener("DOMContentLoaded", () => {
             <li><strong>Movement and propulsion :</strong> These are the entities that the player will use to gain speed or to move in the room, such as moving block or boosters</li>
         </ul>
 
-        <h4>Verdict Colors:</h4>
+        <h4>And the colors ?</h4>
         <ul>
           <li><span style="color: var(--color-correct);">🟩 Correct</span>: The guessed attribute matches the secret element's attribute.</li>
-          <li><span style="color: var(--color-partial);">🟧 Partial</span>: The guessed attribute is partially correct, i.e. the submitted answer is part of the correct answer. ex: If the correct answer is "Red, Blue" and the guessed attribute is "Red", it would be considered "Partial"</li>
-          <li><span style="color: var(--color-notTotallyWrong);">🟨 Not Totally Wrong</span>: The guessed attribute cointains the correct answer, but contains too wrong elements. ex: If the correct answer is "Red" and the guessed attribute is "Red, Blue", it would be considered "Not Totally Wrong"</li>
+          <li><span style="color: var(--color-partial);">🟨 Partial</span>: The guessed attribute is partially correct, i.e. the submitted answer is part of the correct answer. ex: If the correct answer is "Red, Blue" and the guessed attribute is "Red", it would be considered "Partial"</li>
+          <li><span style="color: var(--color-notTotallyWrong);">🟧 Not Totally Wrong</span>: The guessed attribute cointains the correct answer, but contains too wrong elements. ex: If the correct answer is "Red" and the guessed attribute is "Red, Blue", it would be considered "Not Totally Wrong"</li>
           <li><span style="color: var(--color-wrong);">🟥 Wrong</span>: The guessed attribute is incorrect.</li>
         </ul>
         <p>You have unlimited tries, but you can choose to forfeit if you give up. Good luck!</p>
@@ -246,7 +246,12 @@ document.addEventListener("DOMContentLoaded", () => {
         ? `Celestedle of the day in ${nbTry} tries\n\n`
         : `Celestedle of the day : Aba(n)don ❌ (${nbTry} tries)\n\n`;
 
-      const conversionScore = { correct: "🟩", partial: "🟧", wrong: "🟥" };
+      const conversionScore = {
+        correct: "🟩",
+        partial: "🟨",
+        notTotallyWrong: "🟧",
+        wrong: "🟥",
+      };
 
       historique.forEach((tryData) => {
         if (!tryData.verdict) return;
