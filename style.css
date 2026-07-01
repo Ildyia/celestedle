@@ -10,10 +10,10 @@
     
     /* Couleurs des verdicts */
     --color-correct: #10b981;
-    --color-partial: #f59e0b;
-    --color-notTotallyWrong: #fbbf24;
+    --color-partial: #dbd826;
+    --color-notTotallyWrong: #fb8524;
     --color-wrong: #ef4444;
-    --color-indigo: #6366f1;
+    --color-indigo: #6366f1;    
     --color-indigo-hover: #4f46e5;
 }
 
@@ -227,6 +227,11 @@ h1 {
 
 .partial {
     background-color: var(--color-partial) !important;
+    color: white;
+}
+
+.notTotallyWrong {
+    background-color: var(--color-notTotallyWrong) !important;
     color: white;
 }
 

@@ -122,11 +122,24 @@ app.post("/api/valider", (req, res) => {
   ) {
     couleurVerdict = "correct";
   } else if (couleurMatch.length > 0) {
-    couleurVerdict = "partial";
-  } else {
-    couleurVerdict = "notTotallyWrong";
+    if (couleurMatch == choixCouleurs) {
+      couleurVerdict = "partial";
+      console.log(
+        "Couleur partiellement correcte : ",
+        choixCouleurs,
+        secretCouleurs,
+        couleurMatch,
+      );
+    } else {
+      couleurVerdict = "notTotallyWrong";
+      console.log(
+        "Couleur partiellement correcte : ",
+        choixCouleurs,
+        secretCouleurs,
+        couleurMatch,
+      );
+    }
   }
-
   let hitboxVerdict = "wrong";
 
   if (choixData.hitbox === secretData.hitbox) {
