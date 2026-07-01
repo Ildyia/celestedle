@@ -81,7 +81,7 @@ app.post("/api/abandonner", (req, res) => {
 
   res.json({
     success: true,
-    secretElement: elementSecret.nom,
+    secretElement: elementSecret,
   });
 });
 
