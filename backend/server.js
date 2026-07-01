@@ -65,9 +65,11 @@ app.post("/api/admin/random-Hash", (req, res) => {
     });
   }
   hash = newHash;
+  secretVersion = Date.now();
+  res.json({ message: "Le hash a été mis à jour avec succès." });
 });
 
-app.post("/api/abandonner", (req, res) => {
+app.post("/api/getSecretWord", (req, res) => {
   // Récupère l'élément secret du jour (adapte selon ta logique serveur)
   const elementSecret = getSecretDuJour();
 

@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.removeItem("celestedle_solution");
   }
 
-  fetch("https://celestedle-api.onrender.com/api/version")
+  fetch("https://server.celestedle.vercel.app/api/secret-version")
     .then((res) => res.json())
     .then((data) => {
       const versionSauvegardee = localStorage.getItem("celestedle_version");
@@ -211,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
     giveupBtn.addEventListener("click", () => {
       if (!confirm("Are you sure you want to give up?")) return;
 
-      fetch("https://celestedle-api.onrender.com/api/abandonner", {
+      fetch("https://celestedle-api.onrender.com/api/getSecretWord", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       })
@@ -303,6 +303,7 @@ window.randomSecret = function (reset = false) {
   newHash = Math.floor(newHash); // Génère un nouveau hash aléatoire
   if (reset) newHash = null;
   console.log(newHash); // Si reset, on envoie null pour réinitialiser le hash
+
   fetch("https://celestedle-api.onrender.com/api/admin/random-Hash", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -314,6 +315,7 @@ window.randomSecret = function (reset = false) {
       else alert(data.message);
     })
     .catch((err) => console.error("Erreur serveur:", err));
+  //une fois le hash reset, on supprime les cookies des utilisateurs pour forcer le reload du mot du jour
 };
 
 function ajouterLigneTableau(data) {
