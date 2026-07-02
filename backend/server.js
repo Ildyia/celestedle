@@ -1,163 +1,191 @@
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
+
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
+// --- State & Configuration ---
 const database = JSON.parse(fs.readFileSync("./db.json", "utf8"));
-const listeNoms = Object.keys(database).sort();
-
-const ADMIN_KEY = process.env.ADMIN_PASSWORD;
+const officialElementsList = Object.keys(database).sort();
+const adminKey = process.env.ADMIN_PASSWORD;
 
 let secretForce = null;
 let secretVersion = Date.now();
-let hash = 20250202; // Servira de graine (seed) de base pour le calcul
+let globalSeedHash = 20250202; // Used as the base seed value for dynamic daily selections
 
-function getSecretDuJour() {
+// --- Helper Functions ---
+
+// Calculates the element of the day dynamically using a time-locked string hashing mechanism
+function getSecretOfTheDay() {
   if (secretForce) return secretForce;
 
-  const dateStr = new Date().toLocaleDateString("sv-SE", {
+  const dateString = new Date().toLocaleDateString("sv-SE", {
     timeZone: "Europe/Paris",
   });
 
-  // On utilise une variable locale basée sur le hash global pour ne pas altérer la racine
-  let localHash = hash;
+  let localizedHash = globalSeedHash;
 
-  for (let i = 0; i < dateStr.length; i++) {
-    localHash = dateStr.charCodeAt(i) + ((localHash << 5) - localHash);
+  // Generate a pseudo-random hash value locked on the current calendar date string
+  for (let i = 0; i < dateString.length; i++) {
+    localizedHash = dateString.charCodeAt(i) + ((localizedHash << 5) - localizedHash);
   }
-  const index = Math.abs(localHash) % listeNoms.length;
-  return listeNoms[index];
+
+  const targetedIndex = Math.abs(localizedHash) % officialElementsList.length;
+  return officialElementsList[targetedIndex];
 }
 
-function normaliserListe(donnee) {
-  if (Array.isArray(donnee)) {
-    if (donnee.length === 1 && donnee[0].includes(",")) {
-      return donnee[0].split(",").map((c) => c.trim());
+// Normalizes mixed inputs (comma strings or text arrays) into standard string lists
+function normalizeMetaList(data) {
+  if (Array.isArray(data)) {
+    if (data.length === 1 && data[0].includes(",")) {
+      return data[0].split(",").map((item) => item.trim());
     }
-    return donnee.map((c) => c.trim());
+    return data.map((item) => item.trim());
   }
-  if (typeof donnee === "string") {
-    return donnee.split(",").map((c) => c.trim());
+  if (typeof data === "string") {
+    return data.split(",").map((item) => item.trim());
   }
   return [];
 }
 
+// --- Admin Endpoint Handlers ---
+
+// Verifies if the passed payload key matches the environment credential string
 app.post("/api/admin/verifier-key", (req, res) => {
   const { key } = req.body;
-  if (key !== ADMIN_KEY) {
-    return res.status(403).json({ error: "Mot de passe incorrect" });
+  if (key !== adminKey) {
+    return res.status(403).json({ error: "Incorrect password" });
   }
-  res.json({ success: true, message: "Accès autorisé" });
+  res.json({ success: true, message: "Access authorized" });
 });
 
+// Updates or restores the current seed hash to shuffle the daily puzzle word immediately
 app.post("/api/admin/random-Hash", (req, res) => {
   const { key, newHash } = req.body;
 
-  if (key !== ADMIN_KEY) {
-    return res.status(403).json({ error: "Accès refusé" });
+  if (key !== adminKey) {
+    return res.status(403).json({ error: "Access denied" });
   }
+
+  // Restore defaults if explicitly passed a null hash value
   if (newHash === null) {
-    hash = 20250202;
+    globalSeedHash = 20250202;
     secretVersion = Date.now();
     return res.json({
-      message: "Le hash a été réinitialisé sur le hash par défaut.",
+      message: "The seed hash has been reset to the system default configuration.",
     });
   }
-  hash = newHash;
+
+  globalSeedHash = newHash;
   secretVersion = Date.now();
   res.json({
-    message: "Le hash a été mis à jour avec succès et le mot a changé.",
+    message: "The seed hash updated successfully. Daily element puzzle has rotated.",
   });
 });
 
+// --- Core Game APIs ---
+
+// Returns the hidden element token calculated for the active day signature
 app.post("/api/getSecretWord", (req, res) => {
-  const elementSecret = getSecretDuJour();
+  const secretElement = getSecretOfTheDay();
   res.json({
     success: true,
-    secretElement: elementSecret,
+    secretElement: secretElement,
   });
 });
 
+// Provides the primary list containing all valid game entity keywords
 app.get("/api/elements", (req, res) => {
-  res.json(listeNoms);
+  res.json(officialElementsList);
 });
 
-app.get("/api/version", (req, res) => {
+// Returns the dynamic compilation stamp used by the client script to verify state syncs
+app.get("/secret-version", (req, res) => {
   res.json({ secretVersion: secretVersion });
 });
 
+// Compares the client payload choice parameters directly against the target answer metadata fields
 app.post("/api/valider", (req, res) => {
   const { choix } = req.body;
 
   if (!choix || !database[choix]) {
-    return res.status(400).json({ error: "Élément invalide" });
+    return res.status(400).json({ error: "Invalid element name" });
   }
 
-  const secretNom = getSecretDuJour();
-  const choixData = database[choix];
-  const secretData = database[secretNom];
+  const secretName = getSecretOfTheDay();
+  const choiceData = database[choix];
+  const secretData = database[secretName];
 
-  const choixLieux = normaliserListe(choixData.lieu);
-  const secretLieux = normaliserListe(secretData.lieu);
-  const choixCouleurs = normaliserListe(choixData.couleur);
-  const secretCouleurs = normaliserListe(secretData.couleur);
+  const choiceLocations = normalizeMetaList(choiceData.lieu);
+  const secretLocations = normalizeMetaList(secretData.lieu);
+  const choiceColors = normalizeMetaList(choiceData.couleur);
+  const secretColors = normalizeMetaList(secretData.couleur);
 
-  let lieuVerdict = "wrong";
-  let lieuMatch = choixLieux.filter((l) => secretLieux.includes(l));
+  // Evaluate location matches matrix values
+  let locationVerdict = "wrong";
+  let locationMatches = choiceLocations.filter((loc) => secretLocations.includes(loc));
+
   if (
-    lieuMatch.length === secretLieux.length &&
-    lieuMatch.length === choixLieux.length
+    locationMatches.length === secretLocations.length &&
+    locationMatches.length === choiceLocations.length
   ) {
-    lieuVerdict = "correct";
-  } else if (lieuMatch.length > 0) {
-    if (lieuMatch.length === choixLieux.length) {
-      lieuVerdict = "partial";
-    } else lieuVerdict = "notTotallyWrong";
-  }
-
-  let couleurVerdict = "wrong";
-  let couleurMatch = choixCouleurs.filter((c) => secretCouleurs.includes(c));
-  if (
-    couleurMatch.length === secretCouleurs.length &&
-    couleurMatch.length === choixCouleurs.length
-  ) {
-    couleurVerdict = "correct";
-  } else if (couleurMatch.length > 0 || secretCouleurs == "always") {
-    if (choixCouleurs.every((val, i) => val === couleurMatch[i])) {
-      couleurVerdict = "partial";
+    locationVerdict = "correct";
+  } else if (locationMatches.length > 0) {
+    if (locationMatches.length === choiceLocations.length) {
+      locationVerdict = "partial";
     } else {
-      couleurVerdict = "notTotallyWrong";
+      locationVerdict = "notTotallyWrong";
     }
   }
 
+  // Evaluate color matches matrix values
+  let colorVerdict = "wrong";
+  let colorMatches = choiceColors.filter((col) => secretColors.includes(col));
+
+  if (
+    colorMatches.length === secretColors.length &&
+    colorMatches.length === choiceColors.length
+  ) {
+    colorVerdict = "correct";
+  } else if (colorMatches.length > 0 || secretColors.includes("always")) {
+    if (choiceColors.every((val, idx) => val === colorMatches[idx])) {
+      colorVerdict = "partial";
+    } else {
+      colorVerdict = "notTotallyWrong";
+    }
+  }
+
+  // Evaluate standard hitbox value match conditions
   let hitboxVerdict = "wrong";
-  if (choixData.hitbox === secretData.hitbox) {
+  if (choiceData.hitbox === secretData.hitbox) {
     hitboxVerdict = "correct";
   }
 
+  // Dispatch final evaluation payloads
   res.json({
     nom: choix,
     secretVersion: secretVersion,
     verdict: {
-      isCorrect: choix === secretNom,
-      type: choixData.type === secretData.type ? "correct" : "wrong",
-      lieu: lieuVerdict,
-      couleur: couleurVerdict,
+      isCorrect: choix === secretName,
+      type: choiceData.type === secretData.type ? "correct" : "wrong",
+      lieu: locationVerdict,
+      couleur: colorVerdict,
       hitbox: hitboxVerdict,
     },
     valeurs: {
-      type: choixData.type,
-      lieu: choixLieux.join(", "),
-      couleur: choixCouleurs.join(", "),
-      hitbox: choixData.hitbox,
+      type: choiceData.type,
+      lieu: choiceLocations.join(", "),
+      couleur: choiceColors.join(", "),
+      hitbox: choiceData.hitbox,
     },
   });
 });
 
+// --- Server Lifecycle Initialization ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Serveur démarré sur le port ${PORT}`);
+  console.log(`Server successfully started running on port ${PORT}`);
 });

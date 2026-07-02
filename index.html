@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,14 +12,14 @@
         <h1>Celestedle</h1>
         
         <div id="game-status">
-            <p>Tries : <span id="try-count">0</span></p>
-            <button id="share-btn" style="display: none; background-color: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer;">Share</button>
+            <p>Tries: <span id="try-count">0</span></p>
+            <button id="share-btn">Share</button>
             <button id="giveup-btn">Forfeit</button>
             <button id="rules-btn">Rules</button>
         </div>
 
         <form id="guess-form">
-            <div class="input-container" style="position: relative; display: inline-block; width: 100%;">
+            <div class="input-container">
                 <input type="text" id="element-input" autocomplete="off" placeholder="Guess an element...">
                 <div id="element-suggestions" class="suggestions-box"></div>
             </div>
