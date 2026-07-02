@@ -185,6 +185,12 @@ app.post("/api/valider", (req, res) => {
 });
 
 // --- Server Lifecycle Initialization ---
+app.get("/api/version", (req, res) => {
+  res.json({
+    status: "online",
+    environment: process.env.API_URL?.includes("mizkyosia") ? "Production (VPS)" : "Beta-test (Render)"
+  });
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server successfully started running on port ${PORT}`);
