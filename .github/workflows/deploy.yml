@@ -4,25 +4,35 @@ on:
   push:
     branches:
       - main
+      - staging
 
 jobs:
   deploy:
-    runs-on: [self-hosted, linux, cpu ]
+    runs-on: [self-hosted, linux, cpu]
 
-    steps:
-      - uses: actions/checkout@v4
+  steps:
+    - uses: actions/checkout@v4
 
-      - name: Check Docker installation
-        run: |
-          command -v docker
+    - name: Check Docker installation
+      run: |
+        command -v docker
 
-      - name: Setup .env file
-        run: |
+    - name: Setup .env file
+      run: |
+        if [ "${{ github.ref_name }}" = "main" ]; then
           cat > .env <<EOF
-          PORT=${{ secrets.PORT }}
-          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
-          EOF
-      
-      - name: Deploy
-        run: |
-          docker compose up -d --build --force-recreate
+          PORT=${{ secrets.PROD_PORT }}
+          ADMIN_PASSWORD=${{ secrets.PROD_ADMIN_PASSWORD }}
+          API_URL=${{ secrets.PROD_API_URL }}
+        EOF
+        else
+          cat > .env <<EOF
+          PORT=${{ secrets.STAGING_PORT }}
+          ADMIN_PASSWORD=${{ secrets.STAGING_ADMIN_PASSWORD }}
+          API_URL=${{ secrets.STAGING_API_URL }}
+        EOF
+        fi
+     
+    - name: Deploy
+      run: |
+        docker compose up -d --build --force-recreate
