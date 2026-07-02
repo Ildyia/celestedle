@@ -8,42 +8,83 @@
     <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
-    <div id="game-container">
-        <h1>Celestedle</h1>
-        
-        <div id="game-status">
-            <p>Tries: <span id="try-count">0</span></p>
-            <button id="share-btn">Share</button>
-            <button id="giveup-btn">Forfeit</button>
-            <button id="rules-btn">Rules</button>
-            <a href="https://discord.gg/3yqgMbuMbX" target="_blank" id="discord-btn" class="status-link-btn">Discord</a>
+    <div id="layout-wrapper">
+        <!-- Left Column: Dynamic Rules Block -->
+        <div id="rules-sidebar" class="sidebar-block" style="display: none;">
+            <div class="rules-content-static">
+                <h2>Rules of Celestedle</h2>
+                <p>Guess the secret element of the day by entering its name. You'll receive feedback based on its attributes.</p>
+                <h4>Categories</h4>
+                <ul>
+                    <li><strong>Collectibles</strong>: Items collected in-game. (strawberries, hearts....)</li>
+                    <li><strong>Characters</strong>: Characters of the story like Theo, Granny, Oshiro...</li>
+                    <li><strong>Environments</strong>: Entities without a major impact on the gameplay (Binoculars).</li>
+                    <li><strong>Mechanics</strong>: Entites that create the main gameplay gameplay (Crumble blocks).</li>
+                    <li><strong>Movement & Propulsion</strong>: Mechanics that you use to move around or gain speeds (move block, zippers...).</li>
+                    <li><strong>Hazards</strong>: Kills the player (Spikes, Spinners).</li>
+                </ul>
+                <h4>Colors Indicator</h4>
+                <ul>
+                    <li><span style="color: var(--color-correct);">🟩 Correct</span>: Perfect match.</li>
+                    <li><span style="color: var(--color-partial);">🟨 Partial</span>: Guess is part of the answer.</li>
+                    <li><span style="color: var(--color-not-totally-wrong);">🟧 Not Totally Wrong</span>: Contains the answer + extra.</li>
+                    <li><span style="color: var(--color-wrong);">🟥 Wrong</span>: Incorrect attribute.</li>
+                </ul>
+            </div>
         </div>
 
-        <div id="message-container"></div>
-
-        <form id="guess-form">
-            <div class="input-container">
-                <input type="text" id="element-input" autocomplete="off" placeholder="Guess an element...">
-                <div id="element-suggestions" class="suggestions-box"></div>
+        <!-- Center Column: Main Content Wrapper -->
+        <div id="main-content-column">
+            <!-- Rose : Titre -->
+            <h1>Celestedle</h1>
+            
+            <!-- Violet : Barre avec les boutons et les tries -->
+            <div id="game-status">
+                <p>Tries: <span id="try-count">0</span></p>
+                <button id="share-btn">Share</button>
+                <button id="giveup-btn">Forfeit</button>
+                <button id="rules-btn">Rules</button>
+                <a href="https://discord.gg/3yqgMbuMbX" target="_blank" id="discord-btn" class="status-link-btn">Discord</a>
             </div>
-            <button type="submit">Guess</button>
-        </form>
 
-        <table id="guesses-table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Chapter</th>
-                    <th>Colour</th>
-                    <th>Hitbox</th>
-                </tr>
-            </thead>
-            <tbody id="guesses-body">
-            </tbody>
-        </table>
+            <div id="message-container"></div>
+
+            <!-- Vert : Jeu -->
+            <div id="game-container">
+                <form id="guess-form">
+                    <div class="input-container">
+                        <input type="text" id="element-input" autocomplete="off" placeholder="Guess an element...">
+                        <div id="element-suggestions" class="suggestions-box"></div>
+                    </div>
+                    <button type="submit">Guess</button>
+                </form>
+
+                <table id="guesses-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Chapter</th>
+                            <th>Colour</th>
+                            <th>Hitbox</th>
+                        </tr>
+                    </thead>
+                    <tbody id="guesses-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Right Column: Discord Promotional Info -->
+        <div id="discord-sidebar" class="sidebar-block">
+            <div class="discord-promo-content">
+                <h3>Community Hub</h3>
+                <p>Join the Discord server to catch the latest updates, read changelogs, and drop your recommendations directly to the developer!</p>
+                <a href="https://discord.gg/3yqgMbuMbX" target="_blank" class="discord-sidebar-link">Join Discord</a>
+            </div>
+        </div>
     </div>
 
+    <!-- Forfeit Confirmation Modal -->
     <div id="forfeit-modal" class="rules-modal" style="display: none;">
         <div class="rules-content" style="max-width: 450px; text-align: center;">
             <h2 style="color: var(--color-wrong);">Give up?</h2>

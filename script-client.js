@@ -368,42 +368,16 @@ const App = {
     this.nodes.form.parentNode.insertBefore(messageContainer, this.nodes.form);
   },
 
+  // Intercept and replace old modal injection with clean sidebar layout toggle
   renderRulesModal() {
-    const rulesModal = document.createElement("div");
-    rulesModal.classList.add("rules-modal");
-
-    rulesModal.innerHTML = `
-      <div class="rules-content">
-        <button class="close-rules-btn">&times;</button>
-        <h2>Rules of Celestedle</h2>
-        <p>Guess the secret element of the day by entering its name. After each guess, you'll receive feedback on how close your guess is to the secret element based on its type, location, color, and hitbox.</p>
-        <h4> What is the difference between the categories ?</h4>
-        <ul>
-            <li><strong>Collectibles</strong>: These are items that can be collected in the game, such as strawberries or golden strawberries.</li>
-            <li><strong>Characters</strong>: These are the characters that appear in the game, such as Theo, Granny, or Oshiro.</li>
-            <li><strong>Environments</strong>: These are the entities that do not affect the gameplay, such as Binoculars or Breakable Walls.</li>
-            <li><strong>Mechanics</strong>: These are the entities that affects the gameplay, such as crumble blocks or core switchs.</li>
-            <li><strong>Movement and propulsion :</strong> These are the entities that the player will use to gain speed or to move in the room, such as moving block or boosters</li>
-            <li><strong>Hazards</strong>: These are the entities that will kill the player if touched, such as spikes or spinners.</li>
-        </ul>
-        <h4>And the colors ?</h4>
-        <ul>
-          <li><span style="color: var(--color-correct);">🟩 Correct</span>: The guessed attribute matches the secret element's attribute.</li>
-          <li><span style="color: var(--color-partial);">🟨 Partial</span>: The guessed attribute is partially correct, i.e. the submitted answer is part of the correct answer. ex: If the correct answer is "Red, Blue" and the guessed attribute is "Red", it would be considered "Partial"</li>
-          <li><span style="color: var(--color-notTotallyWrong);">🟧 Not Totally Wrong</span>: The guessed attribute contains the correct answer, but contains too wrong elements. ex: If the correct answer is "Red" and the guessed attribute is "Red, Blue", it would be considered "Not Totally Wrong"</li>
-          <li><span style="color: var(--color-wrong);">🟥 Wrong</span>: The guessed attribute is incorrect.</li>
-        </ul>
-        <p>You have unlimited tries, but you can choose to forfeit if you give up. Good luck!</p>
-      </div>
-    `;
-
-    rulesModal.addEventListener("click", (e) => {
-      if (e.target === rulesModal || e.target.classList.contains("close-rules-btn")) {
-        rulesModal.remove();
-      }
-    });
-
-    document.body.appendChild(rulesModal);
+    const sidebar = document.getElementById("rules-sidebar");
+    if (!sidebar) return;
+    
+    if (sidebar.style.display === "none") {
+      sidebar.style.display = "block";
+    } else {
+      sidebar.style.display = "none";
+    }
   },
 
   addTableRow(data) {
