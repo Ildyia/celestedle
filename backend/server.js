@@ -72,7 +72,7 @@ app.post("/api/admin/random-Hash", (req, res) => {
 
   // Restore defaults if explicitly passed a null hash value
   if (newHash === null) {
-    globalSeedHash = 20250202;
+    globalSeedHash = 20250203;
     secretVersion = Date.now();
     return res.json({
       message: "The seed hash has been reset to the system default configuration.",
