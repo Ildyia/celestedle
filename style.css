@@ -95,7 +95,7 @@ h1 {
 }
 
 /* ==========================================================================
-   3. FORMULAIRE DE SAISIE
+   3. FORMULAIRE DE SAISIE & SUGGESTIONS
    ========================================================================== */
 #guess-form {
     display: flex;
@@ -103,8 +103,13 @@ h1 {
     width: 100%;
 }
 
+.input-container {
+    position: relative;
+    flex: 1; /* Permet à l'input de prendre tout l'espace restant */
+}
+
 #element-input {
-    flex: 1;
+    width: 100%;
     padding: 14px 18px;
     border-radius: 10px;
     border: 2px solid #2e3d5c;
@@ -140,6 +145,36 @@ h1 {
 
 #guess-form button:active {
     transform: translateY(1px);
+}
+
+/* Boîte de suggestions personnalisée */
+.suggestions-box {
+    position: absolute;
+    top: calc(100% + 5px); /* Légèrement décollé sous l'input */
+    left: 0;
+    right: 0;
+    background-color: var(--bg-input);
+    border: 2px solid #2e3d5c;
+    border-radius: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+.suggestion-item {
+    padding: 12px 18px;
+    cursor: pointer;
+    color: var(--text-main);
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: background-color 0.15s ease;
+}
+
+.suggestion-item:hover {
+    background-color: #2e3d5c;
+    color: white;
 }
 
 /* ==========================================================================
@@ -186,7 +221,7 @@ h1 {
 #guesses-table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 8px; /* Espace entre les lignes pour effet de cartes */
+    border-spacing: 0 8px;
     margin-top: 10px;
 }
 
@@ -208,7 +243,6 @@ h1 {
     transition: all 0.2s ease;
 }
 
-/* Arrondir les angles de chaque ligne individuelle */
 #guesses-table tr td:first-child {
     border-top-left-radius: 10px;
     border-bottom-left-radius: 10px;
@@ -219,7 +253,6 @@ h1 {
     border-bottom-right-radius: 10px;
 }
 
-/* Couleurs dynamiques selon les classes de verdicts */
 .correct {
     background-color: var(--color-correct) !important;
     color: white;
@@ -244,10 +277,10 @@ h1 {
 #guesses-body tr {
     animation: popIn 0.3s ease-out forwards;
 }
-/* ==========================================================================
-   6. RULES BUTTON & content
-   ========================================================================== */
 
+/* ==========================================================================
+   6. RULES BUTTON & MODAL
+   ========================================================================== */
 #rules-btn {
     background-color: rgba(99, 102, 241, 0.15);
     color: #6366f1;
@@ -264,17 +297,15 @@ h1 {
     color: white;
 }
 
-/* rules content */
-
 .rules-modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(11, 15, 25, 0.4); /* Fond sombre très léger */
-    backdrop-filter: blur(8px); /* Rend l'arrière-plan flou */
-    -webkit-backdrop-filter: blur(8px); /* Compatibilité Safari */
+    background-color: rgba(11, 15, 25, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -283,7 +314,7 @@ h1 {
 }
 
 .rules-content {
-    position: relative; /* Nécessaire pour placer le bouton de fermeture */
+    position: relative;
     background-color: var(--bg-card);
     padding: 30px;
     border-radius: 12px;
@@ -293,8 +324,6 @@ h1 {
     overflow-y: auto;
 }
 
-/* Bouton de fermeture (Croix) */
-/* Bouton de fermeture (Croix) */
 .close-rules-btn {
     position: absolute;
     top: 15px;
@@ -302,7 +331,7 @@ h1 {
     background: none;
     border: none;
     color: var(--text-muted);
-    font-size: 2.2rem; /* Taille augmentée */
+    font-size: 2.2rem;
     font-weight: 300;
     line-height: 1;
     cursor: pointer;
@@ -310,12 +339,12 @@ h1 {
 }
 
 .close-rules-btn:hover {
-    color: var(--color-wrong); /* Passe au rouge au survol */
-    transform: scale(1.15); /* Grossit légèrement au survol */
+    color: var(--color-wrong);
+    transform: scale(1.15);
 }
 
 .close-rules-btn:active {
-    transform: scale(0.95); /* Effet d'enfoncement au clic */
+    transform: scale(0.95);
 }
 
 .rules-content h2 {
@@ -323,7 +352,7 @@ h1 {
     font-size: 1.5rem;
     margin-bottom: 15px;
     text-align: center;
-    padding-right: 20px; /* Évite que le titre touche le bouton fermer */
+    padding-right: 20px;
 }
 
 .rules-content p {

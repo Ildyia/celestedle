@@ -1,8 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const aujourdHui = new Date().toLocaleDateString("sv-SE", {
-    timeZone: "Europe/Paris",
-  });
-  //dictionnaire de synonymes pour les noms d'éléments
+  // Dictionnaire de synonymes pour les noms d'éléments
   const synonymes = {
     cassette: "cassette tape",
     tape: "cassette tape",
@@ -16,9 +13,11 @@ document.addEventListener("DOMContentLoaded", () => {
     "blue booster": "green booster",
     piaf: "bird",
     oiseau: "bird",
-    "granny's bird": "tutorial bird",
-    "part of granny": "tutorial bird",
   };
+
+  const aujourdHui = new Date().toLocaleDateString("sv-SE", {
+    timeZone: "Europe/Paris",
+  });
 
   const dateSauvegardee = localStorage.getItem("celestedle_date");
   if (dateSauvegardee !== aujourdHui) {
@@ -94,93 +93,81 @@ document.addEventListener("DOMContentLoaded", () => {
     form.parentNode.insertBefore(messageContainer, form);
   }
 
-  // Remplissage de la datalist pour les suggestions
-  let listeElementsOfficiels = [];
+  // Système personnalisé de suggestions (Remplace la datalist)
+  const suggestionsBox = document.getElementById("element-suggestions");
   const input = document.getElementById("element-input");
-  const datalist = document.getElementById("element-suggestions");
+  let listeElementsOfficiels = [];
 
-  fetch("https://celestedle-api.render.com/api/elements")
+  fetch("https://celestedle-api.onrender.com/api/elements")
     .then((res) => res.json())
     .then((elements) => {
       listeElementsOfficiels = elements;
-      renderDatalist(""); // Premier rendu vide ou complet
     })
     .catch((err) => console.error("Error loading elements:", err));
 
-  function renderDatalist(recherche) {
-    if (!datalist) return;
-    datalist.innerHTML = ""; // On vide la liste
+  if (input && suggestionsBox) {
+    input.addEventListener("input", (e) => {
+      const recherche = e.target.value.trim().toLowerCase();
+      suggestionsBox.innerHTML = "";
 
-    const rechercheClean = recherche.trim().toLowerCase();
+      if (recherche.length === 0) {
+        suggestionsBox.style.display = "none";
+        return;
+      }
 
-    // Structure pour suivre les suggestions : clé = valeur officielle, valeur = texte à afficher
-    let suggestions = new Map();
+      const suggestionsAFiltrer = new Set();
 
-    // 1. Si la recherche matche un synonyme, on prépare le mot officiel mais on triche sur l'affichage pour le navigateur
-    Object.keys(synonymes).forEach((syn) => {
-      if (syn.includes(rechercheClean) && rechercheClean.length > 0) {
-        const officiel = synonymes[syn];
-        const officielFormate =
-          officiel.charAt(0).toUpperCase() + officiel.slice(1);
-        // On intègre la recherche dans la value pour tromper le filtre du navigateur
-        suggestions.set(
-          officielFormate,
-          `${officielFormate} (Synonyme: ${syn})`,
+      // RÈGLE 1 : Si on tape "piaf" (synonyme), on ne propose que "Bird"
+      if (synonymes[recherche]) {
+        const officiel = synonymes[recherche];
+        suggestionsAFiltrer.add(
+          officiel.charAt(0).toUpperCase() + officiel.slice(1),
         );
+      } else {
+        // RÈGLE 2 : Si on tape "bird", on ne propose que les officiels (pas les synonymes)
+        listeElementsOfficiels.forEach((nom) => {
+          if (nom.toLowerCase().includes(recherche)) {
+            suggestionsAFiltrer.add(nom.charAt(0).toUpperCase() + nom.slice(1));
+          }
+        });
+      }
+
+      // Rendu des suggestions trouvées
+      if (suggestionsAFiltrer.size > 0) {
+        suggestionsAFiltrer.forEach((mot) => {
+          const div = document.createElement("div");
+          div.classList.add("suggestion-item");
+          div.textContent = mot;
+
+          div.addEventListener("click", () => {
+            input.value = mot;
+            suggestionsBox.innerHTML = "";
+            suggestionsBox.style.display = "none";
+            input.focus();
+          });
+
+          suggestionsBox.appendChild(div);
+        });
+        suggestionsBox.style.display = "block";
+      } else {
+        suggestionsBox.style.display = "none";
       }
     });
 
-    // 2. On ajoute les éléments officiels qui matchent la recherche
-    listeElementsOfficiels.forEach((nom) => {
-      if (nom.toLowerCase().includes(rechercheClean) || rechercheClean === "") {
-        const nomFormate = nom.charAt(0).toUpperCase() + nom.slice(1);
-        // Si déjà ajouté via un synonyme, on laisse la version synonyme prioritaire
-        if (!suggestions.has(nomFormate)) {
-          suggestions.set(nomFormate, nomFormate);
-        }
+    // Fermer la boîte si on clique ailleurs sur la page
+    document.addEventListener("click", (e) => {
+      if (e.target !== input && e.target !== suggestionsBox) {
+        suggestionsBox.style.display = "none";
       }
     });
-
-    // 3. On injecte dans la datalist
-    suggestions.forEach((texteAffiche, valeurOfficielle) => {
-      const option = document.createElement("option");
-      option.value = texteAffiche;
-      // On stocke la vraie valeur propre dans un attribut personnalisé
-      option.dataset.realValue = valeurOfficielle;
-      datalist.appendChild(option);
-    });
   }
 
-  // Écouteur pour nettoyer instantanément le champ quand l'utilisateur sélectionne une suggestion
-  if (input) {
-    input.addEventListener("input", (e) => {
-      const valeurSaisie = e.target.value;
-
-      // On cherche si la valeur actuelle correspond à une des options de la datalist
-      const options = datalist.querySelectorAll("option");
-      for (let option of options) {
-        if (option.value === valeurSaisie && option.dataset.realValue) {
-          // Si l'utilisateur a cliqué sur "Booster (Synonyme: bubble)", on remplace par "Booster"
-          e.target.value = option.dataset.realValue;
-          break;
-        }
-      }
-
-      renderDatalist(e.target.value);
-    });
-  }
-  // On met à jour les suggestions en temps réel pendant la frappe
-  if (input) {
-    input.addEventListener("input", (e) => {
-      renderDatalist(e.target.value);
-    });
-  }
-
+  // Soumission du formulaire
   if (form) {
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      const input = document.getElementById("element-input");
-      let choix = input ? input.value.trim().toLowerCase() : "";
+      const inputElement = document.getElementById("element-input");
+      let choix = inputElement ? inputElement.value.trim().toLowerCase() : "";
 
       if (synonymes[choix]) {
         choix = synonymes[choix];
@@ -231,7 +218,8 @@ document.addEventListener("DOMContentLoaded", () => {
           );
 
           ajouterLigneTableau(data);
-          input.value = "";
+          if (inputElement) inputElement.value = "";
+          if (suggestionsBox) suggestionsBox.style.display = "none";
 
           if (data.verdict.isCorrect) {
             confetti({
@@ -251,7 +239,8 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
   }
-  //gestion du bouton Rules
+
+  // Gestion du bouton Rules
   const rulesBtn = document.getElementById("rules-btn");
   if (rulesBtn) {
     rulesBtn.addEventListener("click", () => {
@@ -283,7 +272,6 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
-      // Fermeture avec la croix ou en cliquant sur le fond flou
       rulesModal.addEventListener("click", (e) => {
         if (
           e.target === rulesModal ||
@@ -296,6 +284,8 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.appendChild(rulesModal);
     });
   }
+
+  // Gestion du bouton Give Up
   if (giveupBtn) {
     giveupBtn.addEventListener("click", () => {
       if (!confirm("Are you sure you want to give up?")) return;
@@ -366,7 +356,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Fonctions globales Admin
 window.getSecretWordPlzUwU = function () {
-  //check password
   const mdp = prompt("Please enter admin password :");
   if (!mdp) return;
 
@@ -422,9 +411,8 @@ window.randomSecret = function (reset = false) {
   const mdp = prompt("Please enter admin password:");
   if (!mdp) return;
   let newHash = Math.random() * 1000000000;
-  newHash = Math.floor(newHash); // Génère un nouveau hash aléatoire
+  newHash = Math.floor(newHash);
   if (reset) newHash = null;
-  console.log(newHash); // Si reset, on envoie null pour réinitialiser le hash
 
   fetch("https://celestedle-api.onrender.com/api/admin/random-Hash", {
     method: "POST",
@@ -437,7 +425,6 @@ window.randomSecret = function (reset = false) {
       else alert(data.message);
     })
     .catch((err) => console.error("Erreur serveur:", err));
-  //une fois le hash reset, on supprime les cookies des utilisateurs pour forcer le reload du mot du jour
 };
 
 function ajouterLigneTableau(data) {

@@ -18,8 +18,10 @@
         </div>
 
         <form id="guess-form">
-            <input type="text" id="element-input" list="element-suggestions" placeholder="Type entity name..." autocomplete="off">
-            <datalist id="element-suggestions"></datalist>
+            <div class="input-container" style="position: relative; display: inline-block; width: 100%;">
+                <input type="text" id="element-input" autocomplete="off" placeholder="Guess an element...">
+                <div id="element-suggestions" class="suggestions-box"></div>
+            </div>
             <button type="submit">Guess</button>
         </form>
 
@@ -34,7 +36,7 @@
                 </tr>
             </thead>
             <tbody id="guesses-body">
-                </tbody>
+            </tbody>
         </table>
     </div>
 
