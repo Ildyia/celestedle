@@ -19,7 +19,7 @@
   "cloud": { "type": "movement & propulsion", "lieu": ["ridge", "summit", "farewell"], "couleur": ["blue", "white", "pink"], "hitbox": "rectangular" },
   "red booster": { "type": "movement & propulsion", "lieu": [ "temple", "summit", "farewell"], "couleur": ["red"], "hitbox": "circular" },
   "green booster": { "type": "movement & propulsion", "lieu": ["ridge", "summit", "farewell"], "couleur": ["green"], "hitbox": "circular" },
-  "refill": { "type": "mechanics", "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell"], "couleur": ["green", "pink"], "hitbox": "circular" },
+  "refill": { "type": "mechanics", "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell"], "couleur": ["green", "pink"], "hitbox": "square" },
   "spring": { "type": "movement & propulsion", "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell"], "couleur": ["brown"], "hitbox": "rectangular" },
   "jellyfish": { "type": "movement & propulsion", "lieu": ["farewell"], "couleur": ["blue"], "hitbox": "rectangular" },
   "theo crystal": { "type": "movement & propulsion", "lieu": ["temple"], "couleur": ["blue"], "hitbox": "rectangular" },
