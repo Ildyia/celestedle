@@ -2,12 +2,12 @@ services:
   celestedle-api:
     build: .
     env_file: .env
-    container_name: celestedle-api
+    container_name: ${CONTAINER_NAME}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.celestedle.rule=Host(`celestedle-api.mizkyosia.fr`)"
-      - "traefik.http.routers.celestedle.entrypoints=web"
-      - "traefik.http.services.celestedle.loadbalancer.server.port=${PORT}"
+      - "traefik.http.routers.${TRAEFIK_NAME}.rule=Host(`${APP_HOST}`)"
+      - "traefik.http.routers.${TRAEFIK_NAME}.entrypoints=web"
+      - "traefik.http.services.${TRAEFIK_NAME}.loadbalancer.server.port=${PORT}"
     networks:
       - traefik-public
 
