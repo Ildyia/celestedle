@@ -14,7 +14,7 @@ const adminKey = process.env.ADMIN_PASSWORD;
 
 let secretForce = null;
 let secretVersion = Date.now();
-let globalSeedHash = 20250203; // Used as the base seed value for dynamic daily selections
+let globalSeedHash = 20250204; // Used as the base seed value for dynamic daily selections
 
 // --- Helper Functions ---
 
@@ -30,7 +30,8 @@ function getSecretOfTheDay() {
 
   // Generate a pseudo-random hash value locked on the current calendar date string
   for (let i = 0; i < dateString.length; i++) {
-    localizedHash = dateString.charCodeAt(i) + ((localizedHash << 5) - localizedHash);
+    localizedHash =
+      dateString.charCodeAt(i) + ((localizedHash << 5) - localizedHash);
   }
 
   const targetedIndex = Math.abs(localizedHash) % officialElementsList.length;
@@ -72,17 +73,19 @@ app.post("/api/admin/random-Hash", (req, res) => {
 
   // Restore defaults if explicitly passed a null hash value
   if (newHash === null) {
-    globalSeedHash = 20250203;
+    globalSeedHash = 20250204;
     secretVersion = Date.now();
     return res.json({
-      message: "The seed hash has been reset to the system default configuration.",
+      message:
+        "The seed hash has been reset to the system default configuration.",
     });
   }
 
   globalSeedHash = newHash;
   secretVersion = Date.now();
   res.json({
-    message: "The seed hash updated successfully. Daily element puzzle has rotated.",
+    message:
+      "The seed hash updated successfully. Daily element puzzle has rotated.",
   });
 });
 
@@ -126,7 +129,9 @@ app.post("/api/valider", (req, res) => {
 
   // Evaluate location matches matrix values
   let locationVerdict = "wrong";
-  let locationMatches = choiceLocations.filter((loc) => secretLocations.includes(loc));
+  let locationMatches = choiceLocations.filter((loc) =>
+    secretLocations.includes(loc),
+  );
 
   if (
     locationMatches.length === secretLocations.length &&
@@ -188,7 +193,9 @@ app.post("/api/valider", (req, res) => {
 app.get("/api/version", (req, res) => {
   res.json({
     status: "online",
-    environment: process.env.API_URL?.includes("mizkyosia") ? "Production (VPS)" : "Beta-test (Render)"
+    environment: process.env.API_URL?.includes("mizkyosia")
+      ? "Production (VPS)"
+      : "Beta-test (Render)",
   });
 });
 const PORT = process.env.PORT || 3000;
