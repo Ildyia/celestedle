@@ -1,0 +1,16 @@
+{
+  "name": "celestedle",
+  "version": "1.0.0",
+  "description": "Celestedle game - Guess the Celeste element",
+  "type": "module",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "echo 'No build step required for static site'"
+  },
+  "keywords": ["celeste", "game", "wordle"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@vercel/analytics": "^1.4.1"
+  }
+}

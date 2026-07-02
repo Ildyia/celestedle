@@ -1,3 +1,8 @@
+import { inject } from '@vercel/analytics';
+
+// Initialize Vercel Web Analytics
+inject();
+
 document.addEventListener("DOMContentLoaded", () => {
   // Dictionnaire de synonymes pour les noms d'éléments
   const synonymes = {
