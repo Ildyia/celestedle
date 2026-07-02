@@ -1,0 +1,28 @@
+name: Deploy Celestedle API
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, linux, cpu ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Docker installation
+        run: |
+          command -v docker
+
+      - name: Setup .env file
+        run: |
+          cat > .env <<EOF
+          PORT=${{ secrets.PORT }}
+          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+          EOF
+      
+      - name: Deploy
+        run: |
+          docker compose up -d --build --force-recreate

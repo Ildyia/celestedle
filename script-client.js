@@ -2,6 +2,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const aujourdHui = new Date().toLocaleDateString("sv-SE", {
     timeZone: "Europe/Paris",
   });
+  //dictionnaire de synonymes pour les noms d'éléments
+  const synonymes = {
+    cassette: "cassette tape",
+    tape: "cassette tape",
+    tile: "tiles",
+    boosters: "booster",
+    bubble: "booster",
+    bubbles: "booster",
+    crumble: "crumble block",
+    crumbleblock: "crumble block",
+    jumpthroughs: "jumpthrough",
+    "blue booster": "green booster",
+    piaf: "bird",
+    oiseau: "bird",
+    "granny's bird": "tutorial bird",
+    "part of granny": "tutorial bird",
+  };
+
   const dateSauvegardee = localStorage.getItem("celestedle_date");
   if (dateSauvegardee !== aujourdHui) {
     localStorage.removeItem("celestedle_tries");
@@ -13,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.removeItem("celestedle_solution");
   }
 
-  fetch("https://server.celestedle.vercel.app/api/secret-version")
+  fetch("https://celestedle-api.onrender.com/secret-version")
     .then((res) => res.json())
     .then((data) => {
       const versionSauvegardee = localStorage.getItem("celestedle_version");
@@ -77,25 +95,96 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Remplissage de la datalist pour les suggestions
-  fetch("https://celestedle-api.onrender.com/api/elements")
+  let listeElementsOfficiels = [];
+  const input = document.getElementById("element-input");
+  const datalist = document.getElementById("element-suggestions");
+
+  fetch("https://celestedle-api.render.com/api/elements")
     .then((res) => res.json())
     .then((elements) => {
-      const datalist = document.getElementById("element-suggestions");
-      if (!datalist) return;
-
-      elements.forEach((nom) => {
-        const option = document.createElement("option");
-        option.value = nom.charAt(0).toUpperCase() + nom.slice(1);
-        datalist.appendChild(option);
-      });
+      listeElementsOfficiels = elements;
+      renderDatalist(""); // Premier rendu vide ou complet
     })
     .catch((err) => console.error("Error loading elements:", err));
+
+  function renderDatalist(recherche) {
+    if (!datalist) return;
+    datalist.innerHTML = ""; // On vide la liste
+
+    const rechercheClean = recherche.trim().toLowerCase();
+
+    // Structure pour suivre les suggestions : clé = valeur officielle, valeur = texte à afficher
+    let suggestions = new Map();
+
+    // 1. Si la recherche matche un synonyme, on prépare le mot officiel mais on triche sur l'affichage pour le navigateur
+    Object.keys(synonymes).forEach((syn) => {
+      if (syn.includes(rechercheClean) && rechercheClean.length > 0) {
+        const officiel = synonymes[syn];
+        const officielFormate =
+          officiel.charAt(0).toUpperCase() + officiel.slice(1);
+        // On intègre la recherche dans la value pour tromper le filtre du navigateur
+        suggestions.set(
+          officielFormate,
+          `${officielFormate} (Synonyme: ${syn})`,
+        );
+      }
+    });
+
+    // 2. On ajoute les éléments officiels qui matchent la recherche
+    listeElementsOfficiels.forEach((nom) => {
+      if (nom.toLowerCase().includes(rechercheClean) || rechercheClean === "") {
+        const nomFormate = nom.charAt(0).toUpperCase() + nom.slice(1);
+        // Si déjà ajouté via un synonyme, on laisse la version synonyme prioritaire
+        if (!suggestions.has(nomFormate)) {
+          suggestions.set(nomFormate, nomFormate);
+        }
+      }
+    });
+
+    // 3. On injecte dans la datalist
+    suggestions.forEach((texteAffiche, valeurOfficielle) => {
+      const option = document.createElement("option");
+      option.value = texteAffiche;
+      // On stocke la vraie valeur propre dans un attribut personnalisé
+      option.dataset.realValue = valeurOfficielle;
+      datalist.appendChild(option);
+    });
+  }
+
+  // Écouteur pour nettoyer instantanément le champ quand l'utilisateur sélectionne une suggestion
+  if (input) {
+    input.addEventListener("input", (e) => {
+      const valeurSaisie = e.target.value;
+
+      // On cherche si la valeur actuelle correspond à une des options de la datalist
+      const options = datalist.querySelectorAll("option");
+      for (let option of options) {
+        if (option.value === valeurSaisie && option.dataset.realValue) {
+          // Si l'utilisateur a cliqué sur "Booster (Synonyme: bubble)", on remplace par "Booster"
+          e.target.value = option.dataset.realValue;
+          break;
+        }
+      }
+
+      renderDatalist(e.target.value);
+    });
+  }
+  // On met à jour les suggestions en temps réel pendant la frappe
+  if (input) {
+    input.addEventListener("input", (e) => {
+      renderDatalist(e.target.value);
+    });
+  }
 
   if (form) {
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const input = document.getElementById("element-input");
-      const choix = input ? input.value.trim().toLowerCase() : "";
+      let choix = input ? input.value.trim().toLowerCase() : "";
+
+      if (synonymes[choix]) {
+        choix = synonymes[choix];
+      }
 
       if (!choix) return;
 
