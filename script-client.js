@@ -26,7 +26,7 @@ const App = {
   selectedIndex: -1,
   nodes: {},
 
-  // ---- Core Lifecycle ----
+  // --- Core Lifecycle ---
   init() {
     this.cacheDOM();
     this.checkDailyReset();
