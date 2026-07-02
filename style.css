@@ -1,20 +1,30 @@
 /* ==========================================================================
-   1. VARIABLES & GENERAL CONFIGURATION
+   1. VARIABLES, FONTS & GENERAL CONFIGURATION
    ========================================================================== */
+@font-face {
+    font-family: 'Renogare';
+    src: url('renogare-regular.otf') format('truetype');
+    font-style: normal;
+    font-display: swap;
+}
+
 :root {
-    --bg-main: #0b0f19;
-    --bg-card: #151d30;
-    --bg-input: #1e2942;
-    --text-main: #f3f4f6;
-    --text-muted: #9ca3af;
+    --bg-main: #060913;
+    --bg-card: #0f1626;
+    --bg-input: #17223b;
+    --text-main: #ffffff;
+    --text-muted: #94a3b8;
     
-    /* Verdict colors */
+    /* High-contrast verdict colors */
     --color-correct: #10b981;
-    --color-partial: #dbd826;
-    --color-not-totally-wrong: #fb8524;
+    --color-partial: #f59e0b;
+    --color-not-totally-wrong: #f97316;
     --color-wrong: #ef4444;
+    
+    /* Core brand colors */
     --color-indigo: #6366f1;    
     --color-indigo-hover: #4f46e5;
+    --color-discord: #5865f2;
 }
 
 * {
@@ -24,174 +34,303 @@
 }
 
 body {
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Segoe UI', Roboto, sans-serif;
     background-color: var(--bg-main);
     color: var(--text-main);
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    padding: 20px 10px;
+    padding: 40px 20px;
+}
+
+/* Titles and headings get the official Celeste font */
+h1, h2, h3, h4, th, .btn-celeste, #try-count {
+    font-family: 'Renogare', 'Segoe UI', sans-serif;
+    letter-spacing: 0.5px;
 }
 
 /* ==========================================================================
-   2. MAIN CONTAINER & HEADER
+   2. EXPANDED LAYOUT
    ========================================================================== */
 #game-container {
     width: 100%;
-    max-width: 600px;
+    max-width: 900px; /* Expanded width to use screen space better */
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
 }
 
 h1 {
     text-align: center;
-    font-size: 2.5rem;
-    font-weight: 800;
-    letter-spacing: 2px;
-    background: linear-gradient(135deg, #a5b4fc, #6366f1);
+    font-size: 3.5rem;
+    font-weight: normal;
+    background: linear-gradient(135deg, #e0e7ff, #6366f1);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    padding-bottom: 5px;
-    border-bottom: 2px solid #1e293b;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #1e293b;
 }
 
 #game-status {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap; /* Wraps cleanly on mobile devices */
+    gap: 12px;
     background-color: var(--bg-card);
-    padding: 12px 20px;
+    padding: 16px 24px;
     border-radius: 12px;
-    font-weight: 600;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 #game-status p {
-    font-size: 1rem;
-    color: var(--text-muted);
+    font-size: 1.1rem;
+    color: var(--text-main);
 }
 
 #try-count {
-    color: var(--color-indigo);
-    font-size: 1.2rem;
-}
-
-/* Status action buttons */
-#giveup-btn {
-    background-color: rgba(239, 68, 68, 0.15);
-    color: #f87171;
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-#giveup-btn:hover {
-    background-color: var(--color-wrong);
-    color: white;
+    color: #a5b4fc;
+    font-size: 1.4rem;
 }
 
 /* ==========================================================================
-   3. INPUT FORM & SUGGESTIONS
+   3. HIGH-CONTRAST BUTTONS & LINKS
+   ========================================================================== */
+#game-status button, 
+.status-link-btn,
+#guess-form button {
+    font-family: 'Renogare', sans-serif;
+    font-size: 0.95rem;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: normal;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Forfeit Button - High Contrast Red solid background */
+#giveup-btn {
+    background-color: var(--color-wrong);
+    color: #ffffff;
+}
+
+#giveup-btn:hover {
+    background-color: #dc2626;
+    transform: translateY(-1px);
+}
+
+/* Rules Button - High Contrast Indigo solid background */
+#rules-btn {
+    background-color: var(--color-indigo);
+    color: #ffffff;
+}
+
+#rules-btn:hover {
+    background-color: var(--color-indigo-hover);
+    transform: translateY(-1px);
+}
+
+/* Discord Button - High Contrast Discord solid background */
+#discord-btn {
+    background-color: var(--color-discord);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+#discord-btn:hover {
+    background-color: #4752c4;
+    transform: translateY(-1px);
+}
+
+/* Share Button - High Contrast Green solid background */
+#share-btn {
+    display: none !important; /* Force le bouton à rester caché au début */
+    background-color: var(--color-correct);
+    color: #ffffff;
+}
+
+#share-btn:hover {
+    background-color: #059669;
+    transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   4. INPUT FORM & SUGGESTIONS
    ========================================================================== */
 #guess-form {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     width: 100%;
 }
 
 .input-container {
     position: relative;
-    flex: 1; /* Allows the input to occupy all remaining space */
+    flex: 1;
 }
 
 #element-input {
     width: 100%;
-    padding: 14px 18px;
+    padding: 16px 20px;
     border-radius: 10px;
-    border: 2px solid #2e3d5c;
+    border: 2px solid #334155;
     background-color: var(--bg-input);
     color: var(--text-main);
-    font-size: 1rem;
-    font-weight: 500;
+    font-size: 1.1rem;
     outline: none;
     transition: all 0.2s ease;
 }
 
 #element-input:focus {
-    border-color: var(--color-indigo);
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+    border-color: #818cf8;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.3);
 }
 
-#guess-form button {
-    padding: 14px 28px;
-    border-radius: 10px;
-    border: none;
-    background-color: var(--color-indigo);
-    color: white;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
+#guess-form button[type="submit"] {
+    background-color: #ffffff;
+    color: var(--bg-main);
+    font-size: 1.1rem;
+    padding: 16px 32px;
 }
 
-#guess-form button:hover {
-    background-color: var(--color-indigo-hover);
+#guess-form button[type="submit"]:hover {
+    background-color: #e2e8f0;
     transform: translateY(-1px);
 }
 
-#guess-form button:active {
-    transform: translateY(1px);
-}
-
-/* Custom suggestions box */
 .suggestions-box {
     position: absolute;
-    top: calc(100% + 5px); /* Spaced slightly below the input */
+    top: calc(100% + 6px);
     left: 0;
     right: 0;
     background-color: var(--bg-input);
-    border: 2px solid #2e3d5c;
+    border: 2px solid #334155;
     border-radius: 10px;
-    max-height: 200px;
+    max-height: 250px;
     overflow-y: auto;
     z-index: 1000;
     display: none;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
 }
 
 .suggestion-item {
-    padding: 12px 18px;
+    padding: 14px 20px;
     cursor: pointer;
     color: var(--text-main);
-    font-size: 0.95rem;
-    font-weight: 500;
+    font-size: 1rem;
     transition: background-color 0.15s ease;
 }
 
 .suggestion-item:hover,
 .suggestion-item.selected {
-    background-color: #2e3d5c;
-    color: white;
+    background-color: var(--color-indigo);
+    color: #ffffff;
 }
 
 /* ==========================================================================
-   4. END GAME SCREENS (VICTORY / FORFEIT)
+   5. GUESSES HISTORY TABLE
+   ========================================================================== */
+#guesses-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    margin-top: 12px;
+}
+
+#guesses-table th {
+    padding: 12px;
+    color: var(--text-muted);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+#guesses-table td {
+    padding: 18px 14px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.05rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+#guesses-table tr td:first-child {
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+}
+
+#guesses-table tr td:last-child {
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+.correct {
+    background-color: var(--color-correct) !important;
+    color: #ffffff;
+}
+
+.partial {
+    background-color: var(--color-partial) !important;
+    color: #000000; /* Dark text for readability on bright yellow */
+}
+
+.notTotallyWrong {
+    background-color: var(--color-not-totally-wrong) !important;
+    color: #ffffff;
+}
+
+.wrong {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 2px solid rgba(239, 68, 68, 0.4);
+}
+
+/* ==========================================================================
+   6. INTERACTIVE COMPONENTS (MODAL, TOAST, ANIMATIONS)
    ========================================================================== */
 @keyframes popIn {
     0% { transform: scale(0.96); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
 }
 
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+}
+
+.shake {
+    animation: shake 0.4s ease-in-out;
+    border-color: var(--color-wrong) !important;
+}
+
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--bg-card);
+    border: 2px solid var(--color-not-totally-wrong);
+    color: var(--text-main);
+    padding: 14px 28px;
+    border-radius: 8px;
+    font-weight: 600;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6);
+    z-index: 2000;
+    animation: popIn 0.3s ease-out;
+}
+
 .win-message, .lose-message {
     animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     border-radius: 14px;
-    padding: 24px;
+    padding: 32px;
     text-align: center;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    margin-bottom: 12px;
 }
 
 .win-message {
@@ -201,8 +340,8 @@ h1 {
 
 .win-message h2 {
     color: #34d399;
-    font-size: 1.6rem;
-    margin-bottom: 8px;
+    font-size: 2rem;
+    margin-bottom: 12px;
 }
 
 .lose-message {
@@ -212,92 +351,8 @@ h1 {
 
 .lose-message h2 {
     color: #f87171;
-    font-size: 1.6rem;
-    margin-bottom: 8px;
-}
-
-/* ==========================================================================
-   5. GUESSES HISTORY TABLE
-   ========================================================================== */
-#guesses-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 8px;
-    margin-top: 10px;
-}
-
-#guesses-table th {
-    padding: 8px 12px;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    text-align: center;
-}
-
-#guesses-table td {
-    padding: 14px 10px;
-    text-align: center;
-    font-weight: 600;
-    font-size: 0.95rem;
-    transition: all 0.2s ease;
-}
-
-/* Rounds rows borders individually */
-#guesses-table tr td:first-child {
-    border-top-left-radius: 10px;
-    border-bottom-left-radius: 10px;
-}
-
-#guesses-table tr td:last-child {
-    border-top-right-radius: 10px;
-    border-bottom-right-radius: 10px;
-}
-
-/* Verdict style modifiers */
-.correct {
-    background-color: var(--color-correct) !important;
-    color: white;
-}
-
-.partial {
-    background-color: var(--color-partial) !important;
-    color: white;
-}
-
-.notTotallyWrong {
-    background-color: var(--color-not-totally-wrong) !important;
-    color: white;
-}
-
-.wrong {
-    background-color: rgba(239, 68, 68, 0.2);
-    color: #f87171;
-    border: 1px solid rgba(239, 68, 68, 0.4);
-}
-
-#guesses-body tr {
-    animation: popIn 0.3s ease-out forwards;
-}
-
-/* ==========================================================================
-   6. RULES BUTTON & MODAL
-   ========================================================================== */
-#rules-btn {
-    background-color: rgba(99, 102, 241, 0.15);
-    color: #6366f1;
-    border: 1px solid rgba(99, 102, 241, 0.3);
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-#rules-btn:hover {
-    background-color: var(--color-indigo);
-    color: white;
+    font-size: 2rem;
+    margin-bottom: 12px;
 }
 
 .rules-modal {
@@ -306,7 +361,7 @@ h1 {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(11, 15, 25, 0.4);
+    background-color: rgba(4, 6, 12, 0.7);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     display: flex;
@@ -319,22 +374,23 @@ h1 {
 .rules-content {
     position: relative;
     background-color: var(--bg-card);
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-    max-width: 600px;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7);
+    max-width: 650px;
     max-height: 85vh;
     overflow-y: auto;
+    border: 1px solid #1e293b;
 }
 
 .close-rules-btn {
     position: absolute;
-    top: 15px;
+    top: 20px;
     right: 20px;
     background: none;
     border: none;
     color: var(--text-muted);
-    font-size: 2.2rem;
+    font-size: 2.5rem;
     font-weight: 300;
     line-height: 1;
     cursor: pointer;
@@ -343,44 +399,37 @@ h1 {
 
 .close-rules-btn:hover {
     color: var(--color-wrong);
-    transform: scale(1.15);
-}
-
-.close-rules-btn:active {
-    transform: scale(0.95);
+    transform: scale(1.1);
 }
 
 .rules-content h2 {
     color: var(--color-indigo);
-    font-size: 1.5rem;
-    margin-bottom: 15px;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
     text-align: center;
-    padding-right: 20px;
 }
 
 .rules-content p {
-    color: var(--text-main);
-    font-size: 1rem;
-    line-height: 1.5;
-    margin-bottom: 10px;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin-bottom: 14px;
 }
 
 .rules-content h4 {
-    color: var(--color-indigo);
-    font-size: 1.2rem;
-    margin-bottom: 8px;
-    margin-top: 16px;
+    color: #a5b4fc;
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+    margin-top: 24px;
 }
 
 .rules-content ul {
     list-style-type: disc;
-    padding-left: 20px;
-    margin-bottom: 10px;
+    padding-left: 24px;
+    margin-bottom: 14px;
 }
 
 .rules-content ul li {
-    color: var(--text-main);
-    font-size: 1rem;
-    line-height: 1.5;
-    margin-bottom: 6px;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin-bottom: 8px;
 }

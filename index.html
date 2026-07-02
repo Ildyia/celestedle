@@ -16,7 +16,10 @@
             <button id="share-btn">Share</button>
             <button id="giveup-btn">Forfeit</button>
             <button id="rules-btn">Rules</button>
+            <a href="https://discord.gg/3yqgMbuMbX" target="_blank" id="discord-btn" class="status-link-btn">Discord</a>
         </div>
+
+        <div id="message-container"></div>
 
         <form id="guess-form">
             <div class="input-container">
@@ -39,6 +42,17 @@
             <tbody id="guesses-body">
             </tbody>
         </table>
+    </div>
+
+    <div id="forfeit-modal" class="rules-modal" style="display: none;">
+        <div class="rules-content" style="max-width: 450px; text-align: center;">
+            <h2 style="color: var(--color-wrong);">Give up?</h2>
+            <p style="margin-bottom: 24px;">Are you sure you want to forfeit today's Celestedle and reveal the secret answer?</p>
+            <div style="display: flex; gap: 16px; justify-content: center;">
+                <button id="confirm-forfeit-btn" style="background-color: var(--color-wrong); color: white; padding: 12px 24px; border-radius: 8px; border: none; font-family: 'Renogare', sans-serif; cursor: pointer;">Yes, Forfeit</button>
+                <button id="cancel-forfeit-btn" style="background-color: var(--bg-input); color: white; padding: 12px 24px; border-radius: 8px; border: 1px solid #334155; font-family: 'Renogare', sans-serif; cursor: pointer;">Cancel</button>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
