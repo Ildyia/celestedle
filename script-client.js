@@ -4,15 +4,14 @@ document.addEventListener("DOMContentLoaded", () => {
     cassette: "cassette tape",
     tape: "cassette tape",
     tile: "tiles",
-    boosters: "booster",
-    bubble: "booster",
-    bubbles: "booster",
     crumble: "crumble block",
     crumbleblock: "crumble block",
     jumpthroughs: "jumpthrough",
     "blue booster": "green booster",
     piaf: "bird",
     oiseau: "bird",
+    "moving block": "move block",
+    zippers: "zip movers",
   };
 
   const aujourdHui = new Date().toLocaleDateString("sv-SE", {
@@ -97,6 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const suggestionsBox = document.getElementById("element-suggestions");
   const input = document.getElementById("element-input");
   let listeElementsOfficiels = [];
+  let indexSelectionne = -1;
 
   fetch("https://celestedle-api.onrender.com/api/elements")
     .then((res) => res.json())
@@ -109,6 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
     input.addEventListener("input", (e) => {
       const recherche = e.target.value.trim().toLowerCase();
       suggestionsBox.innerHTML = "";
+      indexSelectionne = -1; // Réinitialise la sélection à chaque nouvelle frappe
 
       if (recherche.length === 0) {
         suggestionsBox.style.display = "none";
@@ -117,20 +118,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const suggestionsAFiltrer = new Set();
 
-      // RÈGLE 1 : Si on tape "piaf" (synonyme), on ne propose que "Bird"
-      if (synonymes[recherche]) {
-        const officiel = synonymes[recherche];
-        suggestionsAFiltrer.add(
-          officiel.charAt(0).toUpperCase() + officiel.slice(1),
-        );
-      } else {
-        // RÈGLE 2 : Si on tape "bird", on ne propose que les officiels (pas les synonymes)
-        listeElementsOfficiels.forEach((nom) => {
-          if (nom.toLowerCase().includes(recherche)) {
-            suggestionsAFiltrer.add(nom.charAt(0).toUpperCase() + nom.slice(1));
-          }
-        });
-      }
+      // 1. RÈGLE 1 : Recherche progressive sur le début d'un synonyme (ex: "pi" pour "piaf")
+      Object.keys(synonymes).forEach((syn) => {
+        if (syn.startsWith(recherche)) {
+          const officiel = synonymes[syn];
+          suggestionsAFiltrer.add(
+            officiel.charAt(0).toUpperCase() + officiel.slice(1),
+          );
+        }
+      });
+
+      // 2. RÈGLE 2 : Recherche sur les éléments officiels (ex: "bird")
+      listeElementsOfficiels.forEach((nom) => {
+        if (nom.toLowerCase().includes(recherche)) {
+          suggestionsAFiltrer.add(nom.charAt(0).toUpperCase() + nom.slice(1));
+        }
+      });
 
       // Rendu des suggestions trouvées
       if (suggestionsAFiltrer.size > 0) {
@@ -140,10 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
           div.textContent = mot;
 
           div.addEventListener("click", () => {
-            input.value = mot;
-            suggestionsBox.innerHTML = "";
-            suggestionsBox.style.display = "none";
-            input.focus();
+            validerSuggestion(mot);
           });
 
           suggestionsBox.appendChild(div);
@@ -153,6 +153,48 @@ document.addEventListener("DOMContentLoaded", () => {
         suggestionsBox.style.display = "none";
       }
     });
+
+    // Navigation au clavier (Flèches Haut/Bas + Entrée)
+    input.addEventListener("keydown", (e) => {
+      const items = suggestionsBox.querySelectorAll(".suggestion-item");
+      if (items.length === 0) return;
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        indexSelectionne++;
+        if (indexSelectionne >= items.length) indexSelectionne = 0;
+        mettreAJourSelection(items);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        indexSelectionne--;
+        if (indexSelectionne < 0) indexSelectionne = items.length - 1;
+        mettreAJourSelection(items);
+      } else if (e.key === "Enter") {
+        if (indexSelectionne > -1 && items[indexSelectionne]) {
+          e.preventDefault();
+          validerSuggestion(items[indexSelectionne].textContent);
+        }
+      }
+    });
+
+    function mettreAJourSelection(items) {
+      items.forEach((item, idx) => {
+        if (idx === indexSelectionne) {
+          item.classList.add("selected");
+          item.scrollIntoView({ block: "nearest" });
+        } else {
+          item.classList.remove("selected");
+        }
+      });
+    }
+
+    function validerSuggestion(mot) {
+      input.value = mot;
+      suggestionsBox.innerHTML = "";
+      suggestionsBox.style.display = "none";
+      indexSelectionne = -1;
+      input.focus();
+    }
 
     // Fermer la boîte si on clique ailleurs sur la page
     document.addEventListener("click", (e) => {

@@ -362,6 +362,11 @@ h1 {
     margin-bottom: 10px;
 }
 
+.suggestion-item.selected {
+    background-color: #2e3d5c;
+    color: white;
+}
+
 .rules-content h4 {
     color: var(--color-indigo);
     font-size: 1.2rem;
