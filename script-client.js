@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     oiseau: "bird",
     "moving block": "move block",
     zippers: "zip movers",
+    "cristal spinner": "crystal spinner",
   };
 
   const aujourdHui = new Date().toLocaleDateString("sv-SE", {
@@ -301,7 +302,8 @@ document.addEventListener("DOMContentLoaded", () => {
             <li><strong>Environments</strong>: These are the entities that does not affect the gameplay, such as Binoculars or Breakable Walls.</li>
             <li><strong>Mechanics</strong>: These are the entities that affects the gameplay, such as crumble blocks or core switchs.</li>
             <li><strong>Movement and propulsion :</strong> These are the entities that the player will use to gain speed or to move in the room, such as moving block or boosters</li>
-        </ul>
+            <li><strong>Hazards</strong>: These are the entities that will kill the player if touched, such as spikes or spinners.</li>
+            </ul>
 
         <h4>And the colors ?</h4>
         <ul>
