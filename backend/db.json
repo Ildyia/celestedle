@@ -8,7 +8,7 @@
   "strawberry": { "type": "collectibles", "lieu": ["city", "site", "resort", "ridge", "temple", "summit", "core"], "couleur": ["red"], "hitbox": "square" },
   "golden strawberry": { "type": "collectibles", "lieu": ["city", "site", "resort", "ridge", "temple", "summit", "core", "farewell"], "couleur": ["yellow"], "hitbox": "square" },
   "winged strawberry": { "type": "collectibles", "lieu": ["city", "site", "resort", "ridge", "temple", "summit"], "couleur": ["red", "white"], "hitbox": "square" },
-  "crystal heart": { "type": "collectibles", "lieu": ["city", "site", "resort", "ridge", "temple", "summit", "core", "farewell"], "couleur": ["blue", "yellow", "red"], "hitbox": "square" },
+  "crystal heart": { "type": "collectibles", "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "core"], "couleur": ["blue", "yellow", "red"], "hitbox": "square" },
   "golden winged strawberry": { "type": "collectibles", "lieu": ["city"], "couleur": ["yellow", "white"], "hitbox": "square" },
   "strawberry shard": { "type": "collectibles", "lieu": ["site", "ridge", "temple", "summit"], "couleur": ["yellow"], "hitbox": "square" },
   "moon berry": { "type": "collectibles", "lieu": ["farewell"], "couleur": ["green"], "hitbox": "square" },
