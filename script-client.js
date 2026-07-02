@@ -1,7 +1,9 @@
 document.addEventListener("DOMContentLoaded", () => {
   App.init();
 });
-
+const API_BASE_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+  ? "https://celestedle-api.onrender.com"
+  : "https://celestedle-api.mizkyosia.fr";
 const App = {
   // --- Constants & State ---
   synonyms: {
@@ -24,7 +26,7 @@ const App = {
   selectedIndex: -1,
   nodes: {},
 
-  // --- Core Lifecycle ---
+  // ---- Core Lifecycle ----
   init() {
     this.cacheDOM();
     this.checkDailyReset();
@@ -100,7 +102,7 @@ const App = {
   },
 
   checkApplicationVersion() {
-    fetch("https://celestedle-api.onrender.com/secret-version")
+    fetch("${API_BASE_URL}/secret-version")
       .then((res) => res.json())
       .then((data) => {
         const savedVersion = localStorage.getItem("celestedle_version");
@@ -131,7 +133,7 @@ const App = {
   },
 
   fetchOfficialElements() {
-    fetch("https://celestedle-api.onrender.com/api/elements")
+    fetch("${API_BASE_URL}/api/elements")
       .then((res) => res.json())
       .then((elements) => {
         this.officialElementsList = elements;
@@ -234,7 +236,7 @@ const App = {
     if (this.synonyms[choice]) choice = this.synonyms[choice];
     if (!choice) return;
 
-    fetch("https://celestedle-api.onrender.com/api/valider", {
+    fetch("${API_BASE_URL}/api/valider", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ choix: choice }),
@@ -288,7 +290,7 @@ const App = {
   },
 
   handleForfeit() {
-    fetch("https://celestedle-api.onrender.com/api/getSecretWord", {
+    fetch("${API_BASE_URL}/api/getSecretWord", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
     })
@@ -407,7 +409,7 @@ window.getSecretWordPlzUwU = function () {
   const adminPassword = prompt("Please enter admin password :");
   if (!adminPassword) return;
 
-  fetch("https://celestedle-api.onrender.com/api/admin/verifier-key", {
+  fetch("${API_BASE_URL}/api/admin/verifier-key", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ key: adminPassword }),
@@ -417,7 +419,7 @@ window.getSecretWordPlzUwU = function () {
       return res.json();
     })
     .then(() => {
-      fetch("https://celestedle-api.onrender.com/api/getSecretWord", {
+      fetch("${API_BASE_URL}/api/getSecretWord", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       })
@@ -432,7 +434,7 @@ window.forceReset = function () {
   const adminPassword = prompt("Please enter admin password :");
   if (!adminPassword) return;
 
-  fetch("https://celestedle-api.onrender.com/api/admin/verifier-key", {
+  fetch("${API_BASE_URL}/api/admin/verifier-key", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ key: adminPassword }),
@@ -455,7 +457,7 @@ window.randomSecret = function (reset = false) {
   let newHash = Math.floor(Math.random() * 1000000000);
   if (reset) newHash = null;
 
-  fetch("https://celestedle-api.onrender.com/api/admin/random-Hash", {
+  fetch("${API_BASE_URL}/api/admin/random-Hash", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ key: adminPassword, newHash: newHash }),
