@@ -4,35 +4,32 @@ on:
   push:
     branches:
       - main
-      - staging
+      - betatest
 
 jobs:
-  deploy:
+  deploy-prod:
+    if: github.ref_name == 'main'
     runs-on: [self-hosted, linux, cpu]
+    steps:
+      - uses: actions/checkout@v4
 
-  steps:
-    - uses: actions/checkout@v4
+      - name: Check Docker installation
+        run: command -v docker
 
-    - name: Check Docker installation
-      run: |
-        command -v docker
-
-    - name: Setup .env file
-      run: |
-        if [ "${{ github.ref_name }}" = "main" ]; then
+      - name: Setup .env file
+        run: |
           cat > .env <<EOF
           PORT=${{ secrets.PROD_PORT }}
           ADMIN_PASSWORD=${{ secrets.PROD_ADMIN_PASSWORD }}
-          API_URL=${{ secrets.PROD_API_URL }}
-        EOF
-        else
-          cat > .env <<EOF
-          PORT=${{ secrets.STAGING_PORT }}
-          ADMIN_PASSWORD=${{ secrets.STAGING_ADMIN_PASSWORD }}
-          API_URL=${{ secrets.STAGING_API_URL }}
-        EOF
-        fi
-     
-    - name: Deploy
-      run: |
-        docker compose up -d --build --force-recreate
+          API_URL=https://celestedle-api.mizkyosia.fr/
+          EOF
+
+      - name: Deploy Production
+        run: docker compose up -d --build --force-recreate
+
+  deploy-staging:
+    if: github.ref_name == 'betatest'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deployment
+        run: curl -X GET "${{ secrets.RENDER_DEPLOY_HOOK }}"
