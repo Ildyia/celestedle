@@ -57,7 +57,7 @@ function normalizeMetaList(data) {
 app.post("/api/admin/verifier-key", (req, res) => {
   const { key } = req.body;
   if (key !== adminKey) {
-    return res.status(403).json({ error: "Incorrect password" });
+    return res.status(403).json({ error: "Incorrect passworrrrd" });
   }
   res.json({ success: true, message: "Access authorized" });
 });
