@@ -68,5 +68,5 @@
  "temple torch": {"type":"environment", "lieu": ["temple"], "couleur": ["yellow, blue"], "hitbox": "square" },
  "bridge": {"type":"environment", "lieu": ["prologue"], "couleur": ["grey"], "hitbox": "rectangular" },
  "conveyor belt/ice wall": {"type":"movement & propulsion", "lieu": ["core", "farewell"], "couleur": ["grey", "blue"], "hitbox": "rectangular" },
- "flutterbird": {"type":"environment", "lieu": ["prologue"], "couleur": ["blue", "pink", "yellow"], "hitbox": "none" }
+ "flutterbird":{"type":"environment", "lieu": ["prologue"], "couleur": ["blue", "pink", "yellow"], "hitbox": "none" }
 }
