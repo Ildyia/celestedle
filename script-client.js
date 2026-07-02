@@ -102,7 +102,7 @@ const App = {
   },
 
   checkApplicationVersion() {
-    fetch("${API_BASE_URL}/secret-version")
+    fetch(`${API_BASE_URL}/secret-version`)
       .then((res) => res.json())
       .then((data) => {
         const savedVersion = localStorage.getItem("celestedle_version");
@@ -133,7 +133,7 @@ const App = {
   },
 
   fetchOfficialElements() {
-    fetch("${API_BASE_URL}/api/elements")
+    fetch(`${API_BASE_URL}/api/elements`)
       .then((res) => res.json())
       .then((elements) => {
         this.officialElementsList = elements;
@@ -236,7 +236,7 @@ const App = {
     if (this.synonyms[choice]) choice = this.synonyms[choice];
     if (!choice) return;
 
-    fetch("${API_BASE_URL}/api/valider", {
+    fetch(`${API_BASE_URL}/api/valider`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ choix: choice }),
@@ -290,7 +290,7 @@ const App = {
   },
 
   handleForfeit() {
-    fetch("${API_BASE_URL}/api/getSecretWord", {
+    fetch(`${API_BASE_URL}/api/getSecretWord`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
     })
@@ -409,7 +409,7 @@ window.getSecretWordPlzUwU = function () {
   const adminPassword = prompt("Please enter admin password :");
   if (!adminPassword) return;
 
-  fetch("${API_BASE_URL}/api/admin/verifier-key", {
+  fetch(`${API_BASE_URL}/api/admin/verifier-key`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ key: adminPassword }),
@@ -419,7 +419,7 @@ window.getSecretWordPlzUwU = function () {
       return res.json();
     })
     .then(() => {
-      fetch("${API_BASE_URL}/api/getSecretWord", {
+      fetch(`${API_BASE_URL}/api/getSecretWord`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       })
@@ -434,7 +434,7 @@ window.forceReset = function () {
   const adminPassword = prompt("Please enter admin password :");
   if (!adminPassword) return;
 
-  fetch("${API_BASE_URL}/api/admin/verifier-key", {
+  fetch(`${API_BASE_URL}/api/admin/verifier-key`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ key: adminPassword }),
@@ -457,7 +457,7 @@ window.randomSecret = function (reset = false) {
   let newHash = Math.floor(Math.random() * 1000000000);
   if (reset) newHash = null;
 
-  fetch("${API_BASE_URL}/api/admin/random-Hash", {
+  fetch(`${API_BASE_URL}/api/admin/random-Hash`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ key: adminPassword, newHash: newHash }),

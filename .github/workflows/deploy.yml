@@ -10,6 +10,7 @@ jobs:
   deploy-prod:
     if: github.ref_name == 'main'
     runs-on: [self-hosted, linux]
+    environment: celestedleEnv
     steps:
       - uses: actions/checkout@v4
 
@@ -18,11 +19,9 @@ jobs:
 
       - name: Setup .env file
         run: |
-          cat > .env <<EOF
-          PORT=${{ secrets.PROD_PORT }}
-          ADMIN_PASSWORD=${{ secrets.PROD_ADMIN_PASSWORD }}
-          API_URL=https://celestedle-api.mizkyosia.fr/
-          EOF
+          echo "PORT=${{ secrets.PORT }}" > .env
+          echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> .env
+          echo "API_URL=https://celestedle-api.mizkyosia.fr/" >> .env
 
       - name: Deploy Production
         run: docker compose up -d --build --force-recreate
@@ -30,6 +29,7 @@ jobs:
   deploy-staging:
     if: github.ref_name == 'betatest'
     runs-on: ubuntu-latest
+    environment: celestedleEnv
     steps:
       - name: Trigger Render Deployment
         run: curl -X GET "${{ secrets.RENDER_DEPLOY_HOOK }}"

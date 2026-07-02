@@ -14,7 +14,7 @@ const adminKey = process.env.ADMIN_PASSWORD;
 
 let secretForce = null;
 let secretVersion = Date.now();
-let globalSeedHash = 20250202; // Used as the base seed value for dynamic daily selections
+let globalSeedHash = 20250203; // Used as the base seed value for dynamic daily selections
 
 // --- Helper Functions ---
 
@@ -57,7 +57,7 @@ function normalizeMetaList(data) {
 app.post("/api/admin/verifier-key", (req, res) => {
   const { key } = req.body;
   if (key !== adminKey) {
-    return res.status(403).json({ error: "Incorrect password" });
+    return res.status(403).json({ error: "Incorrect passworrrrd" });
   }
   res.json({ success: true, message: "Access authorized" });
 });
@@ -72,7 +72,7 @@ app.post("/api/admin/random-Hash", (req, res) => {
 
   // Restore defaults if explicitly passed a null hash value
   if (newHash === null) {
-    globalSeedHash = 20250202;
+    globalSeedHash = 20250203;
     secretVersion = Date.now();
     return res.json({
       message: "The seed hash has been reset to the system default configuration.",
@@ -185,6 +185,12 @@ app.post("/api/valider", (req, res) => {
 });
 
 // --- Server Lifecycle Initialization ---
+app.get("/api/version", (req, res) => {
+  res.json({
+    status: "online",
+    environment: process.env.API_URL?.includes("mizkyosia") ? "Production (VPS)" : "Beta-test (Render)"
+  });
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server successfully started running on port ${PORT}`);
