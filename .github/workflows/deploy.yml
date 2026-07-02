@@ -19,7 +19,7 @@ jobs:
       - name: Setup .env file
         run: |
           cat > .env <<EOF
-          PORT=${{ secrets.PROD_PORT }}
+          PORT=${{ secrets.PORT }}
           ADMIN_PASSWORD=${{ secrets.PROD_ADMIN_PASSWORD }}
           API_URL=https://celestedle-api.mizkyosia.fr/
           EOF
