@@ -14,7 +14,7 @@ const adminKey = process.env.ADMIN_PASSWORD;
 
 let secretForce = null;
 let secretVersion = Date.now();
-let globalSeedHash = 20250202; // Used as the base seed value for dynamic daily selections
+let globalSeedHash = 20250203; // Used as the base seed value for dynamic daily selections
 
 // --- Helper Functions ---
 
