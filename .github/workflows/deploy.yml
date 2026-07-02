@@ -20,7 +20,7 @@ jobs:
         run: |
           cat > .env <<EOF
           PORT=${{ secrets.PORT }}
-          ADMIN_PASSWORD=${{ secrets.PROD_ADMIN_PASSWORD }}
+          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
           API_URL=https://celestedle-api.mizkyosia.fr/
           EOF
 
