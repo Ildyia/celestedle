@@ -4,25 +4,32 @@ on:
   push:
     branches:
       - main
+      - betatest
 
 jobs:
-  deploy:
-    runs-on: [self-hosted, linux, cpu ]
-
+  deploy-prod:
+    if: github.ref_name == 'main'
+    runs-on: [self-hosted, linux, cpu]
     steps:
       - uses: actions/checkout@v4
 
       - name: Check Docker installation
-        run: |
-          command -v docker
+        run: command -v docker
 
       - name: Setup .env file
         run: |
           cat > .env <<EOF
-          PORT=${{ secrets.PORT }}
-          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+          PORT=${{ secrets.PROD_PORT }}
+          ADMIN_PASSWORD=${{ secrets.PROD_ADMIN_PASSWORD }}
+          API_URL=https://celestedle-api.mizkyosia.fr/
           EOF
-      
-      - name: Deploy
-        run: |
-          docker compose up -d --build --force-recreate
+
+      - name: Deploy Production
+        run: docker compose up -d --build --force-recreate
+
+  deploy-staging:
+    if: github.ref_name == 'betatest'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deployment
+        run: curl -X GET "${{ secrets.RENDER_DEPLOY_HOOK }}"
