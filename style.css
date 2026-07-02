@@ -251,7 +251,7 @@ h1, h2, h3, h4, th, .btn-celeste, #try-count, .discord-sidebar-link {
 #guesses-table tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
 
 .correct { background-color: var(--color-correct) !important; color: #ffffff; }
-.partial { background-color: var(--color-partial) !important; color: #000000; }
+.partial { background-color: var(--color-partial) !important; color: #ffffff; }
 .notTotallyWrong { background-color: var(--color-not-totally-wrong) !important; color: #ffffff; }
 .wrong { background-color: rgba(239, 68, 68, 0.12); color: #f87171; border: 2px solid rgba(239, 68, 68, 0.3); }
 
