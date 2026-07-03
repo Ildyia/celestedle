@@ -13,7 +13,9 @@ const officialElementsList = Object.keys(database).sort();
 const adminKey = process.env.ADMIN_PASSWORD;
 
 let secretForce = null;
-let secretVersion = Date.now();
+let secretVersion = new Date().toLocaleDateString("sv-SE", {
+  timeZone: "Europe/Paris",
+});
 let globalSeedHash = 20250204; // Used as the base seed value for dynamic daily selections
 
 // --- Helper Functions ---
