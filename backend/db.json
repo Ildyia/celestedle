@@ -38,7 +38,7 @@
   "zip movers": { "type": "movement & propulsion", "lieu": ["city", "summit", "farewell"], "couleur": ["grey", "blue"], "hitbox": "rectangular" },
   "key gate": { "type": "mechanics", "lieu": ["resort", "temple", "summit", "farewell"], "couleur": ["grey"], "hitbox": "rectangular" },
   "electricity box": { "type": "mechanics", "lieu": ["farewell"], "couleur": ["grey"], "hitbox": "rectangular" },
-  "checkpoint flag": { "type": "environment", "lieu": ["summit"], "couleur": ["grey", "pink"], "hitbox": "rectangular" },
+  "checkpoint flag": { "type": "environment", "lieu": ["summit"], "couleur": ["grey", "pink"], "hitbox": "square" },
   "intro car": { "type": "environment", "lieu": ["prologue", "core", "farewell"], "couleur": ["brown"], "hitbox": "rectangular" },
   "jumpthrough": { "type": "environment", "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell"], "couleur": ["brown", "grey"], "hitbox": "rectangular" },
   "key": { "type": "collectibles", "lieu": ["resort", "temple", "summit", "farewell"], "couleur": ["yellow"], "hitbox": "square" },
@@ -68,5 +68,6 @@
  "temple torch": {"type":"environment", "lieu": ["temple"], "couleur": ["yellow, blue"], "hitbox": "square" },
  "bridge": {"type":"environment", "lieu": ["prologue"], "couleur": ["grey"], "hitbox": "rectangular" },
  "conveyor belt/ice wall": {"type":"movement & propulsion", "lieu": ["core", "farewell"], "couleur": ["grey", "blue"], "hitbox": "rectangular" },
- "flutterbird":{"type":"environment", "lieu": ["prologue"], "couleur": ["blue", "pink", "yellow"], "hitbox": "none" }
+ "flutterbird":{"type":"environment", "lieu": ["prologue"], "couleur": ["blue", "pink", "yellow"], "hitbox": "none" },
+ "gems":{"type":"collectibles", "lieu":["summit"], "couleur":["blue", "green", "yellow", "purple", "white"], "hitbox":"square"}
 }
