@@ -21,7 +21,6 @@ const App = {
     "moving block": "move block",
     zippers: "zip movers",
     "cristal spinner": "crystal spinner",
-<<<<<<< HEAD
     "electricity box": "power box",
     "lock gate": "key gate",
     "lock": "key gate",
@@ -34,9 +33,6 @@ const App = {
     "dash refill": "refill",
     "dash crystal": "refill",
     "key gate": "lock"
-=======
-    "strawberry shard": "strawberry seed",
->>>>>>> 665bdf4e1b180cf62692af57f112783b43db425a
   },
   officialElementsList: [],
   historyLog: [],
