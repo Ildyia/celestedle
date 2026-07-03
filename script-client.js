@@ -22,8 +22,6 @@ const App = {
     zippers: "zip movers",
     "cristal spinner": "crystal spinner",
     "electricity box": "power box",
-    "lock gate": "key gate",
-    "lock": "key gate",
     "electricity":"lightning", 
     "button": "dash switch",
     "huge mess switch": "clutter switch",
