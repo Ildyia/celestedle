@@ -1,9 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
   App.init();
 });
-const API_BASE_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-  ? "https://celestedle-api.onrender.com"
-  : "https://celestedle-api.mizkyosia.fr";
+const API_BASE_URL =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1"
+    ? "https://celestedle-api.onrender.com"
+    : "https://celestedle-api.mizkyosia.fr";
 const App = {
   // --- Constants & State ---
   synonyms: {
@@ -19,6 +21,7 @@ const App = {
     "moving block": "move block",
     zippers: "zip movers",
     "cristal spinner": "crystal spinner",
+    "strawberry shard": "strawberry seed",
   },
   officialElementsList: [],
   historyLog: [],
@@ -48,42 +51,56 @@ const App = {
       tableBody: document.getElementById("guesses-body"),
       forfeitModal: document.getElementById("forfeit-modal"),
       confirmForfeitBtn: document.getElementById("confirm-forfeit-btn"),
-      cancelForfeitBtn: document.getElementById("cancel-forfeit-btn")
+      cancelForfeitBtn: document.getElementById("cancel-forfeit-btn"),
     };
   },
 
   bindEvents() {
     if (this.nodes.input && this.nodes.suggestionsBox) {
-      this.nodes.input.addEventListener("input", (e) => this.handleSuggestionsFilter(e));
-      this.nodes.input.addEventListener("keydown", (e) => this.handleSuggestionsKeyboard(e));
+      this.nodes.input.addEventListener("input", (e) =>
+        this.handleSuggestionsFilter(e),
+      );
+      this.nodes.input.addEventListener("keydown", (e) =>
+        this.handleSuggestionsKeyboard(e),
+      );
     }
 
     if (this.nodes.form) {
-      this.nodes.form.addEventListener("submit", (e) => this.handleFormSubmit(e));
+      this.nodes.form.addEventListener("submit", (e) =>
+        this.handleFormSubmit(e),
+      );
     }
 
     if (this.nodes.rulesBtn) {
-      this.nodes.rulesBtn.addEventListener("click", () => this.renderRulesModal());
+      this.nodes.rulesBtn.addEventListener("click", () =>
+        this.renderRulesModal(),
+      );
     }
 
     if (this.nodes.giveupBtn) {
       this.nodes.giveupBtn.addEventListener("click", () => {
-        if (this.nodes.forfeitModal) this.nodes.forfeitModal.style.display = "flex";
+        if (this.nodes.forfeitModal)
+          this.nodes.forfeitModal.style.display = "flex";
       });
     }
 
     if (this.nodes.cancelForfeitBtn) {
       this.nodes.cancelForfeitBtn.addEventListener("click", () => {
-        if (this.nodes.forfeitModal) this.nodes.forfeitModal.style.display = "none";
+        if (this.nodes.forfeitModal)
+          this.nodes.forfeitModal.style.display = "none";
       });
     }
 
     if (this.nodes.confirmForfeitBtn) {
-      this.nodes.confirmForfeitBtn.addEventListener("click", () => this.handleForfeit());
+      this.nodes.confirmForfeitBtn.addEventListener("click", () =>
+        this.handleForfeit(),
+      );
     }
 
     if (this.nodes.shareBtn) {
-      this.nodes.shareBtn.addEventListener("click", () => this.handleShareScore());
+      this.nodes.shareBtn.addEventListener("click", () =>
+        this.handleShareScore(),
+      );
     }
 
     document.addEventListener("click", (e) => this.handleOutsideClick(e));
@@ -91,12 +108,23 @@ const App = {
 
   // --- State & Storage Sync ---
   checkDailyReset() {
-    const todayDate = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Paris" });
+    const todayDate = new Date().toLocaleDateString("sv-SE", {
+      timeZone: "Europe/Paris",
+    });
     const savedDate = localStorage.getItem("celestedle_date");
 
     if (savedDate !== todayDate) {
-      const keysToRemove = ["tries", "gameover", "status", "history", "version", "solution"];
-      keysToRemove.forEach(key => localStorage.removeItem(`celestedle_${key}`));
+      const keysToRemove = [
+        "tries",
+        "gameover",
+        "status",
+        "history",
+        "version",
+        "solution",
+      ];
+      keysToRemove.forEach((key) =>
+        localStorage.removeItem(`celestedle_${key}`),
+      );
       localStorage.setItem("celestedle_date", todayDate);
     }
   },
@@ -108,7 +136,9 @@ const App = {
         const savedVersion = localStorage.getItem("celestedle_version");
         if (savedVersion && savedVersion !== String(data.secretVersion)) {
           const keysToRemove = ["tries", "gameover", "status", "history"];
-          keysToRemove.forEach(key => localStorage.removeItem(`celestedle_${key}`));
+          keysToRemove.forEach((key) =>
+            localStorage.removeItem(`celestedle_${key}`),
+          );
           localStorage.setItem("celestedle_version", data.secretVersion);
           location.reload();
         } else if (!savedVersion) {
@@ -123,7 +153,8 @@ const App = {
       this.nodes.tryCountSpan.textContent = this.tryCount;
     }
 
-    this.historyLog = JSON.parse(localStorage.getItem("celestedle_history")) || [];
+    this.historyLog =
+      JSON.parse(localStorage.getItem("celestedle_history")) || [];
     this.historyLog.forEach((data) => this.addTableRow(data));
 
     const isGameOver = localStorage.getItem("celestedle_gameover") === "true";
@@ -157,7 +188,9 @@ const App = {
     Object.keys(this.synonyms).forEach((syn) => {
       if (syn.startsWith(query)) {
         const officialName = this.synonyms[syn];
-        matchingSuggestions.add(officialName.charAt(0).toUpperCase() + officialName.slice(1));
+        matchingSuggestions.add(
+          officialName.charAt(0).toUpperCase() + officialName.slice(1),
+        );
       }
     });
 
@@ -182,7 +215,8 @@ const App = {
   },
 
   handleSuggestionsKeyboard(e) {
-    const items = this.nodes.suggestionsBox.querySelectorAll(".suggestion-item");
+    const items =
+      this.nodes.suggestionsBox.querySelectorAll(".suggestion-item");
     if (items.length === 0) return;
 
     if (e.key === "ArrowDown") {
@@ -223,7 +257,10 @@ const App = {
   },
 
   handleOutsideClick(e) {
-    if (e.target !== this.nodes.input && e.target !== this.nodes.suggestionsBox) {
+    if (
+      e.target !== this.nodes.input &&
+      e.target !== this.nodes.suggestionsBox
+    ) {
       this.nodes.suggestionsBox.style.display = "none";
     }
   },
@@ -231,7 +268,9 @@ const App = {
   // --- Handlers & Game Actions ---
   handleFormSubmit(e) {
     e.preventDefault();
-    let choice = this.nodes.input ? this.nodes.input.value.trim().toLowerCase() : "";
+    let choice = this.nodes.input
+      ? this.nodes.input.value.trim().toLowerCase()
+      : "";
 
     if (this.synonyms[choice]) choice = this.synonyms[choice];
     if (!choice) return;
@@ -250,10 +289,14 @@ const App = {
 
         if (savedVersion && savedVersion !== String(data.secretVersion)) {
           const keysToRemove = ["tries", "gameover", "status", "history"];
-          keysToRemove.forEach(key => localStorage.removeItem(`celestedle_${key}`));
+          keysToRemove.forEach((key) =>
+            localStorage.removeItem(`celestedle_${key}`),
+          );
           localStorage.setItem("celestedle_version", data.secretVersion);
-          
-          this.showToastNotification("The secret word has been changed by an admin ! Your tries have been reset !");
+
+          this.showToastNotification(
+            "The secret word has been changed by an admin ! Your tries have been reset !",
+          );
           setTimeout(() => location.reload(), 2500);
           return;
         }
@@ -264,14 +307,19 @@ const App = {
 
         this.tryCount++;
         localStorage.setItem("celestedle_tries", this.tryCount);
-        if (this.nodes.tryCountSpan) this.nodes.tryCountSpan.textContent = this.tryCount;
+        if (this.nodes.tryCountSpan)
+          this.nodes.tryCountSpan.textContent = this.tryCount;
 
         this.historyLog.push(data);
-        localStorage.setItem("celestedle_history", JSON.stringify(this.historyLog));
+        localStorage.setItem(
+          "celestedle_history",
+          JSON.stringify(this.historyLog),
+        );
 
         this.addTableRow(data);
         if (this.nodes.input) this.nodes.input.value = "";
-        if (this.nodes.suggestionsBox) this.nodes.suggestionsBox.style.display = "none";
+        if (this.nodes.suggestionsBox)
+          this.nodes.suggestionsBox.style.display = "none";
 
         if (data.verdict.isCorrect) {
           confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
@@ -301,7 +349,8 @@ const App = {
       .then((data) => {
         localStorage.setItem("celestedle_gameover", "true");
         localStorage.setItem("celestedle_status", "lose");
-        if (data.secretElement) localStorage.setItem("celestedle_solution", data.secretElement);
+        if (data.secretElement)
+          localStorage.setItem("celestedle_solution", data.secretElement);
         location.reload();
       })
       .catch((err) => {
@@ -318,7 +367,12 @@ const App = {
       ? `Celestedle of the day in ${this.tryCount} tries\n\n`
       : `Celestedle of the day : Forfeit ❌ (${this.tryCount} tries)\n\n`;
 
-    const scoreToEmojiMap = { correct: "🟩", partial: "🟨", notTotallyWrong: "🟧", wrong: "🟥" };
+    const scoreToEmojiMap = {
+      correct: "🟩",
+      partial: "🟨",
+      notTotallyWrong: "🟧",
+      wrong: "🟥",
+    };
 
     this.historyLog.forEach((tryData) => {
       if (!tryData.verdict) return;
@@ -333,7 +387,9 @@ const App = {
       .writeText(shareOutputText + "\nhttps://celestedle.vercel.app/")
       .then(() => {
         this.nodes.shareBtn.textContent = "Copied !";
-        setTimeout(() => { this.nodes.shareBtn.textContent = "Share result"; }, 2000);
+        setTimeout(() => {
+          this.nodes.shareBtn.textContent = "Share result";
+        }, 2000);
       })
       .catch((err) => console.error("Could not write clip path data:", err));
   },
@@ -350,7 +406,12 @@ const App = {
   renderEndGameScreen() {
     this.nodes.form.style.display = "none";
     if (this.nodes.giveupBtn) this.nodes.giveupBtn.style.display = "none";
-    if (this.nodes.shareBtn) this.nodes.shareBtn.style.setProperty("display", "inline-flex", "important");
+    if (this.nodes.shareBtn)
+      this.nodes.shareBtn.style.setProperty(
+        "display",
+        "inline-flex",
+        "important",
+      );
 
     const gameStatus = localStorage.getItem("celestedle_status");
     const isWin = gameStatus !== "lose";
@@ -360,7 +421,8 @@ const App = {
     const title = isWin ? "GG ! Victory ! 🎉" : "Nice try... Aba(n)ddon ! ❌";
 
     const solution = localStorage.getItem("celestedle_solution") || "Unknown";
-    const formattedSolution = solution.charAt(0).toUpperCase() + solution.slice(1);
+    const formattedSolution =
+      solution.charAt(0).toUpperCase() + solution.slice(1);
 
     const matchSummary = isWin
       ? `You found the secret element in <strong>${this.tryCount}</strong> tries.`
@@ -374,7 +436,7 @@ const App = {
   renderRulesModal() {
     const sidebar = document.getElementById("rules-sidebar");
     if (!sidebar) return;
-    
+
     if (sidebar.style.display === "none") {
       sidebar.style.display = "block";
     } else {
@@ -394,14 +456,20 @@ const App = {
     };
 
     const formattedName = data.nom.charAt(0).toUpperCase() + data.nom.slice(1);
-    row.appendChild(createCell(formattedName, data.verdict?.isCorrect ? "correct" : "wrong"));
+    row.appendChild(
+      createCell(formattedName, data.verdict?.isCorrect ? "correct" : "wrong"),
+    );
     row.appendChild(createCell(data.valeurs?.type || "-", data.verdict?.type));
     row.appendChild(createCell(data.valeurs?.lieu || "-", data.verdict?.lieu));
-    row.appendChild(createCell(data.valeurs?.couleur || "-", data.verdict?.couleur));
-    row.appendChild(createCell(data.valeurs?.hitbox || "-", data.verdict?.hitbox));
+    row.appendChild(
+      createCell(data.valeurs?.couleur || "-", data.verdict?.couleur),
+    );
+    row.appendChild(
+      createCell(data.valeurs?.hitbox || "-", data.verdict?.hitbox),
+    );
 
     this.nodes.tableBody.insertBefore(row, this.nodes.tableBody.firstChild);
-  }
+  },
 };
 
 // --- Console Admin Accessors ---
@@ -424,8 +492,12 @@ window.getSecretWordPlzUwU = function () {
         headers: { "Content-Type": "application/json" },
       })
         .then((res) => res.json())
-        .then((data) => { alert("The secret element of the day is : " + data.secretElement); })
-        .catch((err) => console.error("Error fetching admin key parameters:", err));
+        .then((data) => {
+          alert("The secret element of the day is : " + data.secretElement);
+        })
+        .catch((err) =>
+          console.error("Error fetching admin key parameters:", err),
+        );
     })
     .catch((err) => alert(err.message));
 };
@@ -444,8 +516,17 @@ window.forceReset = function () {
       return res.json();
     })
     .then(() => {
-      const keysToRemove = ["tries", "gameover", "status", "history", "date", "version"];
-      keysToRemove.forEach(key => localStorage.removeItem(`celestedle_${key}`));
+      const keysToRemove = [
+        "tries",
+        "gameover",
+        "status",
+        "history",
+        "date",
+        "version",
+      ];
+      keysToRemove.forEach((key) =>
+        localStorage.removeItem(`celestedle_${key}`),
+      );
       alert("Local data wiped ! Reloading window context structure.");
     })
     .catch((err) => alert(err.message));
