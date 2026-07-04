@@ -47,8 +47,9 @@
                 <button id="share-btn">Share</button>
                 <button id="giveup-btn">Forfeit</button>
                 <button id="rules-btn">Rules</button>
+                <button id="Personalized-btn">Personalized synonyms</button>
                 <!-- <button id="zen-mode">Zen Mode</button> -->
-                <a href="https://discord.gg/3yqgMbuMbX" target="_blank" id="discord-btn" class="status-link-btn">Discord</a>
+                
             </div>
 
             <div id="message-container"></div>
@@ -78,15 +79,25 @@
             </div>
         </div>
 
-        <!-- Right Column: Discord Promotional Info -->
-        <div id="discord-sidebar" class="sidebar-block">
-            <div class="discord-promo-content">
-                <h3>Community Hub</h3>
-                <p>Join the Discord server to catch the latest updates, read changelogs, and drop your recommendations directly to the developer!</p>
-                <a href="https://discord.gg/3yqgMbuMbX" target="_blank" class="discord-sidebar-link">Join Discord</a>
+        <!-- Right Column: Sidebar Wrapper -->
+        <div id="right-sidebar-column">
+            <!-- Timer Block -->
+            <div id="timer-sidebar" class="sidebar-block">
+                <h3>Next Word in:</h3>
+                <p id="next-word-timer"></p>
+                <p> (or when the admin change the DB)</p>
             </div>
+            <!-- Discord Promotional Info -->
+            <div id="discord-sidebar" class="sidebar-block">
+                <div class="discord-promo-content">
+                    <h3>Community Hub</h3>
+                    <p>Join the Discord server to catch the latest updates, read changelogs, and drop your recommendations directly to the developer!</p>
+                    <a href="https://discord.gg/3yqgMbuMbX" target="_blank" class="discord-sidebar-link">Join Discord</a>
+                </div>
+            </div>
+
+            
         </div>
-    </div>
 
     <!-- Forfeit Confirmation Modal -->
     <div id="forfeit-modal" class="rules-modal" style="display: none;">

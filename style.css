@@ -90,14 +90,44 @@ h1, h2, h3, h4, th, .btn-celeste, #try-count, .discord-sidebar-link {
     margin-top: 75px;
 }
 
-#discord-sidebar {
+#right-sidebar-column {
     grid-column: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
     width: 100%;
     max-width: 320px;
     justify-self: center;
     margin-top: 175px;
 }
 
+/* On retire la marge et la colonne spécifiques à l'ancien bloc Discord devenu enfant */
+#discord-sidebar {
+    margin-top: 0;
+}
+
+#timer-sidebar {
+    text-align: center;
+}
+
+#timer-sidebar h3 {
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+}
+
+#next-word-timer {
+    font-family: 'Renogare', sans-serif;
+    font-size: 1.6rem;
+    margin: 8px 0;
+    color: var(--color-indigo);
+}
+
+#timer-sidebar p:last-child {
+    font-size: 0.8rem;
+    font-style: italic;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
 /* ==========================================================================
    4. STYLES DES BOÎTES LATÉRALES
    ========================================================================== */
@@ -159,6 +189,7 @@ h1, h2, h3, h4, th, .btn-celeste, #try-count, .discord-sidebar-link {
 }
 
 #game-status button, 
+
 .status-link-btn {
     font-family: 'Renogare', sans-serif;
     font-size: 0.9rem;
@@ -172,15 +203,22 @@ h1, h2, h3, h4, th, .btn-celeste, #try-count, .discord-sidebar-link {
     align-items: center;
     justify-content: center;
 }
+#Personalized-btn { 
+    background-color: var(--color-indigo); 
+    color: #ffffff; 
+}
+
+#Personalized-btn:hover { 
+    background-color: var(--color-indigo-hover); 
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.4); 
+}
 
 #giveup-btn { background-color: var(--color-wrong); color: #ffffff; }
 #giveup-btn:hover { background-color: #dc2626; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
 
-#rules-btn { background-color: var(--color-indigo); color: #ffffff; }
-#rules-btn:hover { background-color: var(--color-indigo-hover); box-shadow: 0 0 10px rgba(99, 102, 241, 0.4); }
+#rules-btn { background-color: var(--color-correct); color: #ffffff; }
+#rules-btn:hover { background-color: #059669; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
 
-#discord-btn { background-color: var(--color-discord); color: #ffffff; text-decoration: none; }
-#discord-btn:hover { background-color: #4752c4; box-shadow: 0 0 10px rgba(88, 101, 242, 0.4); }
 
 #share-btn { display: none !important; background-color: var(--color-correct); color: #ffffff; }
 #share-btn:hover { background-color: #059669; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
@@ -205,6 +243,8 @@ h1, h2, h3, h4, th, .btn-celeste, #try-count, .discord-sidebar-link {
     transform: translateY(-1px);
     box-shadow: 0 6px 16px rgba(88, 101, 242, 0.4);
 }
+
+
 
 /* ==========================================================================
    6. FORMULAIRE DE JEU & SUGGESTIONS
@@ -258,7 +298,16 @@ h1, h2, h3, h4, th, .btn-celeste, #try-count, .discord-sidebar-link {
 /* ==========================================================================
    8. MODALS, TOASTS & ANIMATIONS
    ========================================================================== */
-@keyframes popIn { 0% { transform: scale(0.97); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes popIn { 
+    0% { 
+        transform: translate(-50%, -50%) scale(0.97); 
+        opacity: 0; 
+    } 
+    100% { 
+        transform: translate(-50%, -50%) scale(1); 
+        opacity: 1; 
+    } 
+}
 @keyframes popOut { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.97); opacity: 0; } }
 @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
 
@@ -280,6 +329,133 @@ h1, h2, h3, h4, th, .btn-celeste, #try-count, .discord-sidebar-link {
 
 .rules-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(4, 6, 12, 0.7); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
 .rules-content { position: relative; background-color: var(--bg-card); padding: 32px; border-radius: 12px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6); border: 1px solid #1e293b; animation: popIn 0.25s ease-out; }
+
+/* ==========================================================================
+   9. MODAL DES SYNONYMES PERSONNALISÉS
+   ========================================================================== */
+.personalized-synonyms-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--bg-card);
+    border: 2px solid #334155;
+    padding: 24px;
+    border-radius: 12px;
+    z-index: 2000;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    width: 90%;
+    max-width: 450px;
+    box-sizing: border-box;
+    
+    /* Évite le clignotement au démarrage */
+    opacity: 0;
+    animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.personalized-synonyms-modal h3 {
+    font-size: 1.3rem;
+    margin-bottom: 16px;
+    padding-right: 20px;
+}
+
+.personalized-synonyms-modal p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+#close-synonyms-btn {
+    float: right;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 24px;
+    line-height: 20px;
+    transition: color 0.15s ease;
+}
+#close-synonyms-btn:hover {
+    color: var(--color-wrong);
+}
+
+.personalized-synonyms-modal textarea {
+    width: 100%;
+    height: 110px;
+    resize: none;
+    background-color: var(--bg-main);
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 10px;
+    color: var(--text-main);
+    font-family: monospace;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+    outline: none;
+}
+
+.personalized-synonyms-modal .input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.delete-syn-btn {
+    background: rgba(239, 68, 68, 0);
+    border: none;
+    color: #f87171;
+    font-size: 18px;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: all 0.15s ease;
+}
+
+.delete-syn-btn:hover {
+    background: var(--color-wrong);
+    color: #ffffff;
+    transform: scale(1.05);
+}
+#synonym-error-msg {
+    color: var(--color-wrong);
+    font-size: 0.8rem;
+    font-style: italic;
+    margin-bottom: 12px;
+    display: none;
+}
+.personalized-synonyms-modal input[type="text"] {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #334155;
+    background-color: var(--bg-input);
+    color: var(--text-main);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+.personalized-synonyms-modal input[type="text"]:focus {
+    border-color: #818cf8;
+}
+
+#save-synonyms-btn {
+    width: 100%;
+    font-family: 'Renogare', sans-serif;
+    background-color: var(--color-indigo);
+    color: #ffffff;
+    border: none;
+    font-size: 0.95rem;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+#save-synonyms-btn:hover {
+    background-color: var(--color-indigo-hover);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+}
 
 /* Responsive tablette & mobile */
 @media (max-width: 1200px) {

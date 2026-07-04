@@ -46,6 +46,8 @@ const App = {
     this.loadGameState();
     this.fetchOfficialElements();
     this.bindEvents();
+    this.fetchPersonalizedSynonyms();
+    this.initTimer(); // Ajout ici
   },
 
   cacheDOM() {
@@ -57,10 +59,12 @@ const App = {
       shareBtn: document.getElementById("share-btn"),
       giveupBtn: document.getElementById("giveup-btn"),
       rulesBtn: document.getElementById("rules-btn"),
+      personalizedBtn: document.getElementById("Personalized-btn"),
       tableBody: document.getElementById("guesses-body"),
       forfeitModal: document.getElementById("forfeit-modal"),
       confirmForfeitBtn: document.getElementById("confirm-forfeit-btn"),
       cancelForfeitBtn: document.getElementById("cancel-forfeit-btn"),
+      timerContainer: document.getElementById("next-word-timer"),
     };
   },
 
@@ -73,7 +77,11 @@ const App = {
         this.handleSuggestionsKeyboard(e),
       );
     }
-
+    if (this.nodes.personalizedBtn) {
+    this.nodes.personalizedBtn.addEventListener("click", () => 
+      this.handlePersonalizedModalOpen()
+    );
+  }
     if (this.nodes.form) {
       this.nodes.form.addEventListener("submit", (e) =>
         this.handleFormSubmit(e),
@@ -85,6 +93,7 @@ const App = {
         this.renderRulesModal(),
       );
     }
+
 
     if (this.nodes.giveupBtn) {
       this.nodes.giveupBtn.addEventListener("click", () => {
@@ -169,6 +178,46 @@ const App = {
     const isGameOver = localStorage.getItem("celestedle_gameover") === "true";
     if (isGameOver) {
       this.renderEndGameScreen();
+    }
+  },
+  initTimer() {
+    if (!this.nodes.timerContainer) return;
+
+    const updateTimer = () => {
+      const now = new Date();
+      
+      const nextReset = new Date(now);
+      nextReset.toLocaleString("en-US", { timeZone: "Europe/Paris" });
+      nextReset.setHours(24, 0, 0, 0); 
+
+      const diff = nextReset - now;
+
+      if (diff <= 0) {
+        this.nodes.timerContainer.textContent = "00:00:00";
+        setTimeout(() => location.reload(), 1000);
+        return;
+      }
+
+      const hours = String(Math.floor((diff / (1000 * 60 * 60)) % 24)).padStart(2, "0");
+      const minutes = String(Math.floor((diff / (1000 * 60)) % 60)).padStart(2, "0");
+      const seconds = String(Math.floor((diff / 1000) % 60)).padStart(2, "0");
+
+      this.nodes.timerContainer.textContent = `${hours}:${minutes}:${seconds}`;
+    };
+
+    updateTimer();
+    setInterval(updateTimer, 1000);
+  },
+
+  /// --- Fetching personalizerd synonyms in local data ---
+  fetchPersonalizedSynonyms() {
+    const savedSynonyms = localStorage.getItem("celestedle_synonyms");
+    if (savedSynonyms) {
+      //add personnalized synonyms to the current synonyms list
+      const parsedSynonyms = JSON.parse(savedSynonyms);
+      Object.keys(parsedSynonyms).forEach((key) => {
+        this.synonyms[key] = parsedSynonyms[key];
+      });
     }
   },
 
@@ -345,6 +394,121 @@ const App = {
         console.error("Submit processing error:", err);
       });
   },
+  
+
+  handlePersonalizedModalOpen() {
+    if (document.querySelector(".personalized-synonyms-modal")) return;
+
+    const modal = document.createElement("div");
+    modal.className = "personalized-synonyms-modal";
+    
+    modal.innerHTML = `
+      <span id="close-synonyms-btn">&times;</span>
+      <h3>Personalized Synonyms</h3>
+      <p>Current list:</p>
+      <ul id="synonyms-list-container"></ul>
+      <p>Add a new synonym (format: "synonym": "officialName"):</p>
+      <div class="input-row">
+          <input type="text" id="synonym-key-input" placeholder="e.g., cassette">
+          <input type="text" id="synonym-value-input" placeholder="e.g., cassette tape">
+      </div>
+      <div id="synonym-error-msg"></div>
+      <button id="save-synonyms-btn">Add</button>
+    `;
+
+    document.body.appendChild(modal);
+    this.renderPersonalizedSynonymsList(modal);
+
+    modal.querySelector("#close-synonyms-btn").addEventListener("click", () => {
+      document.body.removeChild(modal);
+    });
+
+    modal.querySelector("#save-synonyms-btn").addEventListener("click", () => {
+      this.handlePersonalizedSynonymAdd(modal);
+    });
+  },
+
+  renderPersonalizedSynonymsList(modal) {
+    const container = modal.querySelector("#synonyms-list-container");
+    container.innerHTML = "";
+    
+    const savedSynonyms = localStorage.getItem("celestedle_synonyms");
+    const personalizedList = savedSynonyms ? JSON.parse(savedSynonyms) : {};
+    const entries = Object.entries(personalizedList);
+    
+    if (entries.length === 0) {
+      container.innerHTML = `<li style="color: var(--text-muted); font-size: 0.9rem;">No personalized synonyms added yet.</li>`;
+      return;
+    }
+
+    entries.forEach(([syn, off]) => {
+      const li = document.createElement("li");
+      li.className = "synonym-item-row";
+      li.innerHTML = `
+        <span><strong>${syn}</strong> &rarr; ${off}</span>
+        <button class="delete-syn-btn" data-key="${syn}">&times;</button>
+      `;
+      
+      li.querySelector(".delete-syn-btn").addEventListener("click", (e) => {
+        const keyToDelete = e.target.getAttribute("data-key");
+        delete this.synonyms[keyToDelete];
+        
+        const currentSaved = JSON.parse(localStorage.getItem("celestedle_synonyms") || "{}");
+        delete currentSaved[keyToDelete];
+        
+        localStorage.setItem("celestedle_synonyms", JSON.stringify(currentSaved));
+        this.renderPersonalizedSynonymsList(modal);
+      });
+
+      container.appendChild(li);
+    });
+  },
+handlePersonalizedSynonymAdd(modal) {
+    const keyInput = document.getElementById("synonym-key-input");
+    const valueInput = document.getElementById("synonym-value-input");
+    const errorContainer = document.getElementById("synonym-error-msg");
+    
+    const key = keyInput.value.trim().toLowerCase();
+    const value = valueInput.value.trim().toLowerCase();
+    
+    // Réinitialise le message d'erreur
+    errorContainer.textContent = "";
+    errorContainer.style.display = "none";
+    
+    if (!key || !value) {
+      errorContainer.textContent = "Please fill both fields.";
+      errorContainer.style.display = "block";
+      return;
+    }
+
+    if (this.synonyms[key]) {
+      errorContainer.textContent = `The synonym "${key}" already exists.`;
+      errorContainer.style.display = "block";
+      return;
+    }
+
+    const officialExists = this.officialElementsList.some(
+      (element) => element.toLowerCase() === value
+    );
+
+    if (!officialExists) {
+      errorContainer.textContent = `"${value}" is not a valid official element name.`;
+      errorContainer.style.display = "block";
+      return;
+    }
+
+    this.synonyms[key] = value;
+
+    const currentSaved = JSON.parse(localStorage.getItem("celestedle_synonyms") || "{}");
+    currentSaved[key] = value;
+    
+    localStorage.setItem("celestedle_synonyms", JSON.stringify(currentSaved));
+    
+    keyInput.value = "";
+    valueInput.value = "";
+    
+    this.renderPersonalizedSynonymsList(modal);
+  },
 
   handleForfeit() {
     fetch(`${API_BASE_URL}/api/getSecretWord`, {
@@ -369,6 +533,7 @@ const App = {
         location.reload();
       });
   },
+
 
   handleShareScore() {
     const isWin = localStorage.getItem("celestedle_status") !== "lose";
@@ -480,6 +645,8 @@ const App = {
     this.nodes.tableBody.insertBefore(row, this.nodes.tableBody.firstChild);
   },
 };
+
+
 
 // --- Console Admin Accessors ---
 window.getSecretWordPlzUwU = function () {
