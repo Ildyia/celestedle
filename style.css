@@ -63,13 +63,17 @@ h1, h2, h3, h4, th, .btn-celeste, #try-count, .discord-sidebar-link {
     width: 100%;
     align-items: start;
 }
-
+#message-container, .win-message, .lose-message {
+    width: 100%;
+    box-sizing: border-box;
+}
 #main-content-column {
     grid-column: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
+    max-width: 800px; /* Devient la taille max, mais permet de descendre en dessous */
     gap: 20px;
 }
 
@@ -300,11 +304,11 @@ h1, h2, h3, h4, th, .btn-celeste, #try-count, .discord-sidebar-link {
    ========================================================================== */
 @keyframes popIn { 
     0% { 
-        transform: translate(-50%, -50%) scale(0.97); 
+        transform: scale(0.97); 
         opacity: 0; 
     } 
     100% { 
-        transform: translate(-50%, -50%) scale(1); 
+        transform: scale(1); 
         opacity: 1; 
     } 
 }
@@ -348,9 +352,20 @@ h1, h2, h3, h4, th, .btn-celeste, #try-count, .discord-sidebar-link {
     max-width: 450px;
     box-sizing: border-box;
     
-    /* Évite le clignotement au démarrage */
+    /* Gère l'animation de centrage et d'apparition de façon isolée */
     opacity: 0;
-    animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation: modalPopIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes modalPopIn {
+    0% {
+        transform: translate(-50%, -50%) scale(0.97);
+        opacity: 0;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
 }
 .personalized-synonyms-modal h3 {
     font-size: 1.3rem;
@@ -459,15 +474,54 @@ h1, h2, h3, h4, th, .btn-celeste, #try-count, .discord-sidebar-link {
 
 /* Responsive tablette & mobile */
 @media (max-width: 1200px) {
-    body { align-items: start; }
-    #layout-wrapper {
-        grid-template-columns: 1fr;
-        max-width: 800px;
-        gap: 24px;
+    body { 
+        padding: 20px 10px; 
     }
-    #main-content-column, #rules-sidebar, #discord-sidebar {
-        grid-column: 1;
-        margin-top: 0;
+    .personalized-synonyms-modal .input-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .personalized-synonyms-modal input[type="text"] {
+        width: 100%;
+    }
+    #layout-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        width: 100%;
         max-width: 100%;
+    }
+    
+    #main-content-column, #rules-sidebar, #right-sidebar-column {
+        margin-top: 0;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    #game-status {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    #game-status p {
+        text-align: center;
+        width: 100%;
+    }
+
+    #game-status button, .status-link-btn {
+        width: 100%;
+        margin: 0;
+    }
+
+    /* Permet au tableau de défiler horizontalement sans casser tout le site */
+    #game-container {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    #guesses-table {
+        width: 100%;
+        min-width: 600px; /* Conserve une taille lisible pour les cellules */
     }
 }

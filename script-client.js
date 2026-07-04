@@ -407,10 +407,10 @@ const App = {
       <h3>Personalized Synonyms</h3>
       <p>Current list:</p>
       <ul id="synonyms-list-container"></ul>
-      <p>Add a new synonym (format: "synonym": "officialName"):</p>
+      <p>Add a new synonym:</p>
       <div class="input-row">
-          <input type="text" id="synonym-key-input" placeholder="e.g., cassette">
-          <input type="text" id="synonym-value-input" placeholder="e.g., cassette tape">
+          <input type="text" id="synonym-key-input" placeholder="synonym">
+          <input type="text" id="synonym-value-input" placeholder="official name">
       </div>
       <div id="synonym-error-msg"></div>
       <button id="save-synonyms-btn">Add</button>
@@ -603,8 +603,12 @@ handlePersonalizedSynonymAdd(modal) {
       : `You didn't find today's celestedle ! The answer was : <strong>${formattedSolution}</strong>`;
 
     messageContainer.innerHTML = `<h2>${title}</h2><p>${matchSummary}</p>`;
-    this.nodes.form.parentNode.insertBefore(messageContainer, this.nodes.form);
-  },
+    const targetContainer = document.getElementById("message-container");
+    if (targetContainer) {
+      targetContainer.appendChild(messageContainer);
+    } else {
+      this.nodes.form.parentNode.insertBefore(messageContainer, this.nodes.form);
+}  },
 
   // Intercept and replace old modal injection with clean sidebar layout toggle
   renderRulesModal() {
