@@ -131,6 +131,40 @@ h1, h2, h3, h4, th, .btn-celeste, #try-count, .discord-sidebar-link {
     color: var(--text-muted);
     margin-top: 4px;
 }
+
+#profile-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1500;
+    font-family: 'Renogare', sans-serif;
+    font-size: 0.9rem;
+    padding: 10px 18px;
+    border-radius: 6px;
+    border: 1px solid #334155;
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+#profile-btn:hover {
+    border-color: #818cf8;
+    background-color: #1e2d4a;
+    transform: translateY(-1px);
+}
+
+/* Ajustement pour mobile pour éviter qu'il masque le contenu ou dépasse */
+@media (max-width: 1200px) {
+    #profile-btn {
+        position: absolute; /* Reste en haut du flux sur mobile scrollable */
+        top: 10px;
+        right: 10px;
+        font-size: 0.8rem;
+        padding: 8px 14px;
+    }
+}   
 /* ==========================================================================
    4. STYLES DES BOÎTES LATÉRALES
    ========================================================================== */
