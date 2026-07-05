@@ -22,15 +22,15 @@ const App = {
     zippers: "zip movers",
     "cristal spinner": "crystal spinner",
     "electricity box": "power box",
-    "electricity":"lightning", 
-    "button": "dash switch",
+    electricity: "lightning",
+    button: "dash switch",
     "huge mess switch": "clutter switch",
     "mess switch": "clutter switch",
     "huge mess tiles": "clutter tiles",
     "mess tiles": "clutter tiles",
     "dash refill": "refill",
     "dash crystal": "refill",
-    "key gate": "lock"
+    "key gate": "lock",
   },
   officialElementsList: [],
   historyLog: [],
@@ -47,7 +47,7 @@ const App = {
     this.fetchOfficialElements();
     this.bindEvents();
     this.fetchPersonalizedSynonyms();
-    this.initTimer(); // Ajout ici
+    this.initTimer();
   },
 
   cacheDOM() {
@@ -78,10 +78,10 @@ const App = {
       );
     }
     if (this.nodes.personalizedBtn) {
-    this.nodes.personalizedBtn.addEventListener("click", () => 
-      this.handlePersonalizedModalOpen()
-    );
-  }
+      this.nodes.personalizedBtn.addEventListener("click", () =>
+        this.handlePersonalizedModalOpen(),
+      );
+    }
     if (this.nodes.form) {
       this.nodes.form.addEventListener("submit", (e) =>
         this.handleFormSubmit(e),
@@ -93,7 +93,6 @@ const App = {
         this.renderRulesModal(),
       );
     }
-
 
     if (this.nodes.giveupBtn) {
       this.nodes.giveupBtn.addEventListener("click", () => {
@@ -185,10 +184,10 @@ const App = {
 
     const updateTimer = () => {
       const now = new Date();
-      
+
       const nextReset = new Date(now);
       nextReset.toLocaleString("en-US", { timeZone: "Europe/Paris" });
-      nextReset.setHours(24, 0, 0, 0); 
+      nextReset.setHours(24, 0, 0, 0);
 
       const diff = nextReset - now;
 
@@ -198,8 +197,14 @@ const App = {
         return;
       }
 
-      const hours = String(Math.floor((diff / (1000 * 60 * 60)) % 24)).padStart(2, "0");
-      const minutes = String(Math.floor((diff / (1000 * 60)) % 60)).padStart(2, "0");
+      const hours = String(Math.floor((diff / (1000 * 60 * 60)) % 24)).padStart(
+        2,
+        "0",
+      );
+      const minutes = String(Math.floor((diff / (1000 * 60)) % 60)).padStart(
+        2,
+        "0",
+      );
       const seconds = String(Math.floor((diff / 1000) % 60)).padStart(2, "0");
 
       this.nodes.timerContainer.textContent = `${hours}:${minutes}:${seconds}`;
@@ -326,12 +331,33 @@ const App = {
   // --- Handlers & Game Actions ---
   handleFormSubmit(e) {
     e.preventDefault();
+    if (this.isProcessing) {
+      this.showToastNotification("Server is loading, please slow down !");
+      return;
+    }
+    this.isProcessing = true;
     let choice = this.nodes.input
       ? this.nodes.input.value.trim().toLowerCase()
       : "";
 
     if (this.synonyms[choice]) choice = this.synonyms[choice];
-    if (!choice) return;
+
+    const alreadyGuessed = this.historyLog.some(
+      (attempt) => attempt.nom.toLowerCase() === choice,
+    );
+    if (alreadyGuessed) {
+      this.showToastNotification("You already tried this ! Be original noob");
+      this.nodes.input.classList.add("shake");
+      setTimeout(() => {
+        this.nodes.input.classList.remove("shake");
+      }, 400);
+      this.isProcessing = false;
+      return;
+    }
+    if (!choice) {
+      this.isProcessing = false;
+      return;
+    }
 
     fetch(`${API_BASE_URL}/api/valider`, {
       method: "POST",
@@ -340,6 +366,7 @@ const App = {
     })
       .then((res) => {
         if (!res.ok) throw new Error("Invalid entities or server error");
+        this.isProcessing = false;
         return res.json();
       })
       .then((data) => {
@@ -356,6 +383,7 @@ const App = {
             "The secret word has been changed by an admin ! Your tries have been reset !",
           );
           setTimeout(() => location.reload(), 2500);
+          this.isProcessing = false;
           return;
         }
 
@@ -394,14 +422,13 @@ const App = {
         console.error("Submit processing error:", err);
       });
   },
-  
 
   handlePersonalizedModalOpen() {
     if (document.querySelector(".personalized-synonyms-modal")) return;
 
     const modal = document.createElement("div");
     modal.className = "personalized-synonyms-modal";
-    
+
     modal.innerHTML = `
       <span id="close-synonyms-btn">&times;</span>
       <h3>Personalized Synonyms</h3>
@@ -431,11 +458,11 @@ const App = {
   renderPersonalizedSynonymsList(modal) {
     const container = modal.querySelector("#synonyms-list-container");
     container.innerHTML = "";
-    
+
     const savedSynonyms = localStorage.getItem("celestedle_synonyms");
     const personalizedList = savedSynonyms ? JSON.parse(savedSynonyms) : {};
     const entries = Object.entries(personalizedList);
-    
+
     if (entries.length === 0) {
       container.innerHTML = `<li style="color: var(--text-muted); font-size: 0.9rem;">No personalized synonyms added yet.</li>`;
       return;
@@ -448,33 +475,38 @@ const App = {
         <span><strong>${syn}</strong> &rarr; ${off}</span>
         <button class="delete-syn-btn" data-key="${syn}">&times;</button>
       `;
-      
+
       li.querySelector(".delete-syn-btn").addEventListener("click", (e) => {
         const keyToDelete = e.target.getAttribute("data-key");
         delete this.synonyms[keyToDelete];
-        
-        const currentSaved = JSON.parse(localStorage.getItem("celestedle_synonyms") || "{}");
+
+        const currentSaved = JSON.parse(
+          localStorage.getItem("celestedle_synonyms") || "{}",
+        );
         delete currentSaved[keyToDelete];
-        
-        localStorage.setItem("celestedle_synonyms", JSON.stringify(currentSaved));
+
+        localStorage.setItem(
+          "celestedle_synonyms",
+          JSON.stringify(currentSaved),
+        );
         this.renderPersonalizedSynonymsList(modal);
       });
 
       container.appendChild(li);
     });
   },
-handlePersonalizedSynonymAdd(modal) {
+  handlePersonalizedSynonymAdd(modal) {
     const keyInput = document.getElementById("synonym-key-input");
     const valueInput = document.getElementById("synonym-value-input");
     const errorContainer = document.getElementById("synonym-error-msg");
-    
+
     const key = keyInput.value.trim().toLowerCase();
     const value = valueInput.value.trim().toLowerCase();
-    
+
     // Réinitialise le message d'erreur
     errorContainer.textContent = "";
     errorContainer.style.display = "none";
-    
+
     if (!key || !value) {
       errorContainer.textContent = "Please fill both fields.";
       errorContainer.style.display = "block";
@@ -488,7 +520,7 @@ handlePersonalizedSynonymAdd(modal) {
     }
 
     const officialExists = this.officialElementsList.some(
-      (element) => element.toLowerCase() === value
+      (element) => element.toLowerCase() === value,
     );
 
     if (!officialExists) {
@@ -499,14 +531,16 @@ handlePersonalizedSynonymAdd(modal) {
 
     this.synonyms[key] = value;
 
-    const currentSaved = JSON.parse(localStorage.getItem("celestedle_synonyms") || "{}");
+    const currentSaved = JSON.parse(
+      localStorage.getItem("celestedle_synonyms") || "{}",
+    );
     currentSaved[key] = value;
-    
+
     localStorage.setItem("celestedle_synonyms", JSON.stringify(currentSaved));
-    
+
     keyInput.value = "";
     valueInput.value = "";
-    
+
     this.renderPersonalizedSynonymsList(modal);
   },
 
@@ -533,7 +567,6 @@ handlePersonalizedSynonymAdd(modal) {
         location.reload();
       });
   },
-
 
   handleShareScore() {
     const isWin = localStorage.getItem("celestedle_status") !== "lose";
@@ -607,8 +640,12 @@ handlePersonalizedSynonymAdd(modal) {
     if (targetContainer) {
       targetContainer.appendChild(messageContainer);
     } else {
-      this.nodes.form.parentNode.insertBefore(messageContainer, this.nodes.form);
-}  },
+      this.nodes.form.parentNode.insertBefore(
+        messageContainer,
+        this.nodes.form,
+      );
+    }
+  },
 
   // Intercept and replace old modal injection with clean sidebar layout toggle
   renderRulesModal() {
@@ -649,8 +686,6 @@ handlePersonalizedSynonymAdd(modal) {
     this.nodes.tableBody.insertBefore(row, this.nodes.tableBody.firstChild);
   },
 };
-
-
 
 // --- Console Admin Accessors ---
 window.getSecretWordPlzUwU = function () {
