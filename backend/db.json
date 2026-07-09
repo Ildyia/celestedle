@@ -1,5 +1,5 @@
 {
-  "madeline": { "type": "characters", "lieu": ["prologue","city", "site", "resort", "ridge", "temple", "reflection", "summit", "farewell"], "couleur": ["blue", "red", "pink"], "hitbox": "rectangular" },
+  "madeline": { "type": "characters", "lieu": ["prologue","city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell"], "couleur": ["blue", "red", "pink"], "hitbox": "rectangular" },
   "badeline": { "type": "characters", "lieu": ["site", "resort", "ridge", "temple", "reflection", "summit", "farewell"], "couleur": ["purple"], "hitbox": "rectangular" },
   "theo": { "type": "characters", "lieu": ["city", "site", "resort", "ridge", "temple", "reflection"], "couleur": ["green"], "hitbox": "rectangular" },
   "granny": { "type": "characters", "lieu": ["prologue", "ridge", "reflection", "summit", "core", "farewell"], "couleur": ["green", "white"], "hitbox": "rectangular" },
@@ -40,7 +40,7 @@
   "lock": { "type": "mechanics", "lieu": ["resort", "temple", "summit", "farewell"], "couleur": ["grey", "brown"], "hitbox": "square" },
   "power box": { "type": "mechanics", "lieu": ["farewell"], "couleur": ["grey"], "hitbox": "square" },
   "checkpoint flag": { "type": "environment", "lieu": ["summit"], "couleur": ["grey", "pink"], "hitbox": "rectangular" },
-  "intro car": { "type": "environment", "lieu": ["prologue", "core", "farewell"], "couleur": ["brown"], "hitbox": "rectangular" },
+  "intro car": { "type": "environment", "lieu": ["prologue", "core", "farewell"], "couleur": ["brown", "blue"], "hitbox": "rectangular" },
   "jumpthrough": { "type": "environment", "lieu": ["prologue", "city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell"], "couleur": ["brown", "grey"], "hitbox": "rectangular" },
   "key": { "type": "collectibles", "lieu": ["resort", "temple", "summit", "farewell"], "couleur": ["yellow"], "hitbox": "square" },
   "water": { "type": "mechanics", "lieu": ["resort", "ridge", "reflection", "summit"], "couleur": ["blue"], "hitbox": "rectangular" },
@@ -69,7 +69,7 @@
  "temple torch": {"type":"environment", "lieu": ["temple"], "couleur": ["yellow, blue"], "hitbox": "square" },
  "bridge": {"type":"environment", "lieu": ["prologue"], "couleur": ["grey"], "hitbox": "rectangular" },
  "conveyor belt/ice wall": {"type":"movement & propulsion", "lieu": ["core", "farewell"], "couleur": ["grey", "blue"], "hitbox": "rectangular" },
- "flutterbird":{"type":"environment", "lieu": ["prologue"], "couleur": ["blue", "pink", "yellow"], "hitbox": "none" },
+ "flutterbird":{"type":"environment", "lieu": ["prologue", "resort", "ridge"], "couleur": ["blue", "pink", "yellow"], "hitbox": "none" },
  "falling block":{"type":"mechanics", "lieu": ["city", "site", "resort", "ridge", "reflection", "summit", "farewell"], "couleur": ["blue", "grey", "purple", "green"], "hitbox": "rectangular" },
 "touch switch gate": {"type":"mechanics", "lieu": ["site", "resort", "ridge", "temple", "reflection", "summit", "farewell"], "couleur": ["grey"], "hitbox": "rectangular" },
 "theo gate": {"type":"mechanics", "lieu": ["temple"], "couleur": ["yellow"], "hitbox": "rectangular" },
@@ -83,5 +83,8 @@
 "bonfire": {"type":"environment", "lieu": ["city", "site", "reflection"], "couleur": ["red", "yellow", "orange"], "hitbox": "none" },
 "mirror": {"type":"environment", "lieu": ["site", "resort", "temple" ], "couleur": ["grey"], "hitbox": "rectangular" },
 "lantern": {"type":"environment", "lieu": ["resort"], "couleur": ["yellow"], "hitbox": "square" },
-"fake wall": {"type":"environment", "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "farewell"], "couleur": ["brown", "grey", "blue", "red", "green", "purple", "white"], "hitbox": "rectangular" }
+"fake wall": {"type":"environment", "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "farewell"], "couleur": ["brown", "grey", "blue", "red", "green", "purple", "white"], "hitbox": "rectangular" },
+"lava sandwich": {"type":"hazards", "lieu": ["core"], "couleur": ["red", "blue"], "hitbox": "rectangular" },
+"exit block": {"type":"environment", "lieu": ["ridge"], "couleur": ["purple"], "hitbox": "rectangular" },
+"temple eye": {"type":"environment", "lieu": ["temple"], "couleur": ["white", "purple"], "hitbox": "rectangular" },
 }
