@@ -86,5 +86,5 @@
 "fake wall": {"type":"environment", "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "farewell"], "couleur": ["brown", "grey", "blue", "red", "green", "purple", "white"], "hitbox": "rectangular" },
 "lava sandwich": {"type":"hazards", "lieu": ["core"], "couleur": ["red", "blue"], "hitbox": "rectangular" },
 "exit block": {"type":"environment", "lieu": ["ridge"], "couleur": ["purple"], "hitbox": "rectangular" },
-"temple eye": {"type":"environment", "lieu": ["temple"], "couleur": ["white", "purple"], "hitbox": "rectangular" },
+"temple eye": {"type":"environment", "lieu": ["temple"], "couleur": ["white", "purple"], "hitbox": "rectangular" }
 }
