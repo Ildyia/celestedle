@@ -83,12 +83,6 @@
     "lieu": ["reflection", "core"],
     "type": "movement & propulsion"
   },
-  "fire bumper": {
-    "couleur": ["red"],
-    "hitbox": "circular",
-    "lieu": ["core"],
-    "type": "hazard"
-  },
   "cassette block": {
     "couleur": ["blue", "pink", "yellow", "green"],
     "hitbox": "rectangular",
@@ -131,19 +125,11 @@
     "lieu": ["resort"],
     "type": "environment"
   },
-
   "conveyor belt": {
     "couleur": ["grey"],
     "hitbox": "rectangular",
     "lieu": ["core", "farewell"],
     "type": "movement & propulsion"
-  },
-
-  "slippery ice wall": {
-    "couleur": ["blue"],
-    "hitbox": "rectangular",
-    "lieu": ["core", "farewell"],
-    "type": "mechanics"
   },
   "core switch": {
     "couleur": ["blue", "red"],
@@ -151,19 +137,6 @@
     "lieu": ["core"],
     "type": "mechanics"
   },
-  "magma block": {
-    "couleur": ["red"],
-    "hitbox": "rectangular",
-    "lieu": ["core", "farewell"],
-    "type": "movement & propulsion"
-  },
-  "ice crumble block": {
-    "couleur": ["blue"],
-    "hitbox": "rectangular",
-    "lieu": ["core", "farewell"],
-    "type": "mechanics"
-  },
-
   "crumble block": {
     "couleur": ["grey"],
     "hitbox": "rectangular",
@@ -197,10 +170,9 @@
   "exit block": {
     "couleur": ["purple"],
     "hitbox": "rectangular",
-    "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell" ],
+    "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell"],
     "type": "environment"
   },
-
   "fake wall": {
     "couleur": ["brown", "grey", "blue", "red", "green", "purple", "white"],
     "hitbox": "rectangular",
@@ -225,16 +197,16 @@
     "lieu": ["core", "farewell"],
     "type": "hazards"
   },
-  "ice ball": {
-    "couleur": ["blue"],
-    "hitbox": "other shape",
-    "lieu": ["core", "farewell"],
-    "type": "hazards"
+  "fire bumper": {
+    "couleur": ["red"],
+    "hitbox": "circular",
+    "lieu": ["core"],
+    "type": "hazard"
   },
   "flutterbird": {
     "couleur": ["blue", "pink", "yellow"],
     "hitbox": "no hitbox interaction",
-    "lieu": ["prologue","city", "resort", "ridge"],
+    "lieu": ["prologue", "city", "resort", "ridge"],
     "type": "environment"
   },
   "golden strawberry": {
@@ -266,6 +238,30 @@
     "hitbox": "rectangular",
     "lieu": ["core", "farewell"],
     "type": "environment"
+  },
+  "ice ball": {
+    "couleur": ["blue"],
+    "hitbox": "other shape",
+    "lieu": ["core", "farewell"],
+    "type": "hazards"
+  },
+  "ice crumble block": {
+    "couleur": ["blue"],
+    "hitbox": "rectangular",
+    "lieu": ["core", "farewell"],
+    "type": "mechanics"
+  },
+  "ice sandwich": {
+    "couleur": ["blue"],
+    "hitbox": "rectangular",
+    "lieu": ["core"],
+    "type": "hazards"
+  },
+  "ice wall": {
+    "couleur": ["blue"],
+    "hitbox": "rectangular",
+    "lieu": ["core"],
+    "type": "hazards"
   },
   "intro car": {
     "couleur": ["brown", "blue"],
@@ -300,7 +296,7 @@
   "lantern": {
     "couleur": ["yellow"],
     "hitbox": "square",
-    "lieu": ["site", "resort" "summit"],
+    "lieu": ["site", "resort", "summit"],
     "type": "environment"
   },
   "lava sandwich": {
@@ -309,20 +305,8 @@
     "lieu": ["core"],
     "type": "hazards"
   },
-  "ice sandwich": {
-    "couleur": ["blue"],
-    "hitbox": "rectangular",
-    "lieu": ["core"],
-    "type": "hazards"
-  },
   "lava wall": {
     "couleur": ["red"],
-    "hitbox": "rectangular",
-    "lieu": ["core"],
-    "type": "hazards"
-  },
-  "ice wall": {
-    "couleur": ["blue"],
     "hitbox": "rectangular",
     "lieu": ["core"],
     "type": "hazards"
@@ -344,6 +328,12 @@
     "hitbox": "rectangular",
     "lieu": ["prologue", "city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell"],
     "type": "characters"
+  },
+  "magma block": {
+    "couleur": ["red"],
+    "hitbox": "rectangular",
+    "lieu": ["core", "farewell"],
+    "type": "movement & propulsion"
   },
   "mario block": {
     "couleur": ["white"],
@@ -451,6 +441,12 @@
     "couleur": ["red"],
     "hitbox": "rectangular",
     "lieu": ["temple"],
+    "type": "mechanics"
+  },
+  "slippery ice wall": {
+    "couleur": ["blue"],
+    "hitbox": "rectangular",
+    "lieu": ["core", "farewell"],
     "type": "mechanics"
   },
   "snowball": {
