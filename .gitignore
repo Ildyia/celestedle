@@ -1,0 +1,15 @@
+# Dépendances et variables
+node_modules/
+.env
+
+# Logs et debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+
+# Fichiers système et éditeurs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

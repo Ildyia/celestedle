@@ -1,0 +1,555 @@
+{
+  "badeline": {
+    "couleur": ["purple"],
+    "hitbox": "no hitbox interaction",
+    "lieu": ["site", "resort", "ridge", "temple", "reflection", "summit", "farewell"],
+    "type": "characters"
+  },
+  "badeline block": {
+    "couleur": ["blue", "purple"],
+    "hitbox": "rectangular",
+    "lieu": ["reflection"],
+    "type": "movement & propulsion"
+  },
+  "badeline boss": {
+    "couleur": ["purple"],
+    "hitbox": "circular",
+    "lieu": ["reflection"],
+    "type": "mechanics"
+  },
+  "badeline chaser": {
+    "couleur": ["purple"],
+    "hitbox": "square",
+    "lieu": ["site"],
+    "type": "hazards"
+  },
+  "badeline laser": {
+    "couleur": ["purple"],
+    "hitbox": "other shape",
+    "lieu": ["reflection"],
+    "type": "hazards"
+  },
+  "badeline orb": {
+    "couleur": ["purple"],
+    "hitbox": "circular",
+    "lieu": ["reflection", "summit", "core", "farewell"],
+    "type": "movement & propulsion"
+  },
+  "badeline projectile": {
+    "couleur": ["purple"],
+    "hitbox": "square",
+    "lieu": ["reflection"],
+    "type": "hazards"
+  },
+  "binoculars": {
+    "couleur": ["grey"],
+    "hitbox": "no hitbox interaction",
+    "lieu": ["site", "ridge", "temple", "reflection", "summit", "farewell"],
+    "type": "environment"
+  },
+  "bird": {
+    "couleur": ["blue"],
+    "hitbox": "circular",
+    "lieu": ["farewell"],
+    "type": "movement & propulsion"
+  },
+  "blade": {
+    "couleur": ["grey", "red"],
+    "hitbox": "circular",
+    "lieu": ["temple", "summit", "farewell"],
+    "type": "hazards"
+  },
+  "bonfire": {
+    "couleur": ["red", "yellow", "orange"],
+    "hitbox": "no hitbox interaction",
+    "lieu": ["city", "site", "reflection"],
+    "type": "environment"
+  },
+  "breakable tiles": {
+    "couleur": ["brown", "grey", "purple"],
+    "hitbox": "rectangular",
+    "lieu": ["city", "site", "resort", "ridge", "reflection", "summit", "core"],
+    "type": "environment"
+  },
+  "bridge": {
+    "couleur": ["grey"],
+    "hitbox": "rectangular",
+    "lieu": ["prologue"],
+    "type": "environment"
+  },
+  "bumper": {
+    "couleur": ["blue"],
+    "hitbox": "circular",
+    "lieu": ["reflection", "core"],
+    "type": "movement & propulsion"
+  },
+  "cassette block": {
+    "couleur": ["blue", "pink", "yellow", "green"],
+    "hitbox": "rectangular",
+    "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell"],
+    "type": "mechanics"
+  },
+  "cassette tape": {
+    "couleur": ["white"],
+    "hitbox": "square",
+    "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "core"],
+    "type": "collectibles"
+  },
+  "checkpoint flag": {
+    "couleur": ["grey", "pink"],
+    "hitbox": "square",
+    "lieu": ["summit"],
+    "type": "environment"
+  },
+  "cloud": {
+    "couleur": ["blue", "white", "pink"],
+    "hitbox": "rectangular",
+    "lieu": ["ridge", "summit", "farewell"],
+    "type": "movement & propulsion"
+  },
+  "clutter door": {
+    "couleur": ["black"],
+    "hitbox": "square",
+    "lieu": ["resort"],
+    "type": "environment"
+  },
+  "clutter switch": {
+    "couleur": ["blue"],
+    "hitbox": "rectangular",
+    "lieu": ["resort"],
+    "type": "environment"
+  },
+  "clutter tiles": {
+    "couleur": ["purple", "pink", "brown", "white", "green", "blue"],
+    "hitbox": "square",
+    "lieu": ["resort"],
+    "type": "environment"
+  },
+  "conveyor belt/ice wall": {
+    "couleur": ["grey", "blue"],
+    "hitbox": "rectangular",
+    "lieu": ["core", "farewell"],
+    "type": "movement & propulsion"
+  },
+  "core switch": {
+    "couleur": ["blue", "red"],
+    "hitbox": "square",
+    "lieu": ["core"],
+    "type": "mechanics"
+  },
+  "coreblock": {
+    "couleur": ["blue", "red"],
+    "hitbox": "rectangular",
+    "lieu": ["core", "farewell"],
+    "type": "mechanics"
+  },
+  "crumble block": {
+    "couleur": ["grey"],
+    "hitbox": "rectangular",
+    "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "farewell"],
+    "type": "mechanics"
+  },
+  "crystal heart": {
+    "couleur": ["blue", "yellow", "red"],
+    "hitbox": "square",
+    "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "core"],
+    "type": "collectibles"
+  },
+  "dash switch": {
+    "couleur": ["yellow", "green"],
+    "hitbox": "rectangular",
+    "lieu": ["temple", "summit", "farewell"],
+    "type": "mechanics"
+  },
+  "dream block": {
+    "couleur": ["black"],
+    "hitbox": "rectangular",
+    "lieu": ["site", "summit", "farewell"],
+    "type": "mechanics"
+  },
+  "dust bunnies": {
+    "couleur": ["black", "red"],
+    "hitbox": "other shape",
+    "lieu": ["resort", "summit"],
+    "type": "hazards"
+  },
+  "exit block": {
+    "couleur": ["purple"],
+    "hitbox": "rectangular",
+    "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell" ],
+    "type": "environment"
+  },
+
+  "fake wall": {
+    "couleur": ["brown", "grey", "blue", "red", "green", "purple", "white"],
+    "hitbox": "rectangular",
+    "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "farewell"],
+    "type": "environment"
+  },
+  "falling block": {
+    "couleur": ["blue", "grey", "purple", "green"],
+    "hitbox": "rectangular",
+    "lieu": ["city", "site", "resort", "ridge", "reflection", "summit", "farewell"],
+    "type": "mechanics"
+  },
+  "feather": {
+    "couleur": ["yellow"],
+    "hitbox": "square",
+    "lieu": ["reflection", "summit", "core", "farewell"],
+    "type": "movement & propulsion"
+  },
+  "fire/ice ball": {
+    "couleur": ["red", "blue"],
+    "hitbox": "circular",
+    "lieu": ["core", "farewell"],
+    "type": "hazards"
+  },
+  "flutterbird": {
+    "couleur": ["blue", "pink", "yellow"],
+    "hitbox": "no hitbox interaction",
+    "lieu": ["prologue","city", "resort", "ridge"],
+    "type": "environment"
+  },
+  "golden strawberry": {
+    "couleur": ["yellow"],
+    "hitbox": "square",
+    "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell"],
+    "type": "collectibles"
+  },
+  "golden winged strawberry": {
+    "couleur": ["yellow", "white"],
+    "hitbox": "square",
+    "lieu": ["city"],
+    "type": "collectibles"
+  },
+  "granny": {
+    "couleur": ["green", "white"],
+    "hitbox": "no hitbox interaction",
+    "lieu": ["prologue", "ridge", "reflection", "core", "farewell"],
+    "type": "characters"
+  },
+  "green booster": {
+    "couleur": ["green"],
+    "hitbox": "circular",
+    "lieu": ["ridge", "summit", "farewell"],
+    "type": "movement & propulsion"
+  },
+  "heart door": {
+    "couleur": ["blue"],
+    "hitbox": "rectangular",
+    "lieu": ["core", "farewell"],
+    "type": "environment"
+  },
+  "intro car": {
+    "couleur": ["brown", "blue"],
+    "hitbox": "rectangular",
+    "lieu": ["prologue", "core", "farewell"],
+    "type": "environment"
+  },
+  "jellyfish": {
+    "couleur": ["blue"],
+    "hitbox": "rectangular",
+    "lieu": ["farewell"],
+    "type": "movement & propulsion"
+  },
+  "jumpthrough": {
+    "couleur": ["brown", "grey"],
+    "hitbox": "rectangular",
+    "lieu": ["prologue", "city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell"],
+    "type": "environment"
+  },
+  "kevin": {
+    "couleur": ["blue", "brown"],
+    "hitbox": "rectangular",
+    "lieu": ["reflection", "farewell"],
+    "type": "movement & propulsion"
+  },
+  "key": {
+    "couleur": ["yellow"],
+    "hitbox": "square",
+    "lieu": ["resort", "temple", "summit", "farewell"],
+    "type": "collectibles"
+  },
+  "lantern": {
+    "couleur": ["yellow"],
+    "hitbox": "square",
+    "lieu": ["site", "summit"],
+    "type": "environment"
+  },
+  "lava sandwich": {
+    "couleur": ["red", "blue"],
+    "hitbox": "rectangular",
+    "lieu": ["core"],
+    "type": "hazards"
+  },
+  "lava/ice wall": {
+    "couleur": ["red", "blue"],
+    "hitbox": "rectangular",
+    "lieu": ["core"],
+    "type": "hazards"
+  },
+  "lightning": {
+    "couleur": ["yellow"],
+    "hitbox": "rectangular",
+    "lieu": ["farewell"],
+    "type": "hazards"
+  },
+  "lock": {
+    "couleur": ["grey", "brown"],
+    "hitbox": "square",
+    "lieu": ["resort", "temple", "summit", "farewell"],
+    "type": "mechanics"
+  },
+  "madeline": {
+    "couleur": ["blue", "red", "pink"],
+    "hitbox": "rectangular",
+    "lieu": ["prologue", "city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell"],
+    "type": "characters"
+  },
+  "mario block": {
+    "couleur": ["white"],
+    "hitbox": "rectangular",
+    "lieu": ["ridge"],
+    "type": "mechanics"
+  },
+  "mirror": {
+    "couleur": ["grey"],
+    "hitbox": "rectangular",
+    "lieu": ["site", "resort", "temple"],
+    "type": "environment"
+  },
+  "moon berry": {
+    "couleur": ["green"],
+    "hitbox": "square",
+    "lieu": ["farewell"],
+    "type": "collectibles"
+  },
+  "moonblock": {
+    "couleur": ["grey"],
+    "hitbox": "rectangular",
+    "lieu": ["farewell"],
+    "type": "environment"
+  },
+  "move block": {
+    "couleur": ["black"],
+    "hitbox": "rectangular",
+    "lieu": ["ridge", "summit", "farewell"],
+    "type": "movement & propulsion"
+  },
+  "moving platform": {
+    "couleur": ["brown", "purple"],
+    "hitbox": "rectangular",
+    "lieu": ["resort", "ridge", "summit"],
+    "type": "mechanics"
+  },
+  "oshiro": {
+    "couleur": ["green", "black"],
+    "hitbox": "no hitbox interaction",
+    "lieu": ["resort"],
+    "type": "characters"
+  },
+  "oshiro boss": {
+    "couleur": ["white"],
+    "hitbox": "other shape",
+    "lieu": ["resort"],
+    "type": "hazards"
+  },
+  "pico8 computer": {
+    "couleur": ["grey"],
+    "hitbox": "square",
+    "lieu": ["resort"],
+    "type": "environment"
+  },
+  "power box": {
+    "couleur": ["grey"],
+    "hitbox": "square",
+    "lieu": ["farewell"],
+    "type": "mechanics"
+  },
+  "pufferfish": {
+    "couleur": ["orange"],
+    "hitbox": "other shape",
+    "lieu": ["farewell"],
+    "type": "movement & propulsion"
+  },
+  "red booster": {
+    "couleur": ["red"],
+    "hitbox": "circular",
+    "lieu": ["temple", "summit", "farewell"],
+    "type": "movement & propulsion"
+  },
+  "refill": {
+    "couleur": ["green", "pink"],
+    "hitbox": "square",
+    "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell"],
+    "type": "mechanics"
+  },
+  "refill double": {
+    "couleur": ["pink"],
+    "hitbox": "square",
+    "lieu": ["farewell"],
+    "type": "mechanics"
+  },
+  "resort roof": {
+    "couleur": ["purple"],
+    "hitbox": "rectangular",
+    "lieu": ["resort", "summit"],
+    "type": "environment"
+  },
+  "seeker": {
+    "couleur": ["blue", "red"],
+    "hitbox": "rectangular",
+    "lieu": ["temple"],
+    "type": "hazards"
+  },
+  "seeker barrier": {
+    "couleur": ["white"],
+    "hitbox": "rectangular",
+    "lieu": ["temple", "farewell"],
+    "type": "mechanics"
+  },
+  "seeker block": {
+    "couleur": ["red"],
+    "hitbox": "rectangular",
+    "lieu": ["temple"],
+    "type": "mechanics"
+  },
+  "snowball": {
+    "couleur": ["white"],
+    "hitbox": "circular",
+    "lieu": ["ridge", "summit"],
+    "type": "hazards"
+  },
+  "spikes": {
+    "couleur": ["white", "blue", "red"],
+    "hitbox": "rectangular",
+    "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell"],
+    "type": "hazards"
+  },
+  "spinners": {
+    "couleur": ["blue", "red", "purple", "rainbow"],
+    "hitbox": "other shape",
+    "lieu": ["ridge", "temple", "reflection", "summit", "core", "farewell"],
+    "type": "hazards"
+  },
+  "spring": {
+    "couleur": ["brown"],
+    "hitbox": "rectangular",
+    "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell"],
+    "type": "movement & propulsion"
+  },
+  "starjump block": {
+    "couleur": ["white"],
+    "hitbox": "rectangular",
+    "lieu": ["reflection", "core"],
+    "type": "environment"
+  },
+  "strawberry": {
+    "couleur": ["red"],
+    "hitbox": "square",
+    "lieu": ["city", "site", "resort", "ridge", "temple", "summit", "core"],
+    "type": "collectibles"
+  },
+  "strawberry seed": {
+    "couleur": ["yellow"],
+    "hitbox": "square",
+    "lieu": ["site", "ridge", "temple", "summit"],
+    "type": "collectibles"
+  },
+  "swap block": {
+    "couleur": ["grey"],
+    "hitbox": "rectangular",
+    "lieu": ["temple", "summit", "farewell"],
+    "type": "movement & propulsion"
+  },
+  "temple eyeball": {
+    "couleur": ["white", "purple"],
+    "hitbox": "rectangular",
+    "lieu": ["temple"],
+    "type": "environment"
+  },
+  "temple gate": {
+    "couleur": ["grey"],
+    "hitbox": "rectangular",
+    "lieu": ["temple", "summit", "farewell"],
+    "type": "mechanics"
+  },
+  "temple torch": {
+    "couleur": ["yellow, blue"],
+    "hitbox": "square",
+    "lieu": ["temple"],
+    "type": "environment"
+  },
+  "theo": {
+    "couleur": ["green"],
+    "hitbox": "no hitbox interaction",
+    "lieu": ["city", "site", "resort", "ridge", "temple", "reflection"],
+    "type": "characters"
+  },
+  "theo crystal": {
+    "couleur": ["blue"],
+    "hitbox": "rectangular",
+    "lieu": ["temple"],
+    "type": "movement & propulsion"
+  },
+  "theo gate": {
+    "couleur": ["yellow"],
+    "hitbox": "rectangular",
+    "lieu": ["temple"],
+    "type": "mechanics"
+  },
+  "tiles": {
+    "couleur": ["brown", "grey", "blue", "red", "green", "purple", "white"],
+    "hitbox": "square",
+    "lieu": ["prologue", "city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell"],
+    "type": "environment"
+  },
+  "touch switch": {
+    "couleur": ["blue", "purple"],
+    "hitbox": "square",
+    "lieu": ["site", "resort", "ridge", "temple", "reflection", "summit", "farewell"],
+    "type": "mechanics"
+  },
+  "touch switch gate": {
+    "couleur": ["grey"],
+    "hitbox": "rectangular",
+    "lieu": ["site", "resort", "ridge", "temple", "reflection", "summit", "farewell"],
+    "type": "mechanics"
+  },
+  "trigger spike": {
+    "couleur": ["red"],
+    "hitbox": "rectangular",
+    "lieu": ["resort", "summit", "farewell"],
+    "type": "mechanics"
+  },
+  "tutorial bird": {
+    "couleur": ["blue"],
+    "hitbox": "no hitbox interaction",
+    "lieu": ["prologue", "city", "ridge", "reflection", "core", "farewell"],
+    "type": "characters"
+  },
+  "water": {
+    "couleur": ["blue"],
+    "hitbox": "rectangular",
+    "lieu": ["resort", "ridge", "reflection", "summit"],
+    "type": "mechanics"
+  },
+  "wind": {
+    "couleur": ["white"],
+    "hitbox": "no hitbox interaction",
+    "lieu": ["ridge", "summit", "farewell"],
+    "type": "movement & propulsion"
+  },
+  "winged strawberry": {
+    "couleur": ["red", "white"],
+    "hitbox": "square",
+    "lieu": ["city", "site", "resort", "ridge", "temple", "summit"],
+    "type": "collectibles"
+  },
+  "zip movers": {
+    "couleur": ["grey", "blue"],
+    "hitbox": "rectangular",
+    "lieu": ["city", "summit", "farewell"],
+    "type": "movement & propulsion"
+  }
+}
