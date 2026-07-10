@@ -83,6 +83,12 @@
     "lieu": ["reflection", "core"],
     "type": "movement & propulsion"
   },
+  "fire bumper": {
+    "couleur": ["red"],
+    "hitbox": "circular",
+    "lieu": ["core"],
+    "type": "hazard"
+  },
   "cassette block": {
     "couleur": ["blue", "pink", "yellow", "green"],
     "hitbox": "rectangular",
@@ -125,11 +131,19 @@
     "lieu": ["resort"],
     "type": "environment"
   },
-  "conveyor belt/ice wall": {
-    "couleur": ["grey", "blue"],
+
+  "conveyor belt": {
+    "couleur": ["grey"],
     "hitbox": "rectangular",
     "lieu": ["core", "farewell"],
     "type": "movement & propulsion"
+  },
+
+  "slippery ice wall": {
+    "couleur": ["blue"],
+    "hitbox": "rectangular",
+    "lieu": ["core", "farewell"],
+    "type": "mechanics"
   },
   "core switch": {
     "couleur": ["blue", "red"],
@@ -137,12 +151,19 @@
     "lieu": ["core"],
     "type": "mechanics"
   },
-  "coreblock": {
-    "couleur": ["blue", "red"],
+  "magma block": {
+    "couleur": ["red"],
+    "hitbox": "rectangular",
+    "lieu": ["core", "farewell"],
+    "type": "movement & propulsion"
+  },
+  "ice crumble block": {
+    "couleur": ["blue"],
     "hitbox": "rectangular",
     "lieu": ["core", "farewell"],
     "type": "mechanics"
   },
+
   "crumble block": {
     "couleur": ["grey"],
     "hitbox": "rectangular",
@@ -198,9 +219,15 @@
     "lieu": ["reflection", "summit", "core", "farewell"],
     "type": "movement & propulsion"
   },
-  "fire/ice ball": {
-    "couleur": ["red", "blue"],
+  "fire ball": {
+    "couleur": ["red", "orange"],
     "hitbox": "circular",
+    "lieu": ["core", "farewell"],
+    "type": "hazards"
+  },
+  "ice ball": {
+    "couleur": ["blue"],
+    "hitbox": "other shape",
     "lieu": ["core", "farewell"],
     "type": "hazards"
   },
@@ -277,13 +304,25 @@
     "type": "environment"
   },
   "lava sandwich": {
-    "couleur": ["red", "blue"],
+    "couleur": ["red"],
     "hitbox": "rectangular",
     "lieu": ["core"],
     "type": "hazards"
   },
-  "lava/ice wall": {
-    "couleur": ["red", "blue"],
+  "ice sandwich": {
+    "couleur": ["blue"],
+    "hitbox": "rectangular",
+    "lieu": ["core"],
+    "type": "hazards"
+  },
+  "lava wall": {
+    "couleur": ["red"],
+    "hitbox": "rectangular",
+    "lieu": ["core"],
+    "type": "hazards"
+  },
+  "ice wall": {
+    "couleur": ["blue"],
     "hitbox": "rectangular",
     "lieu": ["core"],
     "type": "hazards"
