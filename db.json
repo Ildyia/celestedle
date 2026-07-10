@@ -269,7 +269,7 @@
   },
   "intro car": {
     "couleur": ["brown", "blue"],
-    "hitbox": "rectangular",
+    "hitbox": "other shape",
     "lieu": ["prologue", "core", "farewell"],
     "type": "environment"
   },
