@@ -300,7 +300,7 @@
   "lantern": {
     "couleur": ["yellow"],
     "hitbox": "square",
-    "lieu": ["site", "summit"],
+    "lieu": ["site", "resort" "summit"],
     "type": "environment"
   },
   "lava sandwich": {
