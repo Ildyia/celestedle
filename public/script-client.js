@@ -15,6 +15,10 @@ const App = {
     crumbleblock: "crumble block",
     jumpthroughs: "jumpthrough",
     "blue booster": "green booster",
+    "red bubble": "red booster",
+    "green bubble": "green booster",
+    "blue bubble": "green booster",
+    bubble: "green booster",
     piaf: "bird",
     oiseau: "bird",
     "moving block": "move block",
@@ -36,6 +40,13 @@ const App = {
     "badeline gun": "badeline shot",
     "badeline blaster": "badeline shot",
     "badeline shooter": "badeline shot",
+    "fire wall": "lava/ice wall",
+    "slime door": "clutter door",
+    "slime button": "clutter switch",
+    "slime switch": "clutter switch",
+    books: "clutter tiles",
+    towels: "clutter tiles",
+    crates: "clutter tiles",
   },
   officialElementsList: [],
   historyLog: [],
@@ -78,9 +89,7 @@ const App = {
       this.nodes.input.addEventListener("keydown", (e) => this.handleSuggestionsKeyboard(e));
     }
     if (this.nodes.personalizedBtn) {
-      this.nodes.personalizedBtn.addEventListener("click", () =>
-        ModalService.openPersonalizedModal(this),
-      );
+      this.nodes.personalizedBtn.addEventListener("click", () => ModalService.openPersonalizedModal(this));
     }
     if (this.nodes.form) {
       this.nodes.form.addEventListener("submit", (e) => this.handleFormSubmit(e));
@@ -285,9 +294,7 @@ const App = {
           keysToRemove.forEach((key) => localStorage.removeItem(`celestedle_${key}`));
           localStorage.setItem("celestedle_version", data.secretVersion);
 
-          this.showToastNotification(
-            "The secret word has been changed by an admin ! Your tries have been reset !",
-          );
+          this.showToastNotification("The secret word has been changed by an admin ! Your tries have been reset !");
           setTimeout(() => location.reload(), 2500);
           this.isProcessing = false;
           return;
@@ -347,9 +354,7 @@ const App = {
       return;
     }
 
-    const officialExists = this.officialElementsList.some(
-      (element) => element.toLowerCase() === value,
-    );
+    const officialExists = this.officialElementsList.some((element) => element.toLowerCase() === value);
 
     if (!officialExists) {
       errorContainer.textContent = `"${value}" is not a valid official element name.`;
@@ -388,9 +393,7 @@ const App = {
 
   handleShareScore() {
     const isWin = localStorage.getItem("celestedle_status") !== "lose";
-    let shareOutputText = isWin
-      ? `Celestedle of the day in ${this.tryCount} tries\n\n`
-      : `Celestedle of the day : Forfeit ❌ (${this.tryCount} tries)\n\n`;
+    let shareOutputText = isWin ? `Celestedle of the day in ${this.tryCount} tries\n\n` : `Celestedle of the day : Forfeit ❌ (${this.tryCount} tries)\n\n`;
 
     const scoreToEmojiMap = {
       correct: "🟩",
@@ -430,8 +433,7 @@ const App = {
   renderEndGameScreen() {
     this.nodes.form.style.display = "none";
     if (this.nodes.giveupBtn) this.nodes.giveupBtn.style.display = "none";
-    if (this.nodes.shareBtn)
-      this.nodes.shareBtn.style.setProperty("display", "inline-flex", "important");
+    if (this.nodes.shareBtn) this.nodes.shareBtn.style.setProperty("display", "inline-flex", "important");
 
     const gameStatus = localStorage.getItem("celestedle_status");
     const isWin = gameStatus !== "lose";
