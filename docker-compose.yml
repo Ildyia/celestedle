@@ -3,14 +3,16 @@ services:
     build: .
     env_file: .env
     container_name: celestedle-api
+    ports:
+        - "3000:3000"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.celestedle.rule=Host(`celestedle-api.mizkyosia.fr`)"
       - "traefik.http.routers.celestedle.entrypoints=web"
       - "traefik.http.services.celestedle.loadbalancer.server.port=${PORT}"
     networks:
-      - traefik-public
+     - traefik-public
 
 networks:
-  traefik-public:
-    external: true
+ traefik-public:
+  external: true

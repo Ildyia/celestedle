@@ -2,10 +2,13 @@ FROM node:25-alpine
 
 WORKDIR /api
 
-COPY backend/package*.json .
+# Copie les fichiers de dépendances depuis la racine
+COPY package*.json ./
 
-RUN npm ci
+RUN npm ci --omit=dev
 
-COPY backend/ .
+# Copie tout le reste du projet (le dossier src, public, db.json, etc.)
+COPY . .
 
-CMD ["node", "server.js"]
+# Lance le serveur depuis son nouvel emplacement
+CMD ["node", "src/server.js"]
