@@ -1,28 +1,24 @@
-const fs = require("fs");
-const path = require("path");
+let database = {};
+let officialElementsList = [];
 
-const database = JSON.parse(fs.readFileSync(path.join(__dirname, "../../db.json"), "utf8"));
-const officialElementsList = Object.keys(database).sort();
+async function loadElementsFromDB(db) {
+  try {
+    const elements = await db.collection("words").find({}).toArray();
 
-let secretForce = null;
-let globalSeedHash = 20250204;
+    const newDatabase = {};
+    elements.forEach((el) => {
+      const { name, ...rest } = el;
+      newDatabase[name] = rest;
+    });
 
-function getSecretOfTheDay() {
-  if (secretForce) return secretForce;
+    database = newDatabase;
+    officialElementsList = Object.keys(database).sort();
 
-  const dateString = new Date().toLocaleDateString("sv-SE", {
-    timeZone: "Europe/Paris",
-  });
-
-  let localizedHash = globalSeedHash;
-
-  for (let i = 0; i < dateString.length; i++) {
-    // Utilise une opération mathématique standard pour éviter les bugs d'entiers 32 bits de Node
-    localizedHash = (localizedHash * 33 + dateString.charCodeAt(i)) | 0;
+    console.log(`Successfully loaded ${officialElementsList.length} elements from MongoDB.`);
+  } catch (error) {
+    console.error("Failed to load elements from MongoDB:", error);
+    throw error;
   }
-
-  const targetedIndex = Math.abs(localizedHash) % officialElementsList.length;
-  return officialElementsList[targetedIndex];
 }
 
 function normalizeMetaList(data) {
@@ -38,14 +34,13 @@ function normalizeMetaList(data) {
   return [];
 }
 
-function updateSeedHash(newHash) {
-  globalSeedHash = newHash;
-}
-
 module.exports = {
-  database,
-  officialElementsList,
-  getSecretOfTheDay,
+  get database() {
+    return database;
+  },
+  get officialElementsList() {
+    return officialElementsList;
+  },
+  loadElementsFromDB,
   normalizeMetaList,
-  updateSeedHash,
 };

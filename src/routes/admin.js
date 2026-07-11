@@ -1,9 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const { updateSeedHash } = require("../utils/helpers");
-
+const { getDB } = require("../utils/db");
+const helpers = require("../utils/helpers");
 const adminKey = process.env.ADMIN_PASSWORD;
-console.log("--- LA CLÉ ADMIN CHARGÉE EST :", adminKey, "---"); // <-- AJOUTE CETTE LIGNE
+const { getDailyIndex, setAdminSeedModifier } = require("../utils/cronWord");
+
+function getParisDateString() {
+  return new Date().toLocaleDateString("sv-SE", {
+    timeZone: "Europe/Paris",
+  });
+}
 
 router.post("/verify-key", (req, res) => {
   const { key } = req.body;
@@ -13,24 +19,49 @@ router.post("/verify-key", (req, res) => {
   res.json({ success: true, message: "Access authorized" });
 });
 
-router.post("/random-hash", (req, res) => {
+router.post("/random-hash", async (req, res) => {
   const { key, newHash } = req.body;
 
   if (key !== adminKey) {
     return res.status(403).json({ error: "Access denied" });
   }
 
-  if (newHash === null) {
-    updateSeedHash(20250204);
-    return res.json({
-      message: "The seed hash has been reset to the system default configuration.",
-    });
-  }
+  try {
+    const db = getDB();
+    const todayStr = getParisDateString();
 
-  updateSeedHash(newHash);
-  res.json({
-    message: "The seed hash updated successfully. Daily element puzzle has rotated.",
-  });
+    // 1. Applique le modificateur (null réinitialise la date par défaut)
+    setAdminSeedModifier(newHash);
+
+    // 2. Calcule le nouvel index et récupère le mot associé
+    const index = getDailyIndex(todayStr);
+    const newSecretWord = helpers.officialElementsList[index];
+
+    // 3. Écrase ou insère le mot pour aujourd'hui dans daily_words
+    await db.collection("daily_words").updateOne(
+      { date: todayStr },
+      { 
+        $set: { 
+          word: newSecretWord 
+        },
+        $setOnInsert: {
+          successCount: 0,
+          averageAttempts: 0,
+          bestScore: null,
+          createdAt: new Date()
+        }
+      },
+      { upsert: true }
+    );
+
+    return res.json({
+      message: `Daily puzzle rotated successfully. New word for today is: ${newSecretWord}`,
+    });
+
+  } catch (error) {
+    console.error("Admin rotation failed:", error);
+    return res.status(500).json({ error: "Server error during rotation" });
+  }
 });
 
 module.exports = router;
