@@ -288,6 +288,7 @@ const App = {
 
     ApiService.validateGuess(choice)
       .then((data) => {
+        this.isProcessing = false;
         const savedVersion = localStorage.getItem("celestedle_version");
 
         if (savedVersion && savedVersion !== String(data.secretVersion)) {
