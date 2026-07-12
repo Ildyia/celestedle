@@ -24,7 +24,7 @@
     "type": "hazards"
   },
   "badeline laser": {
-    "couleur": ["purple"],
+    "couleur": ["purple", "red"],
     "hitbox": "other shape",
     "lieu": ["reflection"],
     "type": "hazards"
@@ -36,7 +36,7 @@
     "type": "movement & propulsion"
   },
   "badeline projectile": {
-    "couleur": ["purple"],
+    "couleur": ["purple", "red"],
     "hitbox": "square",
     "lieu": ["reflection"],
     "type": "hazards"
