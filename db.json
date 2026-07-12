@@ -78,7 +78,7 @@
     "type": "environment"
   },
   "bumper": {
-    "couleur": ["blue"],
+    "couleur": ["blue", "brown"],
     "hitbox": "circular",
     "lieu": ["reflection", "core"],
     "type": "movement & propulsion"
