@@ -78,7 +78,7 @@
     "type": "environment"
   },
   "bumper": {
-    "couleur": ["blue"],
+    "couleur": ["blue", "brown"],
     "hitbox": "circular",
     "lieu": ["reflection", "core"],
     "type": "movement & propulsion"
@@ -168,9 +168,9 @@
     "type": "hazards"
   },
   "exit block": {
-    "couleur": ["purple"],
+    "couleur": ["brown", "grey", "blue", "red", "green", "purple", "white"],
     "hitbox": "rectangular",
-    "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell"],
+    "lieu": ["site", "resort", "temple", "reflection", "summit", "core", "farewell"],
     "type": "environment"
   },
   "fake wall": {
@@ -201,7 +201,7 @@
     "couleur": ["red"],
     "hitbox": "circular",
     "lieu": ["core"],
-    "type": "hazard"
+    "type": "hazards"
   },
   "flutterbird": {
     "couleur": ["blue", "pink", "yellow"],
@@ -408,7 +408,7 @@
     "type": "movement & propulsion"
   },
   "refill": {
-    "couleur": ["green", "pink"],
+    "couleur": ["green"],
     "hitbox": "square",
     "lieu": ["city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell"],
     "type": "mechanics"
@@ -555,7 +555,7 @@
     "couleur": ["red"],
     "hitbox": "rectangular",
     "lieu": ["resort", "summit", "farewell"],
-    "type": "mechanics"
+    "type": "hazards"
   },
   "tutorial bird": {
     "couleur": ["blue"],
@@ -584,7 +584,7 @@
   "zip movers": {
     "couleur": ["grey", "blue"],
     "hitbox": "rectangular",
-    "lieu": ["city", "summit", "farewell"],
+    "lieu": ["city", "old site", "summit", "farewell"],
     "type": "movement & propulsion"
   }
 }
