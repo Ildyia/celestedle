@@ -17,8 +17,10 @@ function getSecretOfTheDay() {
   let localizedHash = globalSeedHash;
 
   for (let i = 0; i < dateString.length; i++) {
-    // Utilise une opération mathématique standard pour éviter les bugs d'entiers 32 bits de Node
+    // Use bitwise OR with 0 to ensure the result is a 32-bit integer
     localizedHash = (localizedHash * 33 + dateString.charCodeAt(i)) | 0;
+    //Use math function to randomize the localizedHash further
+    localizedHash = Math.sin(localizedHash) * 10000 | 0;
   }
 
   const targetedIndex = Math.abs(localizedHash) % officialElementsList.length;

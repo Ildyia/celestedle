@@ -584,7 +584,7 @@
   "zip movers": {
     "couleur": ["grey", "blue"],
     "hitbox": "rectangular",
-    "lieu": ["city", "old site", "summit", "farewell"],
+    "lieu": ["city", "site", "summit", "farewell"],
     "type": "movement & propulsion"
   }
 }
