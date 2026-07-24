@@ -1,7 +1,8 @@
 const API_BASE_URL =
-  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1"
     ? "http://localhost:3000"
-    : "https://celestedle-api.mizkyosia.fr";
+    : "https://celestedle-api.onrender.com";
 
 export const ApiService = {
   fetchSecretVersion() {
@@ -13,7 +14,8 @@ export const ApiService = {
   },
 
   validateGuess(choice) {
-    return fetch(`${API_BASE_URL}/validate`, { // <-- Retiré /api
+    return fetch(`${API_BASE_URL}/validate`, {
+      // <-- Retiré /api
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ choix: choice }),
@@ -24,7 +26,8 @@ export const ApiService = {
   },
 
   forfeitGame() {
-    return fetch(`${API_BASE_URL}/getSecretWord`, { // <-- Retiré /api
+    return fetch(`${API_BASE_URL}/getSecretWord`, {
+      // <-- Retiré /api
       method: "POST",
       headers: { "Content-Type": "application/json" },
     }).then((res) => {
@@ -34,7 +37,8 @@ export const ApiService = {
   },
 
   verifyAdminKey(password) {
-    return fetch(`${API_BASE_URL}/admin/verify-key`, { // <-- Laisse /admin si ta route serveur est sur /api/admin ou adapte selon tes routes admin
+    return fetch(`${API_BASE_URL}/admin/verify-key`, {
+      // <-- Laisse /admin si ta route serveur est sur /api/admin ou adapte selon tes routes admin
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ key: password }),
@@ -45,7 +49,8 @@ export const ApiService = {
   },
 
   getSecretWordAdmin() {
-    return fetch(`${API_BASE_URL}/getSecretWord`, { // <-- Retiré /api
+    return fetch(`${API_BASE_URL}/getSecretWord`, {
+      // <-- Retiré /api
       method: "POST",
       headers: { "Content-Type": "application/json" },
     }).then((res) => res.json());
@@ -57,5 +62,5 @@ export const ApiService = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ key: password, newHash: newHash }),
     }).then((res) => res.json());
-  }
+  },
 };

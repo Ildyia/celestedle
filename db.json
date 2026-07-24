@@ -570,7 +570,7 @@
     "type": "mechanics"
   },
   "wind": {
-    "couleur": ["white"],
+    "couleur": ["white", "blue", "pink"],
     "hitbox": "no hitbox interaction",
     "lieu": ["ridge", "summit", "farewell"],
     "type": "movement & propulsion"

@@ -3,7 +3,7 @@ const router = express.Router();
 const { updateSeedHash } = require("../utils/helpers");
 
 const adminKey = process.env.ADMIN_PASSWORD;
-console.log("--- LA CLÉ ADMIN CHARGÉE EST :", adminKey, "---"); // <-- AJOUTE CETTE LIGNE
+console.log("--- LA CLÉ ADMIN CHARGÉE EST :", adminKey, "---");
 
 router.post("/verify-key", (req, res) => {
   const { key } = req.body;
@@ -23,13 +23,15 @@ router.post("/random-hash", (req, res) => {
   if (newHash === null) {
     updateSeedHash(20250204);
     return res.json({
-      message: "The seed hash has been reset to the system default configuration.",
+      message:
+        "The seed hash has been reset to the system default configuration.",
     });
   }
 
   updateSeedHash(newHash);
   res.json({
-    message: "The seed hash updated successfully. Daily element puzzle has rotated.",
+    message:
+      "The seed hash updated successfully. Daily element puzzle has rotated.",
   });
 });
 
