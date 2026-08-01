@@ -7,6 +7,12 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 const App = {
+  switchMode(targetMode) {
+    const isHard = targetMode === "hard";
+    localStorage.setItem("celestedle_hardmode_active", String(isHard));
+    location.reload();
+  },
+
   synonyms: {
     cassette: "cassette tape",
     tape: "cassette tape",
@@ -58,6 +64,13 @@ const App = {
   officialElementsList: [],
   historyLog: [],
   tryCount: 0,
+  hardTryCount: 0,
+  hardModeLimit: 6,
+  hardModeActive: false,
+  hardModeUnlocked: false,
+  hardModeSeed: null,
+  hardHistoryLog: [],
+  hardGameOver: false,
   selectedIndex: -1,
   nodes: {},
 
@@ -65,11 +78,17 @@ const App = {
     this.cacheDOM();
     this.checkDailyReset();
     this.checkApplicationVersion();
+    this.loadHardModeState();
     this.loadGameState();
     this.fetchOfficialElements();
     this.bindEvents();
     this.fetchPersonalizedSynonyms();
     initTimer(this.nodes.timerContainer);
+    if (this.nodes.activateHardModeBtn) {
+      this.nodes.activateHardModeBtn.addEventListener("click", () =>
+        this.activateHardMode(),
+      );
+    }
   },
 
   cacheDOM() {
@@ -78,6 +97,8 @@ const App = {
       input: document.getElementById("element-input"),
       suggestionsBox: document.getElementById("element-suggestions"),
       tryCountSpan: document.getElementById("try-count"),
+      hardModeStatus: document.getElementById("hard-mode-status"),
+      activateHardModeBtn: document.getElementById("activate-hard-mode-btn"),
       shareBtn: document.getElementById("share-btn"),
       giveupBtn: document.getElementById("giveup-btn"),
       rulesBtn: document.getElementById("rules-btn"),
@@ -112,6 +133,11 @@ const App = {
     if (this.nodes.rulesBtn) {
       this.nodes.rulesBtn.addEventListener("click", () =>
         this.renderRulesModal(),
+      );
+    }
+    if (this.nodes.activateHardModeBtn) {
+      this.nodes.activateHardModeBtn.addEventListener("click", () =>
+        this.activateHardMode(),
       );
     }
     if (this.nodes.giveupBtn) {
@@ -153,6 +179,14 @@ const App = {
         "history",
         "version",
         "solution",
+        "hardmode_unlocked",
+        "hardmode_active",
+        "hardmode_seed",
+        "hardmode_tries",
+        "hardmode_history",
+        "hardmode_gameover",
+        "hardmode_status",
+        "hardmode_solution",
       ];
       keysToRemove.forEach((key) =>
         localStorage.removeItem(`celestedle_${key}`),
@@ -179,16 +213,60 @@ const App = {
 
   loadGameState() {
     this.tryCount = parseInt(localStorage.getItem("celestedle_tries")) || 0;
-    if (this.nodes.tryCountSpan) {
-      this.nodes.tryCountSpan.textContent = this.tryCount;
-    }
+    this.hardTryCount =
+      parseInt(localStorage.getItem("celestedle_hardmode_tries")) || 0;
+    this.hardModeSeed =
+      localStorage.getItem("celestedle_hardmode_seed") || null;
 
-    this.historyLog =
+    const dailyHistory =
       JSON.parse(localStorage.getItem("celestedle_history")) || [];
+    const hardHistory =
+      JSON.parse(localStorage.getItem("celestedle_hardmode_history")) || [];
+
+    this.historyLog = this.hardModeActive ? hardHistory : dailyHistory;
     this.historyLog.forEach((data) => this.addTableRow(data));
 
-    if (localStorage.getItem("celestedle_gameover") === "true") {
+    if (this.nodes.tryCountSpan) {
+      this.nodes.tryCountSpan.textContent = this.hardModeActive
+        ? this.hardTryCount
+        : this.tryCount;
+    }
+
+    this.updateHardModeDisplay();
+
+    if (
+      this.hardModeActive &&
+      localStorage.getItem("celestedle_hardmode_gameover") === "true"
+    ) {
       this.renderEndGameScreen();
+      return;
+    }
+
+    if (
+      !this.hardModeActive &&
+      localStorage.getItem("celestedle_gameover") === "true"
+    ) {
+      this.renderEndGameScreen();
+    }
+  },
+
+  updateHardModeDisplay() {
+    if (this.nodes.hardModeStatus) {
+      if (this.hardModeActive) {
+        this.nodes.hardModeStatus.textContent = `Hard mode active — ${this.hardTryCount} / ${this.hardModeLimit}`;
+        this.nodes.hardModeStatus.classList.remove("unlocked");
+      } else if (this.hardModeUnlocked) {
+        this.nodes.hardModeStatus.textContent = `Hard mode unlocked! Activate it for a ${this.hardModeLimit}-guess challenge.`;
+        this.nodes.hardModeStatus.classList.add("unlocked");
+      } else {
+        this.nodes.hardModeStatus.textContent =
+          "Hard mode locked until you win today's Celestedle.";
+        this.nodes.hardModeStatus.classList.remove("unlocked");
+      }
+    }
+    if (this.nodes.activateHardModeBtn) {
+      this.nodes.activateHardModeBtn.style.display =
+        this.hardModeUnlocked && !this.hardModeActive ? "inline-flex" : "none";
     }
   },
 
@@ -316,6 +394,14 @@ const App = {
 
     if (isSynonym) choice = this.synonyms[normalizedGuess];
 
+    if (this.hardModeActive && this.hardTryCount >= this.hardModeLimit) {
+      this.showToastNotification(
+        "Hard mode guess limit reached — no more attempts allowed.",
+      );
+      this.isProcessing = false;
+      return;
+    }
+
     const alreadyGuessed = this.historyLog.some(
       (attempt) => attempt.nom.toLowerCase() === choice,
     );
@@ -331,7 +417,11 @@ const App = {
       return;
     }
 
-    ApiService.validateGuess(choice)
+    const validatePromise = this.hardModeActive
+      ? ApiService.validateHardMode(choice, this.hardModeSeed)
+      : ApiService.validateGuess(choice);
+
+    validatePromise
       .then((data) => {
         this.isProcessing = false;
         const savedVersion = localStorage.getItem("celestedle_version");
@@ -347,7 +437,6 @@ const App = {
             "The secret word has been changed by an admin ! Your tries have been reset !",
           );
           setTimeout(() => location.reload(), 2500);
-          this.isProcessing = false;
           return;
         }
 
@@ -355,10 +444,36 @@ const App = {
           localStorage.setItem("celestedle_version", data.secretVersion);
         }
 
-        this.tryCount++;
-        localStorage.setItem("celestedle_tries", this.tryCount);
-        if (this.nodes.tryCountSpan)
-          this.nodes.tryCountSpan.textContent = this.tryCount;
+        if (this.hardModeActive) {
+          this.hardTryCount++;
+          localStorage.setItem("celestedle_hardmode_tries", this.hardTryCount);
+          this.hardHistoryLog.push({
+            ...data,
+            isSynonym,
+            synonymOriginal: isSynonym ? rawGuess : undefined,
+          });
+          localStorage.setItem(
+            "celestedle_hardmode_history",
+            JSON.stringify(this.hardHistoryLog),
+          );
+          if (this.nodes.tryCountSpan)
+            this.nodes.tryCountSpan.textContent = this.hardTryCount;
+          this.historyLog = this.hardHistoryLog;
+        } else {
+          this.tryCount++;
+          localStorage.setItem("celestedle_tries", this.tryCount);
+          if (this.nodes.tryCountSpan)
+            this.nodes.tryCountSpan.textContent = this.tryCount;
+          this.historyLog.push({
+            ...data,
+            isSynonym,
+            synonymOriginal: isSynonym ? rawGuess : undefined,
+          });
+          localStorage.setItem(
+            "celestedle_history",
+            JSON.stringify(this.historyLog),
+          );
+        }
 
         const guessData = {
           ...data,
@@ -366,22 +481,29 @@ const App = {
           synonymOriginal: isSynonym ? rawGuess : undefined,
         };
 
-        this.historyLog.push(guessData);
-        localStorage.setItem(
-          "celestedle_history",
-          JSON.stringify(this.historyLog),
-        );
-
         this.addTableRow(guessData);
         if (this.nodes.input) this.nodes.input.value = "";
         if (this.nodes.suggestionsBox)
           this.nodes.suggestionsBox.style.display = "none";
 
         if (data.verdict.isCorrect) {
+          if (this.hardModeActive) {
+            localStorage.setItem("celestedle_hardmode_gameover", "true");
+            localStorage.setItem("celestedle_hardmode_status", "win");
+            this.hardGameOver = true;
+            this.renderEndGameScreen();
+            return;
+          }
+          this.unlockHardModeBonus();
           confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
           localStorage.setItem("celestedle_gameover", "true");
           localStorage.setItem("celestedle_status", "win");
           location.reload();
+          return;
+        }
+
+        if (this.hardModeActive && this.hardTryCount >= this.hardModeLimit) {
+          this.finishHardModeLoss();
         }
       })
       .catch((err) => {
@@ -442,6 +564,16 @@ const App = {
   },
 
   handleForfeit() {
+    if (this.hardModeActive) {
+      ApiService.getHardModeSecret(this.hardModeSeed)
+        .then((data) => this.endHardModeAsLoss(data.secretElement))
+        .catch((err) => {
+          console.error("Error during hard mode forfeit:", err);
+          this.endHardModeAsLoss();
+        });
+      return;
+    }
+
     ApiService.forfeitGame()
       .then((data) => {
         localStorage.setItem("celestedle_gameover", "true");
@@ -499,6 +631,115 @@ const App = {
     setTimeout(() => toast.remove(), 2400);
   },
 
+  loadHardModeState() {
+    this.hardModeUnlocked =
+      localStorage.getItem("celestedle_hardmode_unlocked") === "true";
+    this.hardModeActive =
+      localStorage.getItem("celestedle_hardmode_active") === "true";
+    this.hardModeSeed =
+      localStorage.getItem("celestedle_hardmode_seed") || null;
+    this.hardTryCount =
+      parseInt(localStorage.getItem("celestedle_hardmode_tries")) || 0;
+    this.hardHistoryLog =
+      JSON.parse(localStorage.getItem("celestedle_hardmode_history")) || [];
+  },
+
+  saveHardModeState() {
+    localStorage.setItem(
+      "celestedle_hardmode_unlocked",
+      String(this.hardModeUnlocked),
+    );
+    localStorage.setItem(
+      "celestedle_hardmode_active",
+      String(this.hardModeActive),
+    );
+    if (this.hardModeSeed) {
+      localStorage.setItem("celestedle_hardmode_seed", this.hardModeSeed);
+    }
+    localStorage.setItem(
+      "celestedle_hardmode_tries",
+      String(this.hardTryCount),
+    );
+    localStorage.setItem(
+      "celestedle_hardmode_history",
+      JSON.stringify(this.hardHistoryLog),
+    );
+  },
+
+  unlockHardModeBonus() {
+    if (!this.hardModeUnlocked) {
+      this.hardModeUnlocked = true;
+      this.hardModeSeed = `${new Date().toLocaleDateString("sv-SE", {
+        timeZone: "Europe/Paris",
+      })}:hard`;
+      this.saveHardModeState();
+      if (this.nodes.hardModeStatus) {
+        this.nodes.hardModeStatus.classList.add("unlocked");
+        this.nodes.hardModeStatus.textContent =
+          "Hard mode just unlocked! Activate it for a 6-guess challenge.";
+      }
+    }
+  },
+
+  activateHardMode() {
+    if (!this.hardModeUnlocked) return;
+    this.hardModeActive = true;
+    this.hardTryCount = 0;
+    this.hardHistoryLog = [];
+    this.hardGameOver = false;
+    this.hardModeStatus?.classList.remove("unlocked");
+    this.saveHardModeState();
+    this.clearMessageContainer();
+    if (this.nodes.tableBody) {
+      this.nodes.tableBody.innerHTML = "";
+    }
+    if (this.nodes.form) {
+      this.nodes.form.style.display = "flex";
+    }
+    if (this.nodes.giveupBtn) {
+      this.nodes.giveupBtn.style.display = "inline-flex";
+    }
+    if (this.nodes.tryCountSpan) {
+      this.nodes.tryCountSpan.textContent = this.hardTryCount;
+    }
+    this.updateHardModeDisplay();
+    this.showToastNotification(
+      "Hard mode activated! Limited guesses are now enabled.",
+    );
+  },
+
+  finishHardModeLoss() {
+    this.showToastNotification(
+      "Hard mode limit reached! Revealing today’s answer...",
+    );
+    ApiService.getHardModeSecret(this.hardModeSeed)
+      .then((data) => this.endHardModeAsLoss(data.secretElement))
+      .catch(() => this.endHardModeAsLoss());
+  },
+
+  endHardModeAsLoss(secretElement) {
+    localStorage.setItem("celestedle_hardmode_gameover", "true");
+    localStorage.setItem("celestedle_hardmode_status", "lose");
+    if (secretElement) {
+      localStorage.setItem("celestedle_hardmode_solution", secretElement);
+    }
+    this.hardGameOver = true;
+    this.renderEndGameScreen();
+  },
+
+  clearMessageContainer() {
+    const targetContainer = document.getElementById("message-container");
+    if (targetContainer) targetContainer.innerHTML = "";
+  },
+
+  endGameAsLoss(secretElement) {
+    localStorage.setItem("celestedle_gameover", "true");
+    localStorage.setItem("celestedle_status", "lose");
+    if (secretElement) {
+      localStorage.setItem("celestedle_solution", secretElement);
+    }
+    location.reload();
+  },
   renderEndGameScreen() {
     this.nodes.form.style.display = "none";
     if (this.nodes.giveupBtn) this.nodes.giveupBtn.style.display = "none";
@@ -509,24 +750,44 @@ const App = {
         "important",
       );
 
-    const gameStatus = localStorage.getItem("celestedle_status");
+    const isHardModeEnd = this.hardModeActive;
+    const gameStatus = localStorage.getItem(
+      isHardModeEnd ? "celestedle_hardmode_status" : "celestedle_status",
+    );
     const isWin = gameStatus !== "lose";
+
+    if (isWin && !isHardModeEnd && this.nodes.activateHardModeBtn) {
+      this.nodes.activateHardModeBtn.style.setProperty(
+        "display",
+        "inline-flex",
+        "important",
+      );
+    }
+
     const messageContainer = document.createElement("div");
-
     messageContainer.className = isWin ? "win-message" : "lose-message";
-    const title = isWin ? "GG ! Victory ! 🎉" : "Nice try... Forfeit ! ❌";
+    const title = isWin
+      ? isHardModeEnd
+        ? "Hard mode complete! 🎉"
+        : "GG ! Victory ! 🎉"
+      : "Nice try... Forfeit ! ❌";
 
-    const solution = localStorage.getItem("celestedle_solution") || "Unknown";
+    const solutionKey = isHardModeEnd
+      ? "celestedle_hardmode_solution"
+      : "celestedle_solution";
+    const solution = localStorage.getItem(solutionKey) || "Unknown";
     const formattedSolution =
       solution.charAt(0).toUpperCase() + solution.slice(1);
 
+    const tries = isHardModeEnd ? this.hardTryCount : this.tryCount;
     const matchSummary = isWin
-      ? `You found the secret element in <strong>${this.tryCount}</strong> tries.`
-      : `You didn't find today's celestedle ! The answer was : <strong>${formattedSolution}</strong>`;
+      ? `You found the ${isHardModeEnd ? "hard mode" : "secret"} element in <strong>${tries}</strong> tries.`
+      : `You didn't find ${isHardModeEnd ? "the hard mode" : "today's celestedle"} ! The answer was : <strong>${formattedSolution}</strong>`;
 
     messageContainer.innerHTML = `<h2>${title}</h2><p>${matchSummary}</p>`;
     const targetContainer = document.getElementById("message-container");
     if (targetContainer) {
+      targetContainer.innerHTML = "";
       targetContainer.appendChild(messageContainer);
     } else {
       this.nodes.form.parentNode.insertBefore(
