@@ -296,7 +296,7 @@
   },
   "core sandwich": {
     "couleur": ["red", "blue"],
-    "hitbox": "other shape",
+    "hitbox": "rectangular",
     "lieu": ["core"],
     "type": "hazards"
   },
