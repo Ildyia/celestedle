@@ -49,16 +49,15 @@ function updateSeedHash(newHash) {
 function getHardModeSecret(seed) {
   if (!seed) return getSecretOfTheDay();
 
-  let hash = globalSeedHash;
+  let hash = 20250204;
   for (let i = 0; i < seed.length; i++) {
     hash = (hash * 33 + seed.charCodeAt(i)) | 0;
-    hash = (Math.sin(hash) * 10000) | 0;
+    hash = Math.floor(Math.abs(Math.sin(hash) * 10000));
   }
 
-  const index = Math.abs(hash) % officialElementsList.length;
+  const index = hash % officialElementsList.length;
   return officialElementsList[index];
 }
-
 module.exports = {
   database,
   officialElementsList,
