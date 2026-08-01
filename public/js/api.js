@@ -26,7 +26,6 @@ export const ApiService = {
 
   forfeitGame() {
     return fetch(`${API_BASE_URL}/getSecretWord`, {
-      // <-- Retiré /api
       method: "POST",
       headers: { "Content-Type": "application/json" },
     }).then((res) => {
@@ -37,7 +36,6 @@ export const ApiService = {
 
   verifyAdminKey(password) {
     return fetch(`${API_BASE_URL}/admin/verify-key`, {
-      // <-- Laisse /admin si ta route serveur est sur /api/admin ou adapte selon tes routes admin
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ key: password }),
@@ -49,7 +47,6 @@ export const ApiService = {
 
   getSecretWordAdmin() {
     return fetch(`${API_BASE_URL}/getSecretWord`, {
-      // <-- Retiré /api
       method: "POST",
       headers: { "Content-Type": "application/json" },
     }).then((res) => res.json());

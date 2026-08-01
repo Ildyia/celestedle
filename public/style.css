@@ -287,12 +287,12 @@ th,
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
 }
 
-.discord-sidebar-link {
+.social-sidebar-link {
   margin-top: 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--color-discord);
+  gap: 10px;
   color: #ffffff;
   padding: 12px 20px;
   border-radius: 8px;
@@ -300,12 +300,35 @@ th,
   font-size: 0.9rem;
   font-weight: 600;
   transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+.social-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  object-fit: contain;
+}
+.discord-sidebar-link {
+  background-color: var(--color-discord);
   box-shadow: 0 4px 12px rgba(88, 101, 242, 0.2);
 }
 .discord-sidebar-link:hover {
   background-color: #4752c4;
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(88, 101, 242, 0.4);
+}
+.github-sidebar-link {
+  background-color: #2f363f;
+  box-shadow: 0 4px 12px rgba(47, 54, 63, 0.35);
+}
+.github-sidebar-link {
+  background-color: #2f363f;
+  box-shadow: 0 4px 12px rgba(47, 54, 63, 0.35);
+}
+.github-sidebar-link:hover {
+  background-color: #1f242b;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(47, 54, 63, 0.5);
 }
 
 /* ==========================================================================
