@@ -68,7 +68,7 @@ client.handleBugReport = async ({
   const publicMsg = await publicChannel.send({
     embeds: [
       {
-        title: `🐛 Bug Report [${reportId}]${spoilerTag}`,
+        title: `Bug Report [${reportId}]${spoilerTag}`,
         fields: [
           { name: "Élément", value: elementName, inline: true },
           { name: "Type", value: bugType || "Non spécifié", inline: true },
