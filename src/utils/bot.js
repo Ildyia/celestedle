@@ -69,6 +69,17 @@ client.handleBugReport = async ({
     throw new Error("Discord channels not found. Please check configuration.");
   }
 
+  const cleanElement = elementName.trim();
+  const cleanDescription = description.trim();
+
+  const formattedElement = isSpoiler ? `||${cleanElement}||` : cleanElement;
+  const formattedDescription = isSpoiler
+    ? cleanDescription
+        .split("\n")
+        .map((line) => (line.trim() ? `||${line.trim()}||` : ""))
+        .join("\n")
+    : cleanDescription;
+
   const spoilerTag = isSpoiler ? " ⚠️ [TODAY'S WORD SPOILER]" : "";
   const embedColor = isSpoiler ? 0xf59e0b : 15158332;
 
@@ -78,10 +89,10 @@ client.handleBugReport = async ({
         title: `🛠️ Bug Management [${reportId}]${spoilerTag}`,
         fields: [
           { name: "ID", value: `\`${reportId}\``, inline: true },
-          { name: "Element", value: elementName, inline: true },
-          { name: "Category", value: bugType || "Not specified", inline: true },
+          { name: "Element", value: formattedElement, inline: true },
+          { name: "Category", value: bugType, inline: true },
           { name: "Status", value: "🔴 New", inline: false },
-          { name: "Description", value: description },
+          { name: "Description", value: formattedDescription },
         ],
         color: embedColor,
         timestamp: new Date().toISOString(),
@@ -125,11 +136,11 @@ client.handleBugReport = async ({
       {
         title: `Bug Report [${reportId}]${spoilerTag}`,
         fields: [
-          { name: "Element", value: elementName, inline: true },
-          { name: "Category", value: bugType || "Not specified", inline: true },
+          { name: "Element", value: formattedElement, inline: true },
+          { name: "Category", value: bugType, inline: true },
           { name: "Status", value: "🔴 New", inline: true },
           { name: "Votes", value: "0", inline: true },
-          { name: "Description", value: description },
+          { name: "Description", value: formattedDescription },
         ],
         color: embedColor,
         timestamp: new Date().toISOString(),
