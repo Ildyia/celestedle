@@ -6,10 +6,10 @@
     <title>Celestedle</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="assets/berrywinged.png" type="image/png">
-
 </head>
 <body>
     <div id="layout-wrapper">
+        <!-- BARRE LATÉRALE GAUCHE -->
         <div id="left-sidebar-column">
             <button id="rules-btn" class="sidebar-toggle-btn">Rules</button>
 
@@ -27,7 +27,7 @@
                         <li><strong>Hazards</strong>: Obstacles that kill the player (Spikes, Spinners).</li>
                     </ul>
                     <h4>Chapters</h4>
-                    <p>The "CHAPTER" column indicates which level.s (amongst prologue, 1A, 2A, 3A, 4A, 5A, 6A, 7A, 8A, farewell) the element can be found in. For example, if an item is present in 3A, 3B, 3C and 8B, it will be displayed only as resort.</p>
+                    <p>The "CHAPTER" column indicates which level.s (amongst prologue, 1A, 2A, 3A, 4A, 5A, 6A, 7A, 8A, farewell) the element can be found in.</p>
                     <h4>Colors Indicator</h4>
                     <ul>
                         <li><span style="color: var(--color-correct);">🟩 Correct</span>: Perfect match.</li>
@@ -40,26 +40,32 @@
                 </div>
             </div>
 
-            <div id="stats-sidebar" class="sidebar-block" style="margin-top: 15px;">
+            <!-- BLOC DES 3 STATS COMMUNAUTAIRES -->
+            <div id="stats-sidebar" class="sidebar-block">
                 <h3>Community Stats</h3>
-                <p>Victories today: <span id="success-count">0</span></p>
-                <p>Avg. tries: <span id="avg-tries-count">-</span></p>
-                <p>Avg. hints: <span id="avg-hints-count">-</span></p>
+                <div class="stats-list">
+                    <p>Victories today: <span id="success-count">0</span></p>
+                    <p>Avg. tries: <span id="avg-tries-count">-</span></p>
+                    <p>Avg. hints: <span id="avg-hints-count">-</span></p>
+                </div>
             </div>
         </div>
 
+        <!-- CONTENU PRINCIPAL -->
         <div id="main-content-column">
             <h1>Celestedle</h1>
+            
+            <!-- CONTROLES & ACTION BUTTONS -->
             <div id="game-status">
-                <p>Tries: <span id="try-count">0</span></p>
-                <p>Players solved today: <span id="success-count">0</span></p>
-                <button id="share-btn">Share</button>
-                <button id="giveup-btn">Forfeit</button>
+                <p class="tries-badge">Tries: <span id="try-count">0</span></p>
                 <button id="hint-btn">Hints</button>
                 <button id="personalized-btn">Personalized synonyms</button>
+                <button id="giveup-btn">Forfeit</button>
+                <button id="share-btn" style="display: none;">Share</button>
             </div>
 
             <div id="message-container"></div>
+
             <div id="game-container">
                 <form id="guess-form">
                     <div class="input-container">
@@ -85,23 +91,24 @@
             </div>
         </div>
 
+        <!-- BARRE LATÉRALE DROITE -->
         <div id="right-sidebar-column">
             <div class="bug-card">
                 <h3>Found a bug?</h3>
-                <p>If you encounter a bug, please report it to help improve the game. Your feedback is valuable!</p>
+                <p>If you encounter a bug, please report it to help improve the game.</p>
                 <button id="report-bug-btn">Report a Bug</button>
             </div>
 
             <div id="timer-sidebar" class="sidebar-block">
                 <h3>Next Word in:</h3>
                 <p id="next-word-timer"></p>
-                <p>(or when the admin changes the DB)</p>
+                <p class="small-subtext">(or when the admin changes the DB)</p>
             </div>
 
             <div id="discord-sidebar" class="sidebar-block">
                 <div class="discord-promo-content">
                     <h3>Community Hub</h3>
-                    <p>Join the Discord server to catch the latest updates, read changelogs, and drop your recommendations directly to the developer!</p>
+                    <p>Join the Discord server to catch updates, read changelogs, or talk to the dev!</p>
                     <a href="https://discord.gg/3yqgMbuMbX" target="_blank" class="social-sidebar-link discord-sidebar-link">
                         <img src="assets/discordlogo.png" alt="Discord" class="social-icon">
                         Join Discord
@@ -119,17 +126,19 @@
         <a href="legal-notice.html" class="legal-link">Legal Notice</a>
     </footer>
 
+    <!-- MODAL FORFEIT -->
     <div id="forfeit-modal" class="rules-modal" style="display: none;">
         <div class="rules-content" style="max-width: 450px; text-align: center;">
             <h2 style="color: var(--color-wrong);">Give up?</h2>
             <p style="margin-bottom: 24px;">Are you sure you want to forfeit today's Celestedle and reveal the secret answer?</p>
             <div style="display: flex; gap: 16px; justify-content: center;">
-                <button id="confirm-forfeit-btn" style="background-color: var(--color-wrong); color: white; padding: 12px 24px; border-radius: 8px; border: none; font-family: 'Renogare', sans-serif; cursor: pointer;">Yes, Forfeit</button>
-                <button id="cancel-forfeit-btn" style="background-color: var(--bg-input); color: white; padding: 12px 24px; border-radius: 8px; border: 1px solid #334155; font-family: 'Renogare', sans-serif; cursor: pointer;">Cancel</button>
+                <button id="confirm-forfeit-btn" style="background-color: var(--color-wrong); color: white; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer;">Yes, Forfeit</button>
+                <button id="cancel-forfeit-btn" style="background-color: var(--bg-input); color: white; padding: 12px 24px; border-radius: 8px; border: 1px solid #334155; cursor: pointer;">Cancel</button>
             </div>
         </div>
     </div>
 
+    <!-- MODAL BUG REPORT -->
     <div id="bug-modal" class="rules-modal" style="display: none;">
         <div class="rules-content bug-modal-content">
             <span id="close-bug-btn" class="close-modal-btn">&times;</span>

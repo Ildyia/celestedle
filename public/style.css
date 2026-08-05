@@ -82,6 +82,7 @@ th,
   grid-column: 1;
   display: flex;
   flex-direction: column;
+  gap: 20px;
   width: 100%;
   max-width: 450px;
   justify-self: center;
@@ -145,7 +146,7 @@ th,
   color: var(--color-indigo);
 }
 
-#timer-sidebar p:last-child {
+.small-subtext {
   font-size: 0.8rem;
   font-style: italic;
   color: var(--text-muted);
@@ -205,7 +206,7 @@ th,
 }
 
 /* ==========================================================================
-   5. STYLES DES BOÎTES LATÉRALES
+   5. STYLES DES BOÎTES LATÉRALES & STATISTIQUES
    ========================================================================== */
 .sidebar-block {
   background-color: var(--bg-card);
@@ -222,6 +223,8 @@ th,
 .sidebar-block h3 {
   margin-bottom: 12px;
   font-size: 1.2rem;
+  border-bottom: 1px solid #1e293b;
+  padding-bottom: 6px;
 }
 
 .sidebar-block h4 {
@@ -237,6 +240,26 @@ th,
   flex-direction: column;
   gap: 8px;
   font-size: 0.9rem;
+}
+
+.stats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stats-list p {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.stats-list span {
+  color: var(--text-main);
+  font-family: "Renogare", sans-serif;
+  font-weight: bold;
 }
 
 .discord-promo-content {
@@ -320,6 +343,15 @@ th,
   border: 1px solid #1e293b;
 }
 
+.tries-badge {
+  font-family: "Renogare", sans-serif;
+  font-size: 0.95rem;
+  background-color: var(--bg-input);
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid #334155;
+}
+
 #game-status button,
 .status-link-btn,
 .sidebar-toggle-btn {
@@ -336,6 +368,17 @@ th,
   justify-content: center;
 }
 
+#hint-btn {
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  border: 1px solid #334155;
+}
+
+#hint-btn:hover {
+  border-color: #818cf8;
+  background-color: #1e2d4a;
+}
+
 #personalized-btn {
   background-color: var(--color-indigo);
   color: #ffffff;
@@ -347,12 +390,14 @@ th,
 }
 
 #giveup-btn {
-  background-color: var(--color-wrong);
-  color: #ffffff;
+  background-color: rgba(239, 68, 68, 0.2);
+  border: 1px solid var(--color-wrong);
+  color: #fca5a5;
 }
 
 #giveup-btn:hover {
-  background-color: #dc2626;
+  background-color: var(--color-wrong);
+  color: #ffffff;
   box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
 }
 
@@ -478,22 +523,6 @@ th,
   margin-top: 10px;
 }
 
-#hint-btn {
-  background-color: var(--bg-input);
-  color: var(--text-main);
-  border: 2px solid #334155;
-  border-radius: 8px;
-  padding: 10px 16px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.95rem;
-}
-
-#hint-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
 #hint-counter {
   color: var(--text-muted);
   font-size: 0.95rem;
@@ -575,8 +604,8 @@ th,
 }
 
 .suggestion-thumb {
-  width: 72px;
-  height: 72px;
+  width: 48px;
+  height: 48px;
   object-fit: contain;
   border-radius: 8px;
   background: transparent;
@@ -594,8 +623,8 @@ th,
 }
 
 .hint-thumb {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   object-fit: contain;
   border-radius: 6px;
   background: transparent;
@@ -605,8 +634,8 @@ th,
 }
 
 .entity-thumb {
-  width: 96px;
-  height: 96px;
+  width: 48px;
+  height: 48px;
   object-fit: contain;
   margin-right: 12px;
   vertical-align: middle;
