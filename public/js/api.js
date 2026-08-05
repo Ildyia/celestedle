@@ -13,6 +13,13 @@ export const ApiService = {
     return fetch(`${API_BASE_URL}/elements`).then((res) => res.json());
   },
 
+  fetchDailySuccessCount() {
+    return fetch(`${API_BASE_URL}/daily-stats`).then((res) => {
+      if (!res.ok) throw new Error("Failed to fetch daily stats");
+      return res.json();
+    });
+  },
+
   validateGuess(choice) {
     return fetch(`${API_BASE_URL}/validate`, {
       method: "POST",
@@ -59,6 +66,7 @@ export const ApiService = {
       body: JSON.stringify({ key: password, newHash: newHash }),
     }).then((res) => res.json());
   },
+
   sendBugReport(reportData) {
     return fetch(`${API_BASE_URL}/report-bug`, {
       method: "POST",

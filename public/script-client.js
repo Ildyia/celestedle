@@ -558,12 +558,9 @@ const App = {
       return;
     }
 
-    const playerId =
-      localStorage.getItem("celestedle_player_id") ||
-      `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    localStorage.setItem("celestedle_player_id", playerId);
+    c;
 
-    ApiService.validateGuess(choice, playerId)
+    ApiService.validateGuess(choice)
       .then((data) => {
         this.isProcessing = false;
         const savedVersion = localStorage.getItem("celestedle_version");
