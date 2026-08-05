@@ -558,8 +558,6 @@ const App = {
       return;
     }
 
-    c;
-
     ApiService.validateGuess(choice)
       .then((data) => {
         this.isProcessing = false;
