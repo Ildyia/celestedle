@@ -27,8 +27,8 @@ router.post("/", async (req, res) => {
 
     res.json({ success: true, reportId });
   } catch (err) {
-    console.error("Erreur Report Bug:", err);
-    res.status(500).json({ error: "Erreur lors du signalement." });
+    console.error("Error reporting bug :", err);
+    res.status(500).json({ error: "Error while reporting" });
   }
 });
 

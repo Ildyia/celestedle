@@ -82,9 +82,9 @@ client.handleBugReport = async ({
         title: `🛠️ Gestion Bug [${reportId}]${spoilerTag}`,
         fields: [
           { name: "ID", value: `\`${reportId}\``, inline: true },
-          { name: "Mot / Élément", value: elementName, inline: true },
-          { name: "Type", value: bugType || "Non spécifié", inline: true },
-          { name: "Statut", value: "🔴 Nouveau", inline: false },
+          { name: "Element", value: elementName, inline: true },
+          { name: "Type", value: bugType || "Not specified", inline: true },
+          { name: "Status", value: "🔴 New", inline: false },
           { name: "Description", value: description },
         ],
         color: embedColor,
@@ -129,9 +129,9 @@ client.handleBugReport = async ({
       {
         title: `🐛 Bug Report [${reportId}]${spoilerTag}`,
         fields: [
-          { name: "Élément", value: elementName, inline: true },
-          { name: "Type", value: bugType || "Non spécifié", inline: true },
-          { name: "Statut", value: "🔴 Nouveau", inline: true },
+          { name: "Element", value: elementName, inline: true },
+          { name: "Type", value: bugType || "Not specified", inline: true },
+          { name: "Status", value: "🔴 New", inline: true },
           { name: "Votes", value: "0", inline: true },
           { name: "Description", value: description },
         ],
@@ -248,9 +248,9 @@ client.on("interactionCreate", async (interaction) => {
       ...privateEmbed.data,
       color: newColor,
       fields: privateEmbed.fields.map((f) =>
-        f.name === "Statut"
+        f.name === "Status"
           ? {
-              name: "Statut",
+              name: "Status",
               value: `${newStatus} (par ${interaction.user.username})`,
               inline: false,
             }
@@ -273,14 +273,14 @@ client.on("interactionCreate", async (interaction) => {
           color: newColor,
           fields: publicEmbed.fields.map((f) =>
             f.name === "Statut"
-              ? { name: "Statut", value: newStatus, inline: true }
+              ? { name: "Status", value: newStatus, inline: true }
               : f,
           ),
         };
 
         await publicMsg.edit({ embeds: [updatedPublicEmbed] });
       } catch (err) {
-        console.error("Erreur de synchro public:", err);
+        console.error("Error updating public message:", err);
       }
     }
   }
