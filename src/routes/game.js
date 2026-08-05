@@ -5,6 +5,8 @@ const {
   officialElementsList,
   getSecretOfTheDay,
   normalizeMetaList,
+  registerDailySuccess,
+  getDailySuccessCount,
 } = require("../utils/helpers");
 
 let secretVersion = new Date().toLocaleDateString("sv-SE", {
@@ -48,7 +50,7 @@ router.get("/secret-version", (req, res) => {
 });
 
 router.post("/validate", (req, res) => {
-  const { choix } = req.body;
+  const { choix, playerId } = req.body;
 
   if (!choix || !database[choix]) {
     return res.status(400).json({ error: "Invalid element name" });
@@ -102,11 +104,16 @@ router.post("/validate", (req, res) => {
     hitboxVerdict = "correct";
   }
 
+  const isCorrect = choix === secretName;
+  if (isCorrect && playerId) {
+    registerDailySuccess(secretName, playerId);
+  }
+
   res.json({
     nom: choix,
     secretVersion,
     verdict: {
-      isCorrect: choix === secretName,
+      isCorrect,
       type: choiceData.type === secretData.type ? "correct" : "wrong",
       lieu: locationVerdict,
       couleur: colorVerdict,
@@ -118,6 +125,16 @@ router.post("/validate", (req, res) => {
       couleur: choiceColors.join(", "),
       hitbox: choiceData.hitbox,
     },
+    dailySuccessCount: isCorrect ? getDailySuccessCount(secretName) : undefined,
+  });
+});
+
+router.get("/daily-success-count", (req, res) => {
+  const secretName = getSecretOfTheDay();
+  res.json({
+    success: true,
+    secretElement: secretName,
+    count: getDailySuccessCount(secretName),
   });
 });
 

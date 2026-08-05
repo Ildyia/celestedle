@@ -13,11 +13,11 @@ export const ApiService = {
     return fetch(`${API_BASE_URL}/elements`).then((res) => res.json());
   },
 
-  validateGuess(choice) {
+  validateGuess(choice, playerId) {
     return fetch(`${API_BASE_URL}/validate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ choix: choice }),
+      body: JSON.stringify({ choix: choice, playerId }),
     }).then((res) => {
       if (!res.ok) throw new Error("Invalid entities or server error");
       return res.json();
@@ -50,6 +50,12 @@ export const ApiService = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
     }).then((res) => res.json());
+  },
+
+  fetchDailySuccessCount() {
+    return fetch(`${API_BASE_URL}/daily-success-count`).then((res) =>
+      res.json(),
+    );
   },
 
   triggerRandomSecret(password, newHash) {

@@ -76,6 +76,7 @@ const App = {
     this.checkApplicationVersion();
     this.loadGameState();
     this.fetchOfficialElements();
+    this.fetchDailySuccessCount();
     this.bindEvents();
     this.fetchPersonalizedSynonyms();
     initTimer(this.nodes.timerContainer);
@@ -90,6 +91,7 @@ const App = {
       hintCounter: document.getElementById("hint-counter"),
       hintList: document.getElementById("hint-list"),
       tryCountSpan: document.getElementById("try-count"),
+      successCountSpan: document.getElementById("success-count"),
       shareBtn: document.getElementById("share-btn"),
       giveupBtn: document.getElementById("giveup-btn"),
       rulesBtn: document.getElementById("rules-btn"),
@@ -279,6 +281,16 @@ const App = {
         this.updateHintButtonText();
       })
       .catch((err) => console.error("Error loading elements:", err));
+  },
+
+  fetchDailySuccessCount() {
+    ApiService.fetchDailySuccessCount()
+      .then((data) => {
+        if (this.nodes.successCountSpan) {
+          this.nodes.successCountSpan.textContent = data.count ?? 0;
+        }
+      })
+      .catch((err) => console.error("Error loading success count:", err));
   },
 
   handleHintButton() {
@@ -531,7 +543,12 @@ const App = {
       return;
     }
 
-    ApiService.validateGuess(choice)
+    const playerId =
+      localStorage.getItem("celestedle_player_id") ||
+      `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    localStorage.setItem("celestedle_player_id", playerId);
+
+    ApiService.validateGuess(choice, playerId)
       .then((data) => {
         this.isProcessing = false;
         const savedVersion = localStorage.getItem("celestedle_version");
@@ -573,6 +590,12 @@ const App = {
         );
 
         this.addTableRow(guessData);
+        if (
+          data.dailySuccessCount !== undefined &&
+          this.nodes.successCountSpan
+        ) {
+          this.nodes.successCountSpan.textContent = data.dailySuccessCount;
+        }
         if (this.nodes.input) this.nodes.input.value = "";
         if (this.nodes.suggestionsBox)
           this.nodes.suggestionsBox.style.display = "none";

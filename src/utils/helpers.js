@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { createDailyStatsStore } = require("./daily-stats");
 
 const database = JSON.parse(
   fs.readFileSync(path.join(__dirname, "../../db.json"), "utf8"),
@@ -7,6 +8,7 @@ const database = JSON.parse(
 const officialElementsList = Object.keys(database).sort();
 
 let secretForce = null;
+const dailyStatsStore = createDailyStatsStore();
 //get the seed from the env variable RANDOM_SEED
 let globalSeedHash = 0;
 if (process.env.RANDOM_SEED) {
@@ -59,10 +61,20 @@ function updateSeedHash(newHash) {
   globalSeedHash = newHash;
 }
 
+function registerDailySuccess(secretName, playerId) {
+  return dailyStatsStore.registerSuccess(secretName, playerId);
+}
+
+function getDailySuccessCount(secretName) {
+  return dailyStatsStore.getCount(secretName);
+}
+
 module.exports = {
   database,
   officialElementsList,
   getSecretOfTheDay,
   normalizeMetaList,
   updateSeedHash,
+  registerDailySuccess,
+  getDailySuccessCount,
 };
