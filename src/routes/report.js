@@ -89,3 +89,4 @@ router.post("/", async (req, res) => {
     res.status(500).json({ error: "Erreur serveur." });
   }
 });
+module.exports = router;
