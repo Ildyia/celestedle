@@ -715,6 +715,7 @@ const App = {
   renderEndGameScreen() {
     if (this.nodes.form) this.nodes.form.style.display = "none";
     if (this.nodes.giveupBtn) this.nodes.giveupBtn.style.display = "none";
+    if (this.nodes.hintBtn) this.nodes.hintBtn.style.display = "none";
     if (this.nodes.shareBtn)
       this.nodes.shareBtn.style.setProperty(
         "display",
