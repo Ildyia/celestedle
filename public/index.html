@@ -10,31 +10,41 @@
 </head>
 <body>
     <div id="layout-wrapper">
-        <div id="rules-sidebar" class="sidebar-block" style="display: none;">
-            <div class="rules-content-static">
-                <h2>Rules of Celestedle</h2>
-                <p>Guess the secret element of the day by entering its name. You'll receive feedback based on its attributes.</p>
-                <h4>Categories</h4>
-                <ul>
-                    <li><strong>Collectibles</strong>: Items collected in-game (strawberries, hearts...).</li>
-                    <li><strong>Characters</strong>: Characters of the story like Theo, Granny, Oshiro...</li>
-                    <li><strong>Environments</strong>: Entities without a major impact on the gameplay (Binoculars).</li>
-                    <li><strong>Mechanics</strong>: Entities that create the main gameplay (Crumble blocks).</li>
-                    <li><strong>Movement & Propulsion</strong>: Mechanics that you use to move around or gain speed (move block, zippers...).</li>
-                    <li><strong>Hazards</strong>: Obstacles that kill the player (Spikes, Spinners).</li>
-                </ul>
-                <h4>Chapters</h4>
-                <p>The "CHAPTER" column indicates which level.s (amongst prologue, 1A, 2A, 3A, 4A, 5A, 6A, 7A, 8A, farewell) the element can be found in. For example, if an item is present in 3A, 3B, 3C and 8B, it will be displayed only as resort.</p>
-                <h4>Colors Indicator</h4>
-                <ul>
-                    <li><span style="color: var(--color-correct);">🟩 Correct</span>: Perfect match.</li>
-                    <li><span style="color: var(--color-partial);">🟨 Partial</span>: Guess is part of the answer.</li>
-                    <li><span style="color: var(--color-not-totally-wrong);">🟧 Not Totally Wrong</span>: Contains part of the answer + extra.</li>
-                    <li><span style="color: var(--color-wrong);">🟥 Wrong</span>: Incorrect attribute.</li>
-                </ul>
-                <h4>Hints</h4>
-                <p>Click the "Hints" button to show the whole list of elements in the game. Usable only 3 times a day </p>
-                
+        <div id="left-sidebar-column">
+            <button id="rules-btn" class="sidebar-toggle-btn">Rules</button>
+
+            <div id="rules-sidebar" class="sidebar-block" style="display: none;">
+                <div class="rules-content-static">
+                    <h2>Rules of Celestedle</h2>
+                    <p>Guess the secret element of the day by entering its name. You'll receive feedback based on its attributes.</p>
+                    <h4>Categories</h4>
+                    <ul>
+                        <li><strong>Collectibles</strong>: Items collected in-game (strawberries, hearts...).</li>
+                        <li><strong>Characters</strong>: Characters of the story like Theo, Granny, Oshiro...</li>
+                        <li><strong>Environments</strong>: Entities without a major impact on the gameplay (Binoculars).</li>
+                        <li><strong>Mechanics</strong>: Entities that create the main gameplay (Crumble blocks).</li>
+                        <li><strong>Movement & Propulsion</strong>: Mechanics that you use to move around or gain speed (move block, zippers...).</li>
+                        <li><strong>Hazards</strong>: Obstacles that kill the player (Spikes, Spinners).</li>
+                    </ul>
+                    <h4>Chapters</h4>
+                    <p>The "CHAPTER" column indicates which level.s (amongst prologue, 1A, 2A, 3A, 4A, 5A, 6A, 7A, 8A, farewell) the element can be found in. For example, if an item is present in 3A, 3B, 3C and 8B, it will be displayed only as resort.</p>
+                    <h4>Colors Indicator</h4>
+                    <ul>
+                        <li><span style="color: var(--color-correct);">🟩 Correct</span>: Perfect match.</li>
+                        <li><span style="color: var(--color-partial);">🟨 Partial</span>: Guess is part of the answer.</li>
+                        <li><span style="color: var(--color-not-totally-wrong);">🟧 Not Totally Wrong</span>: Contains part of the answer + extra.</li>
+                        <li><span style="color: var(--color-wrong);">🟥 Wrong</span>: Incorrect attribute.</li>
+                    </ul>
+                    <h4>Hints</h4>
+                    <p>Click the "Hints" button to show the whole list of elements in the game. Usable only 3 times a day.</p>
+                </div>
+            </div>
+
+            <div id="stats-sidebar" class="sidebar-block" style="margin-top: 15px;">
+                <h3>Community Stats</h3>
+                <p>Victories today: <span id="success-count">0</span></p>
+                <p>Avg. tries: <span id="avg-tries-count">-</span></p>
+                <p>Avg. hints: <span id="avg-hints-count">-</span></p>
             </div>
         </div>
 
@@ -45,7 +55,6 @@
                 <p>Players solved today: <span id="success-count">0</span></p>
                 <button id="share-btn">Share</button>
                 <button id="giveup-btn">Forfeit</button>
-                <button id="rules-btn">Rules</button>
                 <button id="hint-btn">Hints</button>
                 <button id="personalized-btn">Personalized synonyms</button>
             </div>

@@ -101,6 +101,9 @@ const App = {
       confirmForfeitBtn: document.getElementById("confirm-forfeit-btn"),
       cancelForfeitBtn: document.getElementById("cancel-forfeit-btn"),
       timerContainer: document.getElementById("next-word-timer"),
+      successCountSpan: document.getElementById("success-count"),
+      avgTriesSpan: document.getElementById("avg-tries-count"),
+      avgHintsSpan: document.getElementById("avg-hints-count"),
     };
   },
 
@@ -286,11 +289,24 @@ const App = {
   fetchDailySuccessCount() {
     ApiService.fetchDailySuccessCount()
       .then((data) => {
-        if (this.nodes.successCountSpan) {
-          this.nodes.successCountSpan.textContent = data.count ?? 0;
-        }
+        this.updateCommunityStats(data);
       })
-      .catch((err) => console.error("Error loading success count:", err));
+      .catch((err) => console.error("Error loading daily stats:", err));
+  },
+
+  updateCommunityStats(data) {
+    if (this.nodes.successCountSpan) {
+      this.nodes.successCountSpan.textContent =
+        data.count ?? data.dailySuccessCount ?? 0;
+    }
+    if (this.nodes.avgTriesSpan) {
+      this.nodes.avgTriesSpan.textContent =
+        data.avgTries != null ? Number(data.avgTries).toFixed(1) : "-";
+    }
+    if (this.nodes.avgHintsSpan) {
+      this.nodes.avgHintsSpan.textContent =
+        data.avgHints != null ? Number(data.avgHints).toFixed(1) : "-";
+    }
   },
 
   handleHintButton() {
@@ -543,12 +559,7 @@ const App = {
       return;
     }
 
-    const playerId =
-      localStorage.getItem("celestedle_player_id") ||
-      `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    localStorage.setItem("celestedle_player_id", playerId);
-
-    ApiService.validateGuess(choice, playerId)
+    ApiService.validateGuess(choice, this.tryCount + 1, this.hintUses)
       .then((data) => {
         this.isProcessing = false;
         const savedVersion = localStorage.getItem("celestedle_version");
@@ -590,12 +601,8 @@ const App = {
         );
 
         this.addTableRow(guessData);
-        if (
-          data.dailySuccessCount !== undefined &&
-          this.nodes.successCountSpan
-        ) {
-          this.nodes.successCountSpan.textContent = data.dailySuccessCount;
-        }
+        this.updateCommunityStats(data);
+
         if (this.nodes.input) this.nodes.input.value = "";
         if (this.nodes.suggestionsBox)
           this.nodes.suggestionsBox.style.display = "none";

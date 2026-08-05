@@ -13,6 +13,25 @@ let secretVersion = new Date().toLocaleDateString("sv-SE", {
   timeZone: "Europe/Paris",
 });
 
+let dailyStats = {
+  count: 0,
+  totalTries: 0,
+  totalHints: 0,
+};
+
+router.get("/daily-stats", (req, res) => {
+  const avgTries =
+    dailyStats.count > 0 ? dailyStats.totalTries / dailyStats.count : 0;
+  const avgHints =
+    dailyStats.count > 0 ? dailyStats.totalHints / dailyStats.count : 0;
+
+  res.json({
+    count: dailyStats.count,
+    avgTries,
+    avgHints,
+  });
+});
+
 router.post("/getSecretWord", (req, res) => {
   const secretElement = getSecretOfTheDay();
 
@@ -50,7 +69,7 @@ router.get("/secret-version", (req, res) => {
 });
 
 router.post("/validate", (req, res) => {
-  const { choix, playerId } = req.body;
+  const { choix, tryCount, hintUses } = req.body;
 
   if (!choix || !database[choix]) {
     return res.status(400).json({ error: "Invalid element name" });
@@ -105,9 +124,17 @@ router.post("/validate", (req, res) => {
   }
 
   const isCorrect = choix === secretName;
-  if (isCorrect && playerId) {
-    registerDailySuccess(secretName, playerId);
+
+  if (isCorrect) {
+    dailyStats.count += 1;
+    if (tryCount) dailyStats.totalTries += Number(tryCount);
+    if (hintUses) dailyStats.totalHints += Number(hintUses);
   }
+
+  const avgTries =
+    dailyStats.count > 0 ? dailyStats.totalTries / dailyStats.count : 0;
+  const avgHints =
+    dailyStats.count > 0 ? dailyStats.totalHints / dailyStats.count : 0;
 
   res.json({
     nom: choix,
@@ -125,16 +152,9 @@ router.post("/validate", (req, res) => {
       couleur: choiceColors.join(", "),
       hitbox: choiceData.hitbox,
     },
-    dailySuccessCount: isCorrect ? getDailySuccessCount(secretName) : undefined,
-  });
-});
-
-router.get("/daily-success-count", (req, res) => {
-  const secretName = getSecretOfTheDay();
-  res.json({
-    success: true,
-    secretElement: secretName,
-    count: getDailySuccessCount(secretName),
+    count: dailyStats.count,
+    avgTries,
+    avgHints,
   });
 });
 

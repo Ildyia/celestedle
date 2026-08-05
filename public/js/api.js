@@ -13,11 +13,18 @@ export const ApiService = {
     return fetch(`${API_BASE_URL}/elements`).then((res) => res.json());
   },
 
-  validateGuess(choice, playerId) {
+  fetchDailySuccessCount() {
+    return fetch(`${API_BASE_URL}/daily-stats`).then((res) => {
+      if (!res.ok) throw new Error("Failed to fetch daily stats");
+      return res.json();
+    });
+  },
+
+  validateGuess(choice, tryCount, hintUses) {
     return fetch(`${API_BASE_URL}/validate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ choix: choice, playerId }),
+      body: JSON.stringify({ choix: choice, tryCount, hintUses }),
     }).then((res) => {
       if (!res.ok) throw new Error("Invalid entities or server error");
       return res.json();
@@ -65,6 +72,7 @@ export const ApiService = {
       body: JSON.stringify({ key: password, newHash: newHash }),
     }).then((res) => res.json());
   },
+
   sendBugReport(reportData) {
     return fetch(`${API_BASE_URL}/report-bug`, {
       method: "POST",
