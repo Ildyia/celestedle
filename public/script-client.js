@@ -76,6 +76,7 @@ const App = {
     this.checkApplicationVersion();
     this.loadGameState();
     this.fetchOfficialElements();
+    this.fetchDailySuccessCount();
     this.bindEvents();
     this.fetchPersonalizedSynonyms();
     initTimer(this.nodes.timerContainer);
@@ -99,6 +100,9 @@ const App = {
       confirmForfeitBtn: document.getElementById("confirm-forfeit-btn"),
       cancelForfeitBtn: document.getElementById("cancel-forfeit-btn"),
       timerContainer: document.getElementById("next-word-timer"),
+      successCountSpan: document.getElementById("success-count"),
+      avgTriesSpan: document.getElementById("avg-tries-count"),
+      avgHintsSpan: document.getElementById("avg-hints-count"),
     };
   },
 
@@ -279,6 +283,29 @@ const App = {
         this.updateHintButtonText();
       })
       .catch((err) => console.error("Error loading elements:", err));
+  },
+
+  fetchDailySuccessCount() {
+    ApiService.fetchDailySuccessCount()
+      .then((data) => {
+        this.updateCommunityStats(data);
+      })
+      .catch((err) => console.error("Error loading daily stats:", err));
+  },
+
+  updateCommunityStats(data) {
+    if (this.nodes.successCountSpan) {
+      this.nodes.successCountSpan.textContent =
+        data.count ?? data.dailySuccessCount ?? 0;
+    }
+    if (this.nodes.avgTriesSpan) {
+      this.nodes.avgTriesSpan.textContent =
+        data.avgTries != null ? Number(data.avgTries).toFixed(1) : "-";
+    }
+    if (this.nodes.avgHintsSpan) {
+      this.nodes.avgHintsSpan.textContent =
+        data.avgHints != null ? Number(data.avgHints).toFixed(1) : "-";
+    }
   },
 
   handleHintButton() {
@@ -531,7 +558,12 @@ const App = {
       return;
     }
 
-    ApiService.validateGuess(choice)
+    const playerId =
+      localStorage.getItem("celestedle_player_id") ||
+      `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    localStorage.setItem("celestedle_player_id", playerId);
+
+    ApiService.validateGuess(choice, playerId)
       .then((data) => {
         this.isProcessing = false;
         const savedVersion = localStorage.getItem("celestedle_version");
@@ -573,6 +605,8 @@ const App = {
         );
 
         this.addTableRow(guessData);
+        this.updateCommunityStats(data);
+
         if (this.nodes.input) this.nodes.input.value = "";
         if (this.nodes.suggestionsBox)
           this.nodes.suggestionsBox.style.display = "none";
@@ -715,6 +749,7 @@ const App = {
   renderEndGameScreen() {
     if (this.nodes.form) this.nodes.form.style.display = "none";
     if (this.nodes.giveupBtn) this.nodes.giveupBtn.style.display = "none";
+    if (this.nodes.hintBtn) this.nodes.hintBtn.style.display = "none";
     if (this.nodes.shareBtn)
       this.nodes.shareBtn.style.setProperty(
         "display",
