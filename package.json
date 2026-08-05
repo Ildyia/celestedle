@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.6",
+    "discord.js": "^14.27.0",
     "express": "^5.2.1",
     "sqlite3": "^6.0.1"
   }
