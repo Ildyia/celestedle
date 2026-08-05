@@ -129,7 +129,8 @@ const App = {
           document.getElementById("bug-element-select")?.value || "N/A",
         bugType: document.getElementById("bug-type-select")?.value,
         description: document.getElementById("bug-description-input")?.value,
-        spoiler: document.getElementById("bug-spoiler-checkbox")?.checked,
+        isSpoiler:
+          document.getElementById("bug-spoiler-checkbox")?.checked || false,
       };
 
       ApiService.sendBugReport(reportData)
