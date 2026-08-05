@@ -462,6 +462,79 @@ th,
   color: #ffffff;
 }
 
+.synonym-marker {
+  width: 20px;
+  height: 20px;
+  margin-left: 8px;
+  vertical-align: middle;
+  filter: invert(1) sepia(0) saturate(0) hue-rotate(180deg) brightness(2);
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.suggestion-item.selected { background: rgba(255,255,255,0.04); }
+.suggestion-thumb {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: transparent;
+  padding: 4px;
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.45);
+}
+
+.hint-item { display:flex; align-items:center; gap:12px; padding:8px; cursor:pointer }
+.hint-thumb { width:56px; height:56px; object-fit:contain; border-radius:6px; background:transparent; padding:4px; border:1px solid rgba(255,255,255,0.04); box-shadow: 0 3px 8px rgba(0,0,0,0.35) }
+
+.entity-thumb {
+  width:96px;
+  height:96px;
+  object-fit: contain;
+  margin-right: 12px;
+  vertical-align: middle;
+  border-radius: 8px;
+
+/* Review UI styles */
+.entity-card{display:flex;align-items:center;justify-content:space-between;padding:8px;border:1px solid #ddd;border-radius:6px;margin:6px 0}
+.entity-title{font-weight:600;margin-bottom:6px}
+.review-thumb{width:320px;height:320px;object-fit:contain;border:1px solid #ccc;background:#fff;padding:8px}
+.entity-thumb{width:96px;height:96px;}
+.entity-info{display:flex;gap:12px;align-items:center}
+.entity-actions{display:flex;gap:8px;align-items:center}
+.entity-card.approved{background:#e8f7e8}
+.entity-card.missing{background:#fdecea}
+.entity-card.replaced{background:#fff7e6}
+
+.container{max-width:980px;margin:20px auto;padding:12px}
+
+/* Pixel-art friendly display when upscaling small sprites */
+.pixelated {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+}
+
+/* Make entity images visible and contained while allowing large previews */
+.entity-display {
+  width: min(780px, 92%);
+  max-width: 92%;
+  max-height: 90vh;
+  object-fit: contain;
+  background: #fff;
+  padding: 12px;
+  border: 1px solid #ccc;
+}
+
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
 /* ==========================================================================
    7. TABLEAU DES TENTATIVES
    ========================================================================== */

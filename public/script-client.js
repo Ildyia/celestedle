@@ -67,6 +67,7 @@ const App = {
   hintLimit: 3,
   hintListOpen: false,
   nodes: {},
+  entityImageMap: null,
 
   init() {
     this.cacheDOM();
@@ -254,12 +255,27 @@ const App = {
 
     this.nodes.hintList.innerHTML = "";
     sortedElements.forEach((name) => {
+      const display = name.charAt(0).toUpperCase() + name.slice(1);
       const item = document.createElement("div");
       item.classList.add("hint-item");
-      item.textContent = name.charAt(0).toUpperCase() + name.slice(1);
-      item.addEventListener("click", () =>
-        this.selectSuggestion(item.textContent),
-      );
+
+      const thumb = document.createElement("img");
+      thumb.className = "hint-thumb";
+      thumb.alt = display;
+      thumb.src = "assets/entities/placeholder.svg";
+
+      const text = document.createElement("span");
+      text.textContent = display;
+
+      item.appendChild(thumb);
+      item.appendChild(text);
+
+      // Resolve image path
+      this.resolveEntityImage(name.toLowerCase()).then((p) => {
+        if (p) thumb.src = p;
+      });
+
+      item.addEventListener("click", () => this.selectSuggestion(display));
       this.nodes.hintList.appendChild(item);
     });
     this.nodes.hintList.style.display = "block";
@@ -299,10 +315,10 @@ const App = {
 
     const matchingSuggestions = new Map();
 
-    const addSuggestion = (word, priority) => {
+    const addSuggestion = (word, priority, isSynonym = false) => {
       const existing = matchingSuggestions.get(word);
-      if (existing === undefined || priority < existing) {
-        matchingSuggestions.set(word, priority);
+      if (existing === undefined || priority < existing.priority) {
+        matchingSuggestions.set(word, { priority, isSynonym });
       }
     };
 
@@ -314,7 +330,7 @@ const App = {
         const lowerName = officialName.toLowerCase();
         const priority =
           lowerName === query ? 0 : lowerName.startsWith(query) ? 1 : 2;
-        addSuggestion(displayName, priority);
+        addSuggestion(displayName, priority, true);
       }
     });
 
@@ -324,20 +340,46 @@ const App = {
         const displayName = name.charAt(0).toUpperCase() + name.slice(1);
         const priority =
           lowerName === query ? 0 : lowerName.startsWith(query) ? 1 : 2;
-        addSuggestion(displayName, priority);
+        addSuggestion(displayName, priority, false);
       }
     });
 
     if (matchingSuggestions.size > 0) {
       Array.from(matchingSuggestions.entries())
-        .sort(([a, priorityA], [b, priorityB]) => {
-          if (priorityA !== priorityB) return priorityA - priorityB;
+        .sort(([a, vA], [b, vB]) => {
+          if (vA.priority !== vB.priority) return vA.priority - vB.priority;
           return a.localeCompare(b);
         })
-        .forEach(([word]) => {
+        .forEach(([word, meta]) => {
           const div = document.createElement("div");
           div.classList.add("suggestion-item");
-          div.textContent = word;
+
+          const thumb = document.createElement("img");
+          thumb.className = "suggestion-thumb";
+          thumb.alt = word;
+          thumb.src = "assets/entities/placeholder.svg";
+
+          const textNode = document.createElement("span");
+          textNode.textContent = word;
+
+          div.appendChild(thumb);
+          div.appendChild(textNode);
+
+          if (meta && meta.isSynonym) {
+            const img = document.createElement("img");
+            img.className = "synonym-marker";
+            img.src = "assets/entities/switch.svg";
+            img.alt = "(synonym)";
+            img.setAttribute("aria-hidden", "true");
+            div.appendChild(img);
+          }
+
+          // Resolve actual entity image asynchronously
+          const key = word.toLowerCase();
+          this.resolveEntityImage(key).then((path) => {
+            if (path) thumb.src = path;
+          });
+
           div.addEventListener("click", () => this.selectSuggestion(word));
           this.nodes.suggestionsBox.appendChild(div);
         });
@@ -551,45 +593,15 @@ const App = {
       .then((data) => {
         localStorage.setItem("celestedle_gameover", "true");
         localStorage.setItem("celestedle_status", "lose");
-
-        if (data.secretElement && data.secretAttributes) {
+        if (data.secretElement) {
           localStorage.setItem("celestedle_solution", data.secretElement);
+        }
+        if (data.secretAttributes) {
           localStorage.setItem(
             "celestedle_solution_attributes",
-            typeof data.secretAttributes === "string"
-              ? data.secretAttributes
-              : JSON.stringify(data.secretAttributes),
-          );
-
-          const forfeitData = {
-            nom: data.secretElement,
-            verdict: {
-              isCorrect: true,
-              type: "correct",
-              lieu: "correct",
-              couleur: "correct",
-              hitbox: "correct",
-            },
-            valeurs: {
-              type: data.secretAttributes.type || "Unknown",
-              lieu: Array.isArray(data.secretAttributes.lieu)
-                ? data.secretAttributes.lieu.join(", ")
-                : data.secretAttributes.lieu || "-",
-              couleur: Array.isArray(data.secretAttributes.couleur)
-                ? data.secretAttributes.couleur.join(", ")
-                : data.secretAttributes.couleur || "-",
-              hitbox: data.secretAttributes.hitbox || "Unknown",
-            },
-          };
-
-          this.addTableRow(forfeitData);
-          this.historyLog.push(forfeitData);
-          localStorage.setItem(
-            "celestedle_history",
-            JSON.stringify(this.historyLog),
+            JSON.stringify(data.secretAttributes),
           );
         }
-
         if (this.nodes.forfeitModal) {
           this.nodes.forfeitModal.style.display = "none";
         }
@@ -597,7 +609,12 @@ const App = {
       })
       .catch((err) => {
         console.error("Error during forfeit processing:", err);
-        alert("Erreur lors de l'abandon. Impossible de récupérer la solution.");
+        localStorage.setItem("celestedle_gameover", "true");
+        localStorage.setItem("celestedle_status", "lose");
+        if (this.nodes.forfeitModal) {
+          this.nodes.forfeitModal.style.display = "none";
+        }
+        this.renderEndGameScreen();
       });
   },
 
@@ -643,7 +660,7 @@ const App = {
   },
 
   renderEndGameScreen() {
-    this.nodes.form.style.display = "none";
+    if (this.nodes.form) this.nodes.form.style.display = "none";
     if (this.nodes.giveupBtn) this.nodes.giveupBtn.style.display = "none";
     if (this.nodes.shareBtn)
       this.nodes.shareBtn.style.setProperty(
@@ -652,13 +669,20 @@ const App = {
         "important",
       );
 
-    const existingMsg = document.querySelector(".win-message, .lose-message");
-    if (existingMsg) existingMsg.remove();
-
     const gameStatus = localStorage.getItem("celestedle_status");
     const isWin = gameStatus !== "lose";
-    const messageContainer = document.createElement("div");
 
+    const targetContainer =
+      document.getElementById("message-container") ||
+      this.nodes.form?.parentNode;
+    if (!targetContainer) return;
+
+    const existingMsg = targetContainer.querySelector(
+      ".win-message, .lose-message",
+    );
+    if (existingMsg) existingMsg.remove();
+
+    const messageContainer = document.createElement("div");
     messageContainer.className = isWin ? "win-message" : "lose-message";
     const title = isWin ? "GG ! Victory ! 🎉" : "Nice try... Forfeit ! ❌";
 
@@ -668,20 +692,23 @@ const App = {
     const rawAttributes = localStorage.getItem(
       "celestedle_solution_attributes",
     );
+
     let attributeSummary = "";
+    let parsedSolutionAttrs = {};
     if (rawAttributes) {
       try {
         const attrs =
           typeof rawAttributes === "string"
             ? JSON.parse(rawAttributes)
             : rawAttributes;
+        parsedSolutionAttrs = attrs || {};
         const locationText = Array.isArray(attrs.lieu)
           ? attrs.lieu.join(", ")
           : attrs.lieu;
         const colorText = Array.isArray(attrs.couleur)
           ? attrs.couleur.join(", ")
           : attrs.couleur;
-        attributeSummary = `<br><br><strong>Type:</strong> ${attrs.type}<br><strong>Locations:</strong> ${locationText}<br><strong>Colours:</strong> ${colorText}<br><strong>Hitbox:</strong> ${attrs.hitbox}`;
+        attributeSummary = `<br><br><strong>Type:</strong> ${attrs.type || "-"}<br><strong>Locations:</strong> ${locationText || "-"}<br><strong>Colours:</strong> ${colorText || "-"}<br><strong>Hitbox:</strong> ${attrs.hitbox || "-"}`;
       } catch (error) {
         console.error("Failed to parse solution attributes:", error);
       }
@@ -692,14 +719,31 @@ const App = {
       : `You didn't find today's celestedle ! The answer was : <strong>${formattedSolution}</strong>. I used <strong>${this.hintUses}</strong> hints.${attributeSummary}`;
 
     messageContainer.innerHTML = `<h2>${title}</h2><div>${matchSummary}</div>`;
-    const targetContainer = document.getElementById("message-container");
-    if (targetContainer) {
+
+    // Insert a highlighted solution row into the guesses table when player forfeits
+    if (!isWin && solution) {
+      const solutionDisplayName = formattedSolution;
+      this.insertSolutionRow(solutionDisplayName, parsedSolutionAttrs);
+      // Try to add image for solution row as well
+      this.resolveEntityImage(solution)
+        .then((imgPath) => {
+          if (!imgPath) return;
+          const firstRow = this.nodes.tableBody.querySelector("tr");
+          if (!firstRow) return;
+          const img = document.createElement("img");
+          img.className = "entity-thumb";
+          img.src = imgPath;
+          img.alt = solutionDisplayName;
+          const nameCell = firstRow.querySelector("td");
+          if (nameCell) nameCell.insertBefore(img, nameCell.firstChild);
+        })
+        .catch(() => {});
+    }
+
+    if (document.getElementById("message-container")) {
       targetContainer.appendChild(messageContainer);
     } else {
-      this.nodes.form.parentNode.insertBefore(
-        messageContainer,
-        this.nodes.form,
-      );
+      targetContainer.insertBefore(messageContainer, this.nodes.form);
     }
   },
 
@@ -728,6 +772,16 @@ const App = {
     nameText.textContent = formattedName;
     nameCell.appendChild(nameText);
 
+    // Attempt to load a local entity image asynchronously
+    this.resolveEntityImage(data.nom).then((imgPath) => {
+      if (!imgPath) return;
+      const thumb = document.createElement("img");
+      thumb.className = "entity-thumb";
+      thumb.src = imgPath;
+      thumb.alt = formattedName;
+      nameCell.insertBefore(thumb, nameCell.firstChild);
+    });
+
     if (data.isSynonym && data.synonymOriginal) {
       const synonymBadge = document.createElement("span");
       synonymBadge.className = "synonym-indicator";
@@ -744,6 +798,114 @@ const App = {
     row.appendChild(
       createCell(data.valeurs?.hitbox || "-", data.verdict?.hitbox),
     );
+
+    this.nodes.tableBody.insertBefore(row, this.nodes.tableBody.firstChild);
+  },
+
+  // Try to resolve a local entity image path by testing common extensions
+  async resolveEntityImage(name) {
+    if (!name) return null;
+
+    // Load mapping.json once and cache a normalized map (lowercased keys)
+    if (!this._entityImageMapPromise && this.entityImageMap === null) {
+      // Try multiple candidate mapping locations to support different static servers
+      const candidates = [
+        "/assets/entities/mapping.json",
+        "/public/assets/entities/mapping.json",
+        "assets/entities/mapping.json",
+        "public/assets/entities/mapping.json",
+      ];
+
+      this._entityImageMapPromise = (async () => {
+        let json = null;
+        for (const url of candidates) {
+          try {
+            // eslint-disable-next-line no-await-in-loop
+            const res = await fetch(url);
+            if (res.ok) {
+              json = await res.json();
+              break;
+            }
+          } catch (e) {
+            // try next
+          }
+        }
+        const norm = {};
+        try {
+          Object.keys(json || {}).forEach((k) => {
+            norm[k.toLowerCase()] = json[k];
+          });
+        } catch (e) {}
+        this.entityImageMap = norm;
+      })();
+    }
+
+    if (this._entityImageMapPromise) await this._entityImageMapPromise;
+
+    const key = name.toLowerCase();
+    if (this.entityImageMap && this.entityImageMap[key]) {
+      return this.entityImageMap[key];
+    }
+
+    // Fallback: try slug-based file probes across multiple base paths
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    const exts = ["png", "webp", "jpg", "jpeg"];
+    const bases = [
+      "/assets/entities/",
+      "/public/assets/entities/",
+      "assets/entities/",
+      "public/assets/entities/",
+    ];
+
+    for (let b = 0; b < bases.length; b++) {
+      for (let i = 0; i < exts.length; i++) {
+        // eslint-disable-next-line no-await-in-loop
+        const found = await new Promise((resolve) => {
+          const path = `${bases[b]}${slug}.${exts[i]}`;
+          const img = new Image();
+          img.onload = () => resolve(path);
+          img.onerror = () => resolve(null);
+          img.src = path;
+        });
+        if (found) return found;
+      }
+    }
+
+    return null;
+  },
+
+  insertSolutionRow(solutionName, attrs = {}) {
+    if (!this.nodes.tableBody) return;
+
+    const row = document.createElement("tr");
+
+    const createCell = (text, className) => {
+      const cell = document.createElement("td");
+      cell.textContent = text;
+      cell.className = className || "wrong";
+      return cell;
+    };
+
+    const nameCell = document.createElement("td");
+    nameCell.className = "correct solution-row";
+    const nameText = document.createElement("div");
+    nameText.textContent = solutionName;
+    nameCell.appendChild(nameText);
+
+    row.appendChild(nameCell);
+    row.appendChild(createCell(attrs.type || "-", "correct"));
+    const lieuText = Array.isArray(attrs.lieu)
+      ? attrs.lieu.join(", ")
+      : attrs.lieu || "-";
+    row.appendChild(createCell(lieuText, "correct"));
+    const couleurText = Array.isArray(attrs.couleur)
+      ? attrs.couleur.join(", ")
+      : attrs.couleur || "-";
+    row.appendChild(createCell(couleurText, "correct"));
+    row.appendChild(createCell(attrs.hitbox || "-", "correct"));
 
     this.nodes.tableBody.insertBefore(row, this.nodes.tableBody.firstChild);
   },

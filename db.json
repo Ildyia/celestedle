@@ -951,7 +951,7 @@
     "couleur": [
       "white"
     ],
-    "hitbox": "circular",
+    "hitbox": "other shape",
     "lieu": [
       "ridge",
       "summit"
