@@ -13,7 +13,20 @@ let secretVersion = new Date().toLocaleDateString("sv-SE", {
 
 router.post("/getSecretWord", (req, res) => {
   const secretElement = getSecretOfTheDay();
-  const secretData = database[secretElement] || {};
+
+  if (!secretElement || !database[secretElement]) {
+    console.error(
+      "Erreur: Mot secret introuvable dans la base de données :",
+      secretElement,
+    );
+    return res.status(500).json({
+      error: "Secret element not found in database",
+      secretElement: secretElement || "Unknown",
+    });
+  }
+
+  const secretData = database[secretElement];
+
   res.json({
     success: true,
     secretElement,

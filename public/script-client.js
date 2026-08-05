@@ -92,9 +92,6 @@ const App = {
       giveupBtn: document.getElementById("giveup-btn"),
       rulesBtn: document.getElementById("rules-btn"),
       personalizedBtn: document.getElementById("personalized-btn"),
-      hintBtn: document.getElementById("hint-btn"),
-      hintCounter: document.getElementById("hint-counter"),
-      hintList: document.getElementById("hint-list"),
       tableBody: document.getElementById("guesses-body"),
       forfeitModal: document.getElementById("forfeit-modal"),
       confirmForfeitBtn: document.getElementById("confirm-forfeit-btn"),
@@ -171,6 +168,7 @@ const App = {
         "history",
         "version",
         "solution",
+        "solution_attributes",
       ];
       keysToRemove.forEach((key) =>
         localStorage.removeItem(`celestedle_${key}`),
@@ -553,22 +551,53 @@ const App = {
       .then((data) => {
         localStorage.setItem("celestedle_gameover", "true");
         localStorage.setItem("celestedle_status", "lose");
-        if (data.secretElement) {
+
+        if (data.secretElement && data.secretAttributes) {
           localStorage.setItem("celestedle_solution", data.secretElement);
-        }
-        if (data.secretAttributes) {
           localStorage.setItem(
             "celestedle_solution_attributes",
-            JSON.stringify(data.secretAttributes),
+            typeof data.secretAttributes === "string"
+              ? data.secretAttributes
+              : JSON.stringify(data.secretAttributes),
+          );
+
+          const forfeitData = {
+            nom: data.secretElement,
+            verdict: {
+              isCorrect: true,
+              type: "correct",
+              lieu: "correct",
+              couleur: "correct",
+              hitbox: "correct",
+            },
+            valeurs: {
+              type: data.secretAttributes.type || "Unknown",
+              lieu: Array.isArray(data.secretAttributes.lieu)
+                ? data.secretAttributes.lieu.join(", ")
+                : data.secretAttributes.lieu || "-",
+              couleur: Array.isArray(data.secretAttributes.couleur)
+                ? data.secretAttributes.couleur.join(", ")
+                : data.secretAttributes.couleur || "-",
+              hitbox: data.secretAttributes.hitbox || "Unknown",
+            },
+          };
+
+          this.addTableRow(forfeitData);
+          this.historyLog.push(forfeitData);
+          localStorage.setItem(
+            "celestedle_history",
+            JSON.stringify(this.historyLog),
           );
         }
-        location.reload();
+
+        if (this.nodes.forfeitModal) {
+          this.nodes.forfeitModal.style.display = "none";
+        }
+        this.renderEndGameScreen();
       })
       .catch((err) => {
         console.error("Error during forfeit processing:", err);
-        localStorage.setItem("celestedle_gameover", "true");
-        localStorage.setItem("celestedle_status", "lose");
-        location.reload();
+        alert("Erreur lors de l'abandon. Impossible de récupérer la solution.");
       });
   },
 
@@ -623,6 +652,9 @@ const App = {
         "important",
       );
 
+    const existingMsg = document.querySelector(".win-message, .lose-message");
+    if (existingMsg) existingMsg.remove();
+
     const gameStatus = localStorage.getItem("celestedle_status");
     const isWin = gameStatus !== "lose";
     const messageContainer = document.createElement("div");
@@ -639,14 +671,17 @@ const App = {
     let attributeSummary = "";
     if (rawAttributes) {
       try {
-        const attrs = JSON.parse(rawAttributes);
+        const attrs =
+          typeof rawAttributes === "string"
+            ? JSON.parse(rawAttributes)
+            : rawAttributes;
         const locationText = Array.isArray(attrs.lieu)
           ? attrs.lieu.join(", ")
           : attrs.lieu;
         const colorText = Array.isArray(attrs.couleur)
           ? attrs.couleur.join(", ")
           : attrs.couleur;
-        attributeSummary = `\n\n<strong>Type:</strong> ${attrs.type}<br><strong>Locations:</strong> ${locationText}<br><strong>Colours:</strong> ${colorText}<br><strong>Hitbox:</strong> ${attrs.hitbox}`;
+        attributeSummary = `<br><br><strong>Type:</strong> ${attrs.type}<br><strong>Locations:</strong> ${locationText}<br><strong>Colours:</strong> ${colorText}<br><strong>Hitbox:</strong> ${attrs.hitbox}`;
       } catch (error) {
         console.error("Failed to parse solution attributes:", error);
       }
@@ -656,7 +691,7 @@ const App = {
       ? `You found the secret element in <strong>${this.tryCount}</strong> tries. I used <strong>${this.hintUses}</strong> hints.`
       : `You didn't find today's celestedle ! The answer was : <strong>${formattedSolution}</strong>. I used <strong>${this.hintUses}</strong> hints.${attributeSummary}`;
 
-    messageContainer.innerHTML = `<h2>${title}</h2><p>${matchSummary}</p>`;
+    messageContainer.innerHTML = `<h2>${title}</h2><div>${matchSummary}</div>`;
     const targetContainer = document.getElementById("message-container");
     if (targetContainer) {
       targetContainer.appendChild(messageContainer);
