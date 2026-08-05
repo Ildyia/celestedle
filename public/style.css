@@ -90,6 +90,73 @@ th,
   font-size: 2.2rem;
 }
 
+#disclaimer-block {
+  width: 100%;
+  border-left: 4px solid #6366f1;
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.14), rgba(15, 23, 42, 0.05));
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  padding: 18px 22px;
+  border-radius: 12px;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.18);
+  color: var(--text-main);
+  line-height: 1.6;
+}
+
+#disclaimer-block h2 {
+  margin-bottom: 10px;
+  font-size: 1.15rem;
+}
+
+#disclaimer-block p {
+  margin-bottom: 10px;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+#legal-notice {
+  width: 100%;
+  background-color: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  padding: 24px 26px;
+  border-radius: 16px;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.32);
+}
+
+#legal-notice h3,
+#legal-notice h2 {
+  margin-bottom: 14px;
+  font-size: 1.2rem;
+  color: #eef2ff;
+}
+
+#legal-notice p {
+  margin-bottom: 14px;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+#legal-notice a {
+  color: #a5b4fc;
+  text-decoration: underline;
+}
+
+.legal-page-block {
+  background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.14), transparent 35%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+  border-radius: 20px;
+  padding: 28px 30px;
+}
+
+#main-content-column h1 {
+  font-size: 2.6rem;
+  margin-bottom: 14px;
+}
+
+#main-content-column {
+  padding: 0 12px;
+}
+
 #game-container {
   width: 100%;
 }
@@ -177,6 +244,8 @@ th,
 /* ==========================================================================
    4. STYLES DES BOÎTES LATÉRALES
    ========================================================================== */
+
+
 .sidebar-block {
   background-color: var(--bg-card);
   border: 1px solid #1e293b;
@@ -227,6 +296,8 @@ th,
 #game-status {
   width: 100%;
   display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   justify-content: space-between;
   align-items: center;
   background-color: var(--bg-card);
@@ -275,6 +346,22 @@ th,
 #rules-btn:hover {
   background-color: #059669;
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+.status-link-btn {
+  font-family: "Renogare", sans-serif;
+  background-color: transparent;
+  color: var(--text-main);
+  border: 1px solid #4f46e5;
+  padding: 10px 18px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.status-link-btn:hover {
+  background-color: rgba(99, 102, 241, 0.12);
+  transform: translateY(-1px);
 }
 
 #share-btn {
