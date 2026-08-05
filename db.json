@@ -650,7 +650,7 @@
     "couleur": [
       "yellow"
     ],
-    "hitbox": "square",
+    "hitbox": "rectangular",
     "lieu": [
       "site",
       "resort",
@@ -827,7 +827,7 @@
     "couleur": [
       "grey"
     ],
-    "hitbox": "square",
+    "hitbox": "no hitbox interaction",
     "lieu": [
       "resort"
     ],
