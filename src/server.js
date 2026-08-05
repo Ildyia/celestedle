@@ -20,6 +20,7 @@ app.use(express.static(path.join(__dirname, "../public")));
 
 app.use("/", gameRoutes);
 app.use("/admin", adminRoutes);
+app.use("/report-bug", reportRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
