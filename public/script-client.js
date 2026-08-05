@@ -558,7 +558,7 @@ const App = {
       return;
     }
 
-    ApiService.validateGuess(choice)
+    ApiService.validateGuess(choice, this.tryCount + 1, this.hintUses)
       .then((data) => {
         this.isProcessing = false;
         const savedVersion = localStorage.getItem("celestedle_version");
