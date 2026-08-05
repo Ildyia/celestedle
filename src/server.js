@@ -3,6 +3,8 @@ const cors = require("cors");
 const path = require("path");
 const gameRoutes = require("./routes/game");
 const adminRoutes = require("./routes/admin");
+const reportRoutes = require("./routes/report");
+const bot = require("./utils/bot");
 
 const app = express();
 
@@ -18,6 +20,7 @@ app.use(express.static(path.join(__dirname, "../public")));
 
 app.use("/", gameRoutes);
 app.use("/admin", adminRoutes);
+app.use("/report-bug", reportRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
