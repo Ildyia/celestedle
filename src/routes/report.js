@@ -8,7 +8,7 @@ router.post("/", async (req, res) => {
 
   try {
     if (!global.discordBotClient) {
-      throw new Error("Le bot Discord n'est pas encore prêt.");
+      throw new Error("Discord bot not ready yet. Please try again later.");
     }
 
     await global.discordBotClient.handleBugReport({
@@ -21,8 +21,8 @@ router.post("/", async (req, res) => {
 
     res.json({ success: true, reportId });
   } catch (err) {
-    console.error("Erreur Report Bug:", err);
-    res.status(500).json({ error: "Erreur lors du signalement." });
+    console.error("Error reporting bug:", err);
+    res.status(500).json({ error: "Error occurred while submitting report." });
   }
 });
 
