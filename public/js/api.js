@@ -59,4 +59,14 @@ export const ApiService = {
       body: JSON.stringify({ key: password, newHash: newHash }),
     }).then((res) => res.json());
   },
+  sendBugReport(reportData) {
+    return fetch(`${API_BASE_URL}/report-bug`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(reportData),
+    }).then((res) => {
+      if (!res.ok) throw new Error("Erreur réseau");
+      return res.json();
+    });
+  },
 };

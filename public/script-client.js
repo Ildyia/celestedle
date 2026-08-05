@@ -58,6 +58,7 @@ const App = {
     "core block": "magma block",
     "space block": "moon block",
     "floaty space block": "moon block",
+    "bubble red": "red booster",
   },
   officialElementsList: [],
   historyLog: [],
@@ -110,6 +111,35 @@ const App = {
         this.handleSuggestionsKeyboard(e),
       );
     }
+
+    document
+      .getElementById("report-bug-btn")
+      ?.addEventListener("click", () => this.openBugModal());
+    document
+      .getElementById("close-bug-btn")
+      ?.addEventListener("click", () => this.closeBugModal());
+    document
+      .getElementById("cancel-bug-btn")
+      ?.addEventListener("click", () => this.closeBugModal());
+
+    document.getElementById("bug-form")?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const reportData = {
+        elementName:
+          document.getElementById("bug-element-select")?.value || "N/A",
+        bugType: document.getElementById("bug-type-select")?.value,
+        description: document.getElementById("bug-description-input")?.value,
+        spoiler: document.getElementById("bug-spoiler-checkbox")?.checked,
+      };
+
+      ApiService.sendBugReport(reportData)
+        .then(() => {
+          this.showToastNotification("Bug report sent!");
+          this.closeBugModal();
+        })
+        .catch(() => this.showToastNotification("Failed to send report."));
+    });
+
     if (this.nodes.hintBtn) {
       this.nodes.hintBtn.addEventListener("click", () =>
         this.handleHintButton(),
@@ -153,6 +183,28 @@ const App = {
       );
     }
     document.addEventListener("click", (e) => this.handleOutsideClick(e));
+  },
+
+  openBugModal() {
+    const select = document.getElementById("bug-element-select");
+    if (select) {
+      select.innerHTML = '<option value="">-- None / General bug --</option>';
+      this.officialElementsList.forEach((el) => {
+        const opt = document.createElement("option");
+        opt.value = el;
+        opt.textContent = el.charAt(0).toUpperCase() + el.slice(1);
+        select.appendChild(opt);
+      });
+    }
+    const modal = document.getElementById("bug-modal");
+    if (modal) modal.style.display = "flex";
+  },
+
+  closeBugModal() {
+    const modal = document.getElementById("bug-modal");
+    const form = document.getElementById("bug-form");
+    if (modal) modal.style.display = "none";
+    if (form) form.reset();
   },
 
   checkDailyReset() {
@@ -270,7 +322,6 @@ const App = {
       item.appendChild(thumb);
       item.appendChild(text);
 
-      // Resolve image path
       this.resolveEntityImage(name.toLowerCase()).then((p) => {
         if (p) thumb.src = p;
       });
@@ -308,7 +359,7 @@ const App = {
     this.nodes.suggestionsBox.innerHTML = "";
     this.selectedIndex = -1;
 
-    if (query.length === 0) {
+    if (query.length < 3) {
       this.nodes.suggestionsBox.style.display = "none";
       return;
     }
@@ -374,7 +425,6 @@ const App = {
             div.appendChild(img);
           }
 
-          // Resolve actual entity image asynchronously
           const key = word.toLowerCase();
           this.resolveEntityImage(key).then((path) => {
             if (path) thumb.src = path;
@@ -434,12 +484,14 @@ const App = {
 
   handleOutsideClick(e) {
     if (
+      this.nodes.suggestionsBox &&
       e.target !== this.nodes.input &&
       e.target !== this.nodes.suggestionsBox
     ) {
       this.nodes.suggestionsBox.style.display = "none";
     }
     if (
+      this.nodes.hintList &&
       e.target !== this.nodes.hintBtn &&
       e.target !== this.nodes.hintList &&
       !this.nodes.hintList.contains(e.target)
@@ -684,7 +736,7 @@ const App = {
 
     const messageContainer = document.createElement("div");
     messageContainer.className = isWin ? "win-message" : "lose-message";
-    const title = isWin ? "GG ! Victory ! 🎉" : "Nice try... Forfeit ! ❌";
+    const title = isWin ? "GG ! Victory ! 🎉" : "Nice try... Aba(n)ddon ! ❌";
 
     const solution = localStorage.getItem("celestedle_solution") || "Unknown";
     const formattedSolution =
@@ -720,11 +772,9 @@ const App = {
 
     messageContainer.innerHTML = `<h2>${title}</h2><div>${matchSummary}</div>`;
 
-    // Insert a highlighted solution row into the guesses table when player forfeits
     if (!isWin && solution) {
       const solutionDisplayName = formattedSolution;
       this.insertSolutionRow(solutionDisplayName, parsedSolutionAttrs);
-      // Try to add image for solution row as well
       this.resolveEntityImage(solution)
         .then((imgPath) => {
           if (!imgPath) return;
@@ -772,7 +822,6 @@ const App = {
     nameText.textContent = formattedName;
     nameCell.appendChild(nameText);
 
-    // Attempt to load a local entity image asynchronously
     this.resolveEntityImage(data.nom).then((imgPath) => {
       if (!imgPath) return;
       const thumb = document.createElement("img");
@@ -802,13 +851,10 @@ const App = {
     this.nodes.tableBody.insertBefore(row, this.nodes.tableBody.firstChild);
   },
 
-  // Try to resolve a local entity image path by testing common extensions
   async resolveEntityImage(name) {
     if (!name) return null;
 
-    // Load mapping.json once and cache a normalized map (lowercased keys)
     if (!this._entityImageMapPromise && this.entityImageMap === null) {
-      // Try multiple candidate mapping locations to support different static servers
       const candidates = [
         "/assets/entities/mapping.json",
         "/public/assets/entities/mapping.json",
@@ -820,7 +866,6 @@ const App = {
         let json = null;
         for (const url of candidates) {
           try {
-            // eslint-disable-next-line no-await-in-loop
             const res = await fetch(url);
             if (res.ok) {
               json = await res.json();
@@ -847,7 +892,6 @@ const App = {
       return this.entityImageMap[key];
     }
 
-    // Fallback: try slug-based file probes across multiple base paths
     const slug = name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
@@ -862,7 +906,6 @@ const App = {
 
     for (let b = 0; b < bases.length; b++) {
       for (let i = 0; i < exts.length; i++) {
-        // eslint-disable-next-line no-await-in-loop
         const found = await new Promise((resolve) => {
           const path = `${bases[b]}${slug}.${exts[i]}`;
           const img = new Image();
@@ -911,7 +954,6 @@ const App = {
   },
 };
 
-// --- Commandes Globales Admin ---
 window.getSecretWordPlzUwU = function () {
   const adminPassword = prompt("Please enter admin password :");
   if (!adminPassword) return;

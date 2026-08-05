@@ -3,6 +3,8 @@ const cors = require("cors");
 const path = require("path");
 const gameRoutes = require("./routes/game");
 const adminRoutes = require("./routes/admin");
+const reportRoutes = require("./routes/report");
+const bot = require("./utils/bot");
 
 const app = express();
 

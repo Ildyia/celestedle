@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Celestedle</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="assets/entities/berrywinged.png" type="image/png">
-
+    <link rel="icon" href="assets/berrywinged.png" type="image/png">
 </head>
 <body>
     <div id="layout-wrapper">
@@ -32,43 +31,24 @@
                     <li><span style="color: var(--color-not-totally-wrong);">🟧 Not Totally Wrong</span>: Contains part of the answer + extra.</li>
                     <li><span style="color: var(--color-wrong);">🟥 Wrong</span>: Incorrect attribute.</li>
                 </ul>
-                <h4>Hints</h4>
-                <p>Click the "Show elements" button to reveal a list of possible elements, up to 3 times per day. The number of hints used will be displayed in your score.</p>
-                <h4>Personalized Synonyms</h4>
-                <p>You can create personalized synonyms for elements to make them easier to remember. (ex: "berry" for "strawberry")</p>
-                <p> There is some default synonyms included</p>
-                <p> A synonym will be indicated with an icon in your suggestions</p>
-
             </div>
         </div>
 
         <div id="main-content-column">
             <h1>Celestedle</h1>
-            <section id="disclaimer-block" class="disclaimer-block">
-                <h2>Important notice</h2>
-                <p>Major update in progress: bugs may occur.</p>
-                <p>If you want to help this project, you can join the discord to report bugs and suggest improvements, or make a github PR</p>
-            </section>
             <div id="game-status">
                 <p>Tries: <span id="try-count">0</span></p>
                 <button id="share-btn">Share</button>
                 <button id="giveup-btn">Forfeit</button>
                 <button id="rules-btn">Rules</button>
-                <a href="legal-notice.html" class="status-link-btn">Legal notice</a>
                 <button id="personalized-btn">Personalized synonyms</button>
             </div>
 
             <div id="message-container"></div>
-
             <div id="game-container">
                 <form id="guess-form">
                     <div class="input-container">
                         <input type="text" id="element-input" autocomplete="off" placeholder="Guess an element...">
-                        <div class="hint-controls">
-                            <button type="button" id="hint-btn">Show elements (3 left)</button>
-                            <span id="hint-counter">Hints used: 0/3</span>
-                        </div>
-                        <div id="hint-list" class="hint-list"></div>
                         <div id="element-suggestions" class="suggestions-box"></div>
                     </div>
                     <button type="submit">Guess</button>
@@ -90,27 +70,38 @@
         </div>
 
         <div id="right-sidebar-column">
+            <div class="bug-card">
+                <h3>Found a bug?</h3>
+                <p>If you encounter a bug, please report it to help improve the game. Your feedback is valuable!</p>
+                <button id="report-bug-btn">Report a Bug</button>
+            </div>
+
             <div id="timer-sidebar" class="sidebar-block">
                 <h3>Next Word in:</h3>
                 <p id="next-word-timer"></p>
                 <p>(or when the admin changes the DB)</p>
             </div>
+
             <div id="discord-sidebar" class="sidebar-block">
                 <div class="discord-promo-content">
                     <h3>Community Hub</h3>
                     <p>Join the Discord server to catch the latest updates, read changelogs, and drop your recommendations directly to the developer!</p>
                     <a href="https://discord.gg/3yqgMbuMbX" target="_blank" class="social-sidebar-link discord-sidebar-link">
-                        <img src="assets/entities/discordlogo.png" alt="Discord" class="social-icon">
+                        <img src="assets/discordlogo.png" alt="Discord" class="social-icon">
                         Join Discord
                     </a>
                     <a href="https://github.com/Ildyia/celestedle" target="_blank" class="social-sidebar-link github-sidebar-link">
-                        <img src="assets/entities/githublogo.png" alt="GitHub" class="social-icon">
+                        <img src="assets/githublogo.png" alt="GitHub" class="social-icon">
                         View on GitHub
                     </a>
                 </div>
             </div>
         </div>
     </div>
+
+    <footer id="site-footer">
+        <a href="legal-notice.html" class="legal-link">Legal Notice</a>
+    </footer>
 
     <div id="forfeit-modal" class="rules-modal" style="display: none;">
         <div class="rules-content" style="max-width: 450px; text-align: center;">
@@ -123,6 +114,46 @@
         </div>
     </div>
 
+    <div id="bug-modal" class="rules-modal" style="display: none;">
+        <div class="rules-content bug-modal-content">
+            <span id="close-bug-btn" class="close-modal-btn">&times;</span>
+            <h2>Report a Bug</h2>
+            <form id="bug-form">
+                <div class="form-group">
+                    <label for="bug-element-select">Related Element (Optional):</label>
+                    <select id="bug-element-select" class="bug-input">
+                        <option value="">-- None / General bug --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="bug-type-select">Type of report:</label>
+                    <select id="bug-type-select" class="bug-input" required>
+                        <option value="Mauvaise catégorie">Error in hints</option>
+                        <option value="Typo / Faute">Typo / Grammar</option>
+                        <option value="Bug technique">Technical Bug</option>
+                        <option value="Autre">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="bug-description-input">Details:</label>
+                    <textarea id="bug-description-input" class="bug-input" rows="4" placeholder="Describe the issue..." required></textarea>
+                </div>
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 8px;">
+                     <input type="checkbox" id="bug-spoiler-checkbox" style="cursor: pointer;">
+                    <label for="bug-spoiler-checkbox" style="cursor: pointer; margin: 0;">Concerns today's secret word (hide text with spoiler)</label>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancel-bug-btn" class="btn-secondary">Cancel</button>
+                    <button type="submit" id="submit-bug-btn" class="btn-primary">Send Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-<script src="script-client.js" type="module" defer></script></body>
+    <script src="script-client.js" type="module" defer></script>
+</body>
 </html>
