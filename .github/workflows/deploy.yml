@@ -22,6 +22,9 @@ jobs:
           echo "PORT=${{ secrets.PORT }}" > .env
           echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> .env
           echo "API_URL=https://celestedle-api.mizkyosia.fr/" >> .env
+          echo "DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}" >> .env
+          echo "DISCORD_BOT_TOKEN=${{ secrets.DISCORD_BOT_TOKEN }}" >> .env
+          echo "RANDOM_SEED=${{ secrets.RANDOM_SEED }}" >> .env
 
       - name: Deploy Production
         run: docker compose up -d --build --force-recreate

@@ -8,9 +8,19 @@ const officialElementsList = Object.keys(database).sort();
 
 let secretForce = null;
 //get the seed from the env variable RANDOM_SEED
-let globalSeedHash = process.env.RANDOM_SEED
-  ? parseInt(process.env.RANDOM_SEED)
-  : 0;
+let globalSeedHash = 0;
+if (process.env.RANDOM_SEED) {
+  const parsed = parseInt(process.env.RANDOM_SEED, 10);
+  if (isNaN(parsed)) {
+    // Si la seed est une string alphanumérique, on calcule un hash de base
+    for (let i = 0; i < process.env.RANDOM_SEED.length; i++) {
+      globalSeedHash =
+        (globalSeedHash * 31 + process.env.RANDOM_SEED.charCodeAt(i)) | 0;
+    }
+  } else {
+    globalSeedHash = parsed;
+  }
+}
 
 function getSecretOfTheDay() {
   if (secretForce) return secretForce;
