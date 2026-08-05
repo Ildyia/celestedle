@@ -6,6 +6,7 @@ router.post("/", async (req, res) => {
 
   const reportId = `BUG-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
+  // Application du spoiler Discord uniquement si le champ contient du texte
   const formattedElement =
     isSpoiler && elementName ? `||${elementName}||` : elementName || "N/A";
   const formattedDescription =
@@ -16,7 +17,6 @@ router.post("/", async (req, res) => {
       throw new Error("Le bot Discord n'est pas encore prêt.");
     }
 
-    // Le bot crée les deux messages
     await global.discordBotClient.handleBugReport({
       reportId,
       elementName: formattedElement,
@@ -27,8 +27,8 @@ router.post("/", async (req, res) => {
 
     res.json({ success: true, reportId });
   } catch (err) {
-    console.error("Error reporting bug :", err);
-    res.status(500).json({ error: "Error while reporting" });
+    console.error("Erreur Report Bug:", err);
+    res.status(500).json({ error: "Erreur lors du signalement." });
   }
 });
 
