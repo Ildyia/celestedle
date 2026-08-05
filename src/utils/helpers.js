@@ -1,11 +1,16 @@
 const fs = require("fs");
 const path = require("path");
 
-const database = JSON.parse(fs.readFileSync(path.join(__dirname, "../../db.json"), "utf8"));
+const database = JSON.parse(
+  fs.readFileSync(path.join(__dirname, "../../db.json"), "utf8"),
+);
 const officialElementsList = Object.keys(database).sort();
 
 let secretForce = null;
-let globalSeedHash = 20250204;
+//get the seed from the env variable RANDOM_SEED
+let globalSeedHash = process.env.RANDOM_SEED
+  ? parseInt(process.env.RANDOM_SEED)
+  : 0;
 
 function getSecretOfTheDay() {
   if (secretForce) return secretForce;
@@ -20,7 +25,7 @@ function getSecretOfTheDay() {
     // Use bitwise OR with 0 to ensure the result is a 32-bit integer
     localizedHash = (localizedHash * 33 + dateString.charCodeAt(i)) | 0;
     //Use math function to randomize the localizedHash further
-    localizedHash = Math.sin(localizedHash) * 10000 | 0;
+    localizedHash = (Math.sin(localizedHash) * 10000) | 0;
   }
 
   const targetedIndex = Math.abs(localizedHash) % officialElementsList.length;

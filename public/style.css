@@ -360,6 +360,64 @@ th,
   box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
 }
 
+.hint-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+#hint-btn {
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  border: 2px solid #334155;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+#hint-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+#hint-counter {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.hint-list {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  right: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  background-color: var(--bg-input);
+  border: 2px solid #334155;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  z-index: 1001;
+  box-sizing: border-box;
+}
+
+.hint-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  color: var(--text-main);
+  border-radius: 6px;
+  transition: background-color 0.15s ease;
+}
+
+.hint-item:hover {
+  background-color: var(--color-indigo);
+  color: #ffffff;
+}
+
 #guess-form button[type="submit"] {
   font-family: "Renogare", sans-serif;
   background-color: var(--bg-input);

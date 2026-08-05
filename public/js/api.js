@@ -1,8 +1,4 @@
-const API_BASE_URL =
-  window.location.hostname === "localhost" ||
-  window.location.hostname === "127.0.0.1"
-    ? "https://celestedle-api.onrender.com"
-    : "https://celestedle-api.mizkyosia.fr/";
+const API_BASE_URL = "https://celestedle-api.mizkyosia.fr";
 
 export const ApiService = {
   fetchSecretVersion() {

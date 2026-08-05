@@ -48,17 +48,24 @@ const App = {
     books: "clutter tiles",
     towels: "clutter tiles",
     crates: "clutter tiles",
-    "moon block": "moonblock",
+    moonblock: "moon block",
     "fire barrier": "lava barrier",
     "slippery ice wall": "ice wall",
     "trigger spike": "trigger dust",
     "hot core block": "magma block",
     "cold core block": "ice crumble block",
+    "bounce block": "magma block",
+    "core block": "magma block",
+    "space block": "moon block",
+    "floaty space block": "moon block",
   },
   officialElementsList: [],
   historyLog: [],
   tryCount: 0,
   selectedIndex: -1,
+  hintUses: 0,
+  hintLimit: 3,
+  hintListOpen: false,
   nodes: {},
 
   init() {
@@ -77,11 +84,17 @@ const App = {
       form: document.getElementById("guess-form"),
       input: document.getElementById("element-input"),
       suggestionsBox: document.getElementById("element-suggestions"),
+      hintBtn: document.getElementById("hint-btn"),
+      hintCounter: document.getElementById("hint-counter"),
+      hintList: document.getElementById("hint-list"),
       tryCountSpan: document.getElementById("try-count"),
       shareBtn: document.getElementById("share-btn"),
       giveupBtn: document.getElementById("giveup-btn"),
       rulesBtn: document.getElementById("rules-btn"),
       personalizedBtn: document.getElementById("personalized-btn"),
+      hintBtn: document.getElementById("hint-btn"),
+      hintCounter: document.getElementById("hint-counter"),
+      hintList: document.getElementById("hint-list"),
       tableBody: document.getElementById("guesses-body"),
       forfeitModal: document.getElementById("forfeit-modal"),
       confirmForfeitBtn: document.getElementById("confirm-forfeit-btn"),
@@ -97,6 +110,11 @@ const App = {
       );
       this.nodes.input.addEventListener("keydown", (e) =>
         this.handleSuggestionsKeyboard(e),
+      );
+    }
+    if (this.nodes.hintBtn) {
+      this.nodes.hintBtn.addEventListener("click", () =>
+        this.handleHintButton(),
       );
     }
     if (this.nodes.personalizedBtn) {
@@ -206,11 +224,72 @@ const App = {
     ApiService.fetchElements()
       .then((elements) => {
         this.officialElementsList = elements;
+        this.updateHintButtonText();
       })
       .catch((err) => console.error("Error loading elements:", err));
   },
 
+  handleHintButton() {
+    if (this.hintListOpen) return;
+    if (this.hintUses >= this.hintLimit) {
+      this.showToastNotification("No hints left.");
+      return;
+    }
+
+    if (this.nodes.suggestionsBox) {
+      this.nodes.suggestionsBox.style.display = "none";
+    }
+
+    this.hintUses += 1;
+    this.updateHintCounter();
+    this.renderHintList();
+    this.hintListOpen = true;
+    this.updateHintButtonText();
+  },
+
+  renderHintList() {
+    if (!this.nodes.hintList) return;
+
+    const sortedElements = this.officialElementsList
+      .slice()
+      .sort((a, b) => a.localeCompare(b));
+
+    this.nodes.hintList.innerHTML = "";
+    sortedElements.forEach((name) => {
+      const item = document.createElement("div");
+      item.classList.add("hint-item");
+      item.textContent = name.charAt(0).toUpperCase() + name.slice(1);
+      item.addEventListener("click", () =>
+        this.selectSuggestion(item.textContent),
+      );
+      this.nodes.hintList.appendChild(item);
+    });
+    this.nodes.hintList.style.display = "block";
+  },
+
+  hideHintList() {
+    if (!this.nodes.hintList) return;
+    this.nodes.hintList.innerHTML = "";
+    this.nodes.hintList.style.display = "none";
+    this.hintListOpen = false;
+  },
+
+  updateHintCounter() {
+    if (this.nodes.hintCounter) {
+      this.nodes.hintCounter.textContent = `Hints used: ${this.hintUses}/${this.hintLimit}`;
+    }
+  },
+
+  updateHintButtonText() {
+    if (!this.nodes.hintBtn) return;
+    const remaining = Math.max(this.hintLimit - this.hintUses, 0);
+    this.nodes.hintBtn.textContent =
+      remaining > 0 ? `Show elements (${remaining} left)` : `No hints left`;
+    this.nodes.hintBtn.disabled = remaining === 0;
+  },
+
   handleSuggestionsFilter(e) {
+    this.hideHintList();
     const query = e.target.value.trim().toLowerCase();
     this.nodes.suggestionsBox.innerHTML = "";
     this.selectedIndex = -1;
@@ -220,31 +299,50 @@ const App = {
       return;
     }
 
-    const matchingSuggestions = new Set();
+    const matchingSuggestions = new Map();
+
+    const addSuggestion = (word, priority) => {
+      const existing = matchingSuggestions.get(word);
+      if (existing === undefined || priority < existing) {
+        matchingSuggestions.set(word, priority);
+      }
+    };
 
     Object.keys(this.synonyms).forEach((syn) => {
       if (syn.startsWith(query)) {
         const officialName = this.synonyms[syn];
-        matchingSuggestions.add(
-          officialName.charAt(0).toUpperCase() + officialName.slice(1),
-        );
+        const displayName =
+          officialName.charAt(0).toUpperCase() + officialName.slice(1);
+        const lowerName = officialName.toLowerCase();
+        const priority =
+          lowerName === query ? 0 : lowerName.startsWith(query) ? 1 : 2;
+        addSuggestion(displayName, priority);
       }
     });
 
     this.officialElementsList.forEach((name) => {
-      if (name.toLowerCase().includes(query)) {
-        matchingSuggestions.add(name.charAt(0).toUpperCase() + name.slice(1));
+      const lowerName = name.toLowerCase();
+      if (lowerName.includes(query)) {
+        const displayName = name.charAt(0).toUpperCase() + name.slice(1);
+        const priority =
+          lowerName === query ? 0 : lowerName.startsWith(query) ? 1 : 2;
+        addSuggestion(displayName, priority);
       }
     });
 
     if (matchingSuggestions.size > 0) {
-      matchingSuggestions.forEach((word) => {
-        const div = document.createElement("div");
-        div.classList.add("suggestion-item");
-        div.textContent = word;
-        div.addEventListener("click", () => this.selectSuggestion(word));
-        this.nodes.suggestionsBox.appendChild(div);
-      });
+      Array.from(matchingSuggestions.entries())
+        .sort(([a, priorityA], [b, priorityB]) => {
+          if (priorityA !== priorityB) return priorityA - priorityB;
+          return a.localeCompare(b);
+        })
+        .forEach(([word]) => {
+          const div = document.createElement("div");
+          div.classList.add("suggestion-item");
+          div.textContent = word;
+          div.addEventListener("click", () => this.selectSuggestion(word));
+          this.nodes.suggestionsBox.appendChild(div);
+        });
       this.nodes.suggestionsBox.style.display = "block";
     } else {
       this.nodes.suggestionsBox.style.display = "none";
@@ -290,6 +388,7 @@ const App = {
     this.nodes.suggestionsBox.innerHTML = "";
     this.nodes.suggestionsBox.style.display = "none";
     this.selectedIndex = -1;
+    this.hideHintList();
     this.nodes.input.focus();
   },
 
@@ -300,6 +399,13 @@ const App = {
     ) {
       this.nodes.suggestionsBox.style.display = "none";
     }
+    if (
+      e.target !== this.nodes.hintBtn &&
+      e.target !== this.nodes.hintList &&
+      !this.nodes.hintList.contains(e.target)
+    ) {
+      this.hideHintList();
+    }
   },
 
   handleFormSubmit(e) {
@@ -308,6 +414,7 @@ const App = {
       this.showToastNotification("Server is loading, please slow down !");
       return;
     }
+    this.hideHintList();
     this.isProcessing = true;
     const rawGuess = this.nodes.input ? this.nodes.input.value.trim() : "";
     const normalizedGuess = rawGuess.toLowerCase();
@@ -446,8 +553,15 @@ const App = {
       .then((data) => {
         localStorage.setItem("celestedle_gameover", "true");
         localStorage.setItem("celestedle_status", "lose");
-        if (data.secretElement)
+        if (data.secretElement) {
           localStorage.setItem("celestedle_solution", data.secretElement);
+        }
+        if (data.secretAttributes) {
+          localStorage.setItem(
+            "celestedle_solution_attributes",
+            JSON.stringify(data.secretAttributes),
+          );
+        }
         location.reload();
       })
       .catch((err) => {
@@ -461,8 +575,8 @@ const App = {
   handleShareScore() {
     const isWin = localStorage.getItem("celestedle_status") !== "lose";
     let shareOutputText = isWin
-      ? `Celestedle of the day in ${this.tryCount} tries\n\n`
-      : `Celestedle of the day : Forfeit ❌ (${this.tryCount} tries)\n\n`;
+      ? `Celestedle of the day in ${this.tryCount} tries\nI used ${this.hintUses} hints\n\n`
+      : `Celestedle of the day : Forfeit ❌ (${this.tryCount} tries)\nI used ${this.hintUses} hints\n\n`;
 
     const scoreToEmojiMap = {
       correct: "🟩",
@@ -519,10 +633,28 @@ const App = {
     const solution = localStorage.getItem("celestedle_solution") || "Unknown";
     const formattedSolution =
       solution.charAt(0).toUpperCase() + solution.slice(1);
+    const rawAttributes = localStorage.getItem(
+      "celestedle_solution_attributes",
+    );
+    let attributeSummary = "";
+    if (rawAttributes) {
+      try {
+        const attrs = JSON.parse(rawAttributes);
+        const locationText = Array.isArray(attrs.lieu)
+          ? attrs.lieu.join(", ")
+          : attrs.lieu;
+        const colorText = Array.isArray(attrs.couleur)
+          ? attrs.couleur.join(", ")
+          : attrs.couleur;
+        attributeSummary = `\n\n<strong>Type:</strong> ${attrs.type}<br><strong>Locations:</strong> ${locationText}<br><strong>Colours:</strong> ${colorText}<br><strong>Hitbox:</strong> ${attrs.hitbox}`;
+      } catch (error) {
+        console.error("Failed to parse solution attributes:", error);
+      }
+    }
 
     const matchSummary = isWin
-      ? `You found the secret element in <strong>${this.tryCount}</strong> tries.`
-      : `You didn't find today's celestedle ! The answer was : <strong>${formattedSolution}</strong>`;
+      ? `You found the secret element in <strong>${this.tryCount}</strong> tries. I used <strong>${this.hintUses}</strong> hints.`
+      : `You didn't find today's celestedle ! The answer was : <strong>${formattedSolution}</strong>. I used <strong>${this.hintUses}</strong> hints.${attributeSummary}`;
 
     messageContainer.innerHTML = `<h2>${title}</h2><p>${matchSummary}</p>`;
     const targetContainer = document.getElementById("message-container");

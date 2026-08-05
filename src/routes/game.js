@@ -13,7 +13,17 @@ let secretVersion = new Date().toLocaleDateString("sv-SE", {
 
 router.post("/getSecretWord", (req, res) => {
   const secretElement = getSecretOfTheDay();
-  res.json({ success: true, secretElement });
+  const secretData = database[secretElement] || {};
+  res.json({
+    success: true,
+    secretElement,
+    secretAttributes: {
+      type: secretData.type || "Unknown",
+      lieu: normalizeMetaList(secretData.lieu),
+      couleur: normalizeMetaList(secretData.couleur),
+      hitbox: secretData.hitbox || "Unknown",
+    },
+  });
 });
 
 router.get("/elements", (req, res) => {
@@ -41,7 +51,9 @@ router.post("/validate", (req, res) => {
   const secretColors = normalizeMetaList(secretData.couleur);
 
   let locationVerdict = "wrong";
-  let locationMatches = choiceLocations.filter((loc) => secretLocations.includes(loc));
+  let locationMatches = choiceLocations.filter((loc) =>
+    secretLocations.includes(loc),
+  );
 
   if (
     locationMatches.length === secretLocations.length &&
@@ -59,7 +71,10 @@ router.post("/validate", (req, res) => {
   let colorVerdict = "wrong";
   let colorMatches = choiceColors.filter((col) => secretColors.includes(col));
 
-  if (colorMatches.length === secretColors.length && colorMatches.length === choiceColors.length) {
+  if (
+    colorMatches.length === secretColors.length &&
+    colorMatches.length === choiceColors.length
+  ) {
     colorVerdict = "correct";
   } else if (colorMatches.length > 0 || secretColors.includes("always")) {
     if (choiceColors.every((val, idx) => val === colorMatches[idx])) {
