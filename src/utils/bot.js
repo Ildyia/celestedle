@@ -1,87 +1,190 @@
-const { Client, GatewayIntentBits } = require("discord.js");
+const {
+  Client,
+  GatewayIntentBits,
+  REST,
+  Routes,
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+} = require("discord.js");
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
 });
 
-const PUBLIC_CHANNEL_ID = "1534624008614576209";
+global.discordBotClient = client;
 
-// Stockage en mémoire pour associer les bugs aux messages publics et votes
+// IDs des salons par défaut (peuvent être surchargés par la commande)
+let publicChannelId =
+  process.env.DISCORD_PUBLIC_CHANNEL_ID || "1534624008614576209";
+let privateChannelId =
+  process.env.DISCORD_PRIVATE_CHANNEL_ID || "1534616690287972498";
+
 const reportsMap = new Map();
 
-client.on("ready", () => {
-  console.log(`Bot Discord connecté en tant que ${client.user.tag}`);
+// --- 1. Déclaration de la commande Slash ---
+const commands = [
+  new SlashCommandBuilder()
+    .setName("setup-reports")
+    .setDescription("Configure les salons pour les rapports de bugs")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .addChannelOption((opt) =>
+      opt
+        .setName("public")
+        .setDescription("Salon public pour les votes")
+        .setRequired(true),
+    )
+    .addChannelOption((opt) =>
+      opt
+        .setName("private")
+        .setDescription("Salon privé pour la gestion")
+        .setRequired(true),
+    ),
+].map((cmd) => cmd.toJSON());
+
+client.on("ready", async () => {
+  console.log(`Bot Discord connecté : ${client.user.tag}`);
+
+  // Enregistrement global de la commande Slash
+  try {
+    const rest = new REST({ version: "10" }).setToken(
+      process.env.DISCORD_BOT_TOKEN,
+    );
+    await rest.put(Routes.applicationCommands(client.user.id), {
+      body: commands,
+    });
+    console.log("Commandes Slash enregistrées avec succès.");
+  } catch (err) {
+    console.error("Erreur d'enregistrement des commandes Slash :", err);
+  }
 });
 
-// Méthode appelée par la route /report-bug pour publier dans le salon public
-client.createPublicReport = async ({
+// --- 2. Fonction de traitement des rapports ---
+client.handleBugReport = async ({
   reportId,
   elementName,
   bugType,
   description,
   isSpoiler,
-  privateMessageId,
 }) => {
-  try {
-    const publicChannel = await client.channels.fetch(PUBLIC_CHANNEL_ID);
-    if (!publicChannel) return;
+  const privateChannel = await client.channels.fetch(privateChannelId);
+  const publicChannel = await client.channels.fetch(publicChannelId);
 
-    const isSpoiler = isSpoiler
-      ? "⚠️ This report contains spoilers for today's secret word!"
-      : "";
-
-    const publicMsg = await publicChannel.send({
-      embeds: [
-        {
-          title: `Bug Report [${reportId}]`,
-          fields: [
-            { name: "Element", value: elementName || "N/A", inline: true },
-            { name: "Type", value: bugType || "Non spécifié", inline: true },
-            { name: "Status", value: "🔴 Nouveau", inline: true },
-            { name: "Votes", value: "0", inline: true },
-            { name: "Description", value: description || "Aucune" },
-          ],
-          color: 15158332,
-          timestamp: new Date().toISOString(),
-        },
-      ],
-      components: [
-        {
-          type: 1,
-          components: [
-            {
-              type: 2,
-              style: 2,
-              emoji: "👍",
-              custom_id: `vote_up_${reportId}`,
-            },
-            {
-              type: 2,
-              style: 2,
-              emoji: "👎",
-              custom_id: `vote_down_${reportId}`,
-            },
-          ],
-        },
-      ],
-    });
-
-    reportsMap.set(reportId, {
-      publicMessageId: publicMsg.id,
-      privateMessageId: privateMessageId,
-      votes: new Map(),
-    });
-  } catch (err) {
-    console.error("Erreur lors de la création du message public :", err);
+  if (!privateChannel || !publicChannel) {
+    throw new Error("Salons Discord introuvables. Vérifiez la configuration.");
   }
+
+  const spoilerTag = isSpoiler ? " ⚠️ [SPOILER]" : "";
+  const embedColor = isSpoiler ? 0xf59e0b : 15158332;
+
+  const privateMsg = await privateChannel.send({
+    embeds: [
+      {
+        title: `🛠️ Gestion Bug [${reportId}]${spoilerTag}`,
+        fields: [
+          { name: "ID", value: `\`${reportId}\``, inline: true },
+          { name: "Mot / Élément", value: elementName, inline: true },
+          { name: "Type", value: bugType || "Non spécifié", inline: true },
+          { name: "Statut", value: "🔴 Nouveau", inline: false },
+          { name: "Description", value: description },
+        ],
+        color: embedColor,
+        timestamp: new Date().toISOString(),
+      },
+    ],
+    components: [
+      {
+        type: 1,
+        components: [
+          {
+            type: 2,
+            style: 3,
+            label: "Fixed",
+            custom_id: `status_fixed_${reportId}`,
+          },
+          {
+            type: 2,
+            style: 1,
+            label: "Working on it",
+            custom_id: `status_working_${reportId}`,
+          },
+          {
+            type: 2,
+            style: 2,
+            label: "Can't reproduce",
+            custom_id: `status_cant_${reportId}`,
+          },
+          {
+            type: 2,
+            style: 4,
+            label: "Wrong report",
+            custom_id: `status_wrong_${reportId}`,
+          },
+        ],
+      },
+    ],
+  });
+
+  const publicMsg = await publicChannel.send({
+    embeds: [
+      {
+        title: `🐛 Bug Report [${reportId}]${spoilerTag}`,
+        fields: [
+          { name: "Élément", value: elementName, inline: true },
+          { name: "Type", value: bugType || "Non spécifié", inline: true },
+          { name: "Statut", value: "🔴 Nouveau", inline: true },
+          { name: "Votes", value: "0", inline: true },
+          { name: "Description", value: description },
+        ],
+        color: embedColor,
+        timestamp: new Date().toISOString(),
+      },
+    ],
+    components: [
+      {
+        type: 1,
+        components: [
+          { type: 2, style: 2, emoji: "👍", custom_id: `vote_up_${reportId}` },
+          {
+            type: 2,
+            style: 2,
+            emoji: "👎",
+            custom_id: `vote_down_${reportId}`,
+          },
+        ],
+      },
+    ],
+  });
+
+  reportsMap.set(reportId, {
+    publicMessageId: publicMsg.id,
+    privateMessageId: privateMsg.id,
+    votes: new Map(),
+  });
 };
 
+// --- 3. Gestion des interactions (Commande Slash + Boutons) ---
 client.on("interactionCreate", async (interaction) => {
+  // A. Commande Slash de configuration
+  if (interaction.isChatInputCommand()) {
+    if (interaction.commandName === "setup-reports") {
+      const pubChan = interaction.options.getChannel("public");
+      const privChan = interaction.options.getChannel("private");
+
+      publicChannelId = pubChan.id;
+      privateChannelId = privChan.id;
+
+      return interaction.reply({
+        content: `Configuration mise à jour avec succès !\n- **Salon Public** : <#${publicChannelId}>\n- **Salon Privé** : <#${privateChannelId}>`,
+        ephemeral: true,
+      });
+    }
+  }
+
   if (!interaction.isButton()) return;
 
   const customId = interaction.customId;
 
-  // --- 1. Gestion des votes (+1 / -1) dans le salon public ---
+  // B. Votes (Salon Public)
   if (customId.startsWith("vote_")) {
     const isUp = customId.startsWith("vote_up_");
     const reportId = customId.replace(isUp ? "vote_up_" : "vote_down_", "");
@@ -89,7 +192,7 @@ client.on("interactionCreate", async (interaction) => {
 
     if (!reportData) {
       return interaction.reply({
-        content: "Impossible de voter sur ce rapport (session expirée).",
+        content: "Session de vote expirée.",
         ephemeral: true,
       });
     }
@@ -119,7 +222,7 @@ client.on("interactionCreate", async (interaction) => {
     await interaction.update({ embeds: [updatedEmbed] });
   }
 
-  // --- 2. Gestion du statut dans le salon privé ---
+  // C. Statut (Salon Privé)
   if (customId.startsWith("status_")) {
     let newStatus = "";
     let newColor = 0xef4444;
@@ -140,7 +243,6 @@ client.on("interactionCreate", async (interaction) => {
 
     const reportId = customId.split("_").pop();
 
-    // Mise à jour du message privé
     const privateEmbed = interaction.message.embeds[0];
     const updatedPrivateEmbed = {
       ...privateEmbed.data,
@@ -157,11 +259,10 @@ client.on("interactionCreate", async (interaction) => {
     };
     await interaction.update({ embeds: [updatedPrivateEmbed] });
 
-    // Mise à jour du message public correspondant
     const reportData = reportsMap.get(reportId);
     if (reportData) {
       try {
-        const publicChannel = await client.channels.fetch(PUBLIC_CHANNEL_ID);
+        const publicChannel = await client.channels.fetch(publicChannelId);
         const publicMsg = await publicChannel.messages.fetch(
           reportData.publicMessageId,
         );
@@ -179,12 +280,10 @@ client.on("interactionCreate", async (interaction) => {
 
         await publicMsg.edit({ embeds: [updatedPublicEmbed] });
       } catch (err) {
-        console.error("Erreur de mise à jour du message public :", err);
+        console.error("Erreur de synchro public:", err);
       }
     }
   }
 });
 
 client.login(process.env.DISCORD_BOT_TOKEN);
-
-global.discordBotClient = client;
