@@ -1318,11 +1318,12 @@ th,
   font-family: "Renogare", sans-serif;
   font-weight: bold;
   color: var(--color-indigo);
+}
 /* Majuscule automatique sur chaque mot dans le tableau */
 #guesses-table td {
   text-transform: capitalize;
 }
-}
+
 
 /* Majuscule automatique sur le texte des cartes d'indices */
 .hint-card-value,
