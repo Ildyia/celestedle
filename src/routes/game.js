@@ -9,30 +9,44 @@ const {
   getSeededRandom,
 } = require("../utils/helpers");
 
-const ALL_TYPES = ["Entity", "Trigger", "Environment", "Mechanic"];
-const ALL_HITBOXES = ["Small", "Medium", "Large", "Full Tile", "None"];
+const ALL_TYPES = [
+  "mechanics",
+  "movement and propulsion",
+  "environment",
+  "hazards",
+  "characters",
+  "collectibles",
+];
+const ALL_HITBOXES = [
+  "no hitbox interaction",
+  "circular",
+  "square",
+  "rectangular",
+  "other shape",
+];
 const ALL_LOCATIONS = [
-  "Forsaken City",
-  "Old Site",
-  "Celestial Resort",
-  "Golden Ridge",
-  "Mirror Temple",
-  "Reflection",
-  "The Summit",
-  "Core",
-  "Farewell",
+  "prologue",
+  "city",
+  "site",
+  "resort",
+  "ridge",
+  "temple",
+  "summit",
+  "core",
+  "farewell",
 ];
 const ALL_COLORS = [
-  "Red",
-  "Blue",
-  "Green",
-  "Yellow",
-  "Purple",
-  "Pink",
-  "White",
-  "Black",
-  "Orange",
-  "Brown",
+  "red",
+  "blue",
+  "green",
+  "yellow",
+  "purple",
+  "pink",
+  "white",
+  "black",
+  "orange",
+  "brown",
+  "grey",
 ];
 
 function getRandomWrongValue(correctValue, allPossibleValues) {
