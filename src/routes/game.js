@@ -195,7 +195,6 @@ router.post("/hint", (req, res) => {
       const wrongElements = elements.filter(
         (el) => el.nom && el.nom.toLowerCase() !== secret.nom.toLowerCase(),
       );
-      // Sélection déterministe via la seed
       const index = getSeededRandom(1) % wrongElements.length;
       const randomWrong = wrongElements[index];
       return res.json({
@@ -204,12 +203,11 @@ router.post("/hint", (req, res) => {
     }
 
     if (type === "secret_info") {
+      // Réservé exclusivement à Type et Lieu pour ne pas chevaucher l'autre indice
       const infos = [
         `Its type includes: <strong>${Array.isArray(secret.type) ? secret.type[0] : secret.type}</strong>`,
-        `Its hitbox is: <strong>${Array.isArray(secret.hitbox) ? secret.hitbox[0] : secret.hitbox}</strong>`,
         `It can be found in: <strong>${Array.isArray(secret.lieu) ? secret.lieu[0] : secret.lieu}</strong>`,
       ];
-      // Choix déterministe de l'info
       const index = getSeededRandom(2) % infos.length;
       return res.json({
         text: `<strong>Secret Info:</strong> ${infos[index]}`,
@@ -217,31 +215,22 @@ router.post("/hint", (req, res) => {
     }
 
     if (type === "truth_and_lies") {
+      // Réservé exclusivement à Couleur et Hitbox
       const secretColor = Array.isArray(secret.couleur)
         ? secret.couleur[0]
         : secret.couleur;
-      const secretLocation = Array.isArray(secret.lieu)
-        ? secret.lieu[0]
-        : secret.lieu;
-      const secretType = Array.isArray(secret.type)
-        ? secret.type[0]
-        : secret.type;
       const secretHitbox = Array.isArray(secret.hitbox)
         ? secret.hitbox[0]
         : secret.hitbox;
 
       const truthPool = [
-        `Type is "${secretType || "Unknown"}"`,
         `Hitbox is "${secretHitbox || "Unknown"}"`,
         `Color includes "${secretColor || "Unknown"}"`,
-        `Location includes "${secretLocation || "Unknown"}"`,
       ];
 
-      // 1. Sélection de la vérité via la seed
       const trueIndex = getSeededRandom(3) % truthPool.length;
       const trueStatement = truthPool[trueIndex];
 
-      // 2. Génération des faux choix de manière déterministe
       const getSeededWrong = (currentVal, pool, seedOffset) => {
         const arr = Array.isArray(currentVal) ? currentVal : [currentVal];
         const filtered = pool.filter((v) => !arr.includes(v));
@@ -250,32 +239,16 @@ router.post("/hint", (req, res) => {
         return filtered[idx];
       };
 
-      const fakeType = getSeededWrong(secret.type, ALL_TYPES, 10);
       const fakeHitbox = getSeededWrong(secret.hitbox, ALL_HITBOXES, 11);
-      const fakeLocation = getSeededWrong(secret.lieu, ALL_LOCATIONS, 12);
       const fakeColor = getSeededWrong(secret.couleur, ALL_COLORS, 13);
 
       const liesPool = [
-        `Type is "${fakeType}"`,
         `Hitbox is "${fakeHitbox}"`,
-        `Location includes "${fakeLocation}"`,
         `Color includes "${fakeColor}"`,
       ];
 
-      // 3. Choix des 2 mensonges sans doublons
-      const lie1Index = getSeededRandom(4) % liesPool.length;
-      let lie2Index = getSeededRandom(5) % liesPool.length;
-      if (lie2Index === lie1Index) {
-        lie2Index = (lie1Index + 1) % liesPool.length;
-      }
+      const statements = [trueStatement, liesPool[0], liesPool[1]];
 
-      const statements = [
-        trueStatement,
-        liesPool[lie1Index],
-        liesPool[lie2Index],
-      ];
-
-      // 4. Mélange fixe des 3 propositions
       const randOrder = getSeededRandom(6) % 3;
       if (randOrder === 1) statements.push(statements.shift());
       if (randOrder === 2) statements.unshift(statements.pop());
