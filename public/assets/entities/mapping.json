@@ -42,7 +42,7 @@
   "crystal heart": "assets/entities/crystal-heart.png",
   "dash switch": "assets/entities/dash-switch.png",
   "dream block": "assets/entities/dream-block.png",
-  "exit block": "assets/entities/exit-block.gif",
+  "exit block": "assets/entities/exitblock.png",
   "fake wall": "assets/entities/fake-wall.png",
   "falling block": "assets/entities/falling-block.png",
   "fire ball": "assets/entities/fire-ball.png",

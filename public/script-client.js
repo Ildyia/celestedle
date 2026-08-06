@@ -66,7 +66,7 @@ const App = {
   selectedIndex: -1,
   hintUses: 0,
   hintLimit: 3,
-  hintListOpen: false,
+  usedHintTypes: [],
   nodes: {},
   entityImageMap: null,
 
@@ -88,8 +88,6 @@ const App = {
       input: document.getElementById("element-input"),
       suggestionsBox: document.getElementById("element-suggestions"),
       hintBtn: document.getElementById("hint-btn"),
-      hintCounter: document.getElementById("hint-counter"),
-      hintList: document.getElementById("hint-list"),
       tryCountSpan: document.getElementById("try-count"),
       successCountSpan: document.getElementById("success-count"),
       shareBtn: document.getElementById("share-btn"),
@@ -104,6 +102,7 @@ const App = {
       successCountSpan: document.getElementById("success-count"),
       avgTriesSpan: document.getElementById("avg-tries-count"),
       avgHintsSpan: document.getElementById("avg-hints-count"),
+      showAllBtn: document.getElementById("show-all-btn"),
     };
   },
 
@@ -147,10 +146,34 @@ const App = {
     });
 
     if (this.nodes.hintBtn) {
-      this.nodes.hintBtn.addEventListener("click", () =>
-        this.handleHintButton(),
-      );
+      this.nodes.hintBtn.addEventListener("click", () => {
+        if (this.hintUses >= this.hintLimit) {
+          this.showToastNotification("No hints left.");
+          return;
+        }
+        this.updateHintButtonsState();
+        const modal = document.getElementById("hint-modal");
+        if (modal) modal.style.display = "flex";
+      });
     }
+
+    document
+      .getElementById("close-hint-modal")
+      ?.addEventListener("click", () => {
+        const modal = document.getElementById("hint-modal");
+        if (modal) modal.style.display = "none";
+      });
+
+    document
+      .getElementById("hint-opt-false-friend")
+      ?.addEventListener("click", () => this.requestHint("false_friend"));
+    document
+      .getElementById("hint-opt-secret")
+      ?.addEventListener("click", () => this.requestHint("secret_info"));
+    document
+      .getElementById("hint-opt-wrong")
+      ?.addEventListener("click", () => this.requestHint("wrong_info"));
+
     if (this.nodes.personalizedBtn) {
       this.nodes.personalizedBtn.addEventListener("click", () =>
         ModalService.openPersonalizedModal(this),
@@ -188,7 +211,113 @@ const App = {
         this.handleShareScore(),
       );
     }
+
+    if (this.nodes.showAllBtn) {
+      this.nodes.showAllBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.nodes.input.value = "";
+        this.showAllSuggestions();
+        this.nodes.input.focus();
+      });
+    }
     document.addEventListener("click", (e) => this.handleOutsideClick(e));
+  },
+
+  updateHintButtonsState() {
+    const btnFF = document.getElementById("hint-opt-false-friend");
+    const btnSecret = document.getElementById("hint-opt-secret");
+    const btnWrong = document.getElementById("hint-opt-wrong");
+
+    if (btnFF) btnFF.disabled = this.usedHintTypes.includes("false_friend");
+    if (btnSecret)
+      btnSecret.disabled = this.usedHintTypes.includes("secret_info");
+    if (btnWrong) btnWrong.disabled = this.usedHintTypes.includes("wrong_info");
+  },
+
+  requestHint(type) {
+    if (this.usedHintTypes.includes(type)) return;
+
+    const modal = document.getElementById("hint-modal");
+    if (modal) modal.style.display = "none";
+
+    ApiService.fetchHint(type)
+      .then((data) => {
+        if (!data || !data.text) return;
+        this.hintUses += 1;
+        this.usedHintTypes.push(type);
+        localStorage.setItem(
+          "celestedle_used_hint_types",
+          JSON.stringify(this.usedHintTypes),
+        );
+        this.updateHintButtonText();
+        this.saveAndRenderHint(data.text);
+      })
+      .catch(() => this.showToastNotification("Error fetching hint."));
+  },
+
+  showAllSuggestions() {
+    if (!this.nodes.suggestionsBox) return;
+    this.nodes.suggestionsBox.innerHTML = "";
+    this.selectedIndex = -1;
+
+    const sortedElements = [...this.officialElementsList].sort((a, b) =>
+      a.localeCompare(b),
+    );
+
+    sortedElements.forEach((name) => {
+      const displayName = name.charAt(0).toUpperCase() + name.slice(1);
+      const div = document.createElement("div");
+      div.classList.add("suggestion-item");
+
+      const thumb = document.createElement("img");
+      thumb.className = "suggestion-thumb";
+      thumb.alt = displayName;
+      thumb.src = "assets/entities/placeholder.svg";
+
+      const textNode = document.createElement("span");
+      textNode.textContent = displayName;
+
+      div.appendChild(thumb);
+      div.appendChild(textNode);
+
+      this.resolveEntityImage(name.toLowerCase()).then((path) => {
+        if (path) thumb.src = path;
+      });
+
+      div.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.selectSuggestion(displayName);
+      });
+
+      this.nodes.suggestionsBox.appendChild(div);
+    });
+
+    this.nodes.suggestionsBox.style.display = "block";
+  },
+  saveAndRenderHint(text) {
+    const savedHints = JSON.parse(
+      localStorage.getItem("celestedle_saved_hints") || "[]",
+    );
+    savedHints.push(text);
+    localStorage.setItem("celestedle_saved_hints", JSON.stringify(savedHints));
+    this.renderActiveHints();
+  },
+
+  renderActiveHints() {
+    const container = document.getElementById("active-hints-container");
+    if (!container) return;
+    const savedHints = JSON.parse(
+      localStorage.getItem("celestedle_saved_hints") || "[]",
+    );
+
+    container.innerHTML = "";
+    savedHints.forEach((hintText) => {
+      const card = document.createElement("div");
+      card.className = "hint-card";
+      card.innerHTML = hintText;
+      container.appendChild(card);
+    });
   },
 
   openBugModal() {
@@ -228,6 +357,8 @@ const App = {
         "version",
         "solution",
         "solution_attributes",
+        "saved_hints",
+        "used_hint_types",
       ];
       keysToRemove.forEach((key) =>
         localStorage.removeItem(`celestedle_${key}`),
@@ -240,7 +371,14 @@ const App = {
     ApiService.fetchSecretVersion().then((data) => {
       const savedVersion = localStorage.getItem("celestedle_version");
       if (savedVersion && savedVersion !== String(data.secretVersion)) {
-        const keysToRemove = ["tries", "gameover", "status", "history"];
+        const keysToRemove = [
+          "tries",
+          "gameover",
+          "status",
+          "history",
+          "saved_hints",
+          "used_hint_types",
+        ];
         keysToRemove.forEach((key) =>
           localStorage.removeItem(`celestedle_${key}`),
         );
@@ -258,9 +396,16 @@ const App = {
       this.nodes.tryCountSpan.textContent = this.tryCount;
     }
 
+    this.usedHintTypes = JSON.parse(
+      localStorage.getItem("celestedle_used_hint_types") || "[]",
+    );
+    this.hintUses = this.usedHintTypes.length;
+
     this.historyLog =
       JSON.parse(localStorage.getItem("celestedle_history")) || [];
     this.historyLog.forEach((data) => this.addTableRow(data));
+
+    this.renderActiveHints();
 
     if (localStorage.getItem("celestedle_gameover") === "true") {
       this.renderEndGameScreen();
@@ -309,81 +454,15 @@ const App = {
     }
   },
 
-  handleHintButton() {
-    if (this.hintListOpen) return;
-    if (this.hintUses >= this.hintLimit) {
-      this.showToastNotification("No hints left.");
-      return;
-    }
-
-    if (this.nodes.suggestionsBox) {
-      this.nodes.suggestionsBox.style.display = "none";
-    }
-
-    this.hintUses += 1;
-    this.updateHintCounter();
-    this.renderHintList();
-    this.hintListOpen = true;
-    this.updateHintButtonText();
-  },
-
-  renderHintList() {
-    if (!this.nodes.hintList) return;
-
-    const sortedElements = this.officialElementsList
-      .slice()
-      .sort((a, b) => a.localeCompare(b));
-
-    this.nodes.hintList.innerHTML = "";
-    sortedElements.forEach((name) => {
-      const display = name.charAt(0).toUpperCase() + name.slice(1);
-      const item = document.createElement("div");
-      item.classList.add("hint-item");
-
-      const thumb = document.createElement("img");
-      thumb.className = "hint-thumb";
-      thumb.alt = display;
-      thumb.src = "assets/entities/placeholder.svg";
-
-      const text = document.createElement("span");
-      text.textContent = display;
-
-      item.appendChild(thumb);
-      item.appendChild(text);
-
-      this.resolveEntityImage(name.toLowerCase()).then((p) => {
-        if (p) thumb.src = p;
-      });
-
-      item.addEventListener("click", () => this.selectSuggestion(display));
-      this.nodes.hintList.appendChild(item);
-    });
-    this.nodes.hintList.style.display = "block";
-  },
-
-  hideHintList() {
-    if (!this.nodes.hintList) return;
-    this.nodes.hintList.innerHTML = "";
-    this.nodes.hintList.style.display = "none";
-    this.hintListOpen = false;
-  },
-
-  updateHintCounter() {
-    if (this.nodes.hintCounter) {
-      this.nodes.hintCounter.textContent = `Hints used: ${this.hintUses}/${this.hintLimit}`;
-    }
-  },
-
   updateHintButtonText() {
     if (!this.nodes.hintBtn) return;
     const remaining = Math.max(this.hintLimit - this.hintUses, 0);
     this.nodes.hintBtn.textContent =
-      remaining > 0 ? `Show elements (${remaining} left)` : `No hints left`;
+      remaining > 0 ? `Hints (${remaining} left)` : `No hints left`;
     this.nodes.hintBtn.disabled = remaining === 0;
   },
 
   handleSuggestionsFilter(e) {
-    this.hideHintList();
     const query = e.target.value.trim().toLowerCase();
     this.nodes.suggestionsBox.innerHTML = "";
     this.selectedIndex = -1;
@@ -507,7 +586,6 @@ const App = {
     this.nodes.suggestionsBox.innerHTML = "";
     this.nodes.suggestionsBox.style.display = "none";
     this.selectedIndex = -1;
-    this.hideHintList();
     this.nodes.input.focus();
   },
 
@@ -519,14 +597,6 @@ const App = {
     ) {
       this.nodes.suggestionsBox.style.display = "none";
     }
-    if (
-      this.nodes.hintList &&
-      e.target !== this.nodes.hintBtn &&
-      e.target !== this.nodes.hintList &&
-      !this.nodes.hintList.contains(e.target)
-    ) {
-      this.hideHintList();
-    }
   },
 
   handleFormSubmit(e) {
@@ -535,7 +605,6 @@ const App = {
       this.showToastNotification("Server is loading, please slow down !");
       return;
     }
-    this.hideHintList();
     this.isProcessing = true;
     const rawGuess = this.nodes.input ? this.nodes.input.value.trim() : "";
     const normalizedGuess = rawGuess.toLowerCase();
@@ -565,7 +634,14 @@ const App = {
         const savedVersion = localStorage.getItem("celestedle_version");
 
         if (savedVersion && savedVersion !== String(data.secretVersion)) {
-          const keysToRemove = ["tries", "gameover", "status", "history"];
+          const keysToRemove = [
+            "tries",
+            "gameover",
+            "status",
+            "history",
+            "saved_hints",
+            "used_hint_types",
+          ];
           keysToRemove.forEach((key) =>
             localStorage.removeItem(`celestedle_${key}`),
           );
@@ -611,7 +687,7 @@ const App = {
           confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
           localStorage.setItem("celestedle_gameover", "true");
           localStorage.setItem("celestedle_status", "win");
-          location.reload();
+          this.renderEndGameScreen();
         }
       })
       .catch((err) => {
@@ -703,9 +779,25 @@ const App = {
 
   handleShareScore() {
     const isWin = localStorage.getItem("celestedle_status") !== "lose";
+
+    const hintNamesMap = {
+      false_friend: "False Friend",
+      secret_info: "Secret Info",
+      wrong_info: "NOT Hint",
+    };
+
+    let hintsSummary = "No hints used";
+    if (this.usedHintTypes && this.usedHintTypes.length > 0) {
+      const formattedHints = this.usedHintTypes
+        .map((type) => hintNamesMap[type] || type)
+        .join(", ");
+      const hintLabel = this.usedHintTypes.length > 1 ? "hints" : "hint";
+      hintsSummary = `${this.usedHintTypes.length} ${hintLabel} used (${formattedHints})`;
+    }
+
     let shareOutputText = isWin
-      ? `Celestedle of the day in ${this.tryCount} tries\nI used ${this.hintUses} hints\n\n`
-      : `Celestedle of the day : Forfeit ❌ (${this.tryCount} tries)\nI used ${this.hintUses} hints\n\n`;
+      ? `Celestedle of the day in ${this.tryCount} tries\n${hintsSummary}\n\n`
+      : `Celestedle of the day : Forfeit ❌ (${this.tryCount} tries)\n${hintsSummary}\n\n`;
 
     const scoreToEmojiMap = {
       correct: "🟩",
@@ -1011,6 +1103,8 @@ window.forceReset = function () {
         "history",
         "date",
         "version",
+        "saved_hints",
+        "used_hint_types",
       ];
       keysToRemove.forEach((key) =>
         localStorage.removeItem(`celestedle_${key}`),

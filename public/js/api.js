@@ -20,6 +20,17 @@ export const ApiService = {
     });
   },
 
+  fetchHint(type) {
+    return fetch(`${API_BASE_URL}/hint`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type }),
+    }).then((res) => {
+      if (!res.ok) throw new Error("Failed to fetch hint");
+      return res.json();
+    });
+  },
+
   validateGuess(choice, tryCount, hintUses) {
     return fetch(`${API_BASE_URL}/validate`, {
       method: "POST",
