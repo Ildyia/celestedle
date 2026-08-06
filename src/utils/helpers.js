@@ -8,13 +8,13 @@ const database = JSON.parse(
 const officialElementsList = Object.keys(database).sort();
 
 let secretForce = null;
+let secretVersion = "1.0.0";
 const dailyStatsStore = createDailyStatsStore();
-//get the seed from the env variable RANDOM_SEED
+
 let globalSeedHash = 0;
 if (process.env.RANDOM_SEED) {
   const parsed = parseInt(process.env.RANDOM_SEED, 10);
   if (isNaN(parsed)) {
-    // Si la seed est une string alphanumérique, on calcule un hash de base
     for (let i = 0; i < process.env.RANDOM_SEED.length; i++) {
       globalSeedHash =
         (globalSeedHash * 31 + process.env.RANDOM_SEED.charCodeAt(i)) | 0;
@@ -34,14 +34,29 @@ function getSecretOfTheDay() {
   let localizedHash = globalSeedHash;
 
   for (let i = 0; i < dateString.length; i++) {
-    // Use bitwise OR with 0 to ensure the result is a 32-bit integer
     localizedHash = (localizedHash * 33 + dateString.charCodeAt(i)) | 0;
-    //Use math function to randomize the localizedHash further
     localizedHash = (Math.sin(localizedHash) * 10000) | 0;
   }
 
   const targetedIndex = Math.abs(localizedHash) % officialElementsList.length;
   return officialElementsList[targetedIndex];
+}
+
+// Alias pour compatibilité avec routes/game.js
+function getSecretElement() {
+  const secretName = getSecretOfTheDay();
+  return {
+    nom: secretName,
+    ...database[secretName],
+  };
+}
+
+// Alias pour compatibilité avec routes/game.js
+function getElementsList() {
+  return officialElementsList.map((nom) => ({
+    nom,
+    ...database[nom],
+  }));
 }
 
 function normalizeMetaList(data) {
@@ -59,6 +74,11 @@ function normalizeMetaList(data) {
 
 function updateSeedHash(newHash) {
   globalSeedHash = newHash;
+  secretVersion = Date.now().toString(); // Met à jour la version pour forcer le reset client
+}
+
+function getSecretVersion() {
+  return secretVersion;
 }
 
 function registerDailySuccess(secretName, playerId) {
@@ -69,12 +89,31 @@ function getDailySuccessCount(secretName) {
   return dailyStatsStore.getCount(secretName);
 }
 
+function getDailyStats() {
+  const secretName = getSecretOfTheDay();
+  return {
+    count: getDailySuccessCount(secretName) || 0,
+    avgTries: 0,
+    avgHints: 0,
+  };
+}
+
+function recordDailySuccess(tryCount, hintUses) {
+  const secretName = getSecretOfTheDay();
+  return registerDailySuccess(secretName, "anonymous");
+}
+
 module.exports = {
   database,
   officialElementsList,
   getSecretOfTheDay,
+  getSecretElement,
+  getElementsList,
   normalizeMetaList,
   updateSeedHash,
+  getSecretVersion,
   registerDailySuccess,
   getDailySuccessCount,
+  getDailyStats,
+  recordDailySuccess,
 };
