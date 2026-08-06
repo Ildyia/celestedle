@@ -6,6 +6,7 @@ const {
   getDailyStats,
   recordDailySuccess,
   getSecretVersion,
+  getSeededRandom,
 } = require("../utils/helpers");
 
 const ALL_TYPES = ["Entity", "Trigger", "Environment", "Mechanic"];
