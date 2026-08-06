@@ -83,54 +83,7 @@ client.handleBugReport = async ({
   const spoilerTag = isSpoiler ? " ⚠️ [TODAY'S WORD SPOILER]" : "";
   const embedColor = isSpoiler ? 0xf59e0b : 15158332;
 
-  const privateMsg = await privateChannel.send({
-    embeds: [
-      {
-        title: `🛠️ Bug Management [${reportId}]${spoilerTag}`,
-        fields: [
-          { name: "ID", value: `\`${reportId}\``, inline: true },
-          { name: "Element", value: formattedElement, inline: true },
-          { name: "Category", value: bugType, inline: true },
-          { name: "Status", value: "🔴 New", inline: false },
-          { name: "Description", value: formattedDescription },
-        ],
-        color: embedColor,
-        timestamp: new Date().toISOString(),
-      },
-    ],
-    components: [
-      {
-        type: 1,
-        components: [
-          {
-            type: 2,
-            style: 3,
-            label: "Fixed",
-            custom_id: `status_fixed_${reportId}`,
-          },
-          {
-            type: 2,
-            style: 1,
-            label: "Working on it",
-            custom_id: `status_working_${reportId}`,
-          },
-          {
-            type: 2,
-            style: 2,
-            label: "Can't reproduce",
-            custom_id: `status_cant_${reportId}`,
-          },
-          {
-            type: 2,
-            style: 4,
-            label: "Wrong report",
-            custom_id: `status_wrong_${reportId}`,
-          },
-        ],
-      },
-    ],
-  });
-
+  // Send public message first to get its ID
   const publicMsg = await publicChannel.send({
     embeds: [
       {
@@ -156,6 +109,55 @@ client.handleBugReport = async ({
             style: 2,
             emoji: "👎",
             custom_id: `vote_down_${reportId}`,
+          },
+        ],
+      },
+    ],
+  });
+
+  // Attach publicMsg.id to custom_id so we can fetch it directly later
+  const privateMsg = await privateChannel.send({
+    embeds: [
+      {
+        title: `🛠️ Bug Management [${reportId}]${spoilerTag}`,
+        fields: [
+          { name: "ID", value: `\`${reportId}\``, inline: true },
+          { name: "Element", value: formattedElement, inline: true },
+          { name: "Category", value: bugType, inline: true },
+          { name: "Status", value: "🔴 New", inline: false },
+          { name: "Description", value: formattedDescription },
+        ],
+        color: embedColor,
+        timestamp: new Date().toISOString(),
+      },
+    ],
+    components: [
+      {
+        type: 1,
+        components: [
+          {
+            type: 2,
+            style: 3,
+            label: "Fixed",
+            custom_id: `status_fixed_${reportId}_${publicMsg.id}`,
+          },
+          {
+            type: 2,
+            style: 1,
+            label: "Working on it",
+            custom_id: `status_working_${reportId}_${publicMsg.id}`,
+          },
+          {
+            type: 2,
+            style: 2,
+            label: "Can't reproduce",
+            custom_id: `status_cant_${reportId}_${publicMsg.id}`,
+          },
+          {
+            type: 2,
+            style: 4,
+            label: "Wrong report",
+            custom_id: `status_wrong_${reportId}_${publicMsg.id}`,
           },
         ],
       },
@@ -242,7 +244,9 @@ client.on("interactionCreate", async (interaction) => {
       newColor = 0xef4444;
     }
 
-    const reportId = customId.split("_").pop();
+    const parts = customId.split("_");
+    const publicMsgId = parts.pop();
+    const reportId = parts.pop();
 
     const privateEmbed = interaction.message.embeds[0];
     const updatedPrivateEmbed = {
@@ -262,10 +266,25 @@ client.on("interactionCreate", async (interaction) => {
 
     try {
       const publicChannel = await client.channels.fetch(publicChannelId);
-      const fetchedMessages = await publicChannel.messages.fetch({ limit: 50 });
-      const publicMsg = fetchedMessages.find((msg) =>
-        msg.embeds.some((e) => e.title && e.title.includes(`[${reportId}]`)),
-      );
+
+      // Fetch public message directly by its ID
+      let publicMsg;
+      if (publicMsgId && publicMsgId !== reportId) {
+        try {
+          publicMsg = await publicChannel.messages.fetch(publicMsgId);
+        } catch (e) {
+          // Fallback search if fetching directly fails
+        }
+      }
+
+      if (!publicMsg) {
+        const fetchedMessages = await publicChannel.messages.fetch({
+          limit: 100,
+        });
+        publicMsg = fetchedMessages.find((msg) =>
+          msg.embeds.some((e) => e.title && e.title.includes(`[${reportId}]`)),
+        );
+      }
 
       if (publicMsg) {
         const publicEmbed = publicMsg.embeds[0];
