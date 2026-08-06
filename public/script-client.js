@@ -251,6 +251,10 @@ const App = {
           "celestedle_used_hint_types",
           JSON.stringify(this.usedHintTypes),
         );
+
+        // Mettre à jour l'état visuel des boutons tout de suite
+        this.updateHintButtonsState();
+
         this.updateHintButtonText();
         this.saveAndRenderHint(data.text);
       })

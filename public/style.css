@@ -1273,3 +1273,21 @@ th,
 #element-input {
   padding-right: 45px; /* Pour éviter que le texte passe sous le bouton */
 }
+/* Style pour les boutons d'indices désactivés */
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(100%);
+  background-color: var(--bg-input) !important;
+  border: 1px solid #334155 !important;
+}
+
+#hint-modal .btn-primary:disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  filter: grayscale(100%) !important;
+  background-color: var(--bg-input) !important;
+  color: var(--text-muted) !important;
+  border: 1px solid #334155 !important;
+  pointer-events: none;
+}
