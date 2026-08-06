@@ -16,8 +16,6 @@ app.get("/db.json", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "db.json"));
 });
 
-app.use(express.static(path.join(__dirname, "../public")));
-
 app.use("/", gameRoutes);
 app.use("/admin", adminRoutes);
 app.use("/report-bug", reportRoutes);
