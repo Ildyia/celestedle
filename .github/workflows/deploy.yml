@@ -6,6 +6,11 @@ on:
       - main
       - betatest
 
+# Annule les déploiements précédents sur la même branche/environnement
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy-prod:
     if: github.ref_name == 'main'
@@ -30,7 +35,7 @@ jobs:
         run: docker compose up -d --build --force-recreate
 
   deploy-staging:
-    if: github.ref_name == 'betatest'
+    if: github.ref_name == 'beta'
     runs-on: ubuntu-latest
     environment: celestedleEnv
     steps:

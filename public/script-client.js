@@ -72,6 +72,7 @@ const App = {
 
   init() {
     this.cacheDOM();
+    this.loadColorblindPreference();
     this.checkDailyReset();
     this.checkApplicationVersion();
     this.loadGameState();
@@ -94,6 +95,7 @@ const App = {
       giveupBtn: document.getElementById("giveup-btn"),
       rulesBtn: document.getElementById("rules-btn"),
       personalizedBtn: document.getElementById("personalized-btn"),
+      colorblindBtn: document.getElementById("colorblind-btn"),
       tableBody: document.getElementById("guesses-body"),
       forfeitModal: document.getElementById("forfeit-modal"),
       confirmForfeitBtn: document.getElementById("confirm-forfeit-btn"),
@@ -178,6 +180,11 @@ const App = {
         ModalService.openPersonalizedModal(this),
       );
     }
+    if (this.nodes.colorblindBtn) {
+      this.nodes.colorblindBtn.addEventListener("click", () =>
+        this.toggleColorblindMode(),
+      );
+    }
     if (this.nodes.form) {
       this.nodes.form.addEventListener("submit", (e) =>
         this.handleFormSubmit(e),
@@ -221,6 +228,20 @@ const App = {
       });
     }
     document.addEventListener("click", (e) => this.handleOutsideClick(e));
+  },
+
+  loadColorblindPreference() {
+    const isColorblind =
+      localStorage.getItem("celestedle_colorblind") === "true";
+    if (isColorblind) {
+      document.body.classList.add("colorblind");
+    }
+  },
+
+  toggleColorblindMode() {
+    document.body.classList.toggle("colorblind");
+    const enabled = document.body.classList.contains("colorblind");
+    localStorage.setItem("celestedle_colorblind", enabled);
   },
 
   updateHintButtonsState() {

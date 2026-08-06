@@ -1330,3 +1330,27 @@ th,
 .hint-card-grid span {
   text-transform: capitalize;
 }
+
+/* Mode Contraste Élevé / Daltonien */
+body.colorblind {
+  --color-correct: #0077bb;         /* Bleu ciel bien distinct */
+  --color-partial: #ee7733;         /* Orange/Pêche vif */
+  --color-not-totally-wrong: #cc3311; /* Rouge brique/Vermillon */
+  --color-wrong: #333333;           /* Gris très foncé */
+}
+
+/* Ajout de motifs / symboles pour ne pas reposer uniquement sur la couleur */
+body.colorblind #guesses-table td.correct::after {
+  content: " (✓)";
+  font-size: 0.8em;
+}
+
+body.colorblind #guesses-table td.partial::after {
+  content: " (~)";
+  font-size: 0.8em;
+}
+
+body.colorblind #guesses-table td.wrong::after {
+  content: " (✗)";
+  font-size: 0.8em;
+}
