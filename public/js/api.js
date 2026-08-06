@@ -78,8 +78,8 @@ export const ApiService = {
     }).then((res) => res.json());
   },
 
-  forceReset(password) {
-    return fetch(`${API_BASE_URL}/admin/force-reset`, {
+  triggerAdminReset(password) {
+    return fetch(`${API_BASE_URL}/admin/trigger-reset`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ key: password }),

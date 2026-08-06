@@ -37,13 +37,12 @@ router.post("/random-hash", (req, res) => {
   });
 });
 
-router.post("/force-reset", (req, res) => {
+router.post("/trigger-reset", (req, res) => {
   const { key } = req.body;
   if (adminKey && key !== adminKey) {
     return res.status(403).json({ error: "Access denied" });
   }
 
-  // Génère un nouveau hash aléatoire pour forcer le changement de mot et d'indices
   const newHash = Math.floor(Math.random() * 10000000);
   updateSeedHash(newHash);
 
@@ -55,11 +54,8 @@ router.post("/force-reset", (req, res) => {
   });
 });
 
-// Assign an image from the graphics dump to an entity
-// body: { key, entityName, srcPath }
 router.post("/assign-image", (req, res) => {
   const { key, entityName, srcPath } = req.body;
-  // optional key check
   if (adminKey && key !== adminKey)
     return res.status(403).json({ error: "Access denied" });
   if (!entityName || !srcPath)
@@ -80,7 +76,6 @@ router.post("/assign-image", (req, res) => {
 
   try {
     fs.copyFileSync(dumpFull, destFull);
-    // update mapping.json
     const mappingPath = path.join(
       publicDir,
       "assets",
@@ -103,8 +98,6 @@ router.post("/assign-image", (req, res) => {
   }
 });
 
-// Upload an image from the local computer and assign it to an entity
-// body: { key, entityName, fileName, fileData }
 router.post("/upload-image", (req, res) => {
   const { key, entityName, fileName, fileData } = req.body;
   if (adminKey && key !== adminKey)
