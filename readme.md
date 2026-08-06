@@ -13,14 +13,6 @@ Each day, a secret element or entity from Celeste is chosen deterministically fo
 - **Community Statistics**: Compare your scores and average tries against global player statistics.
 - **In-Game Bug Reporting**: Submit entity issues or feedback directly to our Discord server.
 
-## Coming Soon
-
-- Hard Mode
-- Profile, personnal statistics etc
-- Streak tracker
-- Achievements
-- Other game mode (Techdle, moddedle, connection etc)
-
 ## Community & Support
 
 Join our official Discord server to share your daily scores, report bugs, discuss strategies, and stay updated with the latest features:
