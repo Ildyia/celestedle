@@ -8,7 +8,7 @@ const database = JSON.parse(
 const officialElementsList = Object.keys(database).sort();
 
 let secretForce = null;
-let secretVersion = "1.0.0";
+let secretVersion = "1.0.1";
 const dailyStatsStore = createDailyStatsStore();
 
 let globalSeedHash = 0;
@@ -85,22 +85,14 @@ function registerDailySuccess(secretName, playerId) {
   return dailyStatsStore.registerSuccess(secretName, playerId);
 }
 
-function getDailySuccessCount(secretName) {
-  return dailyStatsStore.getCount(secretName);
-}
-
 function getDailyStats() {
   const secretName = getSecretOfTheDay();
-  return {
-    count: getDailySuccessCount(secretName) || 0,
-    avgTries: 0,
-    avgHints: 0,
-  };
+  return dailyStatsStore.getStats(secretName);
 }
 
 function recordDailySuccess(tryCount, hintUses) {
   const secretName = getSecretOfTheDay();
-  return registerDailySuccess(secretName, "anonymous");
+  return dailyStatsStore.registerSuccess(secretName, tryCount, hintUses);
 }
 
 function getSeededRandom(offset = 0) {

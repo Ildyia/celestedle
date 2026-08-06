@@ -99,7 +99,6 @@ const App = {
       confirmForfeitBtn: document.getElementById("confirm-forfeit-btn"),
       cancelForfeitBtn: document.getElementById("cancel-forfeit-btn"),
       timerContainer: document.getElementById("next-word-timer"),
-      successCountSpan: document.getElementById("success-count"),
       avgTriesSpan: document.getElementById("avg-tries-count"),
       avgHintsSpan: document.getElementById("avg-hints-count"),
       showAllBtn: document.getElementById("show-all-btn"),
@@ -252,9 +251,7 @@ const App = {
           JSON.stringify(this.usedHintTypes),
         );
 
-        // Mettre à jour l'état visuel des boutons tout de suite
         this.updateHintButtonsState();
-
         this.updateHintButtonText();
         this.saveAndRenderHint(data.text);
       })
@@ -266,9 +263,10 @@ const App = {
     this.nodes.suggestionsBox.innerHTML = "";
     this.selectedIndex = -1;
 
-    const sortedElements = [...this.officialElementsList].sort((a, b) =>
-      a.localeCompare(b),
-    );
+    const elements = Array.isArray(this.officialElementsList)
+      ? this.officialElementsList
+      : [];
+    const sortedElements = [...elements].sort((a, b) => a.localeCompare(b));
 
     sortedElements.forEach((name) => {
       const displayName = name.charAt(0).toUpperCase() + name.slice(1);
@@ -300,6 +298,7 @@ const App = {
 
     this.nodes.suggestionsBox.style.display = "block";
   },
+
   saveAndRenderHint(text) {
     const savedHints = JSON.parse(
       localStorage.getItem("celestedle_saved_hints") || "[]",
@@ -329,7 +328,10 @@ const App = {
     const select = document.getElementById("bug-element-select");
     if (select) {
       select.innerHTML = '<option value="">-- None / General bug --</option>';
-      this.officialElementsList.forEach((el) => {
+      const elements = Array.isArray(this.officialElementsList)
+        ? this.officialElementsList
+        : [];
+      elements.forEach((el) => {
         const opt = document.createElement("option");
         opt.value = el;
         opt.textContent = el.charAt(0).toUpperCase() + el.slice(1);
@@ -374,6 +376,7 @@ const App = {
 
   checkApplicationVersion() {
     ApiService.fetchSecretVersion().then((data) => {
+      if (!data || !data.secretVersion) return;
       const savedVersion = localStorage.getItem("celestedle_version");
       if (savedVersion && savedVersion !== String(data.secretVersion)) {
         const keysToRemove = [
@@ -430,21 +433,32 @@ const App = {
   fetchOfficialElements() {
     ApiService.fetchElements()
       .then((elements) => {
-        this.officialElementsList = elements;
+        if (Array.isArray(elements)) {
+          this.officialElementsList = elements;
+        } else {
+          console.error("API returned non-array elements:", elements);
+          this.officialElementsList = [];
+        }
         this.updateHintButtonText();
       })
-      .catch((err) => console.error("Error loading elements:", err));
+      .catch((err) => {
+        console.error("Error loading elements:", err);
+        this.officialElementsList = [];
+      });
   },
 
   fetchDailySuccessCount() {
     ApiService.fetchDailySuccessCount()
       .then((data) => {
-        this.updateCommunityStats(data);
+        if (data && typeof data === "object") {
+          this.updateCommunityStats(data);
+        }
       })
       .catch((err) => console.error("Error loading daily stats:", err));
   },
 
   updateCommunityStats(data) {
+    if (!data) return;
     if (this.nodes.successCountSpan) {
       this.nodes.successCountSpan.textContent =
         data.count ?? data.dailySuccessCount ?? 0;
@@ -498,7 +512,10 @@ const App = {
       }
     });
 
-    this.officialElementsList.forEach((name) => {
+    const elements = Array.isArray(this.officialElementsList)
+      ? this.officialElementsList
+      : [];
+    elements.forEach((name) => {
       const lowerName = name.toLowerCase();
       if (lowerName.includes(query)) {
         const displayName = name.charAt(0).toUpperCase() + name.slice(1);
@@ -619,7 +636,7 @@ const App = {
     if (isSynonym) choice = this.synonyms[normalizedGuess];
 
     const alreadyGuessed = this.historyLog.some(
-      (attempt) => attempt.nom.toLowerCase() === choice,
+      (attempt) => attempt.nom && attempt.nom.toLowerCase() === choice,
     );
     if (alreadyGuessed) {
       this.showToastNotification("You already tried this ! Be original noob");
@@ -636,6 +653,11 @@ const App = {
     ApiService.validateGuess(choice, this.tryCount + 1, this.hintUses)
       .then((data) => {
         this.isProcessing = false;
+        if (!data || data.error) {
+          this.showToastNotification(data?.error || "Invalid guess");
+          return;
+        }
+
         const savedVersion = localStorage.getItem("celestedle_version");
 
         if (savedVersion && savedVersion !== String(data.secretVersion)) {
@@ -656,11 +678,10 @@ const App = {
             "The secret word has been changed by an admin ! Your tries have been reset !",
           );
           setTimeout(() => location.reload(), 2500);
-          this.isProcessing = false;
           return;
         }
 
-        if (!savedVersion) {
+        if (!savedVersion && data.secretVersion) {
           localStorage.setItem("celestedle_version", data.secretVersion);
         }
 
@@ -688,7 +709,7 @@ const App = {
         if (this.nodes.suggestionsBox)
           this.nodes.suggestionsBox.style.display = "none";
 
-        if (data.verdict.isCorrect) {
+        if (data.verdict && data.verdict.isCorrect) {
           confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
           localStorage.setItem("celestedle_gameover", "true");
           localStorage.setItem("celestedle_status", "win");
@@ -696,6 +717,7 @@ const App = {
         }
       })
       .catch((err) => {
+        this.isProcessing = false;
         if (this.nodes.input) {
           this.nodes.input.classList.add("shake");
           setTimeout(() => this.nodes.input.classList.remove("shake"), 400);
@@ -727,7 +749,10 @@ const App = {
       return;
     }
 
-    const officialExists = this.officialElementsList.some(
+    const elements = Array.isArray(this.officialElementsList)
+      ? this.officialElementsList
+      : [];
+    const officialExists = elements.some(
       (element) => element.toLowerCase() === value,
     );
 
@@ -757,10 +782,10 @@ const App = {
       .then((data) => {
         localStorage.setItem("celestedle_gameover", "true");
         localStorage.setItem("celestedle_status", "lose");
-        if (data.secretElement) {
+        if (data && data.secretElement) {
           localStorage.setItem("celestedle_solution", data.secretElement);
         }
-        if (data.secretAttributes) {
+        if (data && data.secretAttributes) {
           localStorage.setItem(
             "celestedle_solution_attributes",
             JSON.stringify(data.secretAttributes),
@@ -943,7 +968,9 @@ const App = {
       return cell;
     };
 
-    const formattedName = data.nom.charAt(0).toUpperCase() + data.nom.slice(1);
+    const formattedName = data.nom
+      ? data.nom.charAt(0).toUpperCase() + data.nom.slice(1)
+      : "Unknown";
     const nameCell = document.createElement("td");
     nameCell.className = data.verdict?.isCorrect ? "correct" : "wrong";
 
@@ -951,14 +978,16 @@ const App = {
     nameText.textContent = formattedName;
     nameCell.appendChild(nameText);
 
-    this.resolveEntityImage(data.nom).then((imgPath) => {
-      if (!imgPath) return;
-      const thumb = document.createElement("img");
-      thumb.className = "entity-thumb";
-      thumb.src = imgPath;
-      thumb.alt = formattedName;
-      nameCell.insertBefore(thumb, nameCell.firstChild);
-    });
+    if (data.nom) {
+      this.resolveEntityImage(data.nom).then((imgPath) => {
+        if (!imgPath) return;
+        const thumb = document.createElement("img");
+        thumb.className = "entity-thumb";
+        thumb.src = imgPath;
+        thumb.alt = formattedName;
+        nameCell.insertBefore(thumb, nameCell.firstChild);
+      });
+    }
 
     if (data.isSynonym && data.synonymOriginal) {
       const synonymBadge = document.createElement("span");
