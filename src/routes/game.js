@@ -173,8 +173,9 @@ router.post("/hint", (req, res) => {
       const wrongElements = elements.filter(
         (el) => el.nom && el.nom.toLowerCase() !== secret.nom.toLowerCase(),
       );
-      const randomWrong =
-        wrongElements[Math.floor(Math.random() * wrongElements.length)];
+      // Sélection déterministe via la seed
+      const index = getSeededRandom(1) % wrongElements.length;
+      const randomWrong = wrongElements[index];
       return res.json({
         text: `<strong>False Friend:</strong> The secret element is NOT <em>${randomWrong ? randomWrong.nom : "Unknown"}</em>.`,
       });
@@ -186,8 +187,11 @@ router.post("/hint", (req, res) => {
         `Its hitbox is: <strong>${Array.isArray(secret.hitbox) ? secret.hitbox[0] : secret.hitbox}</strong>`,
         `It can be found in: <strong>${Array.isArray(secret.lieu) ? secret.lieu[0] : secret.lieu}</strong>`,
       ];
-      const randomInfo = infos[Math.floor(Math.random() * infos.length)];
-      return res.json({ text: `<strong>Secret Info:</strong> ${randomInfo}` });
+      // Choix déterministe de l'info
+      const index = getSeededRandom(2) % infos.length;
+      return res.json({
+        text: `<strong>Secret Info:</strong> ${infos[index]}`,
+      });
     }
 
     if (type === "truth_and_lies") {
@@ -210,9 +214,11 @@ router.post("/hint", (req, res) => {
         `Color includes "${secretColor}"`,
         `Location includes "${secretLocation}"`,
       ];
-      const trueStatement =
-        truthPool[Math.floor(Math.random() * truthPool.length)];
+      // 1. Choix fixe de la vérité
+      const trueIndex = getSeededRandom(3) % truthPool.length;
+      const trueStatement = truthPool[trueIndex];
 
+      // 2. Choix fixe des mensonges
       const fakeType = getRandomWrongValue(secret.type, ALL_TYPES);
       const fakeHitbox = getRandomWrongValue(secret.hitbox, ALL_HITBOXES);
       const fakeLocation = getRandomWrongValue(secret.lieu, ALL_LOCATIONS);
@@ -225,13 +231,20 @@ router.post("/hint", (req, res) => {
         `Color includes "${fakeColor}"`,
       ];
 
-      const shuffledLies = liesPool.sort(() => 0.5 - Math.random());
-      const lie1 = shuffledLies[0];
-      const lie2 = shuffledLies[1];
+      // Sélection fixe de 2 mensonges sans Math.random()
+      const lie1Index = getSeededRandom(4) % liesPool.length;
+      let lie2Index = getSeededRandom(5) % liesPool.length;
+      if (lie2Index === lie1Index)
+        lie2Index = (lie1Index + 1) % liesPool.length;
 
-      const statements = [trueStatement, lie1, lie2].sort(
-        () => 0.5 - Math.random(),
-      );
+      const lie1 = liesPool[lie1Index];
+      const lie2 = liesPool[lie2Index];
+
+      // 3. Mélange fixe des 3 propositions
+      const statements = [trueStatement, lie1, lie2];
+      const randOrder = getSeededRandom(6) % 3;
+      if (randOrder === 1) statements.push(statements.shift());
+      if (randOrder === 2) statements.unshift(statements.pop());
 
       const hintText = `<strong>1 Truth & 2 Lies:</strong><br>• ${statements.join("<br>• ")}`;
 

@@ -103,6 +103,17 @@ function recordDailySuccess(tryCount, hintUses) {
   return registerDailySuccess(secretName, "anonymous");
 }
 
+function getSeededRandom(offset = 0) {
+  const secretName = getSecretOfTheDay();
+  let hash = globalSeedHash;
+  const str = secretName + offset;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 33 + str.charCodeAt(i)) | 0;
+    hash = (Math.sin(hash) * 10000) | 0;
+  }
+  return Math.abs(hash);
+}
+
 module.exports = {
   database,
   officialElementsList,
@@ -116,4 +127,5 @@ module.exports = {
   getDailySuccessCount,
   getDailyStats,
   recordDailySuccess,
+  getSeededRandom,
 };
