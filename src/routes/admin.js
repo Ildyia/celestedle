@@ -37,6 +37,24 @@ router.post("/random-hash", (req, res) => {
   });
 });
 
+router.post("/force-reset", (req, res) => {
+  const { key } = req.body;
+  if (adminKey && key !== adminKey) {
+    return res.status(403).json({ error: "Access denied" });
+  }
+
+  // Génère un nouveau hash aléatoire pour forcer le changement de mot et d'indices
+  const newHash = Math.floor(Math.random() * 10000000);
+  updateSeedHash(newHash);
+
+  res.json({
+    success: true,
+    message:
+      "Game forced reset successfully. Secret element and hints regenerated.",
+    newHash,
+  });
+});
+
 // Assign an image from the graphics dump to an entity
 // body: { key, entityName, srcPath }
 router.post("/assign-image", (req, res) => {

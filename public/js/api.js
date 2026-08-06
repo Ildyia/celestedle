@@ -70,18 +70,23 @@ export const ApiService = {
     }).then((res) => res.json());
   },
 
-  fetchDailySuccessCount() {
-    return fetch(`${API_BASE_URL}/daily-success-count`).then((res) =>
-      res.json(),
-    );
-  },
-
   triggerRandomSecret(password, newHash) {
     return fetch(`${API_BASE_URL}/admin/random-hash`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ key: password, newHash: newHash }),
     }).then((res) => res.json());
+  },
+
+  forceReset(password) {
+    return fetch(`${API_BASE_URL}/admin/force-reset`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: password }),
+    }).then((res) => {
+      if (!res.ok) throw new Error("Access denied or server error");
+      return res.json();
+    });
   },
 
   sendBugReport(reportData) {

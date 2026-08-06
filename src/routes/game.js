@@ -7,8 +7,6 @@ const {
   officialElementsList,
   getSecretOfTheDay,
   normalizeMetaList,
-  registerDailySuccess,
-  getDailySuccessCount,
 } = require("../utils/helpers");
 
 const STATS_FILE = path.join(__dirname, "../stats.json");
@@ -111,10 +109,6 @@ router.post("/getSecretWord", (req, res) => {
   const secretElement = getSecretOfTheDay();
 
   if (!secretElement || !database[secretElement]) {
-    console.error(
-      "Erreur: Mot secret introuvable dans la base de données :",
-      secretElement,
-    );
     return res.status(500).json({
       error: "Secret element not found in database",
       secretElement: secretElement || "Unknown",
