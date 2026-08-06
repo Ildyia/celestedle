@@ -192,13 +192,11 @@ client.on("interactionCreate", async (interaction) => {
   if (customId.startsWith("vote_")) {
     const isUp = customId.startsWith("vote_up_");
     const reportId = customId.replace(isUp ? "vote_up_" : "vote_down_", "");
-    const reportData = reportsMap.get(reportId);
+    let reportData = reportsMap.get(reportId);
 
     if (!reportData) {
-      return interaction.reply({
-        content: "Voting session expired.",
-        ephemeral: true,
-      });
+      reportData = { votes: new Map() };
+      reportsMap.set(reportId, reportData);
     }
 
     const userId = interaction.user.id;
@@ -262,15 +260,15 @@ client.on("interactionCreate", async (interaction) => {
     };
     await interaction.update({ embeds: [updatedPrivateEmbed] });
 
-    const reportData = reportsMap.get(reportId);
-    if (reportData) {
-      try {
-        const publicChannel = await client.channels.fetch(publicChannelId);
-        const publicMsg = await publicChannel.messages.fetch(
-          reportData.publicMessageId,
-        );
-        const publicEmbed = publicMsg.embeds[0];
+    try {
+      const publicChannel = await client.channels.fetch(publicChannelId);
+      const fetchedMessages = await publicChannel.messages.fetch({ limit: 50 });
+      const publicMsg = fetchedMessages.find((msg) =>
+        msg.embeds.some((e) => e.title && e.title.includes(`[${reportId}]`)),
+      );
 
+      if (publicMsg) {
+        const publicEmbed = publicMsg.embeds[0];
         const updatedPublicEmbed = {
           ...publicEmbed.data,
           color: newColor,
@@ -282,9 +280,11 @@ client.on("interactionCreate", async (interaction) => {
         };
 
         await publicMsg.edit({ embeds: [updatedPublicEmbed] });
-      } catch (err) {
-        console.error("Public sync error:", err);
+      } else {
+        console.error(`Public message for report ${reportId} not found.`);
       }
+    } catch (err) {
+      console.error("Public sync error:", err);
     }
   }
 });
