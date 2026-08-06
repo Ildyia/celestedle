@@ -146,10 +146,33 @@ const App = {
     });
 
     if (this.nodes.hintBtn) {
-      this.nodes.hintBtn.addEventListener("click", () =>
-        this.handleHintButton(),
-      );
+      this.nodes.hintBtn.addEventListener("click", () => {
+        if (this.hintUses >= this.hintLimit) {
+          this.showToastNotification("No hints left.");
+          return;
+        }
+        const modal = document.getElementById("hint-modal");
+        if (modal) modal.style.display = "flex";
+      });
     }
+
+    document
+      .getElementById("close-hint-modal")
+      ?.addEventListener("click", () => {
+        const modal = document.getElementById("hint-modal");
+        if (modal) modal.style.display = "none";
+      });
+
+    document
+      .getElementById("hint-opt-list")
+      ?.addEventListener("click", () => this.requestHint("list_attr"));
+    document
+      .getElementById("hint-opt-secret")
+      ?.addEventListener("click", () => this.requestHint("secret_info"));
+    document
+      .getElementById("hint-opt-wrong")
+      ?.addEventListener("click", () => this.requestHint("wrong_info"));
+
     if (this.nodes.personalizedBtn) {
       this.nodes.personalizedBtn.addEventListener("click", () =>
         ModalService.openPersonalizedModal(this),
@@ -188,6 +211,47 @@ const App = {
       );
     }
     document.addEventListener("click", (e) => this.handleOutsideClick(e));
+  },
+
+  requestHint(type) {
+    const modal = document.getElementById("hint-modal");
+    if (modal) modal.style.display = "none";
+
+    ApiService.fetchHint(type)
+      .then((data) => {
+        this.hintUses += 1;
+        this.updateHintButtonText();
+        this.displayHintResult(data);
+      })
+      .catch(() => this.showToastNotification("Error fetching hint."));
+  },
+
+  displayHintResult(data) {
+    if (data.hintType === "list_attr") {
+      this.renderHintListWithAttr(data.attributeName, data.items);
+    } else if (data.hintType === "secret_info") {
+      this.showToastNotification(
+        `Hint: Secret ${data.label} is "${data.value}"`,
+      );
+    } else if (data.hintType === "wrong_info") {
+      this.showToastNotification(
+        `NOT Hint: Type: != ${data.wrongType} | Location: != ${data.wrongLocation} | Colour: != ${data.wrongColor} | Hitbox: != ${data.wrongHitbox}`,
+      );
+    }
+  },
+
+  renderHintListWithAttr(attrName, items) {
+    if (!this.nodes.hintList) return;
+    this.nodes.hintList.innerHTML = `<h4 style="margin: 5px 0;">Elements list (${attrName})</h4>`;
+    items.forEach((item) => {
+      const div = document.createElement("div");
+      div.className = "hint-item";
+      div.textContent = `${item.name.charAt(0).toUpperCase() + item.name.slice(1)} - ${attrName}: ${item.value}`;
+      div.addEventListener("click", () => this.selectSuggestion(item.name));
+      this.nodes.hintList.appendChild(div);
+    });
+    this.nodes.hintList.style.display = "block";
+    this.hintListOpen = true;
   },
 
   openBugModal() {
@@ -308,58 +372,6 @@ const App = {
     }
   },
 
-  handleHintButton() {
-    if (this.hintListOpen) return;
-    if (this.hintUses >= this.hintLimit) {
-      this.showToastNotification("No hints left.");
-      return;
-    }
-
-    if (this.nodes.suggestionsBox) {
-      this.nodes.suggestionsBox.style.display = "none";
-    }
-
-    this.hintUses += 1;
-    this.updateHintCounter();
-    this.renderHintList();
-    this.hintListOpen = true;
-    this.updateHintButtonText();
-  },
-
-  renderHintList() {
-    if (!this.nodes.hintList) return;
-
-    const sortedElements = this.officialElementsList
-      .slice()
-      .sort((a, b) => a.localeCompare(b));
-
-    this.nodes.hintList.innerHTML = "";
-    sortedElements.forEach((name) => {
-      const display = name.charAt(0).toUpperCase() + name.slice(1);
-      const item = document.createElement("div");
-      item.classList.add("hint-item");
-
-      const thumb = document.createElement("img");
-      thumb.className = "hint-thumb";
-      thumb.alt = display;
-      thumb.src = "assets/entities/placeholder.svg";
-
-      const text = document.createElement("span");
-      text.textContent = display;
-
-      item.appendChild(thumb);
-      item.appendChild(text);
-
-      this.resolveEntityImage(name.toLowerCase()).then((p) => {
-        if (p) thumb.src = p;
-      });
-
-      item.addEventListener("click", () => this.selectSuggestion(display));
-      this.nodes.hintList.appendChild(item);
-    });
-    this.nodes.hintList.style.display = "block";
-  },
-
   hideHintList() {
     if (!this.nodes.hintList) return;
     this.nodes.hintList.innerHTML = "";
@@ -367,17 +379,11 @@ const App = {
     this.hintListOpen = false;
   },
 
-  updateHintCounter() {
-    if (this.nodes.hintCounter) {
-      this.nodes.hintCounter.textContent = `Hints used: ${this.hintUses}/${this.hintLimit}`;
-    }
-  },
-
   updateHintButtonText() {
     if (!this.nodes.hintBtn) return;
     const remaining = Math.max(this.hintLimit - this.hintUses, 0);
     this.nodes.hintBtn.textContent =
-      remaining > 0 ? `Show elements (${remaining} left)` : `No hints left`;
+      remaining > 0 ? `Hints (${remaining} left)` : `No hints left`;
     this.nodes.hintBtn.disabled = remaining === 0;
   },
 
@@ -610,7 +616,7 @@ const App = {
           confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
           localStorage.setItem("celestedle_gameover", "true");
           localStorage.setItem("celestedle_status", "win");
-          location.reload();
+          this.renderEndGameScreen();
         }
       })
       .catch((err) => {
