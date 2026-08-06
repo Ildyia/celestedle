@@ -171,8 +171,8 @@ const App = {
       .getElementById("hint-opt-secret")
       ?.addEventListener("click", () => this.requestHint("secret_info"));
     document
-      .getElementById("hint-opt-wrong")
-      ?.addEventListener("click", () => this.requestHint("wrong_info"));
+      .getElementById("hint-opt-truth-lies")
+      ?.addEventListener("click", () => this.requestHint("truth_and_lies"));
 
     if (this.nodes.personalizedBtn) {
       this.nodes.personalizedBtn.addEventListener("click", () =>
@@ -227,12 +227,13 @@ const App = {
   updateHintButtonsState() {
     const btnFF = document.getElementById("hint-opt-false-friend");
     const btnSecret = document.getElementById("hint-opt-secret");
-    const btnWrong = document.getElementById("hint-opt-wrong");
+    const btnTruthLies = document.getElementById("hint-opt-truth-lies");
 
     if (btnFF) btnFF.disabled = this.usedHintTypes.includes("false_friend");
     if (btnSecret)
       btnSecret.disabled = this.usedHintTypes.includes("secret_info");
-    if (btnWrong) btnWrong.disabled = this.usedHintTypes.includes("wrong_info");
+    if (btnTruthLies)
+      btnTruthLies.disabled = this.usedHintTypes.includes("truth_and_lies");
   },
 
   requestHint(type) {
@@ -783,7 +784,7 @@ const App = {
     const hintNamesMap = {
       false_friend: "False Friend",
       secret_info: "Secret Info",
-      wrong_info: "NOT Hint",
+      truth_and_lies: "1 Truth 2 Lies",
     };
 
     let hintsSummary = "No hints used";

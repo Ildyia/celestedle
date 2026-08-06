@@ -1,369 +1,219 @@
 const express = require("express");
 const router = express.Router();
-const fs = require("fs");
-const path = require("path");
 const {
-  database,
-  officialElementsList,
-  getSecretOfTheDay,
-  normalizeMetaList,
+  getSecretElement,
+  getElementsList,
+  getDailyStats,
+  recordDailySuccess,
+  getSecretVersion,
 } = require("../utils/helpers");
 
-const STATS_FILE = path.join(__dirname, "../stats.json");
+const ALL_TYPES = ["Entity", "Trigger", "Environment", "Mechanic"];
+const ALL_HITBOXES = ["Small", "Medium", "Large", "Full Tile", "None"];
+const ALL_LOCATIONS = [
+  "Forsaken City",
+  "Old Site",
+  "Celestial Resort",
+  "Golden Ridge",
+  "Mirror Temple",
+  "Reflection",
+  "The Summit",
+  "Core",
+  "Farewell",
+];
+const ALL_COLORS = [
+  "Red",
+  "Blue",
+  "Green",
+  "Yellow",
+  "Purple",
+  "Pink",
+  "White",
+  "Black",
+  "Orange",
+  "Brown",
+];
 
-let secretVersion = new Date().toLocaleDateString("sv-SE", {
-  timeZone: "Europe/Paris",
-});
-
-function getSeededRandom(seedOffset = 0) {
-  const dateString = new Date().toLocaleDateString("sv-SE", {
-    timeZone: "Europe/Paris",
-  });
-  let hash = seedOffset;
-  for (let i = 0; i < dateString.length; i++) {
-    hash = (hash * 33 + dateString.charCodeAt(i)) | 0;
-    hash = (Math.sin(hash) * 10000) | 0;
-  }
-  const x = Math.sin(Math.abs(hash)) * 10000;
-  return x - Math.floor(x);
+function getRandomWrongValue(correctValue, allPossibleValues) {
+  const current = Array.isArray(correctValue) ? correctValue : [correctValue];
+  const wrongs = allPossibleValues.filter((v) => !current.includes(v));
+  if (wrongs.length === 0) return "Unknown";
+  return wrongs[Math.floor(Math.random() * wrongs.length)];
 }
 
-function loadStatsHistory() {
-  try {
-    if (fs.existsSync(STATS_FILE)) {
-      return JSON.parse(fs.readFileSync(STATS_FILE, "utf8"));
-    }
-  } catch (err) {
-    console.error("Error reading stats file:", err);
-  }
-  return [];
-}
-
-function getCurrentWordStats() {
-  const currentSecret = getSecretOfTheDay();
-  const history = loadStatsHistory();
-  const currentEntry = history.find(
-    (entry) =>
-      entry.word === currentSecret && entry.secretVersion === secretVersion,
-  );
-
-  if (currentEntry) {
-    return currentEntry.stats;
-  }
-
-  return { count: 0, totalTries: 0, totalHints: 0 };
-}
-
-function saveCurrentWordStats(stats) {
-  const currentSecret = getSecretOfTheDay();
-  const today = new Date().toLocaleDateString("sv-SE", {
-    timeZone: "Europe/Paris",
-  });
-  const history = loadStatsHistory();
-
-  const avgTries =
-    stats.count > 0 ? Number((stats.totalTries / stats.count).toFixed(2)) : 0;
-
-  const existingIndex = history.findIndex(
-    (entry) =>
-      entry.word === currentSecret && entry.secretVersion === secretVersion,
-  );
-
-  const updatedEntry = {
-    date: today,
-    word: currentSecret,
-    secretVersion: secretVersion,
-    victories: stats.count,
-    avgTries: avgTries,
-    stats: stats,
-  };
-
-  if (existingIndex !== -1) {
-    history[existingIndex] = updatedEntry;
-  } else {
-    history.push(updatedEntry);
-  }
-
-  try {
-    fs.writeFileSync(STATS_FILE, JSON.stringify(history, null, 2), "utf8");
-  } catch (err) {
-    console.error("Error saving stats file:", err);
-  }
-}
-
-router.get("/daily-stats", (req, res) => {
-  const dailyStats = getCurrentWordStats();
-  const avgTries =
-    dailyStats.count > 0 ? dailyStats.totalTries / dailyStats.count : 0;
-  const avgHints =
-    dailyStats.count > 0 ? dailyStats.totalHints / dailyStats.count : 0;
-
-  res.json({
-    count: dailyStats.count,
-    avgTries,
-    avgHints,
-  });
-});
-
-router.post("/getSecretWord", (req, res) => {
-  const secretElement = getSecretOfTheDay();
-
-  if (!secretElement || !database[secretElement]) {
-    return res.status(500).json({
-      error: "Secret element not found in database",
-      secretElement: secretElement || "Unknown",
-    });
-  }
-
-  const secretData = database[secretElement];
-
-  res.json({
-    success: true,
-    secretElement,
-    secretAttributes: {
-      type: secretData.type || "Unknown",
-      lieu: normalizeMetaList(secretData.lieu),
-      couleur: normalizeMetaList(secretData.couleur),
-      hitbox: secretData.hitbox || "Unknown",
-    },
-  });
+router.get("/secret-version", (req, res) => {
+  res.json({ secretVersion: getSecretVersion() });
 });
 
 router.get("/elements", (req, res) => {
-  res.json(officialElementsList);
+  const elements = getElementsList();
+  res.json(elements.map((el) => el.nom));
 });
 
-router.get("/secret-version", (req, res) => {
-  res.json({ secretVersion });
-});
-
-router.post("/hint", (req, res) => {
-  const { type } = req.body;
-  const secretName = getSecretOfTheDay();
-  const secretData = database[secretName];
-
-  if (!secretData) {
-    return res.status(500).json({ error: "Secret element not found" });
-  }
-
-  const secretLocations = normalizeMetaList(secretData.lieu);
-  const secretColors = normalizeMetaList(secretData.couleur);
-
-  if (type === "false_friend") {
-    const isStrictColorMatch = (elCols) => {
-      return elCols.some((c) => {
-        if (["yellow", "orange", "jaune"].includes(c.toLowerCase()))
-          return false;
-        return secretColors.includes(c);
-      });
-    };
-
-    let candidates = officialElementsList.filter((name) => {
-      if (name === secretName) return false;
-      const el = database[name];
-      const elLocs = normalizeMetaList(el.lieu);
-      const elCols = normalizeMetaList(el.couleur);
-
-      const hasExactLoc = elLocs.some((l) => secretLocations.includes(l));
-      const hasExactCol = isStrictColorMatch(elCols);
-
-      return (
-        el.type !== secretData.type &&
-        el.hitbox !== secretData.hitbox &&
-        !hasExactLoc &&
-        !hasExactCol
-      );
-    });
-
-    if (candidates.length === 0) {
-      candidates = officialElementsList.filter((name) => {
-        if (name === secretName) return false;
-        const el = database[name];
-        return el.type !== secretData.type && el.hitbox !== secretData.hitbox;
-      });
-    }
-
-    if (candidates.length === 0) {
-      candidates = officialElementsList.filter((name) => name !== secretName);
-    }
-
-    const randomIndex = Math.floor(getSeededRandom(101) * candidates.length);
-    const chosen = candidates[randomIndex];
-    const formattedChosen = chosen.charAt(0).toUpperCase() + chosen.slice(1);
-
-    return res.json({
-      hintType: "false_friend",
-      text: `<div class="hint-card-title">False Friend</div><div class="hint-card-value">${formattedChosen}</div>`,
-    });
-  }
-
-  if (type === "secret_info") {
-    const options = [
-      { label: "Type", value: secretData.type },
-      { label: "Location", value: secretLocations.join(", ") },
-      { label: "Colour", value: secretColors.join(", ") },
-      { label: "Hitbox", value: secretData.hitbox },
-    ];
-    const randomIndex = Math.floor(getSeededRandom(202) * options.length);
-    const chosen = options[randomIndex];
-    return res.json({
-      hintType: "secret_info",
-      text: `<div class="hint-card-title">Secret ${chosen.label}</div><div class="hint-card-value">${chosen.value}</div>`,
-    });
-  }
-
-  if (type === "wrong_info") {
-    const allTypes = [
-      ...new Set(officialElementsList.map((n) => database[n].type)),
-    ];
-    const allLocations = [
-      ...new Set(
-        officialElementsList.flatMap((n) =>
-          normalizeMetaList(database[n].lieu),
-        ),
-      ),
-    ];
-    const allColors = [
-      ...new Set(
-        officialElementsList.flatMap((n) =>
-          normalizeMetaList(database[n].couleur),
-        ),
-      ),
-    ];
-    const allHitboxes = [
-      ...new Set(officialElementsList.map((n) => database[n].hitbox)),
-    ];
-
-    const wrongTypes = allTypes.filter((t) => t !== secretData.type);
-    const wrongLocs = allLocations.filter((l) => !secretLocations.includes(l));
-    const wrongColors = allColors.filter((c) => !secretColors.includes(c));
-    const wrongHitboxes = allHitboxes.filter((h) => h !== secretData.hitbox);
-
-    const pickSeeded = (arr, seedOffset) => {
-      if (!arr || arr.length === 0) return "N/A";
-      const idx = Math.floor(getSeededRandom(seedOffset) * arr.length);
-      return arr[idx];
-    };
-
-    const wType = pickSeeded(wrongTypes, 301);
-    const wLoc = pickSeeded(wrongLocs, 302);
-    const wCol = pickSeeded(wrongColors, 303);
-    const wHit = pickSeeded(wrongHitboxes, 304);
-
-    return res.json({
-      hintType: "wrong_info",
-      text: `<div class="hint-card-title">NOT Today</div>
-             <div class="hint-card-grid">
-               <span><strong>Type:</strong> ${wType}</span>
-               <span><strong>Loc:</strong> ${wLoc}</span>
-               <span><strong>Color:</strong> ${wCol}</span>
-               <span><strong>Hitbox:</strong> ${wHit}</span>
-             </div>`,
-    });
-  }
-
-  return res.status(400).json({ error: "Invalid hint type" });
+router.get("/daily-stats", (req, res) => {
+  const stats = getDailyStats();
+  res.json(stats);
 });
 
 router.post("/validate", (req, res) => {
   const { choix, tryCount, hintUses } = req.body;
+  const elements = getElementsList();
+  const secret = getSecretElement();
 
-  if (!choix || !database[choix]) {
-    return res.status(400).json({ error: "Invalid element name" });
-  }
-
-  const secretName = getSecretOfTheDay();
-  const choiceData = database[choix];
-  const secretData = database[secretName];
-
-  const choiceLocations = normalizeMetaList(choiceData.lieu);
-  const secretLocations = normalizeMetaList(secretData.lieu);
-  const choiceColors = normalizeMetaList(choiceData.couleur);
-  const secretColors = normalizeMetaList(secretData.couleur);
-
-  let locationVerdict = "wrong";
-  let locationMatches = choiceLocations.filter((loc) =>
-    secretLocations.includes(loc),
+  const userGuess = elements.find(
+    (el) => el.nom.toLowerCase() === choix.toLowerCase(),
   );
 
-  if (
-    locationMatches.length === secretLocations.length &&
-    locationMatches.length === choiceLocations.length
-  ) {
-    locationVerdict = "correct";
-  } else if (locationMatches.length > 0) {
-    if (locationMatches.length === choiceLocations.length) {
-      locationVerdict = "partial";
-    } else {
-      locationVerdict = "notTotallyWrong";
-    }
+  if (!userGuess) {
+    return res.status(400).json({ error: "Invalid element" });
   }
 
-  let colorVerdict = "wrong";
-  let colorMatches = choiceColors.filter((col) => secretColors.includes(col));
+  const isCorrect = userGuess.nom.toLowerCase() === secret.nom.toLowerCase();
 
-  if (
-    colorMatches.length === secretColors.length &&
-    colorMatches.length === choiceColors.length
-  ) {
-    colorVerdict = "correct";
-  } else if (colorMatches.length > 0 || secretColors.includes("always")) {
-    if (choiceColors.every((val, idx) => val === colorMatches[idx])) {
-      colorVerdict = "partial";
-    } else {
-      colorVerdict = "notTotallyWrong";
-    }
-  }
+  const checkMatch = (attrGuess, attrSecret) => {
+    const arrG = Array.isArray(attrGuess) ? attrGuess : [attrGuess];
+    const arrS = Array.isArray(attrSecret) ? attrSecret : [attrSecret];
 
-  let hitboxVerdict = "wrong";
-  if (choiceData.hitbox === secretData.hitbox) {
-    hitboxVerdict = "correct";
-  }
+    const exact =
+      arrG.length === arrS.length && arrG.every((v) => arrS.includes(v));
+    if (exact) return "correct";
 
-  const isCorrect = choix === secretName;
-  const dailyStats = getCurrentWordStats();
+    const partial = arrG.some((v) => arrS.includes(v));
+    if (partial) return "partial";
+
+    return "wrong";
+  };
+
+  const verdict = {
+    isCorrect,
+    type: checkMatch(userGuess.type, secret.type),
+    lieu: checkMatch(userGuess.lieu, secret.lieu),
+    couleur: checkMatch(userGuess.couleur, secret.couleur),
+    hitbox: checkMatch(userGuess.hitbox, secret.hitbox),
+  };
 
   if (isCorrect) {
-    dailyStats.count += 1;
-    if (tryCount) dailyStats.totalTries += Number(tryCount);
-    if (hintUses) dailyStats.totalHints += Number(hintUses);
-    saveCurrentWordStats(dailyStats);
+    recordDailySuccess(tryCount, hintUses);
   }
 
-  const avgTries =
-    dailyStats.count > 0 ? dailyStats.totalTries / dailyStats.count : 0;
-  const avgHints =
-    dailyStats.count > 0 ? dailyStats.totalHints / dailyStats.count : 0;
+  const stats = getDailyStats();
 
   res.json({
-    nom: choix,
-    secretVersion,
-    verdict: {
-      isCorrect,
-      type: choiceData.type === secretData.type ? "correct" : "wrong",
-      lieu: locationVerdict,
-      couleur: colorVerdict,
-      hitbox: hitboxVerdict,
-    },
+    nom: userGuess.nom,
     valeurs: {
-      type: choiceData.type,
-      lieu: choiceLocations.join(", "),
-      couleur: choiceColors.join(", "),
-      hitbox: choiceData.hitbox,
+      type: Array.isArray(userGuess.type)
+        ? userGuess.type.join(", ")
+        : userGuess.type,
+      lieu: Array.isArray(userGuess.lieu)
+        ? userGuess.lieu.join(", ")
+        : userGuess.lieu,
+      couleur: Array.isArray(userGuess.couleur)
+        ? userGuess.couleur.join(", ")
+        : userGuess.couleur,
+      hitbox: Array.isArray(userGuess.hitbox)
+        ? userGuess.hitbox.join(", ")
+        : userGuess.hitbox,
     },
-    count: dailyStats.count,
-    avgTries,
-    avgHints,
+    verdict,
+    secretVersion: getSecretVersion(),
+    dailySuccessCount: stats.count,
+    avgTries: stats.avgTries,
+    avgHints: stats.avgHints,
   });
 });
 
-router.get("/version", (req, res) => {
+router.post("/getSecretWord", (req, res) => {
+  const secret = getSecretElement();
   res.json({
-    status: "online",
-    environment: process.env.API_URL?.includes("mizkyosia")
-      ? "Production (VPS)"
-      : "Beta-test (Render)",
+    secretElement: secret.nom,
+    secretAttributes: {
+      type: Array.isArray(secret.type) ? secret.type.join(", ") : secret.type,
+      lieu: Array.isArray(secret.lieu) ? secret.lieu.join(", ") : secret.lieu,
+      couleur: Array.isArray(secret.couleur)
+        ? secret.couleur.join(", ")
+        : secret.couleur,
+      hitbox: Array.isArray(secret.hitbox)
+        ? secret.hitbox.join(", ")
+        : secret.hitbox,
+    },
   });
+});
+
+router.post("/hint", (req, res) => {
+  const { type } = req.body;
+  const secret = getSecretElement();
+  const elements = getElementsList();
+
+  if (type === "false_friend") {
+    const wrongElements = elements.filter(
+      (el) => el.nom.toLowerCase() !== secret.nom.toLowerCase(),
+    );
+    const randomWrong =
+      wrongElements[Math.floor(Math.random() * wrongElements.length)];
+    return res.json({
+      text: `<strong>False Friend:</strong> The secret element is NOT <em>${randomWrong.nom}</em>.`,
+    });
+  }
+
+  if (type === "secret_info") {
+    const infos = [
+      `Its type includes: <strong>${Array.isArray(secret.type) ? secret.type[0] : secret.type}</strong>`,
+      `Its hitbox is: <strong>${Array.isArray(secret.hitbox) ? secret.hitbox[0] : secret.hitbox}</strong>`,
+      `It can be found in: <strong>${Array.isArray(secret.lieu) ? secret.lieu[0] : secret.lieu}</strong>`,
+    ];
+    const randomInfo = infos[Math.floor(Math.random() * infos.length)];
+    return res.json({ text: `<strong>Secret Info:</strong> ${randomInfo}` });
+  }
+
+  if (type === "truth_and_lies") {
+    const secretColor = Array.isArray(secret.couleur)
+      ? secret.couleur[0]
+      : secret.couleur;
+    const secretLocation = Array.isArray(secret.lieu)
+      ? secret.lieu[0]
+      : secret.lieu;
+    const secretType = Array.isArray(secret.type)
+      ? secret.type[0]
+      : secret.type;
+    const secretHitbox = Array.isArray(secret.hitbox)
+      ? secret.hitbox[0]
+      : secret.hitbox;
+
+    const truthPool = [
+      `Type is "${secretType}"`,
+      `Hitbox is "${secretHitbox}"`,
+      `Color includes "${secretColor}"`,
+      `Location includes "${secretLocation}"`,
+    ];
+    const trueStatement =
+      truthPool[Math.floor(Math.random() * truthPool.length)];
+
+    const fakeType = getRandomWrongValue(secret.type, ALL_TYPES);
+    const fakeHitbox = getRandomWrongValue(secret.hitbox, ALL_HITBOXES);
+    const fakeLocation = getRandomWrongValue(secret.lieu, ALL_LOCATIONS);
+    const fakeColor = getRandomWrongValue(secret.couleur, ALL_COLORS);
+
+    const liesPool = [
+      `Type is "${fakeType}"`,
+      `Hitbox is "${fakeHitbox}"`,
+      `Location includes "${fakeLocation}"`,
+      `Color includes "${fakeColor}"`,
+    ];
+
+    const shuffledLies = liesPool.sort(() => 0.5 - Math.random());
+    const lie1 = shuffledLies[0];
+    const lie2 = shuffledLies[1];
+
+    const statements = [trueStatement, lie1, lie2].sort(
+      () => 0.5 - Math.random(),
+    );
+
+    const hintText = `<strong>1 Truth & 2 Lies:</strong><br>• ${statements.join("<br>• ")}`;
+
+    return res.json({ text: hintText });
+  }
+
+  return res.status(400).json({ error: "Invalid hint type" });
 });
 
 module.exports = router;
