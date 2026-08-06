@@ -231,6 +231,7 @@ const App = {
 
     ApiService.fetchHint(type)
       .then((data) => {
+        if (!data || !data.text) return;
         this.hintUses += 1;
         this.usedHintTypes.push(type);
         localStorage.setItem(
