@@ -24,13 +24,14 @@ router.post("/random-hash", (req, res) => {
 
   if (newHash === null) {
     updateSeedHash(20250204);
-    return res.json({
-      message:
-        "The seed hash has been reset to the system default configuration.",
-    });
+  } else {
+    updateSeedHash(newHash);
   }
 
-  updateSeedHash(newHash);
+  // Met à jour secretVersion pour déclencher le reset côté client
+  secretVersion =
+    new Date().toISOString() + "_" + Math.random().toString(36).substring(7);
+
   res.json({
     message:
       "The seed hash updated successfully. Daily element puzzle has rotated.",

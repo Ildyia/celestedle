@@ -1124,3 +1124,18 @@ window.randomSecret = function (reset = false) {
     .then((data) => alert(data.error ? "Error : " + data.error : data.message))
     .catch((err) => console.error("Server context update error:", err));
 };
+
+window.triggerReset = function () {
+  const adminPassword = prompt("Please enter admin password :");
+  if (!adminPassword) return;
+
+  ApiService.triggerAdminReset(adminPassword)
+    .then((data) => {
+      alert(data.error ? "Error : " + data.error : data.message);
+      if (data.success) {
+        localStorage.clear();
+        location.reload();
+      }
+    })
+    .catch((err) => alert(err.message));
+};
