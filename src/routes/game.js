@@ -197,7 +197,7 @@ router.post("/hint", (req, res) => {
 
     return res.json({
       hintType: "false_friend",
-      text: `False Friend: "${formattedChosen}" shares no exact attributes with the secret word!`,
+      text: `<div class="hint-card-title">False Friend</div><div class="hint-card-value">${formattedChosen}</div>`,
     });
   }
 
@@ -212,7 +212,7 @@ router.post("/hint", (req, res) => {
     const chosen = options[randomIndex];
     return res.json({
       hintType: "secret_info",
-      text: `Secret ${chosen.label} is "${chosen.value}"`,
+      text: `<div class="hint-card-title">Secret ${chosen.label}</div><div class="hint-card-value">${chosen.value}</div>`,
     });
   }
 
@@ -256,7 +256,13 @@ router.post("/hint", (req, res) => {
 
     return res.json({
       hintType: "wrong_info",
-      text: `NOT Hint: Type: != ${wType} | Location: != ${wLoc} | Colour: != ${wCol} | Hitbox: != ${wHit}`,
+      text: `<div class="hint-card-title">NOT Today</div>
+             <div class="hint-card-grid">
+               <span><strong>Type:</strong> ${wType}</span>
+               <span><strong>Loc:</strong> ${wLoc}</span>
+               <span><strong>Color:</strong> ${wCol}</span>
+               <span><strong>Hitbox:</strong> ${wHit}</span>
+             </div>`,
     });
   }
 

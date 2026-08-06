@@ -1134,3 +1134,113 @@ th,
     display: block;
   }
 }
+
+/* ==========================================================================
+   13. CARTES D'INDICES (HINTS)
+   ========================================================================== */
+#active-hints-container {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 12px;
+  margin: 15px 0;
+  width: 100%;
+}
+
+#active-hints-container .hint-card {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid #1e293b;
+  border-top: 3px solid var(--color-partial);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.hint-card-title {
+  font-family: "Renogare", sans-serif;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.hint-card-value {
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--text-main);
+}
+
+.hint-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  width: 100%;
+}
+
+.hint-card-grid span {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 0.75rem;
+  color: var(--text-main);
+  text-align: center;
+}
+
+#show-all-btn {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+#show-all-btn img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+#show-all-btn:hover {
+  opacity: 1;
+}
+
+.input-container {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+#show-all-btn {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+#show-all-btn:hover {
+  opacity: 1;
+}
+
+#element-input {
+  padding-right: 45px; /* Pour éviter que le texte passe sous le bouton */
+}

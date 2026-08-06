@@ -47,36 +47,42 @@
             </div>
         </div>
 
-        <div id="main-content-column">
+       <div id="main-content-column">
             <h1>Celestedle</h1>
             <div id="game-status">
-    <p>Tries: <span id="try-count">0</span></p>
-    <button id="share-btn">Share</button>
-    <button id="giveup-btn">Forfeit</button>
-    <button id="hint-btn">Hints (<span id="hints-left-count">3</span> left)</button>
-    <button id="personalized-btn">Personalized synonyms</button>
-</div>
+                <p>Tries: <span id="try-count">0</span></p>
+                <button id="share-btn">Share</button>
+                <button id="giveup-btn">Forfeit</button>
+                <button id="hint-btn">Hints</button>
+                <span id="hint-counter" style="display:none;"></span>
+                <button id="personalized-btn">Personalized synonyms</button>
+            </div>
 
-<div id="hint-modal" class="rules-modal" style="display: none;">
-    <div class="rules-content" style="max-width: 500px;">
-        <span id="close-hint-modal" class="close-modal-btn">&times;</span>
-        <h2>Choose a Hint</h2>
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
-            <button id="hint-opt-false-friend" class="btn-primary">1. Show all elements with a random attribute</button>
-            <button id="hint-opt-secret" class="btn-primary">2. Reveal a random secret attribute</button>
-            <button id="hint-opt-wrong" class="btn-primary">3. Reveal what the secret element is NOT</button>
-        </div>
-    </div>
-</div>
+            <div id="hint-modal" class="rules-modal" style="display: none;">
+                <div class="rules-content" style="max-width: 500px;">
+                    <span id="close-hint-modal" class="close-modal-btn">&times;</span>
+                    <h2>Choose a Hint</h2>
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                        <button id="hint-opt-false-friend" class="btn-primary">1. Reveal a False Friend</button>
+                        <button id="hint-opt-secret" class="btn-primary">2. Reveal 1 correct attribute</button>
+                        <button id="hint-opt-wrong" class="btn-primary">3. Reveal what the secret element is NOT</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="active-hints-container" style="margin: 15px 0; display: flex; flex-direction: column; gap: 8px;"></div>
 
             <div id="message-container"></div>
             <div id="game-container">
                 <form id="guess-form">
                     <div class="input-container">
-                        <input type="text" id="element-input" autocomplete="off" placeholder="Guess an element...">
-                        <div id="element-suggestions" class="suggestions-box"></div>
-                        <div id="hint-list" class="hint-list"></div>
-                    </div>
+    <input type="text" id="element-input" autocomplete="off" placeholder="Guess an element...">
+    <button type="button" id="show-all-btn" title="Show all elements">
+        <img src="assets/eye.png" alt="Show all">
+    </button>
+    <div id="element-suggestions" class="suggestions-box"></div>
+    <div id="hint-list" class="hint-list"></div>
+</div>
                     <button type="submit">Guess</button>
                 </form>
 

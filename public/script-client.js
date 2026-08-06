@@ -101,6 +101,7 @@ const App = {
       successCountSpan: document.getElementById("success-count"),
       avgTriesSpan: document.getElementById("avg-tries-count"),
       avgHintsSpan: document.getElementById("avg-hints-count"),
+      showAllBtn: document.getElementById("show-all-btn"),
     };
   },
 
@@ -209,6 +210,14 @@ const App = {
         this.handleShareScore(),
       );
     }
+
+    if (this.nodes.showAllBtn) {
+      this.nodes.showAllBtn.addEventListener("click", () => {
+        this.nodes.input.value = "";
+        this.showAllSuggestions();
+        this.nodes.input.focus();
+      });
+    }
     document.addEventListener("click", (e) => this.handleOutsideClick(e));
   },
 
@@ -244,6 +253,41 @@ const App = {
       .catch(() => this.showToastNotification("Error fetching hint."));
   },
 
+  showAllSuggestions() {
+    if (!this.nodes.suggestionsBox) return;
+    this.nodes.suggestionsBox.innerHTML = "";
+    this.selectedIndex = -1;
+
+    const sortedElements = [...this.officialElementsList].sort((a, b) =>
+      a.localeCompare(b),
+    );
+
+    sortedElements.forEach((name) => {
+      const displayName = name.charAt(0).toUpperCase() + name.slice(1);
+      const div = document.createElement("div");
+      div.classList.add("suggestion-item");
+
+      const thumb = document.createElement("img");
+      thumb.className = "suggestion-thumb";
+      thumb.alt = displayName;
+      thumb.src = "assets/entities/placeholder.svg";
+
+      const textNode = document.createElement("span");
+      textNode.textContent = displayName;
+
+      div.appendChild(thumb);
+      div.appendChild(textNode);
+
+      this.resolveEntityImage(name.toLowerCase()).then((path) => {
+        if (path) thumb.src = path;
+      });
+
+      div.addEventListener("click", () => this.selectSuggestion(displayName));
+      this.nodes.suggestionsBox.appendChild(div);
+    });
+
+    this.nodes.suggestionsBox.style.display = "block";
+  },
   saveAndRenderHint(text) {
     const savedHints = JSON.parse(
       localStorage.getItem("celestedle_saved_hints") || "[]",
@@ -260,17 +304,12 @@ const App = {
       localStorage.getItem("celestedle_saved_hints") || "[]",
     );
 
-    container.innerHTML =
-      savedHints.length > 0 ? "<strong>Active Hints:</strong>" : "";
+    container.innerHTML = "";
     savedHints.forEach((hintText) => {
-      const box = document.createElement("div");
-      box.className = "hint-item";
-      box.style.padding = "8px 12px";
-      box.style.background = "var(--bg-card, #1e293b)";
-      box.style.borderLeft = "4px solid var(--color-partial, #f59e0b)";
-      box.style.borderRadius = "4px";
-      box.textContent = hintText;
-      container.appendChild(box);
+      const card = document.createElement("div");
+      card.className = "hint-card";
+      card.innerHTML = hintText;
+      container.appendChild(card);
     });
   },
 
