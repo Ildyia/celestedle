@@ -55,11 +55,11 @@
                     <h4>Chapters</h4>
                     <p>The "CHAPTER" column indicates which level.s (amongst prologue, 1A, 2A, 3A, 4A, 5A, 6A, 7A, 8A, farewell) the element can be found in.</p>
                     <h4>Colors Indicator</h4>
-                    <ul>
-                        <li><span style="color: var(--color-correct);">🟩 Correct</span>: Perfect match.</li>
-                        <li><span style="color: var(--color-partial);">🟨 Partial</span>: Guess is part of the answer.</li>
-                        <li><span style="color: var(--color-not-totally-wrong);">🟧 Not Totally Wrong</span>: Contains part of the answer + extra.</li>
-                        <li><span style="color: var(--color-wrong);">🟥 Wrong</span>: Incorrect attribute.</li>
+                    <ul class="rules-color-list">
+                        <li><span class="color-box correct"></span> <strong>Correct</strong> (✓): Perfect match.</li>
+                        <li><span class="color-box partial"></span> <strong>Partial</strong> (~): Guess is part of the answer.</li>
+                        <li><span class="color-box notTotallyWrong"></span> <strong>Not Totally Wrong</strong> (≠): Contains part of the answer + extra.</li>
+                        <li><span class="color-box wrong"></span> <strong>Wrong</strong> (✕): Incorrect attribute.</li>
                     </ul>
                     <h4>Hints</h4>
                     <p>Click the "Hints" button to access 3 seeded hints based on the word of the day:</p> <br>
@@ -115,13 +115,13 @@
             <div id="game-container">
                 <form id="guess-form">
                     <div class="input-container">
-    <input type="text" id="element-input" autocomplete="off" placeholder="Guess an element...">
-    <button type="button" id="show-all-btn" title="Show all elements">
-        <img src="assets/eye.png" alt="Show all">
-    </button>
-    <div id="element-suggestions" class="suggestions-box"></div>
-    <div id="hint-list" class="hint-list"></div>
-</div>
+                        <input type="text" id="element-input" autocomplete="off" placeholder="Guess an element...">
+                        <button type="button" id="show-all-btn" title="Show all elements">
+                            <img src="assets/eye.png" alt="Show all">
+                        </button>
+                        <div id="element-suggestions" class="suggestions-box"></div>
+                        <div id="hint-list" class="hint-list"></div>
+                    </div>
                     <button type="submit">Guess</button>
                 </form>
 
@@ -195,7 +195,6 @@
             <h4> Please be carefull to indicate if the bug concern today's word to not spoil other players</h4> <br>
             <form id="bug-form">
                 <div class="form-group">
-
                     <label for="bug-element-select">Related Element (Optional):</label>
                     <select id="bug-element-select" class="bug-input">
                         <option value="">-- None / General bug --</option>

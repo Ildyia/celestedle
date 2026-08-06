@@ -1330,6 +1330,45 @@ th,
 .hint-card-grid span {
   text-transform: capitalize;
 }
+/* ==========================================================================
+   RULES COLOR INDICATOR
+   ========================================================================== */
+
+.rules-color-list {
+  list-style: none !important;
+  padding-left: 0 !important;
+}
+
+.rules-color-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.color-box {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+}
+
+.color-box.correct {
+  background-color: var(--color-correct);
+}
+
+.color-box.partial {
+  background-color: var(--color-partial);
+}
+
+.color-box.notTotallyWrong {
+  background-color: var(--color-not-totally-wrong);
+}
+
+.color-box.wrong {
+  background-color: var(--color-wrong);
+}
+
 
 /* ==========================================================================
    MODE COLORBLIND
