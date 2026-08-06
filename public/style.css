@@ -1322,6 +1322,7 @@ th,
 #guesses-table td {
   text-transform: capitalize;
 }
+}
 
 /* Majuscule automatique sur le texte des cartes d'indices */
 .hint-card-value,
