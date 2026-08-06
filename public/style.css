@@ -1330,27 +1330,72 @@ th,
 .hint-card-grid span {
   text-transform: capitalize;
 }
+/* ==========================================================================
+   MODE COLORBLIND 
+   ========================================================================== */
 
-/* Mode Contraste Élevé / Daltonien */
+/* 1. Couleurs ultra-distinctes */
 body.colorblind {
-  --color-correct: #0077bb;         /* Bleu ciel bien distinct */
-  --color-partial: #ee7733;         /* Orange/Pêche vif */
-  --color-not-totally-wrong: #cc3311; /* Rouge brique/Vermillon */
-  --color-wrong: #333333;           /* Gris très foncé */
+  --color-correct: #00a3ff;            /* Bleu Néon */
+  --color-partial: #9d4edd;            /* Violet Électrique */
+  --color-not-totally-wrong: #ffd600;   /* Jaune Citron (texte sombre pour lisibilité) */
+  --color-wrong: #1e2638;              /* Gris Ardoise Sombre */
 }
 
-/* Ajout de motifs / symboles pour ne pas reposer uniquement sur la couleur */
+/* Texte noir automatique sur le fond jaune pour que ce soit lisible */
+body.colorblind #guesses-table td.notTotallyWrong {
+  color: #000000 !important;
+  text-shadow: none !important;
+}
+
+/* 2. Contours nets et structure propre pour toutes les cases */
+body.colorblind #guesses-table td {
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  box-sizing: border-box;
+}
+
+body.colorblind #guesses-table td.correct {
+  border-color: #66cfff !important;
+}
+
+body.colorblind #guesses-table td.partial {
+  border-color: #c77dff !important;
+}
+
+body.colorblind #guesses-table td.notTotallyWrong {
+  border-color: #ffee55 !important;
+}
+
+body.colorblind #guesses-table td.wrong {
+  border-color: #3b4861 !important;
+  color: #94a3b8 !important;
+}
+
+/* 3. Symboles agrandis et mis en valeur */
+body.colorblind #guesses-table td::after {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 1.05rem;
+  font-weight: 900;
+  vertical-align: middle;
+}
+
 body.colorblind #guesses-table td.correct::after {
-  content: " (✓)";
-  font-size: 0.8em;
+  content: " ✓";
+  color: #ffffff;
 }
 
 body.colorblind #guesses-table td.partial::after {
-  content: " (~)";
-  font-size: 0.8em;
+  content: " ~";
+  color: #ffffff;
+}
+
+body.colorblind #guesses-table td.notTotallyWrong::after {
+  content: " ≠";
+  color: #000000;
 }
 
 body.colorblind #guesses-table td.wrong::after {
-  content: " (✗)";
-  font-size: 0.8em;
+  content: " ✕";
+  color: #f87171;
 }
