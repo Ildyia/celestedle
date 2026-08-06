@@ -1291,3 +1291,13 @@ th,
   border: 1px solid #334155 !important;
   pointer-events: none;
 }
+/* Majuscule automatique sur chaque mot dans le tableau */
+#guesses-table td {
+  text-transform: capitalize;
+}
+
+/* Majuscule automatique sur le texte des cartes d'indices */
+.hint-card-value,
+.hint-card-grid span {
+  text-transform: capitalize;
+}

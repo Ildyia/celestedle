@@ -25,8 +25,6 @@ if (process.env.RANDOM_SEED) {
 }
 
 function getSecretOfTheDay() {
-  if (secretForce) return secretForce;
-
   const dateString = new Date().toLocaleDateString("sv-SE", {
     timeZone: "Europe/Paris",
   });
