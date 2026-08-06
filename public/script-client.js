@@ -66,7 +66,7 @@ const App = {
   selectedIndex: -1,
   hintUses: 0,
   hintLimit: 3,
-  hintListOpen: false,
+  usedHintTypes: [],
   nodes: {},
   entityImageMap: null,
 
@@ -88,8 +88,6 @@ const App = {
       input: document.getElementById("element-input"),
       suggestionsBox: document.getElementById("element-suggestions"),
       hintBtn: document.getElementById("hint-btn"),
-      hintCounter: document.getElementById("hint-counter"),
-      hintList: document.getElementById("hint-list"),
       tryCountSpan: document.getElementById("try-count"),
       shareBtn: document.getElementById("share-btn"),
       giveupBtn: document.getElementById("giveup-btn"),
@@ -151,6 +149,7 @@ const App = {
           this.showToastNotification("No hints left.");
           return;
         }
+        this.updateHintButtonsState();
         const modal = document.getElementById("hint-modal");
         if (modal) modal.style.display = "flex";
       });
@@ -164,8 +163,8 @@ const App = {
       });
 
     document
-      .getElementById("hint-opt-list")
-      ?.addEventListener("click", () => this.requestHint("list_attr"));
+      .getElementById("hint-opt-false-friend")
+      ?.addEventListener("click", () => this.requestHint("false_friend"));
     document
       .getElementById("hint-opt-secret")
       ?.addEventListener("click", () => this.requestHint("secret_info"));
@@ -213,45 +212,65 @@ const App = {
     document.addEventListener("click", (e) => this.handleOutsideClick(e));
   },
 
+  updateHintButtonsState() {
+    const btnFF = document.getElementById("hint-opt-false-friend");
+    const btnSecret = document.getElementById("hint-opt-secret");
+    const btnWrong = document.getElementById("hint-opt-wrong");
+
+    if (btnFF) btnFF.disabled = this.usedHintTypes.includes("false_friend");
+    if (btnSecret)
+      btnSecret.disabled = this.usedHintTypes.includes("secret_info");
+    if (btnWrong) btnWrong.disabled = this.usedHintTypes.includes("wrong_info");
+  },
+
   requestHint(type) {
+    if (this.usedHintTypes.includes(type)) return;
+
     const modal = document.getElementById("hint-modal");
     if (modal) modal.style.display = "none";
 
     ApiService.fetchHint(type)
       .then((data) => {
         this.hintUses += 1;
+        this.usedHintTypes.push(type);
+        localStorage.setItem(
+          "celestedle_used_hint_types",
+          JSON.stringify(this.usedHintTypes),
+        );
         this.updateHintButtonText();
-        this.displayHintResult(data);
+        this.saveAndRenderHint(data.text);
       })
       .catch(() => this.showToastNotification("Error fetching hint."));
   },
 
-  displayHintResult(data) {
-    if (data.hintType === "list_attr") {
-      this.renderHintListWithAttr(data.attributeName, data.items);
-    } else if (data.hintType === "secret_info") {
-      this.showToastNotification(
-        `Hint: Secret ${data.label} is "${data.value}"`,
-      );
-    } else if (data.hintType === "wrong_info") {
-      this.showToastNotification(
-        `NOT Hint: Type: != ${data.wrongType} | Location: != ${data.wrongLocation} | Colour: != ${data.wrongColor} | Hitbox: != ${data.wrongHitbox}`,
-      );
-    }
+  saveAndRenderHint(text) {
+    const savedHints = JSON.parse(
+      localStorage.getItem("celestedle_saved_hints") || "[]",
+    );
+    savedHints.push(text);
+    localStorage.setItem("celestedle_saved_hints", JSON.stringify(savedHints));
+    this.renderActiveHints();
   },
 
-  renderHintListWithAttr(attrName, items) {
-    if (!this.nodes.hintList) return;
-    this.nodes.hintList.innerHTML = `<h4 style="margin: 5px 0;">Elements list (${attrName})</h4>`;
-    items.forEach((item) => {
-      const div = document.createElement("div");
-      div.className = "hint-item";
-      div.textContent = `${item.name.charAt(0).toUpperCase() + item.name.slice(1)} - ${attrName}: ${item.value}`;
-      div.addEventListener("click", () => this.selectSuggestion(item.name));
-      this.nodes.hintList.appendChild(div);
+  renderActiveHints() {
+    const container = document.getElementById("active-hints-container");
+    if (!container) return;
+    const savedHints = JSON.parse(
+      localStorage.getItem("celestedle_saved_hints") || "[]",
+    );
+
+    container.innerHTML =
+      savedHints.length > 0 ? "<strong>Active Hints:</strong>" : "";
+    savedHints.forEach((hintText) => {
+      const box = document.createElement("div");
+      box.className = "hint-item";
+      box.style.padding = "8px 12px";
+      box.style.background = "var(--bg-card, #1e293b)";
+      box.style.borderLeft = "4px solid var(--color-partial, #f59e0b)";
+      box.style.borderRadius = "4px";
+      box.textContent = hintText;
+      container.appendChild(box);
     });
-    this.nodes.hintList.style.display = "block";
-    this.hintListOpen = true;
   },
 
   openBugModal() {
@@ -291,6 +310,8 @@ const App = {
         "version",
         "solution",
         "solution_attributes",
+        "saved_hints",
+        "used_hint_types",
       ];
       keysToRemove.forEach((key) =>
         localStorage.removeItem(`celestedle_${key}`),
@@ -303,7 +324,14 @@ const App = {
     ApiService.fetchSecretVersion().then((data) => {
       const savedVersion = localStorage.getItem("celestedle_version");
       if (savedVersion && savedVersion !== String(data.secretVersion)) {
-        const keysToRemove = ["tries", "gameover", "status", "history"];
+        const keysToRemove = [
+          "tries",
+          "gameover",
+          "status",
+          "history",
+          "saved_hints",
+          "used_hint_types",
+        ];
         keysToRemove.forEach((key) =>
           localStorage.removeItem(`celestedle_${key}`),
         );
@@ -321,9 +349,16 @@ const App = {
       this.nodes.tryCountSpan.textContent = this.tryCount;
     }
 
+    this.usedHintTypes = JSON.parse(
+      localStorage.getItem("celestedle_used_hint_types") || "[]",
+    );
+    this.hintUses = this.usedHintTypes.length;
+
     this.historyLog =
       JSON.parse(localStorage.getItem("celestedle_history")) || [];
     this.historyLog.forEach((data) => this.addTableRow(data));
+
+    this.renderActiveHints();
 
     if (localStorage.getItem("celestedle_gameover") === "true") {
       this.renderEndGameScreen();
@@ -372,13 +407,6 @@ const App = {
     }
   },
 
-  hideHintList() {
-    if (!this.nodes.hintList) return;
-    this.nodes.hintList.innerHTML = "";
-    this.nodes.hintList.style.display = "none";
-    this.hintListOpen = false;
-  },
-
   updateHintButtonText() {
     if (!this.nodes.hintBtn) return;
     const remaining = Math.max(this.hintLimit - this.hintUses, 0);
@@ -388,7 +416,6 @@ const App = {
   },
 
   handleSuggestionsFilter(e) {
-    this.hideHintList();
     const query = e.target.value.trim().toLowerCase();
     this.nodes.suggestionsBox.innerHTML = "";
     this.selectedIndex = -1;
@@ -512,7 +539,6 @@ const App = {
     this.nodes.suggestionsBox.innerHTML = "";
     this.nodes.suggestionsBox.style.display = "none";
     this.selectedIndex = -1;
-    this.hideHintList();
     this.nodes.input.focus();
   },
 
@@ -524,14 +550,6 @@ const App = {
     ) {
       this.nodes.suggestionsBox.style.display = "none";
     }
-    if (
-      this.nodes.hintList &&
-      e.target !== this.nodes.hintBtn &&
-      e.target !== this.nodes.hintList &&
-      !this.nodes.hintList.contains(e.target)
-    ) {
-      this.hideHintList();
-    }
   },
 
   handleFormSubmit(e) {
@@ -540,7 +558,6 @@ const App = {
       this.showToastNotification("Server is loading, please slow down !");
       return;
     }
-    this.hideHintList();
     this.isProcessing = true;
     const rawGuess = this.nodes.input ? this.nodes.input.value.trim() : "";
     const normalizedGuess = rawGuess.toLowerCase();
@@ -570,7 +587,14 @@ const App = {
         const savedVersion = localStorage.getItem("celestedle_version");
 
         if (savedVersion && savedVersion !== String(data.secretVersion)) {
-          const keysToRemove = ["tries", "gameover", "status", "history"];
+          const keysToRemove = [
+            "tries",
+            "gameover",
+            "status",
+            "history",
+            "saved_hints",
+            "used_hint_types",
+          ];
           keysToRemove.forEach((key) =>
             localStorage.removeItem(`celestedle_${key}`),
           );
@@ -708,9 +732,25 @@ const App = {
 
   handleShareScore() {
     const isWin = localStorage.getItem("celestedle_status") !== "lose";
+
+    const hintNamesMap = {
+      false_friend: "False Friend",
+      secret_info: "Secret Info",
+      wrong_info: "NOT Hint",
+    };
+
+    let hintsSummary = "No hints used";
+    if (this.usedHintTypes && this.usedHintTypes.length > 0) {
+      const formattedHints = this.usedHintTypes
+        .map((type) => hintNamesMap[type] || type)
+        .join(", ");
+      const hintLabel = this.usedHintTypes.length > 1 ? "hints" : "hint";
+      hintsSummary = `${this.usedHintTypes.length} ${hintLabel} used (${formattedHints})`;
+    }
+
     let shareOutputText = isWin
-      ? `Celestedle of the day in ${this.tryCount} tries\nI used ${this.hintUses} hints\n\n`
-      : `Celestedle of the day : Forfeit ❌ (${this.tryCount} tries)\nI used ${this.hintUses} hints\n\n`;
+      ? `Celestedle of the day in ${this.tryCount} tries\n${hintsSummary}\n\n`
+      : `Celestedle of the day : Forfeit ❌ (${this.tryCount} tries)\n${hintsSummary}\n\n`;
 
     const scoreToEmojiMap = {
       correct: "🟩",
@@ -1016,6 +1056,8 @@ window.forceReset = function () {
         "history",
         "date",
         "version",
+        "saved_hints",
+        "used_hint_types",
       ];
       keysToRemove.forEach((key) =>
         localStorage.removeItem(`celestedle_${key}`),

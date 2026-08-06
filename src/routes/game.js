@@ -15,6 +15,19 @@ let secretVersion = new Date().toLocaleDateString("sv-SE", {
   timeZone: "Europe/Paris",
 });
 
+function getSeededRandom(seedOffset = 0) {
+  const dateString = new Date().toLocaleDateString("sv-SE", {
+    timeZone: "Europe/Paris",
+  });
+  let hash = seedOffset;
+  for (let i = 0; i < dateString.length; i++) {
+    hash = (hash * 33 + dateString.charCodeAt(i)) | 0;
+    hash = (Math.sin(hash) * 10000) | 0;
+  }
+  const x = Math.sin(Math.abs(hash)) * 10000;
+  return x - Math.floor(x);
+}
+
 function loadStatsHistory() {
   try {
     if (fs.existsSync(STATS_FILE)) {
@@ -128,6 +141,128 @@ router.get("/secret-version", (req, res) => {
   res.json({ secretVersion });
 });
 
+router.post("/hint", (req, res) => {
+  const { type } = req.body;
+  const secretName = getSecretOfTheDay();
+  const secretData = database[secretName];
+
+  if (!secretData) {
+    return res.status(500).json({ error: "Secret element not found" });
+  }
+
+  const secretLocations = normalizeMetaList(secretData.lieu);
+  const secretColors = normalizeMetaList(secretData.couleur);
+
+  if (type === "false_friend") {
+    const isStrictColorMatch = (elCols) => {
+      return elCols.some((c) => {
+        if (["yellow", "orange", "jaune"].includes(c.toLowerCase()))
+          return false;
+        return secretColors.includes(c);
+      });
+    };
+
+    let candidates = officialElementsList.filter((name) => {
+      if (name === secretName) return false;
+      const el = database[name];
+      const elLocs = normalizeMetaList(el.lieu);
+      const elCols = normalizeMetaList(el.couleur);
+
+      const hasExactLoc = elLocs.some((l) => secretLocations.includes(l));
+      const hasExactCol = isStrictColorMatch(elCols);
+
+      return (
+        el.type !== secretData.type &&
+        el.hitbox !== secretData.hitbox &&
+        !hasExactLoc &&
+        !hasExactCol
+      );
+    });
+
+    if (candidates.length === 0) {
+      candidates = officialElementsList.filter((name) => {
+        if (name === secretName) return false;
+        const el = database[name];
+        return el.type !== secretData.type && el.hitbox !== secretData.hitbox;
+      });
+    }
+
+    if (candidates.length === 0) {
+      candidates = officialElementsList.filter((name) => name !== secretName);
+    }
+
+    const randomIndex = Math.floor(getSeededRandom(101) * candidates.length);
+    const chosen = candidates[randomIndex];
+    const formattedChosen = chosen.charAt(0).toUpperCase() + chosen.slice(1);
+
+    return res.json({
+      hintType: "false_friend",
+      text: `False Friend: "${formattedChosen}" shares no exact attributes with the secret word!`,
+    });
+  }
+
+  if (type === "secret_info") {
+    const options = [
+      { label: "Type", value: secretData.type },
+      { label: "Location", value: secretLocations.join(", ") },
+      { label: "Colour", value: secretColors.join(", ") },
+      { label: "Hitbox", value: secretData.hitbox },
+    ];
+    const randomIndex = Math.floor(getSeededRandom(202) * options.length);
+    const chosen = options[randomIndex];
+    return res.json({
+      hintType: "secret_info",
+      text: `Secret ${chosen.label} is "${chosen.value}"`,
+    });
+  }
+
+  if (type === "wrong_info") {
+    const allTypes = [
+      ...new Set(officialElementsList.map((n) => database[n].type)),
+    ];
+    const allLocations = [
+      ...new Set(
+        officialElementsList.flatMap((n) =>
+          normalizeMetaList(database[n].lieu),
+        ),
+      ),
+    ];
+    const allColors = [
+      ...new Set(
+        officialElementsList.flatMap((n) =>
+          normalizeMetaList(database[n].couleur),
+        ),
+      ),
+    ];
+    const allHitboxes = [
+      ...new Set(officialElementsList.map((n) => database[n].hitbox)),
+    ];
+
+    const wrongTypes = allTypes.filter((t) => t !== secretData.type);
+    const wrongLocs = allLocations.filter((l) => !secretLocations.includes(l));
+    const wrongColors = allColors.filter((c) => !secretColors.includes(c));
+    const wrongHitboxes = allHitboxes.filter((h) => h !== secretData.hitbox);
+
+    const pickSeeded = (arr, seedOffset) => {
+      if (!arr || arr.length === 0) return "N/A";
+      const idx = Math.floor(getSeededRandom(seedOffset) * arr.length);
+      return arr[idx];
+    };
+
+    const wType = pickSeeded(wrongTypes, 301);
+    const wLoc = pickSeeded(wrongLocs, 302);
+    const wCol = pickSeeded(wrongColors, 303);
+    const wHit = pickSeeded(wrongHitboxes, 304);
+
+    return res.json({
+      hintType: "wrong_info",
+      text: `NOT Hint: Type: != ${wType} | Location: != ${wLoc} | Colour: != ${wCol} | Hitbox: != ${wHit}`,
+    });
+  }
+
+  return res.status(400).json({ error: "Invalid hint type" });
+});
+
 router.post("/validate", (req, res) => {
   const { choix, tryCount, hintUses } = req.body;
 
@@ -227,91 +362,6 @@ router.get("/version", (req, res) => {
       ? "Production (VPS)"
       : "Beta-test (Render)",
   });
-});
-
-router.post("/hint", (req, res) => {
-  const { type } = req.body;
-  const secretName = getSecretOfTheDay();
-  const secretData = database[secretName];
-
-  if (!secretData) {
-    return res.status(500).json({ error: "Secret element not found" });
-  }
-
-  const secretLocations = normalizeMetaList(secretData.lieu);
-  const secretColors = normalizeMetaList(secretData.couleur);
-
-  if (type === "list_attr") {
-    const attributes = ["type", "lieu", "couleur", "hitbox"];
-    const chosenAttr =
-      attributes[Math.floor(Math.random() * attributes.length)];
-    const items = officialElementsList.map((name) => {
-      const el = database[name];
-      let val = el[chosenAttr];
-      if (Array.isArray(val)) val = val.join(", ");
-      return { name, value: val };
-    });
-    return res.json({
-      hintType: "list_attr",
-      attributeName: chosenAttr,
-      items,
-    });
-  }
-
-  if (type === "secret_info") {
-    const options = [
-      { label: "Type", value: secretData.type },
-      { label: "Location", value: secretLocations.join(", ") },
-      { label: "Colour", value: secretColors.join(", ") },
-      { label: "Hitbox", value: secretData.hitbox },
-    ];
-    const chosen = options[Math.floor(Math.random() * options.length)];
-    return res.json({
-      hintType: "secret_info",
-      label: chosen.label,
-      value: chosen.value,
-    });
-  }
-
-  if (type === "wrong_info") {
-    const allTypes = [
-      ...new Set(officialElementsList.map((n) => database[n].type)),
-    ];
-    const allLocations = [
-      ...new Set(
-        officialElementsList.flatMap((n) =>
-          normalizeMetaList(database[n].lieu),
-        ),
-      ),
-    ];
-    const allColors = [
-      ...new Set(
-        officialElementsList.flatMap((n) =>
-          normalizeMetaList(database[n].couleur),
-        ),
-      ),
-    ];
-    const allHitboxes = [
-      ...new Set(officialElementsList.map((n) => database[n].hitbox)),
-    ];
-
-    const wrongTypes = allTypes.filter((t) => t !== secretData.type);
-    const wrongLocs = allLocations.filter((l) => !secretLocations.includes(l));
-    const wrongColors = allColors.filter((c) => !secretColors.includes(c));
-    const wrongHitboxes = allHitboxes.filter((h) => h !== secretData.hitbox);
-
-    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-
-    return res.json({
-      hintType: "wrong_info",
-      wrongType: pick(wrongTypes) || "N/A",
-      wrongLocation: pick(wrongLocs) || "N/A",
-      wrongColor: pick(wrongColors) || "N/A",
-      wrongHitbox: pick(wrongHitboxes) || "N/A",
-    });
-  }
-
-  return res.status(400).json({ error: "Invalid hint type" });
 });
 
 module.exports = router;
