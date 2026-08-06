@@ -178,7 +178,7 @@ router.post("/hint", (req, res) => {
       const index = getSeededRandom(1) % wrongElements.length;
       const randomWrong = wrongElements[index];
       return res.json({
-        text: `<strong>False Friend:</strong> The secret element is NOT <em>${randomWrong ? randomWrong.nom : "Unknown"}</em>.`,
+        text: `<strong>False Friend:</strong> The secret word does NOT have any common categories with <em>${randomWrong ? randomWrong.nom : "Unknown"}</em>.`,
       });
     }
 
