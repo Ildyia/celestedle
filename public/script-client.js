@@ -212,7 +212,9 @@ const App = {
     }
 
     if (this.nodes.showAllBtn) {
-      this.nodes.showAllBtn.addEventListener("click", () => {
+      this.nodes.showAllBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         this.nodes.input.value = "";
         this.showAllSuggestions();
         this.nodes.input.focus();
@@ -282,7 +284,11 @@ const App = {
         if (path) thumb.src = path;
       });
 
-      div.addEventListener("click", () => this.selectSuggestion(displayName));
+      div.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.selectSuggestion(displayName);
+      });
+
       this.nodes.suggestionsBox.appendChild(div);
     });
 
