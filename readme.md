@@ -2,21 +2,31 @@
 
 A daily Wordle-inspired guessing game based on the video game **Celeste**.
 
-Each day, a secret element or entity from Celeste is chosen. Your goal is to deduce what it is by making guesses. With each attempt, you receive clues based on various attributes—such as type, location, color, and hitbox properties—to guide you toward the correct answer.
+Each day, a secret element or entity from Celeste is chosen deterministically for all players. Your goal is to deduce what it is in as few attempts as possible. With each attempt, you receive clues based on various attributes—such as type, location, color, and hitbox properties—to guide you toward the correct answer.
 
 ## Features
 
-- **Daily Challenges**: A new secret Celeste entity to discover every day.
-- **Detailed Attributes**: Compare your guesses by type, location, color, and more.
-- **Community-Driven**: Built with feedbacks of the community and by fans of the game;
+- **Daily Challenges**: A new secret Celeste entity to discover every day at midnight (Europe/Paris timezone).
+- **Detailed Attributes**: Compare your guesses across categories including **Type**, **Location**, **Color**, and **Hitbox**.
+- **Interactive Hints**: Use daily hints when stuck (*False Friend*, *Secret Info*, *1 Truth & 2 Lies*).
+- **Custom Synonyms**: Create and save your own personalized entity shortcuts.
+- **Community Statistics**: Compare your scores and average tries against global player statistics.
+- **In-Game Bug Reporting**: Submit entity issues or feedback directly to our Discord server.
+
+## Coming Soon
+
+- Hard Mode
+- Profile, personnal statistics etc
+- Streak tracker
+- Achievements
+- Other game mode (Techdle, moddedle, connection etc)
 
 ## Community & Support
 
 Join our official Discord server to share your daily scores, report bugs, discuss strategies, and stay updated with the latest features:
 
-[Join the Celestedle Discord](https://discord.gg/3yqgMbuMbX)
+👉 [Join the Celestedle Discord](https://discord.gg/3yqgMbuMbX)
 
 ## Contributing
 
-Celestedle is currently a work in progress. If you encounter any bugs or have suggestions for new attributes and elements, feel free to open an issue or join the discussion on Discord.
-Project open to contribution, especially for the visual. Join the discord for more information.
+Celestedle is an open project built by and for Celeste fans! If you encounter any bugs, have suggestions for new attributes, or want to contribute—especially for entity visuals and artwork—feel free to join our Discord server or open an issue.
