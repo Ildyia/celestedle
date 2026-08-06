@@ -114,7 +114,6 @@ module.exports = {
   updateSeedHash,
   getSecretVersion,
   registerDailySuccess,
-  getDailySuccessCount,
   getDailyStats,
   recordDailySuccess,
   getSeededRandom,
