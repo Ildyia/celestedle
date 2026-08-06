@@ -1291,3 +1291,31 @@ th,
   border: 1px solid #334155 !important;
   pointer-events: none;
 }
+
+/* ==========================================================================
+   DISCLAIMER BANNER
+   ========================================================================== */
+#disclaimer-banner {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 20px auto;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(180, 83, 9, 0.25));
+  border: 1px solid var(--color-partial);
+  border-radius: 10px;
+  color: #fef3c7;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  box-sizing: border-box;
+}
+
+#disclaimer-banner p {
+  margin-bottom: 6px;
+}
+
+#My-Name {
+  font-family: "Renogare", sans-serif;
+  font-weight: bold;
+  color: var(--color-indigo);
+}
