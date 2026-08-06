@@ -1330,48 +1330,46 @@ th,
 .hint-card-grid span {
   text-transform: capitalize;
 }
+
 /* ==========================================================================
-   MODE COLORBLIND 
+   MODE COLORBLIND
    ========================================================================== */
 
-/* 1. Couleurs ultra-distinctes */
 body.colorblind {
-  --color-correct: #00a3ff;            /* Bleu Néon */
-  --color-partial: #9d4edd;            /* Violet Électrique */
-  --color-not-totally-wrong: #ffd600;   /* Jaune Citron (texte sombre pour lisibilité) */
-  --color-wrong: #1e2638;              /* Gris Ardoise Sombre */
+  --color-correct: #56B4E9;            
+  --color-partial: #F0E442;            
+  --color-not-totally-wrong: #D55E00;   
+  --color-wrong: #CC79A7;
 }
 
-/* Texte noir automatique sur le fond jaune pour que ce soit lisible */
+body.colorblind #guesses-table td.partial,
 body.colorblind #guesses-table td.notTotallyWrong {
   color: #000000 !important;
   text-shadow: none !important;
 }
 
-/* 2. Contours nets et structure propre pour toutes les cases */
 body.colorblind #guesses-table td {
   border: 2px solid rgba(255, 255, 255, 0.2) !important;
   box-sizing: border-box;
 }
 
 body.colorblind #guesses-table td.correct {
-  border-color: #66cfff !important;
+  border-color: #56B4E9 !important;
 }
 
 body.colorblind #guesses-table td.partial {
-  border-color: #c77dff !important;
+  border-color: #F0E442 !important;
 }
 
 body.colorblind #guesses-table td.notTotallyWrong {
-  border-color: #ffee55 !important;
+  border-color: #D55E00 !important;
 }
 
 body.colorblind #guesses-table td.wrong {
-  border-color: #3b4861 !important;
-  color: #94a3b8 !important;
+  border-color: #334155 !important;
+  color: #ffffff !important;
 }
 
-/* 3. Symboles agrandis et mis en valeur */
 body.colorblind #guesses-table td::after {
   display: inline-block;
   margin-left: 6px;
@@ -1387,7 +1385,7 @@ body.colorblind #guesses-table td.correct::after {
 
 body.colorblind #guesses-table td.partial::after {
   content: " ~";
-  color: #ffffff;
+  color: #000000;
 }
 
 body.colorblind #guesses-table td.notTotallyWrong::after {
@@ -1397,5 +1395,5 @@ body.colorblind #guesses-table td.notTotallyWrong::after {
 
 body.colorblind #guesses-table td.wrong::after {
   content: " ✕";
-  color: #f87171;
+  color: #ffffff;
 }

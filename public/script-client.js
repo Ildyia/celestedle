@@ -81,6 +81,7 @@ const App = {
     this.bindEvents();
     this.fetchPersonalizedSynonyms();
     initTimer(this.nodes.timerContainer);
+    this.checkDisclaimerNotice();
   },
 
   cacheDOM() {
@@ -104,6 +105,9 @@ const App = {
       avgTriesSpan: document.getElementById("avg-tries-count"),
       avgHintsSpan: document.getElementById("avg-hints-count"),
       showAllBtn: document.getElementById("show-all-btn"),
+      disclaimerModal: document.getElementById("disclaimer-modal"),
+      closeDisclaimerBtn: document.getElementById("close-disclaimer-btn"),
+      acceptDisclaimerBtn: document.getElementById("accept-disclaimer-btn"),
     };
   },
 
@@ -114,6 +118,16 @@ const App = {
       );
       this.nodes.input.addEventListener("keydown", (e) =>
         this.handleSuggestionsKeyboard(e),
+      );
+    }
+    if (this.nodes.closeDisclaimerBtn) {
+      this.nodes.closeDisclaimerBtn.addEventListener("click", () =>
+        this.closeDisclaimerNotice(),
+      );
+    }
+    if (this.nodes.acceptDisclaimerBtn) {
+      this.nodes.acceptDisclaimerBtn.addEventListener("click", () =>
+        this.closeDisclaimerNotice(),
       );
     }
 
@@ -236,6 +250,19 @@ const App = {
     if (isColorblind) {
       document.body.classList.add("colorblind");
     }
+  },
+  checkDisclaimerNotice() {
+    const seenNotice = localStorage.getItem("celestedle_disclaimer_seen");
+    if (!seenNotice && this.nodes.disclaimerModal) {
+      this.nodes.disclaimerModal.style.display = "flex";
+    }
+  },
+
+  closeDisclaimerNotice() {
+    if (this.nodes.disclaimerModal) {
+      this.nodes.disclaimerModal.style.display = "none";
+    }
+    localStorage.setItem("celestedle_disclaimer_seen", "true");
   },
 
   toggleColorblindMode() {

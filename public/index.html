@@ -7,14 +7,31 @@
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="assets/berrywinged.png" type="image/png">
 </head>
-<div id="disclaimer-banner">
-        <p>We currently have a bug about the colors of the hint and the selection of the word. We are already working to fix it, please do not submit report for these issues !</p>
-        <p>Remember I'm working alone on this project on my freetime, it's normal if it takes time to implement new features or fix bugs.</p>
-        <p> Your help is welcome with a Github PR or with suggestion on the discord, especially for gameplay feedback</p>
-        <p> Thanks for your understanding and for playing my game ! It really means a lot to me to see that the community play at this game, hope you like it !</p>
+<!-- BANNIÈRE D'ACCUEIL / ANNONCE FERMABLE -->
+<div id="disclaimer-modal" class="rules-modal" style="display: none;">
+    <div class="rules-content" style="max-width: 550px; text-align: left;">
+        <span id="close-disclaimer-btn" class="close-modal-btn">&times;</span>
+        <h2 style="color: var(--color-indigo); margin-bottom: 16px;">Welcome to Celestedle! 👋</h2>
+        
+        <p style="margin-bottom: 12px; line-height: 1.5; color: var(--text-main);">
+            👁️ <strong>Colorblind mode added!</strong> If you are colorblind, don't hesitate to give me feedback on how I can make it more accessible for you.
+        </p>
+        <p style="margin-bottom: 12px; line-height: 1.5; color: var(--text-main);">
+            If you encounter any other accessibility issues, please report them to me on Discord or GitHub—making the website accessible to everyone is very important to me!
+        </p>
+        <p style="margin-bottom: 16px; line-height: 1.5; color: var(--text-main);">
+            Thanks for playing my game, it means a lot to me! Hope you like it!
+        </p>
 
-        <p id="My-Name"> Amélia / Ildyia </p>
+        <p id="My-Name" style="font-family: 'Renogare', sans-serif; font-weight: bold; color: var(--color-indigo); text-align: right; margin-bottom: 20px;">
+            — Amélia / Ildyia
+        </p>
+
+        <div style="text-align: center;">
+            <button id="accept-disclaimer-btn" class="btn-primary" style="width: 100%; padding: 12px;">Got it, let's play!</button>
+        </div>
     </div>
+</div>
 <body>
     
     <div id="layout-wrapper">
