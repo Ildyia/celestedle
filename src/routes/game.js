@@ -110,9 +110,16 @@ router.post("/validate", (req, res) => {
         arrG.length === arrS.length && arrG.every((v) => arrS.includes(v));
       if (exact) return "correct";
 
-      const partial = arrG.some((v) => arrS.includes(v));
-      if (partial) return "partial";
+      const hasCommon = arrG.some((v) => arrS.includes(v));
 
+      if (hasCommon) {
+        const hasExtra = arrG.some((v) => !arrS.includes(v));
+        if (hasExtra) return "notTotallyWrong";
+
+        return "partial";
+      }
+
+      // 4. Aucun élément en commun (Rouge 🟥)
       return "wrong";
     };
 
@@ -224,20 +231,29 @@ router.post("/hint", (req, res) => {
         : secret.hitbox;
 
       const truthPool = [
-        `Type is "${secretType}"`,
-        `Hitbox is "${secretHitbox}"`,
-        `Color includes "${secretColor}"`,
-        `Location includes "${secretLocation}"`,
+        `Type is "${secretType || "Unknown"}"`,
+        `Hitbox is "${secretHitbox || "Unknown"}"`,
+        `Color includes "${secretColor || "Unknown"}"`,
+        `Location includes "${secretLocation || "Unknown"}"`,
       ];
-      // 1. Choix fixe de la vérité
+
+      // 1. Sélection de la vérité via la seed
       const trueIndex = getSeededRandom(3) % truthPool.length;
       const trueStatement = truthPool[trueIndex];
 
-      // 2. Choix fixe des mensonges
-      const fakeType = getRandomWrongValue(secret.type, ALL_TYPES);
-      const fakeHitbox = getRandomWrongValue(secret.hitbox, ALL_HITBOXES);
-      const fakeLocation = getRandomWrongValue(secret.lieu, ALL_LOCATIONS);
-      const fakeColor = getRandomWrongValue(secret.couleur, ALL_COLORS);
+      // 2. Génération des faux choix de manière déterministe
+      const getSeededWrong = (currentVal, pool, seedOffset) => {
+        const arr = Array.isArray(currentVal) ? currentVal : [currentVal];
+        const filtered = pool.filter((v) => !arr.includes(v));
+        if (filtered.length === 0) return "Other";
+        const idx = getSeededRandom(seedOffset) % filtered.length;
+        return filtered[idx];
+      };
+
+      const fakeType = getSeededWrong(secret.type, ALL_TYPES, 10);
+      const fakeHitbox = getSeededWrong(secret.hitbox, ALL_HITBOXES, 11);
+      const fakeLocation = getSeededWrong(secret.lieu, ALL_LOCATIONS, 12);
+      const fakeColor = getSeededWrong(secret.couleur, ALL_COLORS, 13);
 
       const liesPool = [
         `Type is "${fakeType}"`,
@@ -246,17 +262,20 @@ router.post("/hint", (req, res) => {
         `Color includes "${fakeColor}"`,
       ];
 
-      // Sélection fixe de 2 mensonges sans Math.random()
+      // 3. Choix des 2 mensonges sans doublons
       const lie1Index = getSeededRandom(4) % liesPool.length;
       let lie2Index = getSeededRandom(5) % liesPool.length;
-      if (lie2Index === lie1Index)
+      if (lie2Index === lie1Index) {
         lie2Index = (lie1Index + 1) % liesPool.length;
+      }
 
-      const lie1 = liesPool[lie1Index];
-      const lie2 = liesPool[lie2Index];
+      const statements = [
+        trueStatement,
+        liesPool[lie1Index],
+        liesPool[lie2Index],
+      ];
 
-      // 3. Mélange fixe des 3 propositions
-      const statements = [trueStatement, lie1, lie2];
+      // 4. Mélange fixe des 3 propositions
       const randOrder = getSeededRandom(6) % 3;
       if (randOrder === 1) statements.push(statements.shift());
       if (randOrder === 2) statements.unshift(statements.pop());
