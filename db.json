@@ -353,7 +353,9 @@
   "dash switch": {
     "couleur": [
       "green",
-      "yellow"
+      "yellow",
+      "purple",
+      "grey"
     ],
     "hitbox": "rectangular",
     "lieu": [
