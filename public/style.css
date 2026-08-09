@@ -29,14 +29,14 @@
 /* ==========================================================================
    2. CONFIGURATION GENERALE
    ========================================================================== */
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
 body {
-  font-family: "Segoe UI", Roboto, sans-serif;
+  font-family: "Renogare", "Segoe UI", sans-serif;
   background-color: var(--bg-main);
   color: var(--text-main);
   min-height: 100vh;
@@ -44,6 +44,57 @@ body {
   flex-direction: column;
   align-items: center;
   padding: 40px 20px 20px 20px;
+}
+
+body, body * {
+  cursor: none !important;
+}
+
+#custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+#custom-cursor img {
+  width: 48px;
+  height: auto;
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+body.no-custom-cursor,
+body.no-custom-cursor * {
+  cursor: auto !important;
+}
+
+body.no-custom-cursor a,
+body.no-custom-cursor button,
+body.no-custom-cursor [role="button"],
+body.no-custom-cursor input[type="submit"],
+body.no-custom-cursor input[type="button"] {
+  cursor: pointer !important;
+}
+
+body.no-custom-cursor input[type="text"],
+body.no-custom-cursor textarea {
+  cursor: text !important;
+}
+
+#default-cursor {
+  transform: translate(-1.5px, -26px);
+}
+
+#pointer-cursor {
+  transform: translate(0, 0);
+}
+
+#text-hover-cursor {
+  transform: translate(-50%, -100%);
 }
 
 h1,
@@ -328,7 +379,7 @@ th,
 }
 
 /* ==========================================================================
-   7. BOUTONS DU JEU ET ETAT
+   7. BOUTONS DU JEU ET ETAT (GAME BAR UNIFORMISÉE)
    ========================================================================== */
 #game-status {
   width: 100%;
@@ -343,54 +394,56 @@ th,
   border: 1px solid #1e293b;
 }
 
-.tries-badge {
-  font-family: "Renogare", sans-serif;
-  font-size: 0.95rem;
-  background-color: var(--bg-input);
-  padding: 8px 14px;
-  border-radius: 6px;
-  border: 1px solid #334155;
-}
-
 #game-status button,
+.tries-badge,
 .status-link-btn,
 .sidebar-toggle-btn {
   font-family: "Renogare", sans-serif;
   font-size: 0.9rem;
-  padding: 10px 18px;
+  height: 40px;
+  padding: 0 4px;
   border-radius: 6px;
-  border: none;
-  cursor: pointer;
   font-weight: normal;
   transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  gap: 8px;
+}
+
+.tries-badge {
+  background-color: var(--bg-input);
+  border: 1px solid #334155;
+  color: var(--text-muted);
 }
 
 #hint-btn {
-  background-color: var(--bg-input);
-  color: var(--text-main);
-  border: 1px solid #334155;
+  background-color: rgba(245, 158, 11, 0.1);
+  border: 1px solid var(--color-partial);
+  color: #fef3c7;
 }
 
 #hint-btn:hover {
-  border-color: #818cf8;
-  background-color: #1e2d4a;
+  background-color: var(--color-partial);
+  color: #000000;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
 }
 
 #personalized-btn {
-  background-color: var(--color-indigo);
-  color: #ffffff;
+  background-color: rgba(99, 102, 241, 0.15);
+  border: 1px solid var(--color-indigo);
+  color: #c7d2fe;
 }
 
 #personalized-btn:hover {
-  background-color: var(--color-indigo-hover);
-  box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+  background-color: var(--color-indigo);
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
 }
 
 #giveup-btn {
-  background-color: rgba(239, 68, 68, 0.2);
+  background-color: rgba(239, 68, 68, 0.1);
   border: 1px solid var(--color-wrong);
   color: #fca5a5;
 }
@@ -398,29 +451,32 @@ th,
 #giveup-btn:hover {
   background-color: var(--color-wrong);
   color: #ffffff;
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+}
+.btn-icon {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
 }
 
 #rules-btn {
   background-color: var(--color-correct);
+  border-color: var(--color-correct);
   color: #ffffff;
   width: 100%;
 }
 
 #rules-btn:hover {
   background-color: #059669;
+  border-color: #059669;
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
 }
 
 .status-link-btn {
-  font-family: "Renogare", sans-serif;
-  background-color: transparent;
+  background-color: var(--bg-card);
+  border-color: #4f46e5;
   color: var(--text-main);
-  border: 1px solid #4f46e5;
-  padding: 10px 18px;
-  border-radius: 6px;
   text-decoration: none;
-  transition: all 0.2s ease;
 }
 
 .status-link-btn:hover {
@@ -428,15 +484,37 @@ th,
   transform: translateY(-1px);
 }
 
+#options-btn {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  background: transparent;
+  border: none;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 1000;
+}
+
+#options-btn:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+#options-btn .btn-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
 #share-btn {
   display: none !important;
   background-color: var(--color-correct);
+  border-color: var(--color-correct);
   color: #ffffff;
-}
-
-#share-btn:hover {
-  background-color: #059669;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
 }
 
 .social-sidebar-link {
@@ -497,11 +575,13 @@ th,
 .input-container {
   position: relative;
   flex: 1;
+  display: flex;
+  align-items: center;
 }
 
 #element-input {
   width: 100%;
-  padding: 14px 18px;
+  padding: 14px 45px 14px 18px;
   border-radius: 8px;
   border: 2px solid #334155;
   background-color: var(--bg-input);
@@ -514,6 +594,26 @@ th,
 #element-input:focus {
   border-color: #818cf8;
   box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+}
+
+#guess-form #guess-btn[type="submit"] {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  cursor: pointer;
+}
+
+#guess-form #guess-btn[type="submit"]:hover {
+  background: transparent !important;
+  border: none !important;
+}
+
+.btn-icon-primary {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  display: block;
 }
 
 .hint-controls {
@@ -543,24 +643,6 @@ th,
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
   z-index: 1001;
   box-sizing: border-box;
-}
-
-#guess-form button[type="submit"] {
-  font-family: "Renogare", sans-serif;
-  background-color: var(--bg-input);
-  color: var(--text-main);
-  border: 2px solid #334155;
-  font-size: 1rem;
-  padding: 14px 28px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-#guess-form button[type="submit"]:hover {
-  border-color: #818cf8;
-  background-color: #1e2d4a;
 }
 
 .suggestions-box {
@@ -603,7 +685,8 @@ th,
   filter: invert(1) sepia(0) saturate(0) hue-rotate(180deg) brightness(2);
 }
 
-.suggestion-thumb {
+.suggestion-thumb,
+.hint-thumb {
   width: 48px;
   height: 48px;
   object-fit: contain;
@@ -622,17 +705,6 @@ th,
   cursor: pointer;
 }
 
-.hint-thumb {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-  border-radius: 6px;
-  background: transparent;
-  padding: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
-}
-
 .entity-thumb {
   width: 48px;
   height: 48px;
@@ -647,6 +719,31 @@ th,
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   -ms-interpolation-mode: nearest-neighbor;
+}
+
+#show-all-btn {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+#show-all-btn img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+#show-all-btn:hover {
+  opacity: 1;
 }
 
 /* ==========================================================================
@@ -674,6 +771,7 @@ th,
   font-weight: 600;
   font-size: 0.95rem;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  text-transform: capitalize;
 }
 
 #guesses-table tr td:first-child {
@@ -742,18 +840,9 @@ th,
 }
 
 @keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  20%,
-  60% {
-    transform: translateX(-5px);
-  }
-  40%,
-  80% {
-    transform: translateX(5px);
-  }
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
 }
 
 .shake {
@@ -930,6 +1019,24 @@ th,
 .btn-secondary:hover {
   background-color: var(--bg-input);
   color: var(--text-main);
+}
+
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(100%);
+  background-color: var(--bg-input) !important;
+  border: 1px solid #334155 !important;
+}
+
+#hint-modal .btn-primary:disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  filter: grayscale(100%) !important;
+  background-color: var(--bg-input) !important;
+  color: var(--text-muted) !important;
+  border: 1px solid #334155 !important;
+  pointer-events: none;
 }
 
 /* ==========================================================================
@@ -1164,6 +1271,37 @@ th,
   }
 }
 
+@media (max-width: 1200px) {
+  /* Aligner la barre d'outils sur une ligne horizontale compacte */
+  #game-status {
+    flex-direction: row !important;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    gap: 6px;
+  }
+
+  /* Réduire la taille des boutons et centrer leur contenu */
+  #game-status button {
+    flex: 1;
+    min-width: 0;
+    padding: 0 8px;
+  }
+
+  /* Masquer le texte secondaire des boutons pour ne garder que l'essentiel */
+  #hint-btn-text,
+  #personalized-btn span,
+  #giveup-btn span {
+    display: none;
+  }
+
+  /* Compacter le badge d'essais */
+  .tries-badge {
+    padding: 0 8px;
+    font-size: 0.8rem;
+  }
+}
+
 /* ==========================================================================
    13. CARTES D'INDICES (HINTS)
    ========================================================================== */
@@ -1203,6 +1341,7 @@ th,
   font-size: 1rem;
   font-weight: bold;
   color: var(--text-main);
+  text-transform: capitalize;
 }
 
 .hint-card-grid {
@@ -1220,80 +1359,11 @@ th,
   font-size: 0.75rem;
   color: var(--text-main);
   text-align: center;
-}
-
-#show-all-btn {
-  position: absolute;
-  right: 12px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-}
-
-#show-all-btn img {
-  width: 20px;
-  height: 20px;
-  object-fit: contain;
-}
-
-#show-all-btn:hover {
-  opacity: 1;
-}
-
-.input-container {
-  position: relative;
-  flex: 1;
-  display: flex;
-  align-items: center;
-}
-
-#show-all-btn {
-  position: absolute;
-  right: 12px;
-  background: transparent;
-  border: none;
-  font-size: 1.1rem;
-  cursor: pointer;
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
-  z-index: 10;
-}
-
-#show-all-btn:hover {
-  opacity: 1;
-}
-
-#element-input {
-  padding-right: 45px; /* Pour éviter que le texte passe sous le bouton */
-}
-/* Style pour les boutons d'indices désactivés */
-.btn-primary:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  filter: grayscale(100%);
-  background-color: var(--bg-input) !important;
-  border: 1px solid #334155 !important;
-}
-
-#hint-modal .btn-primary:disabled {
-  opacity: 0.35 !important;
-  cursor: not-allowed !important;
-  filter: grayscale(100%) !important;
-  background-color: var(--bg-input) !important;
-  color: var(--text-muted) !important;
-  border: 1px solid #334155 !important;
-  pointer-events: none;
+  text-transform: capitalize;
 }
 
 /* ==========================================================================
-   DISCLAIMER BANNER
+   14. BANNIÈRE DISCLAIMER
    ========================================================================== */
 #disclaimer-banner {
   width: 100%;
@@ -1319,137 +1389,13 @@ th,
   font-weight: bold;
   color: var(--color-indigo);
 }
-/* Majuscule automatique sur chaque mot dans le tableau */
-#guesses-table td {
-  text-transform: capitalize;
-}
 
-
-/* Majuscule automatique sur le texte des cartes d'indices */
-.hint-card-value,
-.hint-card-grid span {
-  text-transform: capitalize;
-}
 /* ==========================================================================
-   RULES COLOR INDICATOR
+   15. INDICATEURS DE REGLES & COLORBLIND
    ========================================================================== */
-
 .rules-color-list {
   list-style: none !important;
   padding-left: 0 !important;
-}
-
-.rules-color-list li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.color-box {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
-}
-
-.color-box.correct {
-  background-color: var(--color-correct);
-}
-
-.color-box.partial {
-  background-color: var(--color-partial);
-}
-
-.color-box.notTotallyWrong {
-  background-color: var(--color-not-totally-wrong);
-}
-
-.color-box.wrong {
-  background-color: var(--color-wrong);
-}
-
-
-/* ==========================================================================
-   MODE COLORBLIND
-   ========================================================================== */
-
-body.colorblind {
-  --color-correct: #56B4E9;            
-  --color-partial: #F0E442;            
-  --color-not-totally-wrong: #D55E00;   
-  --color-wrong: #CC79A7;
-}
-
-body.colorblind #guesses-table td.partial,
-body.colorblind #guesses-table td.notTotallyWrong {
-  color: #000000 !important;
-  text-shadow: none !important;
-}
-
-body.colorblind #guesses-table td {
-  border: 2px solid rgba(255, 255, 255, 0.2) !important;
-  box-sizing: border-box;
-}
-
-body.colorblind #guesses-table td.correct {
-  border-color: #56B4E9 !important;
-}
-
-body.colorblind #guesses-table td.partial {
-  border-color: #F0E442 !important;
-}
-
-body.colorblind #guesses-table td.notTotallyWrong {
-  border-color: #D55E00 !important;
-}
-
-body.colorblind #guesses-table td.wrong {
-  border-color: #334155 !important;
-  color: #ffffff !important;
-}
-
-body.colorblind #guesses-table td::after {
-  display: inline-block;
-  margin-left: 6px;
-  font-size: 1.05rem;
-  font-weight: 900;
-  vertical-align: middle;
-}
-
-body.colorblind #guesses-table td.correct::after {
-  content: " ✓";
-  color: #ffffff;
-}
-
-body.colorblind #guesses-table td.partial::after {
-  content: " ~";
-  color: #000000;
-}
-
-body.colorblind #guesses-table td.notTotallyWrong::after {
-  content: " ≠";
-  color: #000000;
-}
-
-body.colorblind #guesses-table td.wrong::after {
-  content: " ✕";
-  color: #ffffff;
-}
-.rules-color-list li {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.color-box {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
-  flex-shrink: 0;
-  margin-top: 3px;
 }
 
 .rules-color-list li {
@@ -1470,4 +1416,139 @@ body.colorblind #guesses-table td.wrong::after {
   border-radius: 3px;
   flex-shrink: 0;
   margin-top: 3px;
+}
+
+.color-box.correct { background-color: var(--color-correct); }
+.color-box.partial { background-color: var(--color-partial); }
+.color-box.notTotallyWrong { background-color: var(--color-not-totally-wrong); }
+.color-box.wrong { background-color: var(--color-wrong); }
+
+body.colorblind {
+  --color-correct: #56B4E9;            
+  --color-partial: #F0E442;            
+  --color-not-totally-wrong: #D55E00;   
+  --color-wrong: #CC79A7;
+}
+
+body.colorblind #guesses-table td.partial,
+body.colorblind #guesses-table td.notTotallyWrong {
+  color: #000000 !important;
+  text-shadow: none !important;
+}
+
+body.colorblind #guesses-table td {
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  box-sizing: border-box;
+}
+
+body.colorblind #guesses-table td.correct { border-color: #56B4E9 !important; }
+body.colorblind #guesses-table td.partial { border-color: #F0E442 !important; }
+body.colorblind #guesses-table td.notTotallyWrong { border-color: #D55E00 !important; }
+body.colorblind #guesses-table td.wrong {
+  border-color: #CC79A7 !important;
+  background-color: rgba(204, 121, 167, 0.25) !important;
+  color: #ffffff !important;
+}
+
+body.colorblind #guesses-table td::after {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 1.05rem;
+  font-weight: 900;
+  vertical-align: middle;
+}
+
+body.colorblind #guesses-table td.correct::after { content: " ✓"; color: #ffffff; }
+body.colorblind #guesses-table td.partial::after { content: " ~"; color: #000000; }
+body.colorblind #guesses-table td.notTotallyWrong::after { content: " ≠"; color: #000000; }
+body.colorblind #guesses-table td.wrong::after { content: " ✕"; color: #ffffff; }
+
+/* ==========================================================================
+   16. SWITCHES ET CHECKBOXES MODERNES (THEME CLASSIQUE)
+   ========================================================================== */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: var(--bg-input);
+  border: 1.5px solid #334155;
+  border-radius: 30px;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.slider::before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 2.5px;
+  background: linear-gradient(135deg, #ffffff, #e2e8f0);
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.switch:hover .slider {
+  border-color: #818cf8;
+  transform: scale(1.05);
+}
+
+.switch:hover .slider::before {
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+input:checked + .slider {
+  background: linear-gradient(135deg, var(--color-indigo), var(--color-indigo-hover));
+  border-color: #818cf8;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+}
+
+input:checked + .slider::before {
+  transform: translateX(21px);
+  background: #ffffff;
+}
+
+input[type="checkbox"]:not(.switch input) {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--bg-input);
+  border: 1.5px solid #334155;
+  border-radius: 5px;
+  cursor: pointer;
+  position: relative;
+  vertical-align: middle;
+  transition: all 0.2s ease;
+}
+
+input[type="checkbox"]:not(.switch input):checked {
+  background: var(--color-indigo);
+  border-color: #818cf8;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
+}
+
+input[type="checkbox"]:not(.switch input):checked::after {
+  content: "✓";
+  position: absolute;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
