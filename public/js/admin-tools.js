@@ -8,7 +8,7 @@ export function initAdminTools() {
     ApiService.verifyAdminKey(adminPassword)
       .then(() => ApiService.getSecretWordAdmin())
       .then((data) =>
-        alert("The secret element of the day is : " + data.secretElement),
+        alert("The secret element of the day is : " + data.secretElement)
       )
       .catch((err) => alert(err.message));
   };
@@ -27,10 +27,10 @@ export function initAdminTools() {
           "date",
           "version",
           "saved_hints",
-          "used_hint_types",
+          "used_hint_types"
         ];
         keysToRemove.forEach((key) =>
-          localStorage.removeItem(`celestedle_${key}`),
+          localStorage.removeItem(`celestedle_${key}`)
         );
         alert("Local data wiped ! Reloading window context structure.");
       })
@@ -45,7 +45,7 @@ export function initAdminTools() {
 
     ApiService.triggerRandomSecret(adminPassword, newHash)
       .then((data) =>
-        alert(data.error ? "Error : " + data.error : data.message),
+        alert(data.error ? "Error : " + data.error : data.message)
       )
       .catch((err) => console.error("Server context update error:", err));
   };

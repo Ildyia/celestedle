@@ -1,54 +1,57 @@
-<!DOCTYPE 1 html>
+<!doctype html>
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard Admin</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
     <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/theme-celeste.css" />
   </head>
-  <body>
-    <h1>Panneau d'administration</h1>
+  <body class="theme-celeste">
+    <div class="admin-container">
+      <h1>Panneau d'administration</h1>
 
-    <section>
-      <h2>Actions rapides</h2>
-      <button onclick="triggerAction('reset-daily')">
-        Réinitialiser le défi du jour
-      </button>
-      <button onclick="triggerAction('clear-cache')">Vider le cache</button>
-    </section>
+      <section class="admin-section">
+        <h2>Actions rapides</h2>
+        <div class="admin-actions">
+          <button class="admin-btn" id="btn-get-secret">
+            Voir le mot secret
+          </button>
+          <button class="admin-btn" id="btn-random-secret">
+            Changer le mot secret
+          </button>
+          <button class="admin-btn admin-btn-danger" id="btn-force-reset">
+            Réinitialiser le jeu (Reset)
+          </button>
+        </div>
+      </section>
+    </div>
 
-    <section>
-      <h2>Modifier la solution</h2>
-      <form id="solution-form">
-        <input
-          type="text"
-          id="entity-id"
-          placeholder="ID de l'entité"
-          required
-        />
-        <button type="submit">Valider</button>
-      </form>
-    </section>
+    <script type="module">
+      import { initAdminTools } from "./js/admin-tools.js";
 
-    <script>
-      async function triggerAction(action) {
-        const res = await fetch(`/api/admin/${action}`, { method: "POST" });
-        const data = await res.json();
-        alert(data.message || "Action exécutée");
-      }
+      document.addEventListener("DOMContentLoaded", () => {
+        initAdminTools();
 
-      document
-        .getElementById("solution-form")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const entityId = document.getElementById("entity-id").value;
-          const res = await fetch("/api/admin/set-solution", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ entityId })
+        document
+          .getElementById("btn-get-secret")
+          ?.addEventListener("click", () => {
+            window.getSecretWordPlzUwU();
           });
-          const data = await res.json();
-          alert(data.message || "Solution mise à jour");
-        });
+
+        document
+          .getElementById("btn-random-secret")
+          ?.addEventListener("click", () => {
+            window.randomSecret();
+          });
+
+        document
+          .getElementById("btn-force-reset")
+          ?.addEventListener("click", () => {
+            window.triggerReset();
+          });
+      });
     </script>
   </body>
 </html>

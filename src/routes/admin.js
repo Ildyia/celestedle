@@ -23,10 +23,7 @@ router.post("/verify", (req, res) => {
 });
 
 router.get("/dashboard", (req, res) => {
-  if (req.query.pwd !== process.env.ADMIN_PASSWORD) {
-    return res.status(403).send("Accès refusé");
-  }
-  res.sendFile(path.join(__dirname, "../../public/admin.html"));
+  res.sendFile(path.join(__dirname, "..", "..", "public", "admin.html"));
 });
 
 router.post("/random-hash", (req, res) => {
