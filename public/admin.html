@@ -1,0 +1,54 @@
+<!DOCTYPE 1 html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Dashboard Admin</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <h1>Panneau d'administration</h1>
+
+    <section>
+      <h2>Actions rapides</h2>
+      <button onclick="triggerAction('reset-daily')">
+        Réinitialiser le défi du jour
+      </button>
+      <button onclick="triggerAction('clear-cache')">Vider le cache</button>
+    </section>
+
+    <section>
+      <h2>Modifier la solution</h2>
+      <form id="solution-form">
+        <input
+          type="text"
+          id="entity-id"
+          placeholder="ID de l'entité"
+          required
+        />
+        <button type="submit">Valider</button>
+      </form>
+    </section>
+
+    <script>
+      async function triggerAction(action) {
+        const res = await fetch(`/api/admin/${action}`, { method: "POST" });
+        const data = await res.json();
+        alert(data.message || "Action exécutée");
+      }
+
+      document
+        .getElementById("solution-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const entityId = document.getElementById("entity-id").value;
+          const res = await fetch("/api/admin/set-solution", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ entityId })
+          });
+          const data = await res.json();
+          alert(data.message || "Solution mise à jour");
+        });
+    </script>
+  </body>
+</html>

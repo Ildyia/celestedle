@@ -15,6 +15,20 @@ router.post("/verify-key", (req, res) => {
   res.json({ success: true, message: "Access authorized" });
 });
 
+router.post("/verify", (req, res) => {
+  if (req.body.password === process.env.ADMIN_PASSWORD) {
+    return res.json({ success: true });
+  }
+  res.status(401).json({ error: "Mot de passe incorrect" });
+});
+
+router.get("/dashboard", (req, res) => {
+  if (req.query.pwd !== process.env.ADMIN_PASSWORD) {
+    return res.status(403).send("Accès refusé");
+  }
+  res.sendFile(path.join(__dirname, "../../public/admin.html"));
+});
+
 router.post("/random-hash", (req, res) => {
   const { key, newHash } = req.body;
 
@@ -44,7 +58,7 @@ router.post("/trigger-reset", (req, res) => {
     success: true,
     message:
       "Game forced reset successfully. Secret element and hints regenerated.",
-    newHash,
+    newHash
   });
 });
 
@@ -74,7 +88,7 @@ router.post("/assign-image", (req, res) => {
       publicDir,
       "assets",
       "entities",
-      "mapping.json",
+      "mapping.json"
     );
     let mapping = {};
     if (fs.existsSync(mappingPath))
@@ -84,7 +98,7 @@ router.post("/assign-image", (req, res) => {
     return res.json({
       success: true,
       mappingEntry: mapping[entityName],
-      dest: destRel,
+      dest: destRel
     });
   } catch (err) {
     console.error("assign-image error", err);
@@ -116,7 +130,7 @@ router.post("/upload-image", (req, res) => {
       publicDir,
       "assets",
       "entities",
-      "mapping.json",
+      "mapping.json"
     );
     let mapping = {};
     if (fs.existsSync(mappingPath))
@@ -126,7 +140,7 @@ router.post("/upload-image", (req, res) => {
     return res.json({
       success: true,
       mappingEntry: mapping[entityName],
-      dest: destRel,
+      dest: destRel
     });
   } catch (err) {
     console.error("upload-image error", err);

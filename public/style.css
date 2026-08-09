@@ -29,7 +29,9 @@
 /* ==========================================================================
    2. CONFIGURATION GENERALE
    ========================================================================== */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -46,7 +48,8 @@ body {
   padding: 40px 20px 20px 20px;
 }
 
-body, body * {
+body,
+body * {
   cursor: none !important;
 }
 
@@ -94,7 +97,7 @@ body.no-custom-cursor textarea {
 }
 
 #text-hover-cursor {
-  transform: translate(-50%, -100%);
+  transform: translate(-10px, -2px);
 }
 
 h1,
@@ -231,7 +234,11 @@ th,
 #disclaimer-block {
   width: 100%;
   border-left: 4px solid #6366f1;
-  background: linear-gradient(180deg, rgba(99, 102, 241, 0.14), rgba(15, 23, 42, 0.05));
+  background: linear-gradient(
+    180deg,
+    rgba(99, 102, 241, 0.14),
+    rgba(15, 23, 42, 0.05)
+  );
   border: 1px solid rgba(99, 102, 241, 0.35);
   padding: 18px 22px;
   border-radius: 12px;
@@ -250,7 +257,12 @@ th,
 }
 
 .legal-page-block {
-  background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.14), transparent 35%),
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(99, 102, 241, 0.14),
+      transparent 35%
+    ),
     linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
   border-radius: 20px;
   padding: 28px 30px;
@@ -352,7 +364,11 @@ th,
 
 #report-bug-btn {
   width: 100%;
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(185, 28, 28, 0.3));
+  background: linear-gradient(
+    135deg,
+    rgba(239, 68, 68, 0.2),
+    rgba(185, 28, 28, 0.3)
+  );
   border: 1px solid var(--color-wrong);
   color: #fca5a5;
   font-family: "Renogare", sans-serif;
@@ -495,7 +511,9 @@ th,
   align-items: center;
   justify-content: center;
   opacity: 0.7;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
   z-index: 1000;
 }
 
@@ -840,9 +858,18 @@ th,
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-5px); }
-  40%, 80% { transform: translateX(5px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-5px);
+  }
+  40%,
+  80% {
+    transform: translateX(5px);
+  }
 }
 
 .shake {
@@ -1370,7 +1397,11 @@ th,
   max-width: 1200px;
   margin: 0 auto 20px auto;
   padding: 14px 20px;
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(180, 83, 9, 0.25));
+  background: linear-gradient(
+    135deg,
+    rgba(245, 158, 11, 0.15),
+    rgba(180, 83, 9, 0.25)
+  );
   border: 1px solid var(--color-partial);
   border-radius: 10px;
   color: #fef3c7;
@@ -1418,16 +1449,24 @@ th,
   margin-top: 3px;
 }
 
-.color-box.correct { background-color: var(--color-correct); }
-.color-box.partial { background-color: var(--color-partial); }
-.color-box.notTotallyWrong { background-color: var(--color-not-totally-wrong); }
-.color-box.wrong { background-color: var(--color-wrong); }
+.color-box.correct {
+  background-color: var(--color-correct);
+}
+.color-box.partial {
+  background-color: var(--color-partial);
+}
+.color-box.notTotallyWrong {
+  background-color: var(--color-not-totally-wrong);
+}
+.color-box.wrong {
+  background-color: var(--color-wrong);
+}
 
 body.colorblind {
-  --color-correct: #56B4E9;            
-  --color-partial: #F0E442;            
-  --color-not-totally-wrong: #D55E00;   
-  --color-wrong: #CC79A7;
+  --color-correct: #56b4e9;
+  --color-partial: #f0e442;
+  --color-not-totally-wrong: #d55e00;
+  --color-wrong: #cc79a7;
 }
 
 body.colorblind #guesses-table td.partial,
@@ -1441,11 +1480,17 @@ body.colorblind #guesses-table td {
   box-sizing: border-box;
 }
 
-body.colorblind #guesses-table td.correct { border-color: #56B4E9 !important; }
-body.colorblind #guesses-table td.partial { border-color: #F0E442 !important; }
-body.colorblind #guesses-table td.notTotallyWrong { border-color: #D55E00 !important; }
+body.colorblind #guesses-table td.correct {
+  border-color: #56b4e9 !important;
+}
+body.colorblind #guesses-table td.partial {
+  border-color: #f0e442 !important;
+}
+body.colorblind #guesses-table td.notTotallyWrong {
+  border-color: #d55e00 !important;
+}
 body.colorblind #guesses-table td.wrong {
-  border-color: #CC79A7 !important;
+  border-color: #cc79a7 !important;
   background-color: rgba(204, 121, 167, 0.25) !important;
   color: #ffffff !important;
 }
@@ -1458,10 +1503,22 @@ body.colorblind #guesses-table td::after {
   vertical-align: middle;
 }
 
-body.colorblind #guesses-table td.correct::after { content: " ✓"; color: #ffffff; }
-body.colorblind #guesses-table td.partial::after { content: " ~"; color: #000000; }
-body.colorblind #guesses-table td.notTotallyWrong::after { content: " ≠"; color: #000000; }
-body.colorblind #guesses-table td.wrong::after { content: " ✕"; color: #ffffff; }
+body.colorblind #guesses-table td.correct::after {
+  content: " ✓";
+  color: #ffffff;
+}
+body.colorblind #guesses-table td.partial::after {
+  content: " ~";
+  color: #000000;
+}
+body.colorblind #guesses-table td.notTotallyWrong::after {
+  content: " ≠";
+  color: #000000;
+}
+body.colorblind #guesses-table td.wrong::after {
+  content: " ✕";
+  color: #ffffff;
+}
 
 /* ==========================================================================
    16. SWITCHES ET CHECKBOXES MODERNES (THEME CLASSIQUE)
@@ -1512,7 +1569,11 @@ body.colorblind #guesses-table td.wrong::after { content: " ✕"; color: #ffffff
 }
 
 input:checked + .slider {
-  background: linear-gradient(135deg, var(--color-indigo), var(--color-indigo-hover));
+  background: linear-gradient(
+    135deg,
+    var(--color-indigo),
+    var(--color-indigo-hover)
+  );
   border-color: #818cf8;
   box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
 }
@@ -1551,4 +1612,148 @@ input[type="checkbox"]:not(.switch input):checked::after {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+
+/* ==========================================================================
+   17. INTERFACE ET DASHBOARD ADMIN
+   ========================================================================== */
+
+/* Ligne d'options & Switch */
+.option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-family: var(--font-primary, system-ui, -apple-system, sans-serif);
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.option-row span {
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* Bouton Admin Dashboard */
+.admin {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.admin-link {
+  display: inline-block;
+  padding: 10px 22px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #6b21a8, #a855f7);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.35);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.admin-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(168, 85, 247, 0.55);
+  background: linear-gradient(135deg, #7e22ce, #c084fc);
+  color: #ffffff;
+}
+
+/* Styles spécifiques au Dashboard Admin (admin.html) */
+.admin-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 24px;
+  background: rgba(20, 24, 40, 0.85);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  color: #f1f5f9;
+}
+
+.admin-container h1 {
+  font-size: 1.8rem;
+  margin-bottom: 24px;
+  color: #e2e8f0;
+  border-bottom: 2px solid rgba(168, 85, 247, 0.4);
+  padding-bottom: 12px;
+}
+
+.admin-section {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 18px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.admin-section h2 {
+  font-size: 1.2rem;
+  margin-bottom: 14px;
+  color: #c084fc;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-btn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #3b82f6;
+  color: #ffffff;
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
+}
+
+.admin-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.admin-btn-danger {
+  background: #ef4444;
+}
+
+.admin-btn-danger:hover {
+  background: #dc2626;
+}
+
+.admin-form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.admin-input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #475569;
+  background: #0f172a;
+  color: #f8fafc;
+  outline: none;
+}
+
+.admin-input:focus {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.25);
 }

@@ -119,7 +119,6 @@ router.post("/validate", (req, res) => {
         return "partial";
       }
 
-      // 4. Aucun élément en commun (Rouge 🟥)
       return "wrong";
     };
 
@@ -203,7 +202,6 @@ router.post("/hint", (req, res) => {
     }
 
     if (type === "secret_info") {
-      // Réservé exclusivement à Type et Lieu pour ne pas chevaucher l'autre indice
       const infos = [
         `Its type includes: <strong>${Array.isArray(secret.type) ? secret.type[0] : secret.type}</strong>`,
         `It can be found in: <strong>${Array.isArray(secret.lieu) ? secret.lieu[0] : secret.lieu}</strong>`,
