@@ -11,7 +11,6 @@ import { TableManager } from "./js/table.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   App.init();
-  initAdminTools();
 });
 
 const App = {
