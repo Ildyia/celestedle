@@ -92,4 +92,17 @@ router.get("/elements-list", verifyAdminToken, (req, res) => {
   res.json(elements);
 });
 
+router.get("/stats-history", (req, res) => {
+  try {
+    const historyPath = path.join(__dirname, "../../stats-history.json");
+    if (fs.existsSync(historyPath)) {
+      const data = JSON.parse(fs.readFileSync(historyPath, "utf8"));
+      return res.json(data);
+    }
+    return res.json([]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

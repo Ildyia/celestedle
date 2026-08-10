@@ -195,7 +195,16 @@
 
         <!-- CONTROLS & ACTION BUTTONS -->
         <div id="game-status">
-          <p class="tries-badge">Tries: <span id="try-count">0</span></p>
+          <p class="tries-badge">
+            <img
+              src="assets/illustration/normalflag.png"
+              alt=""
+              class="btn-icon"
+            />
+            Tries: <span id="try-count">0</span>
+            <img src="assets/illustration/time.png" alt="" class="btn-icon" />
+            Time: <span id="time-count">0</span>
+          </p>
           <button id="hint-btn" class="btn">
             <img src="assets/illustration/assist.png" alt="" class="btn-icon" />
             <span id="hint-btn-text">Hints</span>
@@ -263,7 +272,7 @@
                 placeholder="Guess an element..."
               />
               <button type="button" id="show-all-btn" title="Show all elements">
-                <img src="assets/eye.png" alt="Show all" />
+                <img src="assets/illustration/eye.png" alt="Show all" />
               </button>
               <div id="element-suggestions" class="suggestions-box"></div>
               <div id="hint-list" class="hint-list"></div>
@@ -300,6 +309,13 @@
             If you encounter a bug, please report it to help improve the game.
           </p>
           <button id="report-bug-btn">
+            <img
+              src="assets/illustration/wtf.png"
+              alt=""
+              class="btn-icon"
+              id="reporticon"
+              style="margin-right: 8px"
+            />
             I found a bug / I disagree with a category
           </button>
         </div>

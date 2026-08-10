@@ -3,260 +3,107 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Celestedle - Panel Admin</title>
-    <link rel="stylesheet" href="./style.css" />
-    <link rel="stylesheet" href="./theme-celeste.css" />
+    <title>Celestedle - Administration</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="theme-celeste.css" />
     <style>
-      .admin-layout {
-        max-width: 900px;
-        margin: 40px auto;
-        padding: 0 20px;
-      }
-      .admin-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 16px;
-        margin-top: 20px;
-      }
-      .admin-card {
-        background: rgba(0, 0, 0, 0.4);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
+      .admin-container {
+        max-width: 1200px;
+        margin: 0 auto;
         padding: 20px;
+        color: var(--text-main);
       }
-      .admin-card h3 {
-        margin-top: 0;
-        margin-bottom: 12px;
-        font-size: 1.1rem;
+      .admin-actions-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        background: var(--bg-card, #1e293b);
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
       }
-      .secret-display {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: var(--color-correct, #4caf50);
-        margin: 10px 0;
-        word-break: break-all;
+      .admin-table-wrapper {
+        background: var(--bg-card, #1e293b);
+        padding: 16px;
+        border-radius: 12px;
+        overflow-x: auto;
       }
-      .details-list {
-        font-size: 0.85rem;
-        color: #cbd5e1;
-        margin-top: 10px;
-        line-height: 1.5;
+      .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
       }
-      .details-list strong {
-        color: #fff;
+      .admin-table th {
+        background-color: var(--bg-header, #0f172a);
+        padding: 12px;
+        cursor: pointer;
+        user-select: none;
+        border-bottom: 2px solid #334155;
       }
-      .toast {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        padding: 12px 24px;
-        border-radius: 6px;
-        background: #333;
-        color: #fff;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        opacity: 0;
-        transition: opacity 0.3s;
-        pointer-events: none;
-        z-index: 9999;
+      .admin-table th:hover {
+        background-color: #1e293b;
       }
-      .toast.show {
-        opacity: 1;
+      .admin-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #334155;
       }
-      .toast.success {
-        background: #2e7d32;
+      .admin-table img.word-thumb {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
       }
-      .toast.error {
-        background: #c62828;
-      }
-      .toast.info {
-        background: #0284c7;
-      }
-      .hint-preview {
-        margin-top: 10px;
-        padding: 10px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 6px;
-        font-size: 0.85rem;
-        min-height: 40px;
+      .sort-icon {
+        font-size: 0.8em;
+        margin-left: 4px;
+        opacity: 0.6;
       }
     </style>
   </head>
-  <body class="theme-celeste no-custom-cursor">
-    <!-- GATE LOGIN -->
-    <div id="admin-gate" class="rules-modal">
-      <div class="rules-content" style="max-width: 400px; text-align: center">
-        <h2>Accès administrateur</h2>
-        <form id="admin-gate-form">
-          <div class="form-group" style="text-align: left; margin-top: 16px">
-            <label for="admin-gate-password">Mot de passe :</label>
-            <input
-              type="password"
-              id="admin-gate-password"
-              class="bug-input"
-              autocomplete="current-password"
-              required
-            />
-          </div>
-          <p
-            id="admin-gate-error"
-            style="
-              color: var(--color-wrong, #f44336);
-              min-height: 20px;
-              font-size: 0.85rem;
-            "
-          ></p>
-          <button
-            type="submit"
-            class="btn-primary"
-            style="width: 100%; padding: 12px"
-          >
-            Entrer
-          </button>
-        </form>
-      </div>
-    </div>
+  <body>
+    <div class="admin-container">
+      <h1>Panel Administration Celestedle</h1>
 
-    <!-- PANEL ADMIN -->
-    <div class="admin-layout" id="admin-panel" style="display: none">
-      <h1>Panneau d'administration</h1>
-
-      <!-- Carte Principale Mot Secret -->
-      <div class="admin-card">
-        <h3>Mot secret du jour</h3>
-        <div id="secret-word-val" class="secret-display">••••••••</div>
-        <button class="admin-btn" id="btn-get-secret">
-          Révéler / Inspecter le mot
+      <!-- ACTIONS EN HAUT -->
+      <div class="admin-actions-bar">
+        <button id="admin-reveal-btn" class="btn-primary">
+          👁️ Reveal Secret Word
         </button>
-        <div
-          id="secret-details"
-          class="details-list"
-          style="display: none"
-        ></div>
+        <button id="admin-reset-seed-btn" class="btn-primary">
+          🔄 Reset Seed / Change Word
+        </button>
+        <button id="admin-random-secret-btn" class="btn-primary">
+          🎲 Random Secret Word
+        </button>
+        <button id="admin-sim-hint-btn" class="btn-primary">
+          💡 Simulate Hint
+        </button>
       </div>
 
-      <div class="admin-grid">
-        <!-- Actions Rapides -->
-        <div class="admin-card">
-          <h3>Génération automatique</h3>
-          <button
-            class="admin-btn"
-            id="btn-random-secret"
-            style="width: 100%; margin-bottom: 8px"
-          >
-            Tirer un mot aléatoire
-          </button>
-          <button
-            class="admin-btn admin-btn-danger"
-            id="btn-force-reset"
-            style="width: 100%"
-          >
-            Reset Seed du jour
-          </button>
-        </div>
+      <div id="admin-output" style="margin-bottom: 20px; font-weight: bold;"></div>
 
-        <!-- Sélection Manuelle avec auto-complétion -->
-        <div class="admin-card">
-          <h3>Forcer un mot spécifique</h3>
-          <input
-            type="text"
-            id="custom-word-input"
-            list="elements-datalist"
-            class="bug-input"
-            placeholder="Saisir un nom..."
-            style="margin-bottom: 8px"
-          />
-          <datalist id="elements-datalist"></datalist>
-          <button
-            class="admin-btn"
-            id="btn-set-custom-secret"
-            style="width: 100%"
-          >
-            Définir comme secret
-          </button>
-        </div>
-
-        <!-- Stats Rapides -->
-        <div class="admin-card">
-          <h3>Statistiques du jour</h3>
-          <p>Victoires aujourd'hui : <strong id="stat-wins">-</strong></p>
-          <p>Essais moyens : <strong id="stat-tries">-</strong></p>
-          <button
-            class="admin-btn"
-            id="btn-refresh-stats"
-            style="width: 100%; margin-top: 8px"
-          >
-            Rafraîchir les stats
-          </button>
-        </div>
-
-        <!-- Simulateur d'Indices -->
-        <div class="admin-card">
-          <h3>Testeur d'Indices</h3>
-          <select
-            id="hint-type-select"
-            class="bug-input"
-            style="margin-bottom: 8px"
-          >
-            <option value="false_friend">False Friend</option>
-            <option value="secret_info">Secret Info</option>
-            <option value="truth_and_lies">1 Truth & 2 Lies</option>
-          </select>
-          <button class="admin-btn" id="btn-test-hint" style="width: 100%">
-            Simuler l'indice
-          </button>
-          <div id="hint-preview-box" class="hint-preview">
-            Aucun indice généré.
-          </div>
-        </div>
+      <!-- TABLEAU RECAPITULATIF DES MOTS & STATS -->
+      <div class="admin-table-wrapper">
+        <h2>Base de données & Historique</h2>
+        <table class="admin-table" id="words-stats-table">
+          <thead>
+            <tr>
+              <th data-sort="image">Image</th>
+              <th data-sort="nom">Nom <span class="sort-icon">⇅</span></th>
+              <th data-sort="count">Nb Mot du jour <span class="sort-icon">⇅</span></th>
+              <th data-sort="lastDate">Dernière date <span class="sort-icon">⇅</span></th>
+              <th data-sort="avgTries">Essais moy. <span class="sort-icon">⇅</span></th>
+              <th data-sort="avgHints">Indices moy. <span class="sort-icon">⇅</span></th>
+              <th data-sort="avgTime">Temps moy. (s) <span class="sort-icon">⇅</span></th>
+            </tr>
+          </thead>
+          <tbody id="words-stats-body">
+            <!-- Rempli dynamiquement en JS -->
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <!-- Notification Toast -->
-    <div id="admin-toast" class="toast"></div>
-
-    <script type="module">
-      import { initAdminTools } from "./js/admin-tools.js";
-      import { ApiService } from "./js/api.js";
-
-      const gate = document.getElementById("admin-gate");
-      const panel = document.getElementById("admin-panel");
-      const form = document.getElementById("admin-gate-form");
-      const passwordInput = document.getElementById("admin-gate-password");
-      const errorMsg = document.getElementById("admin-gate-error");
-
-      function unlockPanel() {
-        gate.style.display = "none";
-        panel.style.display = "block";
-        initAdminTools();
-      }
-
-      document.addEventListener("DOMContentLoaded", () => {
-        ApiService.checkAdminSession().then((valid) => {
-          if (valid) unlockPanel();
-          else {
-            gate.style.display = "flex";
-            passwordInput.focus();
-          }
-        });
-      });
-
-      form.addEventListener("submit", (e) => {
-        e.preventDefault();
-        errorMsg.textContent = "";
-        const submitBtn = form.querySelector("button[type='submit']");
-        submitBtn.disabled = true;
-
-        ApiService.adminLogin(passwordInput.value)
-          .then(() => unlockPanel())
-          .catch(() => {
-            errorMsg.textContent = "Mot de passe incorrect.";
-            passwordInput.value = "";
-            passwordInput.focus();
-          })
-          .finally(() => {
-            submitBtn.disabled = false;
-          });
-      });
-    </script>
+    <script src="js/admin-tools.js" type="module"></script>
   </body>
 </html>

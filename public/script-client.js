@@ -66,7 +66,7 @@ const App = {
     "core block": "magma block",
     "space block": "moon block",
     "floaty space block": "moon block",
-    "bubble red": "red booster",
+    "bubble red": "red booster"
   },
   officialElementsList: [],
   historyLog: [],
@@ -77,6 +77,11 @@ const App = {
   usedHintTypes: [],
   nodes: {},
   entityImageMap: null,
+
+  // LOGIQUE DU CHRONOMÈTRE DE JEU
+  gameTimerInterval: null,
+  gameSecondsElapsed: 0,
+  isGameTimerRunning: false,
 
   init() {
     this.cacheDOM();
@@ -95,6 +100,9 @@ const App = {
     initTimer(this.nodes.timerContainer);
     this.checkDisclaimerNotice();
     HintsManager.renderActive();
+
+    // Restauration du chrono si une partie est déjà en cours
+    this.restoreGameTimer();
   },
 
   cacheDOM() {
@@ -124,27 +132,28 @@ const App = {
       optionsModal: document.getElementById("options-modal"),
       closeOptionsBtn: document.getElementById("close-options-btn"),
       toggleColorblindCheckbox: document.getElementById(
-        "toggle-colorblind-checkbox",
+        "toggle-colorblind-checkbox"
       ),
       toggleCursorCheckbox: document.getElementById("toggle-cursor-checkbox"),
       customCursor: document.getElementById("custom-cursor"),
+      gameTimerDisplay: document.getElementById("game-timer-display")
     };
   },
 
   bindEvents() {
     if (this.nodes.input && this.nodes.suggestionsBox) {
       this.nodes.input.addEventListener("input", (e) =>
-        SuggestionsManager.handleFilter(e),
+        SuggestionsManager.handleFilter(e)
       );
       this.nodes.input.addEventListener("keydown", (e) =>
-        SuggestionsManager.handleKeyboard(e),
+        SuggestionsManager.handleKeyboard(e)
       );
     }
     this.nodes.closeDisclaimerBtn?.addEventListener("click", () =>
-      this.closeDisclaimerNotice(),
+      this.closeDisclaimerNotice()
     );
     this.nodes.acceptDisclaimerBtn?.addEventListener("click", () =>
-      this.closeDisclaimerNotice(),
+      this.closeDisclaimerNotice()
     );
 
     document
@@ -165,7 +174,7 @@ const App = {
         bugType: document.getElementById("bug-type-select")?.value,
         description: document.getElementById("bug-description-input")?.value,
         isSpoiler:
-          document.getElementById("bug-spoiler-checkbox")?.checked || false,
+          document.getElementById("bug-spoiler-checkbox")?.checked || false
       })
         .then(() => {
           this.showToastNotification("Bug report sent!");
@@ -193,28 +202,26 @@ const App = {
 
     document
       .getElementById("hint-opt-false-friend")
-      ?.addEventListener("click", () =>
-        HintsManager.request("false_friend", this),
-      );
+      ?.addEventListener("click", () => HintsManager.request("opposite", this));
     document
       .getElementById("hint-opt-secret")
       ?.addEventListener("click", () =>
-        HintsManager.request("secret_info", this),
+        HintsManager.request("secret_info", this)
       );
     document
       .getElementById("hint-opt-truth-lies")
       ?.addEventListener("click", () =>
-        HintsManager.request("truth_and_lies", this),
+        HintsManager.request("truth_and_lies", this)
       );
 
     this.nodes.personalizedBtn?.addEventListener("click", () =>
-      ModalService.openPersonalizedModal(this),
+      ModalService.openPersonalizedModal(this)
     );
     this.nodes.form?.addEventListener("submit", (e) =>
-      this.handleFormSubmit(e),
+      this.handleFormSubmit(e)
     );
     this.nodes.rulesBtn?.addEventListener("click", () =>
-      this.renderRulesModal(),
+      this.renderRulesModal()
     );
     this.nodes.giveupBtn?.addEventListener("click", () => {
       if (this.nodes.forfeitModal)
@@ -225,10 +232,10 @@ const App = {
         this.nodes.forfeitModal.style.display = "none";
     });
     this.nodes.confirmForfeitBtn?.addEventListener("click", () =>
-      this.handleForfeit(),
+      this.handleForfeit()
     );
     this.nodes.shareBtn?.addEventListener("click", () =>
-      this.handleShareScore(),
+      this.handleShareScore()
     );
 
     this.nodes.showAllBtn?.addEventListener("click", (e) => {
@@ -239,6 +246,55 @@ const App = {
       this.nodes.input.focus();
     });
     document.addEventListener("click", (e) => this.handleOutsideClick(e));
+  },
+
+  // METHODES DU CHRONOMETRE
+  startGameTimer() {
+    if (
+      this.isGameTimerRunning ||
+      localStorage.getItem("celestedle_gameover") === "true"
+    )
+      return;
+    this.isGameTimerRunning = true;
+
+    this.gameTimerInterval = setInterval(() => {
+      this.gameSecondsElapsed++;
+      localStorage.setItem("celestedle_elapsed_time", this.gameSecondsElapsed);
+      this.updateGameTimerDisplay();
+    }, 1000);
+  },
+
+  stopGameTimer() {
+    if (this.gameTimerInterval) {
+      clearInterval(this.gameTimerInterval);
+      this.gameTimerInterval = null;
+    }
+    this.isGameTimerRunning = false;
+  },
+
+  restoreGameTimer() {
+    const savedTime = localStorage.getItem("celestedle_elapsed_time");
+    if (savedTime) {
+      this.gameSecondsElapsed = parseInt(savedTime, 10) || 0;
+      this.updateGameTimerDisplay();
+    }
+    const isGameOver = localStorage.getItem("celestedle_gameover") === "true";
+    if (this.tryCount > 0 && !isGameOver) {
+      this.startGameTimer();
+    }
+  },
+
+  updateGameTimerDisplay() {
+    if (!this.nodes.gameTimerDisplay) return;
+    const mins = Math.floor(this.gameSecondsElapsed / 60);
+    const secs = this.gameSecondsElapsed % 60;
+    this.nodes.gameTimerDisplay.textContent = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  },
+
+  getFormattedTime() {
+    const mins = Math.floor(this.gameSecondsElapsed / 60);
+    const secs = this.gameSecondsElapsed % 60;
+    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   },
 
   checkDisclaimerNotice() {
@@ -332,7 +388,7 @@ const App = {
     e.preventDefault();
     if (this.isProcessing)
       return this.showToastNotification(
-        "Server is loading, please slow down !",
+        "Server is loading, please slow down !"
       );
     this.isProcessing = true;
 
@@ -350,6 +406,9 @@ const App = {
     }
     if (!choice) return (this.isProcessing = false);
 
+    // Lancement du timer dès la première tentative
+    this.startGameTimer();
+
     ApiService.validateGuess(choice, this.tryCount + 1, this.hintUses)
       .then((data) => {
         this.isProcessing = false;
@@ -365,10 +424,11 @@ const App = {
             "history",
             "saved_hints",
             "used_hint_types",
+            "elapsed_time"
           ].forEach((k) => localStorage.removeItem(`celestedle_${k}`));
           localStorage.setItem("celestedle_version", data.secretVersion);
           this.showToastNotification(
-            "The secret word has been changed by an admin ! Your tries have been reset !",
+            "The secret word has been changed by an admin ! Your tries have been reset !"
           );
           return setTimeout(() => location.reload(), 2500);
         }
@@ -383,12 +443,12 @@ const App = {
         const guessData = {
           ...data,
           isSynonym,
-          synonymOriginal: isSynonym ? rawGuess : undefined,
+          synonymOriginal: isSynonym ? rawGuess : undefined
         };
         this.historyLog.push(guessData);
         localStorage.setItem(
           "celestedle_history",
-          JSON.stringify(this.historyLog),
+          JSON.stringify(this.historyLog)
         );
 
         TableManager.addRow(guessData, this);
@@ -399,6 +459,7 @@ const App = {
           this.nodes.suggestionsBox.style.display = "none";
 
         if (data.verdict?.isCorrect) {
+          this.stopGameTimer();
           confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
           localStorage.setItem("celestedle_gameover", "true");
           localStorage.setItem("celestedle_status", "win");
@@ -413,6 +474,7 @@ const App = {
   },
 
   handleForfeit() {
+    this.stopGameTimer();
     ApiService.forfeitGame()
       .then((data) => {
         localStorage.setItem("celestedle_gameover", "true");
@@ -422,7 +484,7 @@ const App = {
         if (data?.secretAttributes)
           localStorage.setItem(
             "celestedle_solution_attributes",
-            JSON.stringify(data.secretAttributes),
+            JSON.stringify(data.secretAttributes)
           );
         if (this.nodes.forfeitModal)
           this.nodes.forfeitModal.style.display = "none";
@@ -440,9 +502,10 @@ const App = {
   handleShareScore() {
     const isWin = localStorage.getItem("celestedle_status") !== "lose";
     const hintNamesMap = {
+      opposite: "Opposite",
       false_friend: "False Friend",
       secret_info: "Secret Info",
-      truth_and_lies: "1 Truth 2 Lies",
+      truth_and_lies: "1 Truth 2 Lies"
     };
 
     let hintsSummary = "No hints used";
@@ -453,15 +516,17 @@ const App = {
       hintsSummary = `${this.usedHintTypes.length} ${this.usedHintTypes.length > 1 ? "hints" : "hint"} used (${formatted})`;
     }
 
+    const timeSummary = `⏱️ Time: ${this.getFormattedTime()}`;
+
     let shareOutputText = isWin
-      ? `Celestedle of the day in ${this.tryCount} tries\n${hintsSummary}\n\n`
-      : `Celestedle of the day : Forfeit ❌ (${this.tryCount} tries)\n${hintsSummary}\n\n`;
+      ? `Celestedle of the day in ${this.tryCount} tries (${timeSummary})\n${hintsSummary}\n\n`
+      : `Celestedle of the day : Forfeit ❌ (${this.tryCount} tries - ${timeSummary})\n${hintsSummary}\n\n`;
 
     const scoreToEmojiMap = {
       correct: "🟩",
       partial: "🟨",
       notTotallyWrong: "🟧",
-      wrong: "🟥",
+      wrong: "🟥"
     };
 
     this.historyLog.forEach((tryData) => {
@@ -488,6 +553,7 @@ const App = {
   },
 
   renderEndGameScreen() {
+    this.stopGameTimer();
     if (this.nodes.form) this.nodes.form.style.display = "none";
     if (this.nodes.giveupBtn) this.nodes.giveupBtn.style.display = "none";
     if (this.nodes.hintBtn) this.nodes.hintBtn.style.display = "none";
@@ -495,7 +561,7 @@ const App = {
       this.nodes.shareBtn.style.setProperty(
         "display",
         "inline-flex",
-        "important",
+        "important"
       );
 
     const isWin = localStorage.getItem("celestedle_status") !== "lose";
@@ -513,7 +579,7 @@ const App = {
     const formattedSolution =
       solution.charAt(0).toUpperCase() + solution.slice(1);
     const rawAttributes = localStorage.getItem(
-      "celestedle_solution_attributes",
+      "celestedle_solution_attributes"
     );
 
     let attributeSummary = "";
@@ -529,9 +595,11 @@ const App = {
       } catch (e) {}
     }
 
+    const finalTime = this.getFormattedTime();
+
     const matchSummary = isWin
-      ? `You found the secret element in <strong>${this.tryCount}</strong> tries. I used <strong>${this.hintUses}</strong> hints.`
-      : `You didn't find today's celestedle ! The answer was : <strong>${formattedSolution}</strong>. I used <strong>${this.hintUses}</strong> hints.${attributeSummary}`;
+      ? `You found the secret element in <strong>${this.tryCount}</strong> tries and <strong>${finalTime}</strong>. Used <strong>${this.hintUses}</strong> hints.`
+      : `You didn't find today's celestedle ! The answer was : <strong>${formattedSolution}</strong> (Time: <strong>${finalTime}</strong>). Used <strong>${this.hintUses}</strong> hints.${attributeSummary}`;
 
     messageContainer.innerHTML = `<h2>${isWin ? "GG ! Victory ! 🎉" : "Nice try... Aba(n)ddon ! ❌"}</h2><div>${matchSummary}</div>`;
 
@@ -539,7 +607,7 @@ const App = {
       TableManager.insertSolutionRow(
         formattedSolution,
         parsedSolutionAttrs,
-        this,
+        this
       );
       TableManager.resolveEntityImage(solution, this).then((imgPath) => {
         if (!imgPath) return;
@@ -571,5 +639,5 @@ const App = {
 
   resolveEntityImage(name) {
     return TableManager.resolveEntityImage(name, this);
-  },
+  }
 };

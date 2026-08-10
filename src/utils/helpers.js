@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { createDailyStatsStore } = require("./daily-stats");
+const { createDailyStatsStore } = require("./stats-store");
 
 const database = JSON.parse(
   fs.readFileSync(path.join(__dirname, "../../db.json"), "utf8")
@@ -24,10 +24,26 @@ if (process.env.RANDOM_SEED) {
   }
 }
 
+// Variables pour suivre la rotation quotidienne et archiver
+let lastDateString = null;
+let lastSecretName = null;
+
 function getSecretOfTheDay() {
   const dateString = new Date().toLocaleDateString("sv-SE", {
     timeZone: "Europe/Paris"
   });
+
+  // 📦 Détection du changement de jour (Minuit)
+  if (lastDateString && lastDateString !== dateString) {
+    if (lastSecretName) {
+      dailyStatsStore.archiveCurrentStats(lastSecretName);
+      console.log(
+        `[AUTO-ARCHIVE] Stats for "${lastSecretName}" archived for date ${lastDateString}`
+      );
+    }
+    // Mise à jour de la version pour forcer les clients à recharger
+    secretVersion = Date.now().toString();
+  }
 
   let dateHash = 0;
   for (let i = 0; i < dateString.length; i++) {
@@ -37,7 +53,13 @@ function getSecretOfTheDay() {
   const combined = (dateHash ^ globalSeedHash) >>> 0;
   const targetedIndex = combined % officialElementsList.length;
 
-  return officialElementsList[targetedIndex];
+  const currentSecret = officialElementsList[targetedIndex];
+
+  // Mise à jour du dernier mot et de la dernière date
+  lastDateString = dateString;
+  lastSecretName = currentSecret;
+
+  return currentSecret;
 }
 
 // Log placé APRÈS l'initialisation de globalSeedHash
@@ -76,6 +98,15 @@ function normalizeMetaList(data) {
 }
 
 function updateSeedHash(newHash) {
+  // Archive le mot actuel avant d'appliquer un nouveau hash manuel (ex: admin reset)
+  const currentSecret = getSecretOfTheDay();
+  if (currentSecret) {
+    dailyStatsStore.archiveCurrentStats(currentSecret);
+    console.log(
+      `[MANUAL-RESET-ARCHIVE] Stats for "${currentSecret}" archived.`
+    );
+  }
+
   globalSeedHash = newHash;
   secretVersion = Date.now().toString();
 }
@@ -84,8 +115,13 @@ function getSecretVersion() {
   return secretVersion;
 }
 
-function registerDailySuccess(secretName, playerId) {
-  return dailyStatsStore.registerSuccess(secretName, playerId);
+function registerDailySuccess(secretName, tryCount, hintUses, timeInSeconds) {
+  return dailyStatsStore.registerSuccess(
+    secretName,
+    tryCount,
+    hintUses,
+    timeInSeconds
+  );
 }
 
 function getDailyStats() {
@@ -93,9 +129,14 @@ function getDailyStats() {
   return dailyStatsStore.getStats(secretName);
 }
 
-function recordDailySuccess(tryCount, hintUses) {
+function recordDailySuccess(tryCount, hintUses, timeInSeconds) {
   const secretName = getSecretOfTheDay();
-  return dailyStatsStore.registerSuccess(secretName, tryCount, hintUses);
+  return dailyStatsStore.registerSuccess(
+    secretName,
+    tryCount,
+    hintUses,
+    timeInSeconds
+  );
 }
 
 function getSeededRandom(offset = 0) {
