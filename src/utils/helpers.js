@@ -8,7 +8,7 @@ const database = JSON.parse(
 const officialElementsList = Object.keys(database).sort();
 
 let secretForce = null;
-let secretVersion = Date.now().toString(); // Version dynamique à chaque reboot
+let secretVersion = "1.2.1";
 const dailyStatsStore = createDailyStatsStore();
 
 let globalSeedHash = 0;
