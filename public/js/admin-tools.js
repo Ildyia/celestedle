@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "./api.js";
+import { TableManager } from "./table.js";
 
 let wordsData = [];
 let currentSortKey = "nom";
@@ -8,7 +9,6 @@ export function initAdminTools() {
   setupLoginHandler();
   bindAdminActions();
 
-  // On affiche le dashboard uniquement si un token est présent
   if (localStorage.getItem("celestedle_admin_token")) {
     showDashboard(true);
     loadAdminDashboardData();
@@ -17,7 +17,6 @@ export function initAdminTools() {
   }
 }
 
-// Fonction utilitaire pour basculer l'affichage du Dashboard
 function showDashboard(isLoggedIn) {
   const loginBlock = document.getElementById("admin-login-block");
   const dashboardContent = document.getElementById("admin-dashboard-content");
@@ -36,7 +35,6 @@ function setupLoginHandler() {
   const passwordInput = document.getElementById("admin-password-input");
   const errorMsg = document.getElementById("admin-login-error");
 
-  // Possibilité de valider avec la touche Entrée
   passwordInput?.addEventListener("keypress", (e) => {
     if (e.key === "Enter") loginBtn?.click();
   });
@@ -55,7 +53,6 @@ function setupLoginHandler() {
         const data = await res.json();
 
         if (res.ok && data.token) {
-          // Stocke le token et bascule l'affichage
           localStorage.setItem("celestedle_admin_token", data.token);
           if (errorMsg) errorMsg.style.display = "none";
 
@@ -80,7 +77,6 @@ function setupLoginHandler() {
 function bindAdminActions() {
   const output = document.getElementById("admin-output");
 
-  // Helper pour les requêtes POST d'admin
   const sendAdminPost = async (endpoint) => {
     const token = localStorage.getItem("celestedle_admin_token") || "";
 
@@ -102,7 +98,6 @@ function bindAdminActions() {
     return res.json();
   };
 
-  // 1. Révéler le secret actuel
   document.getElementById("admin-reveal-btn")?.addEventListener("click", () => {
     sendAdminPost("/admin/get-secret")
       .then((data) => {
@@ -114,7 +109,6 @@ function bindAdminActions() {
       });
   });
 
-  // 2. Réinitialiser le mot (Seed Reset)
   document
     .getElementById("admin-reset-seed-btn")
     ?.addEventListener("click", () => {
@@ -130,7 +124,6 @@ function bindAdminActions() {
         });
     });
 
-  // 3. Définir un secret aléatoire
   document
     .getElementById("admin-random-secret-btn")
     ?.addEventListener("click", () => {
@@ -146,7 +139,6 @@ function bindAdminActions() {
         });
     });
 
-  // 4. Tri au clic sur les entêtes du tableau
   document
     .querySelectorAll("#words-stats-table th[data-sort]")
     .forEach((th) => {
@@ -182,7 +174,6 @@ async function loadAdminDashboardData() {
       return res.json();
     };
 
-    // Chargement parallèle des détails et de l'historique
     const [elementsRes, historyRes] = await Promise.all([
       fetchJson("/admin/all-elements-details").catch((err) => {
         console.warn("Impossible de charger les détails des éléments :", err);
@@ -194,15 +185,17 @@ async function loadAdminDashboardData() {
       })
     ]);
 
-    // Fallback si la route /all-elements-details est vide
     let elementsList = elementsRes;
     if (!elementsList || elementsList.length === 0) {
       elementsList = await fetchJson("/game/elements").catch(() => []);
     }
 
-    // Construction du tableau de données compilées
     wordsData = elementsList.map((item) => {
       const name = typeof item === "string" ? item : item.nom;
+
+      const imagePath = TableManager.resolveEntityImage
+        ? TableManager.resolveEntityImage(name)
+        : `assets/illustration/${name.toLowerCase().replace(/\s+/g, "_")}.png`;
 
       const appearances = (historyRes || []).filter(
         (h) => h.secretWord && h.secretWord.toLowerCase() === name.toLowerCase()
@@ -243,8 +236,7 @@ async function loadAdminDashboardData() {
 
       return {
         nom: name,
-        image:
-          item.image || `assets/illustrations/${name.replace(/\s+/g, "_")}.png`,
+        image: imagePath,
         count,
         lastDate,
         avgTries,
