@@ -1,4 +1,5 @@
 const hostname = window.location.hostname;
+
 const API_BASE_URL =
   hostname === "localhost" ||
   hostname === "127.0.0.1" ||
@@ -12,45 +13,59 @@ export const ApiService = {
   fetchSecretVersion() {
     return fetch(`${API_BASE_URL}/secret-version`).then((res) => res.json());
   },
+
   adminLogin(password) {
     return fetch(`${API_BASE_URL}/admin/login`, {
       method: "POST",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password })
-    }).then((res) => {
-      if (!res.ok) throw new Error("Incorrect credentials");
-      return res.json();
-    });
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Incorrect credentials");
+        return res.json();
+      })
+      .then((data) => {
+        if (data.token) {
+          sessionStorage.setItem("admin_token", data.token);
+        }
+        return data;
+      });
   },
 
   checkAdminSession() {
+    const token = sessionStorage.getItem("admin_token");
+    if (!token) return Promise.resolve(false);
+
     return fetch(`${API_BASE_URL}/admin/session`, {
-      credentials: "include"
+      headers: { Authorization: `Bearer ${token}` }
     }).then((res) => res.ok);
   },
 
   getSecretWordAdmin() {
-    return fetch(`${API_BASE_URL}/getSecretWord`, {
+    const token = sessionStorage.getItem("admin_token");
+    return fetch(`${API_BASE_URL}/admin/get-secret`, {
       method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" }
+      headers: { Authorization: `Bearer ${token}` }
     }).then((res) => res.json());
   },
 
   triggerRandomSecret(newHash) {
+    const token = sessionStorage.getItem("admin_token");
     return fetch(`${API_BASE_URL}/admin/random-hash`, {
       method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
       body: JSON.stringify({ newHash })
     }).then((res) => res.json());
   },
 
   triggerAdminReset() {
+    const token = sessionStorage.getItem("admin_token");
     return fetch(`${API_BASE_URL}/admin/trigger-reset`, {
       method: "POST",
-      credentials: "include"
+      headers: { Authorization: `Bearer ${token}` }
     }).then((res) => {
       if (!res.ok) throw new Error("Access denied or server error");
       return res.json();
@@ -96,43 +111,6 @@ export const ApiService = {
       headers: { "Content-Type": "application/json" }
     }).then((res) => {
       if (!res.ok) throw new Error("Server error during forfeit");
-      return res.json();
-    });
-  },
-
-  verifyAdminKey(password) {
-    return fetch(`${API_BASE_URL}/admin/verify-key`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key: password })
-    }).then((res) => {
-      if (!res.ok) throw new Error("Incorrect credentials");
-      return res.json();
-    });
-  },
-
-  getSecretWordAdmin() {
-    return fetch(`${API_BASE_URL}/getSecretWord`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" }
-    }).then((res) => res.json());
-  },
-
-  triggerRandomSecret(password, newHash) {
-    return fetch(`${API_BASE_URL}/admin/random-hash`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key: password, newHash: newHash })
-    }).then((res) => res.json());
-  },
-
-  triggerAdminReset(password) {
-    return fetch(`${API_BASE_URL}/admin/trigger-reset`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key: password })
-    }).then((res) => {
-      if (!res.ok) throw new Error("Access denied or server error");
       return res.json();
     });
   },
