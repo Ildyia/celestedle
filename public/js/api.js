@@ -83,17 +83,16 @@ export const ApiService = {
     });
   },
 
-  fetchHint(type) {
+  fetchHint(payload) {
     return fetch(`${API_BASE_URL}/hint`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type })
+      body: JSON.stringify(payload)
     }).then((res) => {
       if (!res.ok) throw new Error("Failed to fetch hint");
       return res.json();
     });
   },
-
   validateGuess(choice, tryCount, hintUses) {
     return fetch(`${API_BASE_URL}/validate`, {
       method: "POST",
