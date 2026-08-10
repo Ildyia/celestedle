@@ -8,13 +8,13 @@
     <link rel="stylesheet" href="./theme-celeste.css" />
     <style>
       .admin-layout {
-        max-width: 800px;
+        max-width: 900px;
         margin: 40px auto;
         padding: 0 20px;
       }
       .admin-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         gap: 16px;
         margin-top: 20px;
       }
@@ -36,6 +36,15 @@
         margin: 10px 0;
         word-break: break-all;
       }
+      .details-list {
+        font-size: 0.85rem;
+        color: #cbd5e1;
+        margin-top: 10px;
+        line-height: 1.5;
+      }
+      .details-list strong {
+        color: #fff;
+      }
       .toast {
         position: fixed;
         bottom: 20px;
@@ -48,6 +57,7 @@
         opacity: 0;
         transition: opacity 0.3s;
         pointer-events: none;
+        z-index: 9999;
       }
       .toast.show {
         opacity: 1;
@@ -57,6 +67,17 @@
       }
       .toast.error {
         background: #c62828;
+      }
+      .toast.info {
+        background: #0284c7;
+      }
+      .hint-preview {
+        margin-top: 10px;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 6px;
+        font-size: 0.85rem;
+        min-height: 40px;
       }
     </style>
   </head>
@@ -99,36 +120,24 @@
     <div class="admin-layout" id="admin-panel" style="display: none">
       <h1>Panneau d'administration</h1>
 
-      <!-- Mot Secret Actuel -->
+      <!-- Carte Principale Mot Secret -->
       <div class="admin-card">
         <h3>Mot secret du jour</h3>
         <div id="secret-word-val" class="secret-display">••••••••</div>
-        <button class="admin-btn" id="btn-get-secret">Révéler le mot</button>
+        <button class="admin-btn" id="btn-get-secret">
+          Révéler / Inspecter le mot
+        </button>
+        <div
+          id="secret-details"
+          class="details-list"
+          style="display: none"
+        ></div>
       </div>
 
       <div class="admin-grid">
         <!-- Actions Rapides -->
-
-        <!-- Sélection manuelle -->
         <div class="admin-card">
-          <h3>Forcer un mot spécifique</h3>
-          <input
-            type="text"
-            id="custom-word-input"
-            class="bug-input"
-            placeholder="ex: badeline, strawberry..."
-            style="margin-bottom: 8px"
-          />
-          <button
-            class="admin-btn"
-            id="btn-set-custom-secret"
-            style="width: 100%"
-          >
-            Définir comme mot du jour
-          </button>
-        </div>
-        <div class="admin-card">
-          <h3>Gestion du mot</h3>
+          <h3>Génération automatique</h3>
           <button
             class="admin-btn"
             id="btn-random-secret"
@@ -145,14 +154,59 @@
           </button>
         </div>
 
+        <!-- Sélection Manuelle avec auto-complétion -->
+        <div class="admin-card">
+          <h3>Forcer un mot spécifique</h3>
+          <input
+            type="text"
+            id="custom-word-input"
+            list="elements-datalist"
+            class="bug-input"
+            placeholder="Saisir un nom..."
+            style="margin-bottom: 8px"
+          />
+          <datalist id="elements-datalist"></datalist>
+          <button
+            class="admin-btn"
+            id="btn-set-custom-secret"
+            style="width: 100%"
+          >
+            Définir comme secret
+          </button>
+        </div>
+
         <!-- Stats Rapides -->
         <div class="admin-card">
           <h3>Statistiques du jour</h3>
           <p>Victoires aujourd'hui : <strong id="stat-wins">-</strong></p>
           <p>Essais moyens : <strong id="stat-tries">-</strong></p>
-          <button class="admin-btn" id="btn-refresh-stats" style="width: 100%">
+          <button
+            class="admin-btn"
+            id="btn-refresh-stats"
+            style="width: 100%; margin-top: 8px"
+          >
             Rafraîchir les stats
           </button>
+        </div>
+
+        <!-- Simulateur d'Indices -->
+        <div class="admin-card">
+          <h3>Testeur d'Indices</h3>
+          <select
+            id="hint-type-select"
+            class="bug-input"
+            style="margin-bottom: 8px"
+          >
+            <option value="false_friend">False Friend</option>
+            <option value="secret_info">Secret Info</option>
+            <option value="truth_and_lies">1 Truth & 2 Lies</option>
+          </select>
+          <button class="admin-btn" id="btn-test-hint" style="width: 100%">
+            Simuler l'indice
+          </button>
+          <div id="hint-preview-box" class="hint-preview">
+            Aucun indice généré.
+          </div>
         </div>
       </div>
     </div>
