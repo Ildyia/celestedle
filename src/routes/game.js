@@ -194,72 +194,94 @@ router.post("/hint", (req, res) => {
     const elements = getElementsList() || [];
 
     if (type === "opposite") {
-      const getNorm = (attr) => {
-        if (Array.isArray(attr)) return attr.map((v) => v.trim().toLowerCase());
-        if (typeof attr === "string")
-          return attr.split(",").map((v) => v.trim().toLowerCase());
-        return [];
-      };
+      const secret = getSecretElement();
+      const elements = getElementsList() || [];
 
-      const secretAttrs = {
-        type: getNorm(secret.type),
-        lieu: getNorm(secret.lieu),
-        couleur: getNorm(secret.couleur),
-        hitbox: getNorm(secret.hitbox)
-      };
+      const getRawArr = (attr) =>
+        Array.isArray(attr)
+          ? attr.map((v) => v.trim().toLowerCase())
+          : [attr.trim().toLowerCase()];
 
-      // 1. Filtrer les éléments qui n'ont AUCUN attribut identique
-      const validCandidates = elements.filter((el) => {
-        if (!el.nom || el.nom.toLowerCase() === secret.nom.toLowerCase())
-          return false;
+      const secretType = getRawArr(secret.type);
+      const secretLieu = getRawArr(secret.lieu);
+      const secretCouleur = getRawArr(secret.couleur);
+      const secretHitbox = getRawArr(secret.hitbox);
 
-        const checkExact = (g, s) =>
-          g.length === s.length && g.every((v) => s.includes(v));
+      // 1. On évalue chaque élément selon son nombre de catégories totallement différentes (max 4)
+      const scoredCandidates = elements
+        .filter(
+          (el) => el.nom && el.nom.toLowerCase() !== secret.nom.toLowerCase()
+        )
+        .map((el) => {
+          let diffCount = 0;
+          const elType = getRawArr(el.type);
+          const elLieu = getRawArr(el.lieu);
+          const elCouleur = getRawArr(el.couleur);
+          const elHitbox = getRawArr(el.hitbox);
 
-        const hasTypeMatch = checkExact(getNorm(el.type), secretAttrs.type);
-        const hasLieuMatch = checkExact(getNorm(el.lieu), secretAttrs.lieu);
-        const hasCouleurMatch = checkExact(
-          getNorm(el.couleur),
-          secretAttrs.couleur
-        );
-        const hasHitboxMatch = checkExact(
-          getNorm(el.hitbox),
-          secretAttrs.hitbox
-        );
+          if (!elType.some((t) => secretType.includes(t))) diffCount++;
+          if (!elLieu.some((l) => secretLieu.includes(l))) diffCount++;
+          if (!elCouleur.some((c) => secretCouleur.includes(c))) diffCount++;
+          if (!elHitbox.some((h) => secretHitbox.includes(h))) diffCount++;
 
-        return !(
-          hasTypeMatch ||
-          hasLieuMatch ||
-          hasCouleurMatch ||
-          hasHitboxMatch
-        );
-      });
-
-      // 2. Scorer selon le nombre d'attributs partiellement communs
-      const scoredCandidates = validCandidates.map((el) => {
-        let score = 0;
-        ["type", "lieu", "couleur", "hitbox"].forEach((attr) => {
-          const g = getNorm(el[attr]);
-          const s = secretAttrs[attr];
-          if (g.some((v) => s.includes(v))) score++;
+          return { el, diffCount };
         });
-        return { el, score };
-      });
 
-      // 3. Récupérer le score maximal
-      const maxScore = Math.max(...scoredCandidates.map((c) => c.score), 0);
-      const bestCandidates = scoredCandidates
-        .filter((c) => c.score === maxScore)
-        .map((c) => c.el);
+      // 2. On trie du plus différent au moins différent (on veut le max de différences, ex: 4)
+      scoredCandidates.sort((a, b) => b.diffCount - a.diffCount);
 
-      // 4. Sélectionner parmi les meilleurs faux amis
-      const index = getSeededRandom(1) % (bestCandidates.length || 1);
-      const falseFriend = bestCandidates[index];
+      let opposite = null;
+      let differentCategories = [];
+
+      if (scoredCandidates.length > 0) {
+        const maxDiff = scoredCandidates[0].diffCount;
+        const bestCandidates = scoredCandidates.filter(
+          (c) => c.diffCount === maxDiff
+        );
+
+        const index = getSeededRandom(1) % bestCandidates.length;
+        opposite = bestCandidates[index].el;
+
+        // 3. On détecte lesquelles sont différentes pour le texte
+        const opType = getRawArr(opposite.type);
+        const opLieu = getRawArr(opposite.lieu);
+        const opCouleur = getRawArr(opposite.couleur);
+        const opHitbox = getRawArr(opposite.hitbox);
+
+        if (!opType.some((t) => secretType.includes(t)))
+          differentCategories.push("Type");
+        if (!opLieu.some((l) => secretLieu.includes(l)))
+          differentCategories.push("Location");
+        if (!opCouleur.some((c) => secretCouleur.includes(c)))
+          differentCategories.push("Colour");
+        if (!opHitbox.some((h) => secretHitbox.includes(h)))
+          differentCategories.push("Hitbox");
+      }
+
+      let categoriesText = "its attributes";
+      if (differentCategories.length === 4) {
+        categoriesText = "is a perfect opposite !";
+      } else if (differentCategories.length > 0) {
+        if (differentCategories.length === 1) {
+          categoriesText = `is opposite to the word on ${differentCategories[0]}`;
+        } else {
+          const last = differentCategories.pop();
+          categoriesText = `is opposite to the word on ${differentCategories.join(", ")} and ${last}`;
+        }
+      } else {
+        categoriesText = "shares some attributes";
+      }
 
       return res.json({
-        text: `<strong>False Friend:</strong> <em>${
-          falseFriend ? falseFriend.nom : "Unknown"
-        }</em> shares partial characteristics with the secret, but NONE of its attributes are fully correct.`
+        text: `<strong>Opposite:</strong> <em>${
+          opposite ? opposite.nom : "Unknown"
+        }</em> ${categoriesText}.`
+      });
+
+      return res.json({
+        text: `<strong>Opposite:</strong> <em>${
+          opposite ? opposite.nom : "Unknown"
+        }</em> is opposite to the word on ${categoriesText}.`
       });
     }
 

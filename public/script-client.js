@@ -466,7 +466,6 @@ const App = {
     const isWin = localStorage.getItem("celestedle_status") !== "lose";
     const hintNamesMap = {
       opposite: "Opposite",
-      false_friend: "False Friend",
       secret_info: "Secret Info",
       truth_and_lies: "1 Truth 2 Lies"
     };
