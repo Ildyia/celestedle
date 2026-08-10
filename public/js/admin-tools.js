@@ -71,5 +71,21 @@ export function initAdminTools() {
     showToast("Statistiques mises à jour", "info");
   });
 
+  const btnSetCustom = document.getElementById("btn-set-custom-secret");
+  const customInput = document.getElementById("custom-word-input");
+
+  btnSetCustom?.addEventListener("click", () => {
+    const val = customInput.value.trim();
+    if (!val) return showToast("Saisis un nom d'élément", "error");
+
+    ApiService.setSecretWordAdmin(val)
+      .then((data) => {
+        if (secretDisplay) secretDisplay.textContent = data.secret;
+        showToast(`Mot défini sur : ${data.secret}`, "success");
+        customInput.value = "";
+      })
+      .catch((err) => showToast(err.message, "error"));
+  });
+
   loadStats();
 }

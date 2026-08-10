@@ -60,7 +60,7 @@
       }
     </style>
   </head>
-  <body class="theme-celeste">
+  <body class="theme-celeste no-custom-cursor">
     <!-- GATE LOGIN -->
     <div id="admin-gate" class="rules-modal">
       <div class="rules-content" style="max-width: 400px; text-align: center">
@@ -108,6 +108,25 @@
 
       <div class="admin-grid">
         <!-- Actions Rapides -->
+
+        <!-- Sélection manuelle -->
+        <div class="admin-card">
+          <h3>Forcer un mot spécifique</h3>
+          <input
+            type="text"
+            id="custom-word-input"
+            class="bug-input"
+            placeholder="ex: badeline, strawberry..."
+            style="margin-bottom: 8px"
+          />
+          <button
+            class="admin-btn"
+            id="btn-set-custom-secret"
+            style="width: 100%"
+          >
+            Définir comme mot du jour
+          </button>
+        </div>
         <div class="admin-card">
           <h3>Gestion du mot</h3>
           <button

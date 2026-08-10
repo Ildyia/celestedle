@@ -55,4 +55,33 @@ router.post("/get-secret", verifyAdminToken, (req, res) => {
   res.json({ secretElement: secret.nom, details: secret });
 });
 
+// 1. Définir un mot secret spécifique
+router.post("/set-secret", verifyAdminToken, (req, res) => {
+  const { elementName } = req.body || {};
+  const elements = getElementsList() || [];
+
+  const found = elements.find(
+    (el) => el.nom && el.nom.toLowerCase() === (elementName || "").toLowerCase()
+  );
+
+  if (!found) {
+    return res.status(404).json({ error: "Élément introuvable" });
+  }
+
+  // Si tu as une fonction pour forcer l'index ou l'élément
+  // updateSeedElement(found);
+
+  res.json({
+    message: `Mot secret défini sur : ${found.nom}`,
+    secret: found.nom,
+    details: found
+  });
+});
+
+// 2. Liste complète des éléments pour l'auto-complétion admin
+router.get("/elements-list", verifyAdminToken, (req, res) => {
+  const elements = getElementsList() || [];
+  res.json(elements);
+});
+
 module.exports = router;

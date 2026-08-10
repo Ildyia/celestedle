@@ -124,5 +124,27 @@ export const ApiService = {
       if (!res.ok) throw new Error("Erreur réseau");
       return res.json();
     });
+  },
+
+  setSecretWordAdmin(elementName) {
+    const token = sessionStorage.getItem("admin_token");
+    return fetch(`${API_BASE_URL}/admin/set-secret`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ elementName })
+    }).then((res) => {
+      if (!res.ok) throw new Error("Élément introuvable ou erreur");
+      return res.json();
+    });
+  },
+
+  fetchAdminElementsList() {
+    const token = sessionStorage.getItem("admin_token");
+    return fetch(`${API_BASE_URL}/admin/elements-list`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then((res) => res.json());
   }
 };
