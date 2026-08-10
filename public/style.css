@@ -1,5 +1,5 @@
 /* ==========================================================================
-   1. VARIABLES & POLICES
+   1. VARIABLES & FONTS
    ========================================================================== */
 @font-face {
   font-family: "Renogare";
@@ -27,7 +27,7 @@
 }
 
 /* ==========================================================================
-   2. CONFIGURATION GENERALE
+   2. GENERAL CONFIGURATION & CURSORS
    ========================================================================== */
 *,
 *::before,
@@ -113,7 +113,7 @@ th,
 }
 
 /* ==========================================================================
-   3. STRUCTURE ET GRILLE PRINCIPALE
+   3. LAYOUT & MAIN GRID
    ========================================================================== */
 #layout-wrapper {
   display: grid;
@@ -208,7 +208,7 @@ th,
 }
 
 /* ==========================================================================
-   4. FOOTER & PAGES LEGALES
+   4. FOOTER & LEGAL PAGES
    ========================================================================== */
 #site-footer {
   width: 100%;
@@ -269,7 +269,7 @@ th,
 }
 
 /* ==========================================================================
-   5. STYLES DES BOÎTES LATÉRALES & STATISTIQUES
+   5. SIDEBAR BLOCKS & COMMUNITY STATS
    ========================================================================== */
 .sidebar-block {
   background-color: var(--bg-card);
@@ -282,8 +282,33 @@ th,
   flex-direction: column;
 }
 
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #1e293b;
+  padding-bottom: 6px;
+}
+
+.sidebar-header h3 {
+  margin: 0 !important;
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+  line-height: 1;
+}
+
+.sidebar-header-icon {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  flex-shrink: 0;
+  margin-top: -6px;
+  margin-bottom: -6px;
+}
+
 .sidebar-block h2,
-.sidebar-block h3 {
+.sidebar-block h3:not(.sidebar-header h3) {
   margin-bottom: 12px;
   font-size: 1.2rem;
   border-bottom: 1px solid #1e293b;
@@ -338,7 +363,7 @@ th,
 }
 
 /* ==========================================================================
-   6. BLOC & BOUTON BUG REPORT
+   6. BUG REPORT BLOCK & BUTTON
    ========================================================================== */
 .bug-card {
   background-color: var(--bg-card);
@@ -373,13 +398,14 @@ th,
   color: #fca5a5;
   font-family: "Renogare", sans-serif;
   font-size: 0.95rem;
-  padding: 12px 16px;
+  padding: 10px 16px;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.25s ease;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
 }
 
@@ -394,8 +420,15 @@ th,
   transform: translateY(0);
 }
 
+#reporticon {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 /* ==========================================================================
-   7. BOUTONS DU JEU ET ETAT (GAME BAR UNIFORMISÉE)
+   7. GAME CONTROLS & STATUS BAR
    ========================================================================== */
 #game-status {
   width: 100%;
@@ -469,6 +502,7 @@ th,
   color: #ffffff;
   box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
 }
+
 .btn-icon {
   height: 40px;
   width: auto;
@@ -535,6 +569,9 @@ th,
   color: #ffffff;
 }
 
+/* ==========================================================================
+   7b. SOCIAL LINKS (DISCORD, GITHUB, KO-FI)
+   ========================================================================== */
 .social-sidebar-link {
   margin-top: 16px;
   display: inline-flex;
@@ -580,8 +617,27 @@ th,
   box-shadow: 0 6px 16px rgba(47, 54, 63, 0.5);
 }
 
+.kofi-sidebar-link {
+  background-color: rgba(255, 94, 91, 0.15);
+  border: 1px solid rgba(255, 94, 91, 0.35);
+  color: #ff8583 !important;
+  box-shadow: 0 4px 12px rgba(255, 94, 91, 0.15);
+}
+
+.kofi-sidebar-link:hover {
+  background-color: rgba(255, 94, 91, 0.3);
+  border-color: rgba(255, 94, 91, 0.6);
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 94, 91, 0.35);
+}
+
+.kofi-sidebar-link:active {
+  transform: translateY(0);
+}
+
 /* ==========================================================================
-   8. FORMULAIRE DE JEU & SUGGESTIONS
+   8. GAME FORM & SUGGESTIONS
    ========================================================================== */
 #guess-form {
   display: flex;
@@ -765,7 +821,7 @@ th,
 }
 
 /* ==========================================================================
-   9. TABLEAU DES TENTATIVES
+   9. GUESSES TABLE
    ========================================================================== */
 #guesses-table {
   width: 100%;
@@ -833,7 +889,7 @@ th,
 }
 
 /* ==========================================================================
-   10. MODALS, TOASTS & INTERFACE REPORT
+   10. MODALS, TOASTS & INTERFACE
    ========================================================================== */
 @keyframes popIn {
   0% {
@@ -1067,7 +1123,7 @@ th,
 }
 
 /* ==========================================================================
-   11. MODAL DES SYNONYMES PERSONNALISÉS
+   11. CUSTOM SYNONYMS MODAL
    ========================================================================== */
 .personalized-synonyms-modal {
   position: fixed;
@@ -1218,7 +1274,7 @@ th,
 }
 
 /* ==========================================================================
-   12. RESPONSIVE TABLETTE & MOBILE
+   12. TABLET & MOBILE RESPONSIVE
    ========================================================================== */
 @media (max-width: 1200px) {
   body {
@@ -1251,19 +1307,32 @@ th,
   }
 
   #game-status {
-    flex-direction: column;
-    gap: 12px;
+    flex-direction: row !important;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    gap: 6px;
   }
 
   #game-status p {
     text-align: center;
-    width: 100%;
   }
 
-  #game-status button,
-  .status-link-btn {
-    width: 100%;
-    margin: 0;
+  #game-status button {
+    flex: 1;
+    min-width: 0;
+    padding: 0 8px;
+  }
+
+  #hint-btn-text,
+  #personalized-btn span,
+  #giveup-btn span {
+    display: none;
+  }
+
+  .tries-badge {
+    padding: 0 8px;
+    font-size: 0.8rem;
   }
 
   .suggestions-box {
@@ -1298,39 +1367,8 @@ th,
   }
 }
 
-@media (max-width: 1200px) {
-  /* Aligner la barre d'outils sur une ligne horizontale compacte */
-  #game-status {
-    flex-direction: row !important;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 12px;
-    gap: 6px;
-  }
-
-  /* Réduire la taille des boutons et centrer leur contenu */
-  #game-status button {
-    flex: 1;
-    min-width: 0;
-    padding: 0 8px;
-  }
-
-  /* Masquer le texte secondaire des boutons pour ne garder que l'essentiel */
-  #hint-btn-text,
-  #personalized-btn span,
-  #giveup-btn span {
-    display: none;
-  }
-
-  /* Compacter le badge d'essais */
-  .tries-badge {
-    padding: 0 8px;
-    font-size: 0.8rem;
-  }
-}
-
 /* ==========================================================================
-   13. CARTES D'INDICES (HINTS)
+   13. HINT CARDS
    ========================================================================== */
 #active-hints-container {
   display: flex !important;
@@ -1390,7 +1428,7 @@ th,
 }
 
 /* ==========================================================================
-   14. BANNIÈRE DISCLAIMER
+   14. DISCLAIMER BANNER
    ========================================================================== */
 #disclaimer-banner {
   width: 100%;
@@ -1422,7 +1460,7 @@ th,
 }
 
 /* ==========================================================================
-   15. INDICATEURS DE REGLES & COLORBLIND
+   15. RULES INDICATORS & COLORBLIND MODE
    ========================================================================== */
 .rules-color-list {
   list-style: none !important;
@@ -1521,7 +1559,7 @@ body.colorblind #guesses-table td.wrong::after {
 }
 
 /* ==========================================================================
-   16. SWITCHES ET CHECKBOXES MODERNES (THEME CLASSIQUE)
+   16. MODERN SWITCHES & CHECKBOXES
    ========================================================================== */
 .switch {
   position: relative;
@@ -1612,4 +1650,24 @@ input[type="checkbox"]:not(.switch input):checked::after {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+
+/* ==========================================================================
+   17. OPTIONS MODAL & PREVIEW
+   ========================================================================== */
+.option-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  color: var(--text-main);
+  font-size: 0.95rem;
+}
+
+.colorblind-preview .preview-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
