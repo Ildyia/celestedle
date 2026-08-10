@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const path = require("path");
 const {
   updateSeedHash,
   getSecretOfTheDay,
@@ -92,6 +94,17 @@ router.get("/elements-list", verifyAdminToken, (req, res) => {
   res.json(elements);
 });
 
+// Route publique/admin pour charger les détails de tous les éléments pour le tableau
+router.get("/all-elements-details", (req, res) => {
+  try {
+    const elements = getElementsList() || [];
+    res.json(elements);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Route publique/admin pour lire l'historique des statistiques
 router.get("/stats-history", (req, res) => {
   try {
     const historyPath = path.join(__dirname, "../../stats-history.json");
