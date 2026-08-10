@@ -7,19 +7,39 @@ let currentSortOrder = "asc";
 export function initAdminTools() {
   setupLoginHandler();
   bindAdminActions();
-  loadAdminDashboardData();
+
+  // On affiche le dashboard uniquement si un token est présent
+  if (localStorage.getItem("celestedle_admin_token")) {
+    showDashboard(true);
+    loadAdminDashboardData();
+  } else {
+    showDashboard(false);
+  }
+}
+
+// Fonction utilitaire pour basculer l'affichage du Dashboard
+function showDashboard(isLoggedIn) {
+  const loginBlock = document.getElementById("admin-login-block");
+  const dashboardContent = document.getElementById("admin-dashboard-content");
+
+  if (isLoggedIn) {
+    if (loginBlock) loginBlock.style.display = "none";
+    if (dashboardContent) dashboardContent.style.display = "block";
+  } else {
+    if (loginBlock) loginBlock.style.display = "block";
+    if (dashboardContent) dashboardContent.style.display = "none";
+  }
 }
 
 function setupLoginHandler() {
   const loginBtn = document.getElementById("admin-login-btn");
   const passwordInput = document.getElementById("admin-password-input");
   const errorMsg = document.getElementById("admin-login-error");
-  const loginBlock = document.getElementById("admin-login-block");
 
-  // Masquer le formulaire si déjà connecté
-  if (localStorage.getItem("celestedle_admin_token")) {
-    if (loginBlock) loginBlock.style.display = "none";
-  }
+  // Possibilité de valider avec la touche Entrée
+  passwordInput?.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") loginBtn?.click();
+  });
 
   if (loginBtn) {
     loginBtn.addEventListener("click", async () => {
@@ -35,12 +55,11 @@ function setupLoginHandler() {
         const data = await res.json();
 
         if (res.ok && data.token) {
-          // Stocke le token reçu du serveur
+          // Stocke le token et bascule l'affichage
           localStorage.setItem("celestedle_admin_token", data.token);
-          if (loginBlock) loginBlock.style.display = "none";
           if (errorMsg) errorMsg.style.display = "none";
 
-          // Recharge les données d'admin
+          showDashboard(true);
           loadAdminDashboardData();
         } else {
           if (errorMsg) {
@@ -63,13 +82,22 @@ function bindAdminActions() {
 
   // Helper pour les requêtes POST d'admin
   const sendAdminPost = async (endpoint) => {
+    const token = localStorage.getItem("celestedle_admin_token") || "";
+
     const res = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("celestedle_admin_token") || ""}`
+        Authorization: `Bearer ${token}`
       }
     });
+
+    if (res.status === 401) {
+      localStorage.removeItem("celestedle_admin_token");
+      showDashboard(false);
+      throw new Error("Session expirée, veuillez vous reconnecter.");
+    }
+
     if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
     return res.json();
   };

@@ -62,14 +62,15 @@
   </head>
   <body class="theme-celeste no-custom-cursor">
     <div class="admin-container">
-      <!-- Formulaire de Connexion Admin -->
+      
+      <!-- Formulaire de Connexion Admin (Affiches par defaut si deconnecte) -->
       <div
         id="admin-login-block"
         class="sidebar-block"
-        style="max-width: 400px; margin: 20px auto"
+        style="max-width: 400px; margin: 40px auto"
       >
-        <h3>Connexion Admin</h3>
-        <div class="form-group" style="margin-top: 12px">
+        <h3 style="text-align: center; margin-bottom: 12px">Connexion Admin</h3>
+        <div class="form-group">
           <label for="admin-password-input">Mot de passe :</label>
           <input
             type="password"
@@ -81,7 +82,7 @@
         <button
           id="admin-login-btn"
           class="btn-primary"
-          style="width: 100%; margin-top: 10px"
+          style="width: 100%; margin-top: 12px"
         >
           Se connecter
         </button>
@@ -92,63 +93,70 @@
             font-size: 0.85rem;
             margin-top: 8px;
             display: none;
+            text-align: center;
           "
         ></p>
       </div>
-      <h1>Panel Administration Celestedle</h1>
 
-      <!-- ACTIONS EN HAUT -->
-      <div class="admin-actions-bar">
-        <button id="admin-reveal-btn" class="btn-primary">
-          👁️ Reveal Secret Word
-        </button>
-        <button id="admin-reset-seed-btn" class="btn-primary">
-          🔄 Reset Seed / Change Word
-        </button>
-        <button id="admin-random-secret-btn" class="btn-primary">
-          🎲 Random Secret Word
-        </button>
-        <button id="admin-sim-hint-btn" class="btn-primary">
-          💡 Simulate Hint
-        </button>
+      <!-- Contenu du Dashboard (Masque par defaut tant que non-connecte) -->
+      <div id="admin-dashboard-content" style="display: none">
+        <h1>Panel Administration Celestedle</h1>
+
+        <!-- ACTIONS EN HAUT -->
+        <div class="admin-actions-bar">
+          <button id="admin-reveal-btn" class="btn-primary">
+            👁️ Reveal Secret Word
+          </button>
+          <button id="admin-reset-seed-btn" class="btn-primary">
+            🔄 Reset Seed / Change Word
+          </button>
+          <button id="admin-random-secret-btn" class="btn-primary">
+            🎲 Random Secret Word
+          </button>
+          <button id="admin-sim-hint-btn" class="btn-primary">
+            💡 Simulate Hint
+          </button>
+        </div>
+
+        <div
+          id="admin-output"
+          style="margin-bottom: 20px; font-weight: bold"
+        ></div>
+
+        <!-- TABLEAU RECAPITULATIF DES MOTS & STATS -->
+        <div class="admin-table-wrapper">
+          <h2>Base de données & Historique</h2>
+          <table class="admin-table" id="words-stats-table">
+            <thead>
+              <tr>
+                <th data-sort="image">Image</th>
+                <th data-sort="nom">Nom <span class="sort-icon">⇅</span></th>
+                <th data-sort="count">
+                  Nb Mot du jour <span class="sort-icon">⇅</span>
+                </th>
+                <th data-sort="lastDate">
+                  Dernière date <span class="sort-icon">⇅</span>
+                </th>
+                <th data-sort="avgTries">
+                  Essais moy. <span class="sort-icon">⇅</span>
+                </th>
+                <th data-sort="avgHints">
+                  Indices moy. <span class="sort-icon">⇅</span>
+                </th>
+                <th data-sort="avgTime">
+                  Temps moy. (s) <span class="sort-icon">⇅</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="words-stats-body">
+              <!-- Rempli dynamiquement en JS -->
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div
-        id="admin-output"
-        style="margin-bottom: 20px; font-weight: bold"
-      ></div>
-
-      <!-- TABLEAU RECAPITULATIF DES MOTS & STATS -->
-      <div class="admin-table-wrapper">
-        <h2>Base de données & Historique</h2>
-        <table class="admin-table" id="words-stats-table">
-          <thead>
-            <tr>
-              <th data-sort="image">Image</th>
-              <th data-sort="nom">Nom <span class="sort-icon">⇅</span></th>
-              <th data-sort="count">
-                Nb Mot du jour <span class="sort-icon">⇅</span>
-              </th>
-              <th data-sort="lastDate">
-                Dernière date <span class="sort-icon">⇅</span>
-              </th>
-              <th data-sort="avgTries">
-                Essais moy. <span class="sort-icon">⇅</span>
-              </th>
-              <th data-sort="avgHints">
-                Indices moy. <span class="sort-icon">⇅</span>
-              </th>
-              <th data-sort="avgTime">
-                Temps moy. (s) <span class="sort-icon">⇅</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody id="words-stats-body">
-            <!-- Rempli dynamiquement en JS -->
-          </tbody>
-        </table>
-      </div>
     </div>
+
     <script type="module">
       import { initAdminTools } from "./js/admin-tools.js";
 
