@@ -1282,7 +1282,6 @@ th,
   font-style: italic;
   margin-bottom: 4px;
 }
-
 /* ==========================================================================
    12. TABLET & MOBILE RESPONSIVE
    ========================================================================== */
@@ -1375,8 +1374,28 @@ th,
   .mobile-scroll-help {
     display: block;
   }
-}
 
+  /* 📱 FIX MODALES MOBILE : Hauteur max et scroll activé */
+  #legal-notice,
+  .rules-content,
+  .disclaimer-content,
+  .bug-modal-content,
+  .personalized-synonyms-modal {
+    max-height: 80vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* La croix de fermeture reste fixe en haut à droite lors du scroll */
+  .close-modal-btn {
+    position: sticky !important;
+    top: 0;
+    float: right;
+    z-index: 10;
+    background: var(--bg-card);
+    padding: 4px 8px;
+  }
+}
 /* ==========================================================================
    13. HINT CARDS
    ========================================================================== */
