@@ -68,8 +68,11 @@ router.get("/dashboard", (req, res) => {
 
 router.post("/random-hash", requireAdmin, (req, res) => {
   const { newHash } = req.body;
+  const fallbackHash = process.env.RANDOM_SEED
+    ? parseInt(process.env.RANDOM_SEED, 10)
+    : 20250204;
   updateSeedHash(
-    newHash === null || newHash === undefined ? 20250204 : newHash
+    newHash === null || newHash === undefined ? fallbackHash : newHash
   );
   res.json({ success: true, message: "Secret updated" });
 });
