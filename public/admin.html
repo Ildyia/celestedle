@@ -60,7 +60,7 @@
       }
     </style>
   </head>
-  <body>
+  <body class="theme-celeste no-custom-cursor">
     <div class="admin-container">
       <h1>Panel Administration Celestedle</h1>
 
@@ -80,7 +80,10 @@
         </button>
       </div>
 
-      <div id="admin-output" style="margin-bottom: 20px; font-weight: bold;"></div>
+      <div
+        id="admin-output"
+        style="margin-bottom: 20px; font-weight: bold"
+      ></div>
 
       <!-- TABLEAU RECAPITULATIF DES MOTS & STATS -->
       <div class="admin-table-wrapper">
@@ -90,11 +93,21 @@
             <tr>
               <th data-sort="image">Image</th>
               <th data-sort="nom">Nom <span class="sort-icon">⇅</span></th>
-              <th data-sort="count">Nb Mot du jour <span class="sort-icon">⇅</span></th>
-              <th data-sort="lastDate">Dernière date <span class="sort-icon">⇅</span></th>
-              <th data-sort="avgTries">Essais moy. <span class="sort-icon">⇅</span></th>
-              <th data-sort="avgHints">Indices moy. <span class="sort-icon">⇅</span></th>
-              <th data-sort="avgTime">Temps moy. (s) <span class="sort-icon">⇅</span></th>
+              <th data-sort="count">
+                Nb Mot du jour <span class="sort-icon">⇅</span>
+              </th>
+              <th data-sort="lastDate">
+                Dernière date <span class="sort-icon">⇅</span>
+              </th>
+              <th data-sort="avgTries">
+                Essais moy. <span class="sort-icon">⇅</span>
+              </th>
+              <th data-sort="avgHints">
+                Indices moy. <span class="sort-icon">⇅</span>
+              </th>
+              <th data-sort="avgTime">
+                Temps moy. (s) <span class="sort-icon">⇅</span>
+              </th>
             </tr>
           </thead>
           <tbody id="words-stats-body">
