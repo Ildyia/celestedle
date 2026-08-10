@@ -29,15 +29,13 @@ function getSecretOfTheDay() {
     timeZone: "Europe/Paris"
   });
 
-  let localizedHash = 0;
-
+  let dateHash = 0;
   for (let i = 0; i < dateString.length; i++) {
-    localizedHash = (localizedHash * 33 + dateString.charCodeAt(i)) | 0;
-    localizedHash = (Math.sin(localizedHash) * 10000) | 0;
+    dateHash = (dateHash * 33 + dateString.charCodeAt(i)) | 0;
   }
 
-  const combinedHash = localizedHash ^ globalSeedHash;
-  const targetedIndex = Math.abs(combinedHash) % officialElementsList.length;
+  const combined = (dateHash ^ globalSeedHash) >>> 0;
+  const targetedIndex = combined % officialElementsList.length;
   return officialElementsList[targetedIndex];
 }
 // Alias pour compatibilité avec routes/game.js
