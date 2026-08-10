@@ -117,7 +117,7 @@ const App = {
       ),
       toggleCursorCheckbox: document.getElementById("toggle-cursor-checkbox"),
       customCursor: document.getElementById("custom-cursor"),
-      gameTimerDisplay: document.getElementById("time-count")
+      gameTimerDisplay: document.getElementById("game-timer-display")
     };
   },
 
