@@ -191,21 +191,31 @@ async function loadAdminDashboardData() {
       elementsList = await fetchJson("/game/elements").catch(() => []);
     }
 
-    // 🎯 Promise.all pour attendre la résolution asynchrone des images !
+    // 🎯 Contexte factice pour éviter que table.js ne plante sur l'objet app manquant
+    const adminAppContext = {};
+
+    // Construction du tableau de données compilées avec Promise.all pour les images
     wordsData = await Promise.all(
       elementsList.map(async (item) => {
         const name = typeof item === "string" ? item : item.nom;
 
-        // 🎯 On 'await' la résolution de l'image si la méthode est async
+        // Récupération de l'image via TableManager avec son contexte simulé
         let imagePath = "";
         if (
           TableManager &&
           typeof TableManager.resolveEntityImage === "function"
         ) {
-          imagePath = await TableManager.resolveEntityImage(name);
+          try {
+            imagePath = await TableManager.resolveEntityImage(
+              name,
+              adminAppContext
+            );
+          } catch (err) {
+            console.warn(`Impossible de charger l'image pour ${name}:`, err);
+          }
         }
 
-        // Fallback au cas où TableManager retourne null/undefined
+        // Fallback de sécurité si l'image est introuvable
         if (!imagePath) {
           imagePath = `assets/illustration/${name.toLowerCase().replace(/\s+/g, "_")}.png`;
         }
