@@ -4,10 +4,10 @@ import { ModalService } from "./js/modal.js";
 import { CursorManager } from "./js/cursor.js";
 import { OptionsManager } from "./js/options.js";
 import { SuggestionsManager } from "./js/suggestions.js";
-import { initAdminTools } from "./js/admin-tools.js";
 import { GameStateManager } from "./js/game-state.js";
 import { HintsManager } from "./js/hints.js";
 import { TableManager } from "./js/table.js";
+import { GameTimer } from "./js/game-timer.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   App.init();
@@ -57,11 +57,6 @@ const App = {
   nodes: {},
   entityImageMap: null,
 
-  // LOGIQUE DU CHRONOMÈTRE DE JEU
-  gameTimerInterval: null,
-  gameSecondsElapsed: 0,
-  isGameTimerRunning: false,
-
   init() {
     this.cacheDOM();
     GameStateManager.checkDailyReset();
@@ -80,8 +75,14 @@ const App = {
     this.checkDisclaimerNotice();
     HintsManager.renderActive();
 
-    // Restauration du chrono si une partie est déjà en cours
-    this.restoreGameTimer();
+    // Initialisation et restauration du chronomètre de jeu via le module GameTimer
+    GameTimer.init(this.nodes.gameTimerDisplay);
+    if (
+      this.tryCount > 0 &&
+      localStorage.getItem("celestedle_gameover") !== "true"
+    ) {
+      GameTimer.start();
+    }
   },
 
   cacheDOM() {
@@ -116,7 +117,7 @@ const App = {
       ),
       toggleCursorCheckbox: document.getElementById("toggle-cursor-checkbox"),
       customCursor: document.getElementById("custom-cursor"),
-      gameTimerDisplay: document.getElementById("game-timer-display")
+      gameTimerDisplay: document.getElementById("time-count")
     };
   },
 
@@ -194,9 +195,13 @@ const App = {
         HintsManager.request("truth_and_lies", this)
       );
 
-    this.nodes.personalizedBtn?.addEventListener("click", () =>
-      ModalService.openPersonalizedModal(this)
-    );
+    this.nodes.personalizedBtn?.addEventListener("click", () => {
+      if (this.nodes.optionsModal) {
+        this.nodes.optionsModal.style.display = "none";
+      }
+      ModalService.openPersonalizedModal(this);
+    });
+
     this.nodes.form?.addEventListener("submit", (e) =>
       this.handleFormSubmit(e)
     );
@@ -226,55 +231,6 @@ const App = {
       this.nodes.input.focus();
     });
     document.addEventListener("click", (e) => this.handleOutsideClick(e));
-  },
-
-  // METHODES DU CHRONOMETRE
-  startGameTimer() {
-    if (
-      this.isGameTimerRunning ||
-      localStorage.getItem("celestedle_gameover") === "true"
-    )
-      return;
-    this.isGameTimerRunning = true;
-
-    this.gameTimerInterval = setInterval(() => {
-      this.gameSecondsElapsed++;
-      localStorage.setItem("celestedle_elapsed_time", this.gameSecondsElapsed);
-      this.updateGameTimerDisplay();
-    }, 1000);
-  },
-
-  stopGameTimer() {
-    if (this.gameTimerInterval) {
-      clearInterval(this.gameTimerInterval);
-      this.gameTimerInterval = null;
-    }
-    this.isGameTimerRunning = false;
-  },
-
-  restoreGameTimer() {
-    const savedTime = localStorage.getItem("celestedle_elapsed_time");
-    if (savedTime) {
-      this.gameSecondsElapsed = parseInt(savedTime, 10) || 0;
-      this.updateGameTimerDisplay();
-    }
-    const isGameOver = localStorage.getItem("celestedle_gameover") === "true";
-    if (this.tryCount > 0 && !isGameOver) {
-      this.startGameTimer();
-    }
-  },
-
-  updateGameTimerDisplay() {
-    if (!this.nodes.gameTimerDisplay) return;
-    const mins = Math.floor(this.gameSecondsElapsed / 60);
-    const secs = this.gameSecondsElapsed % 60;
-    this.nodes.gameTimerDisplay.textContent = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-  },
-
-  getFormattedTime() {
-    const mins = Math.floor(this.gameSecondsElapsed / 60);
-    const secs = this.gameSecondsElapsed % 60;
-    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   },
 
   checkDisclaimerNotice() {
@@ -345,10 +301,14 @@ const App = {
         data.count ?? data.dailySuccessCount ?? 0;
     if (this.nodes.avgTriesSpan)
       this.nodes.avgTriesSpan.textContent =
-        data.avgTries != null ? Number(data.avgTries).toFixed(1) : "-";
+        data.avgTries != null && data.avgTries > 0
+          ? Number(data.avgTries).toFixed(1)
+          : "-";
     if (this.nodes.avgHintsSpan)
       this.nodes.avgHintsSpan.textContent =
-        data.avgHints != null ? Number(data.avgHints).toFixed(1) : "-";
+        data.avgHints != null && data.avgHints > 0
+          ? Number(data.avgHints).toFixed(1)
+          : "-";
     if (this.nodes.avgTimeSpan) {
       const totalSeconds = data.avgTime ?? data.avgTimeInSeconds;
       if (totalSeconds != null && totalSeconds > 0) {
@@ -396,10 +356,17 @@ const App = {
     }
     if (!choice) return (this.isProcessing = false);
 
-    // Lancement du timer dès la première tentative
-    this.startGameTimer();
+    // Lancement du timer via le module dédié dès la première tentative
+    GameTimer.start();
 
-    ApiService.validateGuess(choice, this.tryCount + 1, this.hintUses)
+    const timeInSeconds = GameTimer.getTimeInSeconds();
+
+    ApiService.validateGuess(
+      choice,
+      this.tryCount + 1,
+      this.hintUses,
+      timeInSeconds
+    )
       .then((data) => {
         this.isProcessing = false;
         if (!data || data.error)
@@ -417,6 +384,7 @@ const App = {
             "elapsed_time"
           ].forEach((k) => localStorage.removeItem(`celestedle_${k}`));
           localStorage.setItem("celestedle_version", data.secretVersion);
+          GameTimer.reset();
           this.showToastNotification(
             "The secret word has been changed by an admin ! Your tries have been reset !"
           );
@@ -449,8 +417,14 @@ const App = {
           this.nodes.suggestionsBox.style.display = "none";
 
         if (data.verdict?.isCorrect) {
-          this.stopGameTimer();
-          confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+          GameTimer.stop();
+          if (window.confetti) {
+            window.confetti({
+              particleCount: 150,
+              spread: 80,
+              origin: { y: 0.6 }
+            });
+          }
           localStorage.setItem("celestedle_gameover", "true");
           localStorage.setItem("celestedle_status", "win");
           this.renderEndGameScreen();
@@ -464,7 +438,7 @@ const App = {
   },
 
   handleForfeit() {
-    this.stopGameTimer();
+    GameTimer.stop();
     ApiService.forfeitGame()
       .then((data) => {
         localStorage.setItem("celestedle_gameover", "true");
@@ -506,7 +480,10 @@ const App = {
       hintsSummary = `${this.usedHintTypes.length} ${this.usedHintTypes.length > 1 ? "hints" : "hint"} used (${formatted})`;
     }
 
-    const timeSummary = `⏱️ Time: ${this.getFormattedTime()}`;
+    const mins = Math.floor(GameTimer.getTimeInSeconds() / 60);
+    const secs = GameTimer.getTimeInSeconds() % 60;
+    const formattedTime = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    const timeSummary = `⏱️ Time: ${formattedTime}`;
 
     let shareOutputText = isWin
       ? `Celestedle of the day in ${this.tryCount} tries (${timeSummary})\n${hintsSummary}\n\n`
@@ -527,10 +504,12 @@ const App = {
     navigator.clipboard
       .writeText(shareOutputText + "\nhttps://celestedle.vercel.app/")
       .then(() => {
-        this.nodes.shareBtn.textContent = "Copied !";
-        setTimeout(() => {
-          this.nodes.shareBtn.textContent = "Share result";
-        }, 2000);
+        if (this.nodes.shareBtn) {
+          this.nodes.shareBtn.textContent = "Copied !";
+          setTimeout(() => {
+            this.nodes.shareBtn.textContent = "Share result";
+          }, 2000);
+        }
       });
   },
 
@@ -543,7 +522,7 @@ const App = {
   },
 
   renderEndGameScreen() {
-    this.stopGameTimer();
+    GameTimer.stop();
     if (this.nodes.form) this.nodes.form.style.display = "none";
     if (this.nodes.giveupBtn) this.nodes.giveupBtn.style.display = "none";
     if (this.nodes.hintBtn) this.nodes.hintBtn.style.display = "none";
@@ -585,7 +564,9 @@ const App = {
       } catch (e) {}
     }
 
-    const finalTime = this.getFormattedTime();
+    const mins = Math.floor(GameTimer.getTimeInSeconds() / 60);
+    const secs = GameTimer.getTimeInSeconds() % 60;
+    const finalTime = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 
     const matchSummary = isWin
       ? `You found the secret element in <strong>${this.tryCount}</strong> tries and <strong>${finalTime}</strong>. Used <strong>${this.hintUses}</strong> hints.`
