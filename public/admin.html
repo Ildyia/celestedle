@@ -1,116 +1,189 @@
-<body class="theme-celeste">
-  <!-- PASSWORD GATE -->
-  <div id="admin-gate" class="rules-modal">
-    <div class="rules-content" style="max-width: 400px; text-align: center">
-      <h2>Accès administrateur</h2>
-      <form id="admin-gate-form">
-        <div class="form-group" style="text-align: left; margin-top: 16px">
-          <label for="admin-gate-password">Mot de passe :</label>
-          <input
-            type="password"
-            id="admin-gate-password"
-            class="bug-input"
-            autocomplete="current-password"
-            required
-          />
-        </div>
-        <p
-          id="admin-gate-error"
-          style="
-            color: var(--color-wrong);
-            min-height: 20px;
-            font-size: 0.85rem;
-          "
-        ></p>
-        <button
-          type="submit"
-          class="btn-primary"
-          style="width: 100%; padding: 12px"
-        >
-          Entrer
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <div class="admin-container" id="admin-panel" style="display: none">
-    <h1>Panneau d'administration</h1>
-
-    <section class="admin-section">
-      <h2>Actions rapides</h2>
-      <div class="admin-actions">
-        <button class="admin-btn" id="btn-get-secret">
-          Voir le mot secret
-        </button>
-        <button class="admin-btn" id="btn-random-secret">
-          Changer le mot secret
-        </button>
-        <button class="admin-btn admin-btn-danger" id="btn-force-reset">
-          Réinitialiser le jeu (Reset)
-        </button>
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Celestedle - Panel Admin</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./theme-celeste.css" />
+    <style>
+      .admin-layout {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+      .admin-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+        margin-top: 20px;
+      }
+      .admin-card {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 20px;
+      }
+      .admin-card h3 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        font-size: 1.1rem;
+      }
+      .secret-display {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: var(--color-correct, #4caf50);
+        margin: 10px 0;
+        word-break: break-all;
+      }
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 12px 24px;
+        border-radius: 6px;
+        background: #333;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+      }
+      .toast.show {
+        opacity: 1;
+      }
+      .toast.success {
+        background: #2e7d32;
+      }
+      .toast.error {
+        background: #c62828;
+      }
+    </style>
+  </head>
+  <body class="theme-celeste">
+    <!-- GATE LOGIN -->
+    <div id="admin-gate" class="rules-modal">
+      <div class="rules-content" style="max-width: 400px; text-align: center">
+        <h2>Accès administrateur</h2>
+        <form id="admin-gate-form">
+          <div class="form-group" style="text-align: left; margin-top: 16px">
+            <label for="admin-gate-password">Mot de passe :</label>
+            <input
+              type="password"
+              id="admin-gate-password"
+              class="bug-input"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+          <p
+            id="admin-gate-error"
+            style="
+              color: var(--color-wrong, #f44336);
+              min-height: 20px;
+              font-size: 0.85rem;
+            "
+          ></p>
+          <button
+            type="submit"
+            class="btn-primary"
+            style="width: 100%; padding: 12px"
+          >
+            Entrer
+          </button>
+        </form>
       </div>
-    </section>
-  </div>
-  <script type="module">
-    import { initAdminTools } from "./js/admin-tools.js";
-    import { ApiService } from "./js/api.js";
+    </div>
 
-    const gate = document.getElementById("admin-gate");
-    const panel = document.getElementById("admin-panel");
-    const form = document.getElementById("admin-gate-form");
-    const passwordInput = document.getElementById("admin-gate-password");
-    const errorMsg = document.getElementById("admin-gate-error");
+    <!-- PANEL ADMIN -->
+    <div class="admin-layout" id="admin-panel" style="display: none">
+      <h1>Panneau d'administration</h1>
 
-    function unlockPanel() {
-      gate.style.display = "none";
-      panel.style.display = "block";
+      <!-- Mot Secret Actuel -->
+      <div class="admin-card">
+        <h3>Mot secret du jour</h3>
+        <div id="secret-word-val" class="secret-display">••••••••</div>
+        <button class="admin-btn" id="btn-get-secret">Révéler le mot</button>
+      </div>
 
-      initAdminTools();
+      <div class="admin-grid">
+        <!-- Actions Rapides -->
+        <div class="admin-card">
+          <h3>Gestion du mot</h3>
+          <button
+            class="admin-btn"
+            id="btn-random-secret"
+            style="width: 100%; margin-bottom: 8px"
+          >
+            Tirer un mot aléatoire
+          </button>
+          <button
+            class="admin-btn admin-btn-danger"
+            id="btn-force-reset"
+            style="width: 100%"
+          >
+            Reset Seed du jour
+          </button>
+        </div>
 
-      document
-        .getElementById("btn-get-secret")
-        ?.addEventListener("click", () => {
-          window.getSecretWordPlzUwU();
+        <!-- Stats Rapides -->
+        <div class="admin-card">
+          <h3>Statistiques du jour</h3>
+          <p>Victoires aujourd'hui : <strong id="stat-wins">-</strong></p>
+          <p>Essais moyens : <strong id="stat-tries">-</strong></p>
+          <button class="admin-btn" id="btn-refresh-stats" style="width: 100%">
+            Rafraîchir les stats
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="admin-toast" class="toast"></div>
+
+    <script type="module">
+      import { initAdminTools } from "./js/admin-tools.js";
+      import { ApiService } from "./js/api.js";
+
+      const gate = document.getElementById("admin-gate");
+      const panel = document.getElementById("admin-panel");
+      const form = document.getElementById("admin-gate-form");
+      const passwordInput = document.getElementById("admin-gate-password");
+      const errorMsg = document.getElementById("admin-gate-error");
+
+      function unlockPanel() {
+        gate.style.display = "none";
+        panel.style.display = "block";
+        initAdminTools();
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        ApiService.checkAdminSession().then((valid) => {
+          if (valid) unlockPanel();
+          else {
+            gate.style.display = "flex";
+            passwordInput.focus();
+          }
         });
-      document
-        .getElementById("btn-random-secret")
-        ?.addEventListener("click", () => {
-          window.randomSecret();
-        });
-      document
-        .getElementById("btn-force-reset")
-        ?.addEventListener("click", () => {
-          window.triggerReset();
-        });
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      ApiService.checkAdminSession().then((valid) => {
-        if (valid) {
-          unlockPanel();
-        } else {
-          gate.style.display = "flex";
-          passwordInput.focus();
-        }
       });
-    });
 
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      errorMsg.textContent = "";
-      const submitBtn = form.querySelector("button[type='submit']");
-      submitBtn.disabled = true;
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        errorMsg.textContent = "";
+        const submitBtn = form.querySelector("button[type='submit']");
+        submitBtn.disabled = true;
 
-      ApiService.adminLogin(passwordInput.value)
-        .then(() => unlockPanel())
-        .catch(() => {
-          errorMsg.textContent = "Mot de passe incorrect.";
-          passwordInput.value = "";
-          passwordInput.focus();
-        })
-        .finally(() => {
-          submitBtn.disabled = false;
-        });
-    });
-  </script>
-</body>
+        ApiService.adminLogin(passwordInput.value)
+          .then(() => unlockPanel())
+          .catch(() => {
+            errorMsg.textContent = "Mot de passe incorrect.";
+            passwordInput.value = "";
+            passwordInput.focus();
+          })
+          .finally(() => {
+            submitBtn.disabled = false;
+          });
+      });
+    </script>
+  </body>
+</html>

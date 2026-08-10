@@ -35,7 +35,7 @@ export const HintsManager = {
         app.usedHintTypes.push(type);
         localStorage.setItem(
           "celestedle_used_hint_types",
-          JSON.stringify(app.usedHintTypes),
+          JSON.stringify(app.usedHintTypes)
         );
 
         this.updateButtonsState(app);
@@ -47,7 +47,7 @@ export const HintsManager = {
 
   saveAndRender(text) {
     const savedHints = JSON.parse(
-      localStorage.getItem("celestedle_saved_hints") || "[]",
+      localStorage.getItem("celestedle_saved_hints") || "[]"
     );
     savedHints.push(text);
     localStorage.setItem("celestedle_saved_hints", JSON.stringify(savedHints));
@@ -58,7 +58,7 @@ export const HintsManager = {
     const container = document.getElementById("active-hints-container");
     if (!container) return;
     const savedHints = JSON.parse(
-      localStorage.getItem("celestedle_saved_hints") || "[]",
+      localStorage.getItem("celestedle_saved_hints") || "[]"
     );
 
     container.innerHTML = "";
@@ -68,5 +68,5 @@ export const HintsManager = {
       card.innerHTML = hintText;
       container.appendChild(card);
     });
-  },
+  }
 };

@@ -52,7 +52,7 @@ router.post("/random-hash", verifyAdminToken, (req, res) => {
 
 router.post("/get-secret", verifyAdminToken, (req, res) => {
   const secret = getSecretElement();
-  res.json({ secret: secret.nom, details: secret });
+  res.json({ secretElement: secret.nom, details: secret });
 });
 
 module.exports = router;
