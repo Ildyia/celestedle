@@ -4,11 +4,11 @@ const {
   REST,
   Routes,
   SlashCommandBuilder,
-  PermissionFlagsBits,
+  PermissionFlagsBits
 } = require("discord.js");
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
 });
 
 global.discordBotClient = client;
@@ -29,14 +29,14 @@ const commands = [
       opt
         .setName("public")
         .setDescription("Public channel for community votes")
-        .setRequired(true),
+        .setRequired(true)
     )
     .addChannelOption((opt) =>
       opt
         .setName("private")
         .setDescription("Private channel for management")
-        .setRequired(true),
-    ),
+        .setRequired(true)
+    )
 ].map((cmd) => cmd.toJSON());
 
 client.on("ready", async () => {
@@ -44,10 +44,10 @@ client.on("ready", async () => {
 
   try {
     const rest = new REST({ version: "10" }).setToken(
-      process.env.DISCORD_BOT_TOKEN,
+      process.env.DISCORD_BOT_TOKEN
     );
     await rest.put(Routes.applicationCommands(client.user.id), {
-      body: commands,
+      body: commands
     });
     console.log("Slash commands successfully registered.");
   } catch (err) {
@@ -60,7 +60,7 @@ client.handleBugReport = async ({
   elementName,
   bugType,
   description,
-  isSpoiler,
+  isSpoiler
 }) => {
   const privateChannel = await client.channels.fetch(privateChannelId);
   const publicChannel = await client.channels.fetch(publicChannelId);
@@ -93,11 +93,11 @@ client.handleBugReport = async ({
           { name: "Category", value: bugType, inline: true },
           { name: "Status", value: "🔴 New", inline: true },
           { name: "Votes", value: "0", inline: true },
-          { name: "Description", value: formattedDescription },
+          { name: "Description", value: formattedDescription }
         ],
         color: embedColor,
-        timestamp: new Date().toISOString(),
-      },
+        timestamp: new Date().toISOString()
+      }
     ],
     components: [
       {
@@ -108,11 +108,11 @@ client.handleBugReport = async ({
             type: 2,
             style: 2,
             emoji: "👎",
-            custom_id: `vote_down_${reportId}`,
-          },
-        ],
-      },
-    ],
+            custom_id: `vote_down_${reportId}`
+          }
+        ]
+      }
+    ]
   });
 
   // Attach publicMsg.id to custom_id so we can fetch it directly later
@@ -125,11 +125,11 @@ client.handleBugReport = async ({
           { name: "Element", value: formattedElement, inline: true },
           { name: "Category", value: bugType, inline: true },
           { name: "Status", value: "🔴 New", inline: false },
-          { name: "Description", value: formattedDescription },
+          { name: "Description", value: formattedDescription }
         ],
         color: embedColor,
-        timestamp: new Date().toISOString(),
-      },
+        timestamp: new Date().toISOString()
+      }
     ],
     components: [
       {
@@ -139,35 +139,35 @@ client.handleBugReport = async ({
             type: 2,
             style: 3,
             label: "Fixed",
-            custom_id: `status_fixed_${reportId}_${publicMsg.id}`,
+            custom_id: `status_fixed_${reportId}_${publicMsg.id}`
           },
           {
             type: 2,
             style: 1,
             label: "Working on it",
-            custom_id: `status_working_${reportId}_${publicMsg.id}`,
+            custom_id: `status_working_${reportId}_${publicMsg.id}`
           },
           {
             type: 2,
             style: 2,
             label: "Can't reproduce",
-            custom_id: `status_cant_${reportId}_${publicMsg.id}`,
+            custom_id: `status_cant_${reportId}_${publicMsg.id}`
           },
           {
             type: 2,
             style: 4,
             label: "Wrong report",
-            custom_id: `status_wrong_${reportId}_${publicMsg.id}`,
-          },
-        ],
-      },
-    ],
+            custom_id: `status_wrong_${reportId}_${publicMsg.id}`
+          }
+        ]
+      }
+    ]
   });
 
   reportsMap.set(reportId, {
     publicMessageId: publicMsg.id,
     privateMessageId: privateMsg.id,
-    votes: new Map(),
+    votes: new Map()
   });
 };
 
@@ -182,7 +182,7 @@ client.on("interactionCreate", async (interaction) => {
 
       return interaction.reply({
         content: `Configuration successfully updated!\n- **Public Channel**: <#${publicChannelId}>\n- **Private Channel**: <#${privateChannelId}>`,
-        ephemeral: true,
+        ephemeral: true
       });
     }
   }
@@ -219,8 +219,8 @@ client.on("interactionCreate", async (interaction) => {
       fields: embed.fields.map((f) =>
         f.name === "Votes"
           ? { name: "Votes", value: `${totalScore}`, inline: true }
-          : f,
-      ),
+          : f
+      )
     };
 
     await interaction.update({ embeds: [updatedEmbed] });
@@ -257,10 +257,10 @@ client.on("interactionCreate", async (interaction) => {
           ? {
               name: "Status",
               value: `${newStatus} (by ${interaction.user.username})`,
-              inline: false,
+              inline: false
             }
-          : f,
-      ),
+          : f
+      )
     };
     await interaction.update({ embeds: [updatedPrivateEmbed] });
 
@@ -279,10 +279,10 @@ client.on("interactionCreate", async (interaction) => {
 
       if (!publicMsg) {
         const fetchedMessages = await publicChannel.messages.fetch({
-          limit: 100,
+          limit: 100
         });
         publicMsg = fetchedMessages.find((msg) =>
-          msg.embeds.some((e) => e.title && e.title.includes(`[${reportId}]`)),
+          msg.embeds.some((e) => e.title && e.title.includes(`[${reportId}]`))
         );
       }
 
@@ -294,8 +294,8 @@ client.on("interactionCreate", async (interaction) => {
           fields: publicEmbed.fields.map((f) =>
             f.name === "Status"
               ? { name: "Status", value: newStatus, inline: true }
-              : f,
-          ),
+              : f
+          )
         };
 
         await publicMsg.edit({ embeds: [updatedPublicEmbed] });
@@ -307,5 +307,8 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 });
-
-client.login(process.env.DISCORD_BOT_TOKEN);
+if (process.env.DISCORD_BOT_TOKEN) {
+  client.login(process.env.DISCORD_BOT_TOKEN);
+} else {
+  console.warn("No TOKEN for discord bot");
+}
