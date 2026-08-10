@@ -1,0 +1,244 @@
+/* ==========================================
+   CELESTE BACKGROUND & THEME OVERRIDES
+   ========================================== */
+
+body.theme-celeste {
+  background-image: url("assets/illustration/bg.png") !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-attachment: fixed !important;
+  background-repeat: no-repeat !important;
+  color: #f8fafc;
+}
+
+html.theme-celeste,
+body.theme-celeste #layout-wrapper,
+body.theme-celeste #main-content-column {
+  background: transparent !important;
+}
+
+body.theme-celeste .sidebar-block,
+body.theme-celeste .bug-card,
+body.theme-celeste .rules-content,
+body.theme-celeste .suggestions-box {
+  background: rgba(20, 16, 35, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+body.theme-celeste #game-container {
+  background: rgba(25, 18, 42, 0.6) !important;
+  border: 1px solid rgba(244, 114, 182, 0.2) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+body.theme-celeste #element-input {
+  background-color: rgba(30, 20, 50, 0.6) !important;
+  border: 1px solid rgba(244, 114, 182, 0.3) !important;
+  color: #ffffff;
+}
+
+body.theme-celeste #element-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+body.theme-celeste #element-input:focus {
+  border-color: #f472b6 !important;
+  box-shadow: 0 0 12px rgba(244, 114, 182, 0.4);
+  outline: none;
+}
+
+body.theme-celeste h1,
+body.theme-celeste h2,
+body.theme-celeste h3 {
+  /*gradient for titles*/
+  background: linear-gradient(90deg, #a855f7, #ec4899, #f472b6);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* Animation for gradient */
+  animation: gradientAnimation 5s ease infinite;
+  /* Add a subtle text shadow for better readability */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+}
+
+/* En-têtes du tableau */
+body.theme-celeste th {
+  color: #f472b6;
+  border-bottom: 2px solid rgba(244, 114, 182, 0.3);
+}
+
+body.theme-celeste td {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Boutons & interrupteurs */
+body.theme-celeste .btn-primary {
+  background-color: #a855f7;
+}
+
+body.theme-celeste .btn-secondary {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+body.theme-celeste input:checked + .slider {
+  background-color: #a855f7;
+}
+
+/* Modales d'arrière-plan */
+body.theme-celeste .rules-modal {
+  background-color: rgba(10, 6, 20, 0.4) !important;
+  backdrop-filter: blur(4px);
+}
+
+/* Textes secondaires & badges */
+body.theme-celeste .tries-badge,
+body.theme-celeste .small-subtext {
+  color: #fbcfe8;
+}
+
+/* Barre de défilement */
+body.theme-celeste ::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.5);
+  border-radius: 4px;
+}
+
+/* ==========================================
+   TRANSPARENCE DES CASES DE COULEUR
+   ========================================== */
+
+/* Mode standard (Theme Celeste) */
+body.theme-celeste td.correct {
+  background-color: rgba(16, 185, 129, 0.75) !important;
+}
+
+body.theme-celeste td.partial {
+  background-color: rgba(245, 158, 11, 0.75) !important;
+}
+
+body.theme-celeste td.notTotallyWrong {
+  background-color: rgba(249, 115, 22, 0.75) !important;
+}
+
+body.theme-celeste td.wrong {
+  background-color: rgba(239, 68, 68, 0.25) !important;
+}
+
+/* Mode Colorblind (Theme Celeste) */
+body.theme-celeste.colorblind td.correct {
+  background-color: rgba(86, 180, 233, 0.75) !important;
+}
+
+body.theme-celeste.colorblind td.partial {
+  background-color: rgba(240, 228, 66, 0.75) !important;
+  color: #000000 !important;
+  text-shadow: none !important;
+}
+
+body.theme-celeste.colorblind td.notTotallyWrong {
+  background-color: rgba(213, 94, 0, 0.75) !important;
+  color: #000000 !important;
+  text-shadow: none !important;
+}
+
+body.theme-celeste.colorblind td.wrong {
+  background-color: rgba(204, 121, 167, 0.3) !important;
+  color: #ffffff !important;
+}
+
+/* ==========================================
+   SWITCHES ET CHECKBOXES MODERNES (THEME CELESTE)
+   ========================================== */
+body.theme-celeste .switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+}
+
+body.theme-celeste .switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+body.theme-celeste .slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 30px;
+  backdrop-filter: blur(4px);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+body.theme-celeste .slider::before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 2.5px;
+  background: linear-gradient(135deg, #ffffff, #e2e8f0);
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+body.theme-celeste .switch:hover .slider {
+  border-color: rgba(244, 114, 182, 0.6);
+  transform: scale(1.05);
+}
+
+body.theme-celeste .switch:hover .slider::before {
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+body.theme-celeste input:checked + .slider {
+  background: linear-gradient(135deg, #a855f7, #ec4899) !important;
+  border-color: #f472b6 !important;
+  box-shadow: 0 0 14px rgba(236, 72, 153, 0.4);
+}
+
+body.theme-celeste input:checked + .slider::before {
+  transform: translateX(21px);
+  background: #ffffff;
+}
+
+body.theme-celeste input[type="checkbox"]:not(.switch input) {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  cursor: pointer;
+  position: relative;
+  vertical-align: middle;
+  transition: all 0.2s ease;
+}
+
+body.theme-celeste input[type="checkbox"]:not(.switch input):checked {
+  background: #a855f7;
+  border-color: #f472b6;
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
+}
+
+body.theme-celeste input[type="checkbox"]:not(.switch input):checked::after {
+  content: "✓";
+  position: absolute;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}

@@ -26,9 +26,9 @@ function createDailyStatsStore() {
   const statsData = loadStats();
 
   return {
-    registerSuccess(secretName, tryCount = 1, hintUses = 0) {
+    registerSuccess(secretName, tryCount = 1, hintUses = 0, timeInSeconds = 0) {
       const today = new Date().toLocaleDateString("sv-SE", {
-        timeZone: "Europe/Paris",
+        timeZone: "Europe/Paris"
       });
       const key = `${today}_${secretName}`;
 
@@ -37,12 +37,14 @@ function createDailyStatsStore() {
           count: 0,
           totalTries: 0,
           totalHints: 0,
+          totalTime: 0 // Stockage du temps total
         };
       }
 
       statsData[key].count += 1;
       statsData[key].totalTries += Number(tryCount) || 1;
       statsData[key].totalHints += Number(hintUses) || 0;
+      statsData[key].totalTime += Number(timeInSeconds) || 0;
 
       saveStats(statsData);
       return statsData[key];
@@ -50,21 +52,22 @@ function createDailyStatsStore() {
 
     getStats(secretName) {
       const today = new Date().toLocaleDateString("sv-SE", {
-        timeZone: "Europe/Paris",
+        timeZone: "Europe/Paris"
       });
       const key = `${today}_${secretName}`;
       const entry = statsData[key];
 
       if (!entry || entry.count === 0) {
-        return { count: 0, avgTries: 0, avgHints: 0 };
+        return { count: 0, avgTries: 0, avgHints: 0, avgTime: 0 };
       }
 
       return {
         count: entry.count,
         avgTries: (entry.totalTries / entry.count).toFixed(1),
         avgHints: (entry.totalHints / entry.count).toFixed(1),
+        avgTime: Math.round(entry.totalTime / entry.count) // Temps moyen arrondi en secondes
       };
-    },
+    }
   };
 }
 

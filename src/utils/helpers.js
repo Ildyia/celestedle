@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { createDailyStatsStore } = require("./daily-stats");
+const { createDailyStatsStore } = require("./stats-store");
 
 const database = JSON.parse(
   fs.readFileSync(path.join(__dirname, "../../db.json"), "utf8")
@@ -8,7 +8,7 @@ const database = JSON.parse(
 const officialElementsList = Object.keys(database).sort();
 
 let secretForce = null;
-let secretVersion = "1.0.2";
+let secretVersion = "1.2.1";
 const dailyStatsStore = createDailyStatsStore();
 
 let globalSeedHash = 0;
@@ -29,16 +29,21 @@ function getSecretOfTheDay() {
     timeZone: "Europe/Paris"
   });
 
-  let localizedHash = globalSeedHash;
-
+  let dateHash = 0;
   for (let i = 0; i < dateString.length; i++) {
-    localizedHash = (localizedHash * 33 + dateString.charCodeAt(i)) | 0;
-    localizedHash = (Math.sin(localizedHash) * 10000) | 0;
+    dateHash = (dateHash * 33 + dateString.charCodeAt(i)) | 0;
   }
 
-  const targetedIndex = Math.abs(localizedHash) % officialElementsList.length;
+  const combined = (dateHash ^ globalSeedHash) >>> 0;
+  const targetedIndex = combined % officialElementsList.length;
+
   return officialElementsList[targetedIndex];
 }
+
+// Log placé APRÈS l'initialisation de globalSeedHash
+console.log(
+  `[INIT] SEED: ${process.env.RANDOM_SEED} | HASH: ${globalSeedHash} | MOT DU JOUR: ${getSecretOfTheDay()}`
+);
 
 // Alias pour compatibilité avec routes/game.js
 function getSecretElement() {
@@ -72,15 +77,20 @@ function normalizeMetaList(data) {
 
 function updateSeedHash(newHash) {
   globalSeedHash = newHash;
-  secretVersion = Date.now().toString(); // Met à jour la version pour forcer le reset client
+  secretVersion = Date.now().toString();
 }
 
 function getSecretVersion() {
   return secretVersion;
 }
 
-function registerDailySuccess(secretName, playerId) {
-  return dailyStatsStore.registerSuccess(secretName, playerId);
+function registerDailySuccess(secretName, tryCount, hintUses, timeInSeconds) {
+  return dailyStatsStore.registerSuccess(
+    secretName,
+    tryCount,
+    hintUses,
+    timeInSeconds
+  );
 }
 
 function getDailyStats() {
@@ -88,9 +98,14 @@ function getDailyStats() {
   return dailyStatsStore.getStats(secretName);
 }
 
-function recordDailySuccess(tryCount, hintUses) {
+function recordDailySuccess(tryCount, hintUses, timeInSeconds) {
   const secretName = getSecretOfTheDay();
-  return dailyStatsStore.registerSuccess(secretName, tryCount, hintUses);
+  return dailyStatsStore.registerSuccess(
+    secretName,
+    tryCount,
+    hintUses,
+    timeInSeconds
+  );
 }
 
 function getSeededRandom(offset = 0) {

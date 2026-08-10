@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Celestedle - Administration</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="theme-celeste.css" />
+    <style>
+      .admin-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        color: var(--text-main);
+      }
+      .admin-actions-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        background: var(--bg-card, #1e293b);
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      }
+      .admin-table-wrapper {
+        background: var(--bg-card, #1e293b);
+        padding: 16px;
+        border-radius: 12px;
+        overflow-x: auto;
+      }
+      .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+      }
+      .admin-table th {
+        background-color: var(--bg-header, #0f172a);
+        padding: 12px;
+        cursor: pointer;
+        user-select: none;
+        border-bottom: 2px solid #334155;
+      }
+      .admin-table th:hover {
+        background-color: #1e293b;
+      }
+      .admin-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #334155;
+      }
+      .admin-table img.word-thumb {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+      }
+      .sort-icon {
+        font-size: 0.8em;
+        margin-left: 4px;
+        opacity: 0.6;
+      }
+    </style>
+  </head>
+  <body class="theme-celeste no-custom-cursor">
+    <div class="admin-container">
+      
+      <!-- Formulaire de Connexion Admin (Affiches par defaut si deconnecte) -->
+      <div
+        id="admin-login-block"
+        class="sidebar-block"
+        style="max-width: 400px; margin: 40px auto"
+      >
+        <h3 style="text-align: center; margin-bottom: 12px">Connexion Admin</h3>
+        <div class="form-group">
+          <label for="admin-password-input">Mot de passe :</label>
+          <input
+            type="password"
+            id="admin-password-input"
+            class="bug-input"
+            placeholder="Entrez le mot de passe..."
+          />
+        </div>
+        <button
+          id="admin-login-btn"
+          class="btn-primary"
+          style="width: 100%; margin-top: 12px"
+        >
+          Se connecter
+        </button>
+        <p
+          id="admin-login-error"
+          style="
+            color: var(--color-wrong);
+            font-size: 0.85rem;
+            margin-top: 8px;
+            display: none;
+            text-align: center;
+          "
+        ></p>
+      </div>
+
+      <!-- Contenu du Dashboard (Masque par defaut tant que non-connecte) -->
+      <div id="admin-dashboard-content" style="display: none">
+        <h1>Panel Administration Celestedle</h1>
+
+        <!-- ACTIONS EN HAUT -->
+        <div class="admin-actions-bar">
+          <button id="admin-reveal-btn" class="btn-primary">
+            👁️ Reveal Secret Word
+          </button>
+          <button id="admin-reset-seed-btn" class="btn-primary">
+            🔄 Reset Seed / Change Word
+          </button>
+          <button id="admin-random-secret-btn" class="btn-primary">
+            🎲 Random Secret Word
+          </button>
+          <button id="admin-sim-hint-btn" class="btn-primary">
+            💡 Simulate Hint
+          </button>
+        </div>
+
+        <div
+          id="admin-output"
+          style="margin-bottom: 20px; font-weight: bold"
+        ></div>
+
+        <!-- TABLEAU RECAPITULATIF DES MOTS & STATS -->
+        <div class="admin-table-wrapper">
+          <h2>Base de données & Historique</h2>
+          <table class="admin-table" id="words-stats-table">
+            <thead>
+              <tr>
+                <th data-sort="image">Image</th>
+                <th data-sort="nom">Nom <span class="sort-icon">⇅</span></th>
+                <th data-sort="count">
+                  Nb Mot du jour <span class="sort-icon">⇅</span>
+                </th>
+                <th data-sort="lastDate">
+                  Dernière date <span class="sort-icon">⇅</span>
+                </th>
+                <th data-sort="avgTries">
+                  Essais moy. <span class="sort-icon">⇅</span>
+                </th>
+                <th data-sort="avgHints">
+                  Indices moy. <span class="sort-icon">⇅</span>
+                </th>
+                <th data-sort="avgTime">
+                  Temps moy. (s) <span class="sort-icon">⇅</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="words-stats-body">
+              <!-- Rempli dynamiquement en JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <script type="module">
+      import { initAdminTools } from "./js/admin-tools.js";
+
+      document.addEventListener("DOMContentLoaded", () => {
+        initAdminTools();
+      });
+    </script>
+  </body>
+</html>

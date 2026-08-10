@@ -1,0 +1,112 @@
+const fs = require("fs");
+const path = require("path");
+
+const HISTORY_PATH = path.join(__dirname, "../../stats-history.json");
+function loadHistory() {
+  try {
+    if (fs.existsSync(HISTORY_PATH)) {
+      return JSON.parse(fs.readFileSync(HISTORY_PATH, "utf8"));
+    } else {
+      fs.writeFileSync(HISTORY_PATH, JSON.stringify([], null, 2), "utf8");
+      return [];
+    }
+  } catch (err) {
+    console.error("Error loading stats history:", err);
+    return [];
+  }
+}
+
+function saveHistory(historyData) {
+  try {
+    fs.writeFileSync(
+      HISTORY_PATH,
+      JSON.stringify(historyData, null, 2),
+      "utf8"
+    );
+  } catch (err) {
+    console.error("Error saving stats history:", err);
+  }
+}
+
+function createDailyStatsStore() {
+  let historyData = loadHistory();
+
+  // Helper interne : trouve ou crée l'entrée pour le mot et la date du jour
+  function getOrCreateTodayEntry(secretName) {
+    const today = new Date().toLocaleDateString("sv-SE", {
+      timeZone: "Europe/Paris"
+    });
+
+    let entry = historyData.find(
+      (item) => item.date === today && item.secretWord === secretName
+    );
+
+    if (!entry) {
+      entry = {
+        date: today,
+        secretWord: secretName,
+        victories: 0,
+        totalTries: 0,
+        totalHints: 0,
+        totalTimeInSeconds: 0,
+        avgTries: 0,
+        avgHints: 0,
+        avgTimeInSeconds: 0,
+        updatedAt: new Date().toISOString()
+      };
+      historyData.push(entry);
+    }
+
+    return entry;
+  }
+
+  return {
+    registerSuccess(secretName, tryCount = 1, hintUses = 0, timeInSeconds = 0) {
+      if (!secretName) return;
+
+      const entry = getOrCreateTodayEntry(secretName);
+
+      entry.victories += 1;
+      entry.totalTries += Number(tryCount) || 1;
+      entry.totalHints += Number(hintUses) || 0;
+      entry.totalTimeInSeconds += Number(timeInSeconds) || 0;
+
+      // Calcul des moyennes en temps réel
+      entry.avgTries = Number((entry.totalTries / entry.victories).toFixed(1));
+      entry.avgHints = Number((entry.totalHints / entry.victories).toFixed(1));
+      entry.avgTimeInSeconds = Math.round(
+        entry.totalTimeInSeconds / entry.victories
+      );
+      entry.updatedAt = new Date().toISOString();
+
+      saveHistory(historyData);
+      return entry;
+    },
+
+    getStats(secretName) {
+      if (!secretName)
+        return { count: 0, avgTries: 0, avgHints: 0, avgTime: 0 };
+
+      const today = new Date().toLocaleDateString("sv-SE", {
+        timeZone: "Europe/Paris"
+      });
+
+      const entry = historyData.find(
+        (item) => item.date === today && item.secretWord === secretName
+      );
+
+      if (!entry || entry.victories === 0) {
+        return { count: 0, avgTries: 0, avgHints: 0, avgTime: 0 };
+      }
+
+      return {
+        count: entry.victories,
+        avgTries: entry.avgTries,
+        avgHints: entry.avgHints,
+        avgTime: entry.avgTimeInSeconds
+      };
+    }
+  };
+}
+
+module.exports = { createDailyStatsStore };

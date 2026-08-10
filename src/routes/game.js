@@ -3,11 +3,12 @@ const router = express.Router();
 const {
   getSecretElement,
   getElementsList,
-  getDailyStats,
-  recordDailySuccess,
   getSecretVersion,
-  getSeededRandom,
+  getSeededRandom
 } = require("../utils/helpers");
+
+const { createDailyStatsStore } = require("../utils/stats-store");
+const statsStore = createDailyStatsStore();
 
 const ALL_TYPES = [
   "mechanics",
@@ -15,14 +16,14 @@ const ALL_TYPES = [
   "environment",
   "hazards",
   "characters",
-  "collectibles",
+  "collectibles"
 ];
 const ALL_HITBOXES = [
   "no hitbox interaction",
   "circular",
   "square",
   "rectangular",
-  "other shape",
+  "other shape"
 ];
 const ALL_LOCATIONS = [
   "prologue",
@@ -33,7 +34,7 @@ const ALL_LOCATIONS = [
   "temple",
   "summit",
   "core",
-  "farewell",
+  "farewell"
 ];
 const ALL_COLORS = [
   "red",
@@ -46,7 +47,7 @@ const ALL_COLORS = [
   "black",
   "orange",
   "brown",
-  "grey",
+  "grey"
 ];
 
 function getRandomWrongValue(correctValue, allPossibleValues) {
@@ -77,7 +78,8 @@ router.get("/elements", (req, res) => {
 
 router.get("/daily-stats", (req, res) => {
   try {
-    const stats = getDailyStats() || { count: 0, avgTries: 0, avgHints: 0 };
+    const secret = getSecretElement();
+    const stats = statsStore.getStats(secret ? secret.nom : "");
     res.json(stats);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -86,14 +88,14 @@ router.get("/daily-stats", (req, res) => {
 
 router.post("/validate", (req, res) => {
   try {
-    const { choix, tryCount, hintUses } = req.body || {};
+    const { choix, tryCount, hintUses, timeInSeconds } = req.body || {};
     if (!choix) return res.status(400).json({ error: "Missing guess choice" });
 
     const elements = getElementsList() || [];
     const secret = getSecretElement();
 
     const userGuess = elements.find(
-      (el) => el.nom && el.nom.toLowerCase() === choix.toLowerCase(),
+      (el) => el.nom && el.nom.toLowerCase() === choix.toLowerCase()
     );
 
     if (!userGuess) {
@@ -119,7 +121,6 @@ router.post("/validate", (req, res) => {
         return "partial";
       }
 
-      // 4. Aucun élément en commun (Rouge 🟥)
       return "wrong";
     };
 
@@ -128,14 +129,14 @@ router.post("/validate", (req, res) => {
       type: checkMatch(userGuess.type, secret.type),
       lieu: checkMatch(userGuess.lieu, secret.lieu),
       couleur: checkMatch(userGuess.couleur, secret.couleur),
-      hitbox: checkMatch(userGuess.hitbox, secret.hitbox),
+      hitbox: checkMatch(userGuess.hitbox, secret.hitbox)
     };
 
-    if (isCorrect && recordDailySuccess) {
-      recordDailySuccess(tryCount, hintUses);
+    if (isCorrect) {
+      statsStore.registerSuccess(secret.nom, tryCount, hintUses, timeInSeconds);
     }
 
-    const stats = getDailyStats() || {};
+    const stats = statsStore.getStats(secret.nom);
 
     res.json({
       nom: userGuess.nom,
@@ -151,13 +152,14 @@ router.post("/validate", (req, res) => {
           : userGuess.couleur,
         hitbox: Array.isArray(userGuess.hitbox)
           ? userGuess.hitbox.join(", ")
-          : userGuess.hitbox,
+          : userGuess.hitbox
       },
       verdict,
       secretVersion: getSecretVersion ? getSecretVersion() : "1.0.0",
       dailySuccessCount: stats.count || 0,
       avgTries: stats.avgTries || 0,
       avgHints: stats.avgHints || 0,
+      avgTime: stats.avgTime || 0
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -177,8 +179,8 @@ router.post("/getSecretWord", (req, res) => {
           : secret.couleur,
         hitbox: Array.isArray(secret.hitbox)
           ? secret.hitbox.join(", ")
-          : secret.hitbox,
-      },
+          : secret.hitbox
+      }
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -191,31 +193,114 @@ router.post("/hint", (req, res) => {
     const secret = getSecretElement();
     const elements = getElementsList() || [];
 
-    if (type === "false_friend") {
-      const wrongElements = elements.filter(
-        (el) => el.nom && el.nom.toLowerCase() !== secret.nom.toLowerCase(),
-      );
-      const index = getSeededRandom(1) % wrongElements.length;
-      const randomWrong = wrongElements[index];
+    if (type === "opposite") {
+      const secret = getSecretElement();
+      const elements = getElementsList() || [];
+
+      const getRawArr = (attr) =>
+        Array.isArray(attr)
+          ? attr.map((v) => v.trim().toLowerCase())
+          : [attr.trim().toLowerCase()];
+
+      const secretType = getRawArr(secret.type);
+      const secretLieu = getRawArr(secret.lieu);
+      const secretCouleur = getRawArr(secret.couleur);
+      const secretHitbox = getRawArr(secret.hitbox);
+
+      // 1. On évalue chaque élément selon son nombre de catégories totallement différentes (max 4)
+      const scoredCandidates = elements
+        .filter(
+          (el) => el.nom && el.nom.toLowerCase() !== secret.nom.toLowerCase()
+        )
+        .map((el) => {
+          let diffCount = 0;
+          const elType = getRawArr(el.type);
+          const elLieu = getRawArr(el.lieu);
+          const elCouleur = getRawArr(el.couleur);
+          const elHitbox = getRawArr(el.hitbox);
+
+          if (!elType.some((t) => secretType.includes(t))) diffCount++;
+          if (!elLieu.some((l) => secretLieu.includes(l))) diffCount++;
+          if (!elCouleur.some((c) => secretCouleur.includes(c))) diffCount++;
+          if (!elHitbox.some((h) => secretHitbox.includes(h))) diffCount++;
+
+          return { el, diffCount };
+        });
+
+      // 2. On trie du plus différent au moins différent (on veut le max de différences, ex: 4)
+      scoredCandidates.sort((a, b) => b.diffCount - a.diffCount);
+
+      let opposite = null;
+      let differentCategories = [];
+
+      if (scoredCandidates.length > 0) {
+        const maxDiff = scoredCandidates[0].diffCount;
+        const bestCandidates = scoredCandidates.filter(
+          (c) => c.diffCount === maxDiff
+        );
+
+        const index = getSeededRandom(1) % bestCandidates.length;
+        opposite = bestCandidates[index].el;
+
+        // 3. On détecte lesquelles sont différentes pour le texte
+        const opType = getRawArr(opposite.type);
+        const opLieu = getRawArr(opposite.lieu);
+        const opCouleur = getRawArr(opposite.couleur);
+        const opHitbox = getRawArr(opposite.hitbox);
+
+        if (!opType.some((t) => secretType.includes(t)))
+          differentCategories.push("Type");
+        if (!opLieu.some((l) => secretLieu.includes(l)))
+          differentCategories.push("Location");
+        if (!opCouleur.some((c) => secretCouleur.includes(c)))
+          differentCategories.push("Colour");
+        if (!opHitbox.some((h) => secretHitbox.includes(h)))
+          differentCategories.push("Hitbox");
+      }
+
+      let categoriesText = "its attributes";
+      if (differentCategories.length === 4) {
+        categoriesText = "is a perfect opposite !";
+      } else if (differentCategories.length > 0) {
+        if (differentCategories.length === 1) {
+          categoriesText = `is opposite to the word on ${differentCategories[0]}`;
+        } else {
+          const last = differentCategories.pop();
+          categoriesText = `is opposite to the word on ${differentCategories.join(", ")} and ${last}`;
+        }
+      } else {
+        categoriesText = "shares some attributes";
+      }
+
       return res.json({
-        text: `<strong>False Friend:</strong> The secret word does NOT have any common categories with <em>${randomWrong ? randomWrong.nom : "Unknown"}</em>`,
+        text: `<strong>Opposite:</strong> <em>${
+          opposite ? opposite.nom : "Unknown"
+        }</em> ${categoriesText}.`
+      });
+
+      return res.json({
+        text: `<strong>Opposite:</strong> <em>${
+          opposite ? opposite.nom : "Unknown"
+        }</em> is opposite to the word on ${categoriesText}.`
       });
     }
 
     if (type === "secret_info") {
-      // Réservé exclusivement à Type et Lieu pour ne pas chevaucher l'autre indice
       const infos = [
-        `Its type includes: <strong>${Array.isArray(secret.type) ? secret.type[0] : secret.type}</strong>`,
-        `It can be found in: <strong>${Array.isArray(secret.lieu) ? secret.lieu[0] : secret.lieu}</strong>`,
+        `Its type includes: <strong>${
+          Array.isArray(secret.type) ? secret.type[0] : secret.type
+        }</strong>`,
+        `It can be found in: <strong>${
+          Array.isArray(secret.lieu) ? secret.lieu[0] : secret.lieu
+        }</strong>`
       ];
       const index = getSeededRandom(2) % infos.length;
       return res.json({
-        text: `<strong>Secret Info:</strong> ${infos[index]}`,
+        text: `<strong>Secret Info:</strong> ${infos[index]}`
       });
     }
 
     if (type === "truth_and_lies") {
-      // Réservé exclusivement à Couleur et Hitbox
       const secretColor = Array.isArray(secret.couleur)
         ? secret.couleur[0]
         : secret.couleur;
@@ -225,7 +310,7 @@ router.post("/hint", (req, res) => {
 
       const truthPool = [
         `Hitbox is "${secretHitbox || "Unknown"}"`,
-        `Color includes "${secretColor || "Unknown"}"`,
+        `Color includes "${secretColor || "Unknown"}"`
       ];
 
       const trueIndex = getSeededRandom(3) % truthPool.length;
@@ -244,7 +329,7 @@ router.post("/hint", (req, res) => {
 
       const liesPool = [
         `Hitbox is "${fakeHitbox}"`,
-        `Color includes "${fakeColor}"`,
+        `Color includes "${fakeColor}"`
       ];
 
       const statements = [trueStatement, liesPool[0], liesPool[1]];
@@ -253,7 +338,9 @@ router.post("/hint", (req, res) => {
       if (randOrder === 1) statements.push(statements.shift());
       if (randOrder === 2) statements.unshift(statements.pop());
 
-      const hintText = `<strong>1 Truth & 2 Lies:</strong><br>• ${statements.join("<br>• ")}`;
+      const hintText = `<strong>1 Truth & 2 Lies:</strong><br>• ${statements.join(
+        "<br>• "
+      )}`;
 
       return res.json({ text: hintText });
     }

@@ -1,136 +1,120 @@
 const express = require("express");
 const router = express.Router();
-const { updateSeedHash } = require("../utils/helpers");
+const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
+const {
+  updateSeedHash,
+  getSecretOfTheDay,
+  getSecretElement,
+  getElementsList
+} = require("../utils/helpers");
 
-const adminKey = process.env.ADMIN_PASSWORD;
-console.log("--- LA CLÉ ADMIN CHARGÉE EST :", adminKey, "---");
+const JWT_SECRET = process.env.JWT_SECRET;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-router.post("/verify-key", (req, res) => {
-  const { key } = req.body;
-  if (key !== adminKey) {
-    return res.status(403).json({ error: "Incorrect password" });
+function verifyAdminToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Token manquant" });
   }
-  res.json({ success: true, message: "Access authorized" });
+
+  try {
+    const token = authHeader.split(" ")[1];
+    jwt.verify(token, JWT_SECRET);
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: "Session expirée" });
+  }
+}
+
+router.post("/login", (req, res) => {
+  const { password } = req.body || {};
+  if (password === ADMIN_PASSWORD) {
+    const token = jwt.sign({ role: "admin" }, JWT_SECRET, { expiresIn: "8h" });
+    return res.json({ success: true, token });
+  }
+  return res.status(401).json({ error: "Mot de passe incorrect" });
 });
 
-router.post("/random-hash", (req, res) => {
-  const { key, newHash } = req.body;
-
-  if (key !== adminKey) {
-    return res.status(403).json({ error: "Access denied" });
-  }
-
-  if (newHash === null) {
-    updateSeedHash(20250204);
-  } else {
-    updateSeedHash(newHash);
-  }
-
-  // Met à jour secretVersion pour déclencher le reset côté client
+router.get("/session", verifyAdminToken, (req, res) => {
+  res.json({ authenticated: true });
 });
 
-router.post("/trigger-reset", (req, res) => {
-  const { key } = req.body;
-  if (adminKey && key !== adminKey) {
-    return res.status(403).json({ error: "Access denied" });
-  }
-
-  const newHash = Math.floor(Math.random() * 10000000);
+router.post("/trigger-reset", verifyAdminToken, (req, res) => {
+  const newHash = Math.floor(Math.random() * 1000000);
   updateSeedHash(newHash);
-
+  const secret = getSecretElement();
   res.json({
-    success: true,
-    message:
-      "Game forced reset successfully. Secret element and hints regenerated.",
-    newHash,
+    message: "Reset réussi",
+    secretElement: secret.nom,
+    details: secret,
+    newHash
   });
 });
 
-router.post("/assign-image", (req, res) => {
-  const { key, entityName, srcPath } = req.body;
-  if (adminKey && key !== adminKey)
-    return res.status(403).json({ error: "Access denied" });
-  if (!entityName || !srcPath)
-    return res.status(400).json({ error: "Missing parameters" });
+router.post("/random-hash", verifyAdminToken, (req, res) => {
+  const newHash = req.body.newHash || Math.floor(Math.random() * 1000000);
+  updateSeedHash(newHash);
+  const secret = getSecretElement();
+  res.json({
+    message: "Hash à jour",
+    secretElement: secret.nom,
+    details: secret,
+    newHash
+  });
+});
 
-  const publicDir = path.join(__dirname, "..", "..", "public");
-  const dumpFull = path.join(publicDir, srcPath);
-  if (!fs.existsSync(dumpFull))
-    return res.status(404).json({ error: "Source file not found: " + srcPath });
+router.post("/get-secret", verifyAdminToken, (req, res) => {
+  const secret = getSecretElement();
+  res.json({ secretElement: secret.nom, details: secret });
+});
 
-  const ext = path.extname(dumpFull) || ".png";
-  const slug = entityName
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-  const destRel = `assets/entities/${slug}${ext}`;
-  const destFull = path.join(publicDir, destRel);
+router.post("/set-secret", verifyAdminToken, (req, res) => {
+  const { elementName } = req.body || {};
+  const elements = getElementsList() || [];
 
+  const found = elements.find(
+    (el) => el.nom && el.nom.toLowerCase() === (elementName || "").toLowerCase()
+  );
+
+  if (!found) {
+    return res.status(404).json({ error: "Élément introuvable" });
+  }
+
+  res.json({
+    message: `Mot secret défini sur : ${found.nom}`,
+    secretElement: found.nom,
+    details: found
+  });
+});
+
+router.get("/elements-list", verifyAdminToken, (req, res) => {
+  const elements = getElementsList() || [];
+  res.json(elements);
+});
+
+// Route publique/admin pour charger les détails de tous les éléments pour le tableau
+router.get("/all-elements-details", (req, res) => {
   try {
-    fs.copyFileSync(dumpFull, destFull);
-    const mappingPath = path.join(
-      publicDir,
-      "assets",
-      "entities",
-      "mapping.json",
-    );
-    let mapping = {};
-    if (fs.existsSync(mappingPath))
-      mapping = JSON.parse(fs.readFileSync(mappingPath));
-    mapping[entityName] = destRel;
-    fs.writeFileSync(mappingPath, JSON.stringify(mapping, null, 2));
-    return res.json({
-      success: true,
-      mappingEntry: mapping[entityName],
-      dest: destRel,
-    });
+    const elements = getElementsList() || [];
+    res.json(elements);
   } catch (err) {
-    console.error("assign-image error", err);
-    return res.status(500).json({ error: "Failed to assign image" });
+    res.status(500).json({ error: err.message });
   }
 });
 
-router.post("/upload-image", (req, res) => {
-  const { key, entityName, fileName, fileData } = req.body;
-  if (adminKey && key !== adminKey)
-    return res.status(403).json({ error: "Access denied" });
-  if (!entityName || !fileName || !fileData)
-    return res.status(400).json({ error: "Missing parameters" });
-
-  const publicDir = path.join(__dirname, "..", "..", "public");
-  const ext = path.extname(fileName).toLowerCase() || ".png";
-  const slug = entityName
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-  const destRel = `assets/entities/${slug}${ext}`;
-  const destFull = path.join(publicDir, destRel);
-
+// Route publique/admin pour lire l'historique des statistiques
+router.get("/stats-history", (req, res) => {
   try {
-    const buffer = Buffer.from(fileData, "base64");
-    fs.writeFileSync(destFull, buffer);
-
-    const mappingPath = path.join(
-      publicDir,
-      "assets",
-      "entities",
-      "mapping.json",
-    );
-    let mapping = {};
-    if (fs.existsSync(mappingPath))
-      mapping = JSON.parse(fs.readFileSync(mappingPath));
-    mapping[entityName] = destRel;
-    fs.writeFileSync(mappingPath, JSON.stringify(mapping, null, 2));
-    return res.json({
-      success: true,
-      mappingEntry: mapping[entityName],
-      dest: destRel,
-    });
+    const historyPath = path.join(__dirname, "../../stats-history.json");
+    if (fs.existsSync(historyPath)) {
+      const data = JSON.parse(fs.readFileSync(historyPath, "utf8"));
+      return res.json(data);
+    }
+    return res.json([]);
   } catch (err) {
-    console.error("upload-image error", err);
-    return res.status(500).json({ error: "Failed to upload image" });
+    res.status(500).json({ error: err.message });
   }
 });
 
