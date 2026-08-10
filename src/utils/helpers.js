@@ -24,26 +24,10 @@ if (process.env.RANDOM_SEED) {
   }
 }
 
-// Variables pour suivre la rotation quotidienne et archiver
-let lastDateString = null;
-let lastSecretName = null;
-
 function getSecretOfTheDay() {
   const dateString = new Date().toLocaleDateString("sv-SE", {
     timeZone: "Europe/Paris"
   });
-
-  // 📦 Détection du changement de jour (Minuit)
-  if (lastDateString && lastDateString !== dateString) {
-    if (lastSecretName) {
-      dailyStatsStore.archiveCurrentStats(lastSecretName);
-      console.log(
-        `[AUTO-ARCHIVE] Stats for "${lastSecretName}" archived for date ${lastDateString}`
-      );
-    }
-    // Mise à jour de la version pour forcer les clients à recharger
-    secretVersion = Date.now().toString();
-  }
 
   let dateHash = 0;
   for (let i = 0; i < dateString.length; i++) {
@@ -53,13 +37,7 @@ function getSecretOfTheDay() {
   const combined = (dateHash ^ globalSeedHash) >>> 0;
   const targetedIndex = combined % officialElementsList.length;
 
-  const currentSecret = officialElementsList[targetedIndex];
-
-  // Mise à jour du dernier mot et de la dernière date
-  lastDateString = dateString;
-  lastSecretName = currentSecret;
-
-  return currentSecret;
+  return officialElementsList[targetedIndex];
 }
 
 // Log placé APRÈS l'initialisation de globalSeedHash
@@ -98,15 +76,6 @@ function normalizeMetaList(data) {
 }
 
 function updateSeedHash(newHash) {
-  // Archive le mot actuel avant d'appliquer un nouveau hash manuel (ex: admin reset)
-  const currentSecret = getSecretOfTheDay();
-  if (currentSecret) {
-    dailyStatsStore.archiveCurrentStats(currentSecret);
-    console.log(
-      `[MANUAL-RESET-ARCHIVE] Stats for "${currentSecret}" archived.`
-    );
-  }
-
   globalSeedHash = newHash;
   secretVersion = Date.now().toString();
 }

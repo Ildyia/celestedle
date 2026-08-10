@@ -186,6 +186,7 @@
             <p>Victories today: <span id="success-count">0</span></p>
             <p>Avg. tries: <span id="avg-tries-count">-</span></p>
             <p>Avg. hints: <span id="avg-hints-count">-</span></p>
+            <p>Avg. time: <span id="avg-time-count">-</span></p>
           </div>
         </div>
       </div>
@@ -201,23 +202,17 @@
               alt=""
               class="btn-icon"
             />
-            Tries: <span id="try-count">0</span>
+            <span id="try-count">0</span>
+          </p>
+          <p class="tries-badge">
             <img src="assets/illustration/time.png" alt="" class="btn-icon" />
-            Time: <span id="time-count">0</span>
+            <span id="game-timer-display">0</span>
           </p>
           <button id="hint-btn" class="btn">
             <img src="assets/illustration/assist.png" alt="" class="btn-icon" />
             <span id="hint-btn-text">Hints</span>
           </button>
 
-          <button id="personalized-btn" class="btn">
-            <img
-              src="assets/illustration/variant.png"
-              alt=""
-              class="btn-icon"
-            />
-            <span>Custom Synonyms</span>
-          </button>
           <button id="giveup-btn" class="btn">
             <img src="assets/illustration/skull.png" alt="" class="btn-icon" />
             <span>Give Up</span>
@@ -414,7 +409,41 @@
           </label>
         </div>
 
-        <div class="colorblind-preview">
+        <hr
+          class="options-separator"
+          style="
+            margin: 12px 0;
+            border: 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+          "
+        />
+
+        <div style="margin: 16px 0 8px 0">
+          <button
+            id="personalized-btn"
+            class="btn-primary"
+            style="
+              width: 100%;
+              padding: 10px 16px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 10px;
+              font-size: 0.95rem;
+              border-radius: 8px;
+              box-sizing: border-box;
+            "
+          >
+            <img
+              src="assets/illustration/variant.png"
+              alt=""
+              style="height: 24px; width: auto; object-fit: contain"
+            />
+            <span>Manage Custom Synonyms</span>
+          </button>
+        </div>
+
+        <div class="colorblind-preview" style="margin-top: 16px">
           <p class="small-subtext">Colorblind preview:</p>
           <div
             class="preview-grid"

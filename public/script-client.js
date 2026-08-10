@@ -16,49 +16,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const App = {
   synonyms: {
-    cassette: "cassette tape",
-    tape: "cassette tape",
-    tile: "tiles",
-    crumble: "crumble block",
-    crumbleblock: "crumble block",
-    jumpthroughs: "jumpthrough",
     "blue booster": "green booster",
     "red bubble": "red booster",
     "green bubble": "green booster",
     "blue bubble": "green booster",
-    bubble: "green booster",
     piaf: "bird",
-    oiseau: "bird",
-    "moving block": "move block",
-    zippers: "zip movers",
-    "cristal spinner": "crystal spinner",
+    "crystal spinners": "spinners",
     "electricity box": "power box",
     electricity: "lightning",
     button: "dash switch",
-    "huge mess switch": "clutter switch",
     "mess switch": "clutter switch",
-    "huge mess tiles": "clutter tiles",
     "mess tiles": "clutter tiles",
     "dash refill": "refill",
     "dash crystal": "refill",
     "key gate": "lock",
     lazer: "badeline laser",
-    "badeline lazer": "badeline laser",
-    "badeline shotgun": "badeline projectile",
-    "badeline gun": "badeline projectile",
-    "badeline blaster": "badeline projectile",
-    "badeline shooter": "badeline projectile",
-    "badeline shot": "badeline projectile",
-    "fire wall": "lava/ice wall",
-    "slime door": "clutter door",
-    "slime button": "clutter switch",
-    "slime switch": "clutter switch",
+    shotgun: "badeline projectile",
+    gun: "badeline projectile",
+    blaster: "badeline projectile",
+
     books: "clutter tiles",
     towels: "clutter tiles",
     crates: "clutter tiles",
-    moonblock: "moon block",
     "fire barrier": "lava barrier",
-    "slippery ice wall": "ice wall",
     "trigger spike": "trigger dust",
     "hot core block": "magma block",
     "cold core block": "ice crumble block",
@@ -124,6 +104,7 @@ const App = {
       timerContainer: document.getElementById("next-word-timer"),
       avgTriesSpan: document.getElementById("avg-tries-count"),
       avgHintsSpan: document.getElementById("avg-hints-count"),
+      avgTimeSpan: document.getElementById("avg-time-count"),
       showAllBtn: document.getElementById("show-all-btn"),
       disclaimerModal: document.getElementById("disclaimer-modal"),
       closeDisclaimerBtn: document.getElementById("close-disclaimer-btn"),
@@ -369,6 +350,16 @@ const App = {
     if (this.nodes.avgHintsSpan)
       this.nodes.avgHintsSpan.textContent =
         data.avgHints != null ? Number(data.avgHints).toFixed(1) : "-";
+    if (this.nodes.avgTimeSpan) {
+      const totalSeconds = data.avgTime ?? data.avgTimeInSeconds;
+      if (totalSeconds != null && totalSeconds > 0) {
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = totalSeconds % 60;
+        this.nodes.avgTimeSpan.textContent = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+      } else {
+        this.nodes.avgTimeSpan.textContent = "-";
+      }
+    }
   },
 
   handleOutsideClick(e) {
