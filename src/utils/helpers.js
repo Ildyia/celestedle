@@ -3,7 +3,7 @@ const path = require("path");
 const { createDailyStatsStore } = require("./daily-stats");
 
 const database = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "../../db.json"), "utf8"),
+  fs.readFileSync(path.join(__dirname, "../../db.json"), "utf8")
 );
 const officialElementsList = Object.keys(database).sort();
 
@@ -26,13 +26,14 @@ if (process.env.RANDOM_SEED) {
 
 function getSecretOfTheDay() {
   const dateString = new Date().toLocaleDateString("sv-SE", {
-    timeZone: "Europe/Paris",
+    timeZone: "Europe/Paris"
   });
 
   let localizedHash = globalSeedHash;
 
   for (let i = 0; i < dateString.length; i++) {
-    localizedHash = (localizedHash * 33 + dateString.charCodeAt(i)) | 0;
+    localizedHash =
+      ((localizedHash + globalSeedHash) * 33 + dateString.charCodeAt(i)) | 0;
     localizedHash = (Math.sin(localizedHash) * 10000) | 0;
   }
 
@@ -45,7 +46,7 @@ function getSecretElement() {
   const secretName = getSecretOfTheDay();
   return {
     nom: secretName,
-    ...database[secretName],
+    ...database[secretName]
   };
 }
 
@@ -53,7 +54,7 @@ function getSecretElement() {
 function getElementsList() {
   return officialElementsList.map((nom) => ({
     nom,
-    ...database[nom],
+    ...database[nom]
   }));
 }
 
@@ -116,5 +117,5 @@ module.exports = {
   registerDailySuccess,
   getDailyStats,
   recordDailySuccess,
-  getSeededRandom,
+  getSeededRandom
 };
