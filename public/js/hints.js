@@ -2,11 +2,11 @@ import { ApiService } from "./api.js";
 
 export const HintsManager = {
   updateButtonsState(app) {
-    const btnFF = document.getElementById("hint-opt-false-friend");
+    const btnFF = document.getElementById("hint-opt-opposite");
     const btnSecret = document.getElementById("hint-opt-secret");
     const btnTruthLies = document.getElementById("hint-opt-truth-lies");
 
-    if (btnFF) btnFF.disabled = app.usedHintTypes.includes("false_friend");
+    if (btnFF) btnFF.disabled = app.usedHintTypes.includes("opposite");
     if (btnSecret)
       btnSecret.disabled = app.usedHintTypes.includes("secret_info");
     if (btnTruthLies)
