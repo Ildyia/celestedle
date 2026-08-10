@@ -1,57 +1,116 @@
-<!doctype html>
-<html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard Admin</title>
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
-    <link rel="stylesheet" href="/style.css" />
-    <link rel="stylesheet" href="/theme-celeste.css" />
-  </head>
-  <body class="theme-celeste">
-    <div class="admin-container">
-      <h1>Panneau d'administration</h1>
-
-      <section class="admin-section">
-        <h2>Actions rapides</h2>
-        <div class="admin-actions">
-          <button class="admin-btn" id="btn-get-secret">
-            Voir le mot secret
-          </button>
-          <button class="admin-btn" id="btn-random-secret">
-            Changer le mot secret
-          </button>
-          <button class="admin-btn admin-btn-danger" id="btn-force-reset">
-            Réinitialiser le jeu (Reset)
-          </button>
+<body class="theme-celeste">
+  <!-- PASSWORD GATE -->
+  <div id="admin-gate" class="rules-modal">
+    <div class="rules-content" style="max-width: 400px; text-align: center">
+      <h2>Accès administrateur</h2>
+      <form id="admin-gate-form">
+        <div class="form-group" style="text-align: left; margin-top: 16px">
+          <label for="admin-gate-password">Mot de passe :</label>
+          <input
+            type="password"
+            id="admin-gate-password"
+            class="bug-input"
+            autocomplete="current-password"
+            required
+          />
         </div>
-      </section>
+        <p
+          id="admin-gate-error"
+          style="
+            color: var(--color-wrong);
+            min-height: 20px;
+            font-size: 0.85rem;
+          "
+        ></p>
+        <button
+          type="submit"
+          class="btn-primary"
+          style="width: 100%; padding: 12px"
+        >
+          Entrer
+        </button>
+      </form>
     </div>
+  </div>
 
-    <script type="module">
-      import { initAdminTools } from "./js/admin-tools.js";
+  <div class="admin-container" id="admin-panel" style="display: none">
+    <h1>Panneau d'administration</h1>
 
-      document.addEventListener("DOMContentLoaded", () => {
-        initAdminTools();
+    <section class="admin-section">
+      <h2>Actions rapides</h2>
+      <div class="admin-actions">
+        <button class="admin-btn" id="btn-get-secret">
+          Voir le mot secret
+        </button>
+        <button class="admin-btn" id="btn-random-secret">
+          Changer le mot secret
+        </button>
+        <button class="admin-btn admin-btn-danger" id="btn-force-reset">
+          Réinitialiser le jeu (Reset)
+        </button>
+      </div>
+    </section>
+  </div>
+  <script type="module">
+    import { initAdminTools } from "./js/admin-tools.js";
+    import { ApiService } from "./js/api.js";
 
-        document
-          .getElementById("btn-get-secret")
-          ?.addEventListener("click", () => {
-            window.getSecretWordPlzUwU();
-          });
+    const gate = document.getElementById("admin-gate");
+    const panel = document.getElementById("admin-panel");
+    const form = document.getElementById("admin-gate-form");
+    const passwordInput = document.getElementById("admin-gate-password");
+    const errorMsg = document.getElementById("admin-gate-error");
 
-        document
-          .getElementById("btn-random-secret")
-          ?.addEventListener("click", () => {
-            window.randomSecret();
-          });
+    function unlockPanel() {
+      gate.style.display = "none";
+      panel.style.display = "block";
 
-        document
-          .getElementById("btn-force-reset")
-          ?.addEventListener("click", () => {
-            window.triggerReset();
-          });
+      initAdminTools();
+
+      document
+        .getElementById("btn-get-secret")
+        ?.addEventListener("click", () => {
+          window.getSecretWordPlzUwU();
+        });
+      document
+        .getElementById("btn-random-secret")
+        ?.addEventListener("click", () => {
+          window.randomSecret();
+        });
+      document
+        .getElementById("btn-force-reset")
+        ?.addEventListener("click", () => {
+          window.triggerReset();
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      ApiService.checkAdminSession().then((valid) => {
+        if (valid) {
+          unlockPanel();
+        } else {
+          gate.style.display = "flex";
+          passwordInput.focus();
+        }
       });
-    </script>
-  </body>
-</html>
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      errorMsg.textContent = "";
+      const submitBtn = form.querySelector("button[type='submit']");
+      submitBtn.disabled = true;
+
+      ApiService.adminLogin(passwordInput.value)
+        .then(() => unlockPanel())
+        .catch(() => {
+          errorMsg.textContent = "Mot de passe incorrect.";
+          passwordInput.value = "";
+          passwordInput.focus();
+        })
+        .finally(() => {
+          submitBtn.disabled = false;
+        });
+    });
+  </script>
+</body>

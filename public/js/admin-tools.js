@@ -2,11 +2,7 @@ import { ApiService } from "./api.js";
 
 export function initAdminTools() {
   window.getSecretWordPlzUwU = function () {
-    const adminPassword = prompt("Please enter admin password :");
-    if (!adminPassword) return;
-
-    ApiService.verifyAdminKey(adminPassword)
-      .then(() => ApiService.getSecretWordAdmin())
+    ApiService.getSecretWordAdmin()
       .then((data) =>
         alert("The secret element of the day is : " + data.secretElement)
       )
@@ -14,36 +10,24 @@ export function initAdminTools() {
   };
 
   window.forceReset = function () {
-    const adminPassword = prompt("Please enter admin password :");
-    if (!adminPassword) return;
-
-    ApiService.verifyAdminKey(adminPassword)
-      .then(() => {
-        const keysToRemove = [
-          "tries",
-          "gameover",
-          "status",
-          "history",
-          "date",
-          "version",
-          "saved_hints",
-          "used_hint_types"
-        ];
-        keysToRemove.forEach((key) =>
-          localStorage.removeItem(`celestedle_${key}`)
-        );
-        alert("Local data wiped ! Reloading window context structure.");
-      })
-      .catch((err) => alert(err.message));
+    const keysToRemove = [
+      "tries",
+      "gameover",
+      "status",
+      "history",
+      "date",
+      "version",
+      "saved_hints",
+      "used_hint_types"
+    ];
+    keysToRemove.forEach((key) => localStorage.removeItem(`celestedle_${key}`));
+    alert("Local data wiped ! Reloading window context structure.");
   };
 
   window.randomSecret = function (reset = false) {
-    const adminPassword = prompt("Please enter admin password:");
-    if (!adminPassword) return;
-    let newHash = Math.floor(Math.random() * 1000000000);
-    if (reset) newHash = null;
+    const newHash = reset ? null : Math.floor(Math.random() * 1000000000);
 
-    ApiService.triggerRandomSecret(adminPassword, newHash)
+    ApiService.triggerRandomSecret(newHash)
       .then((data) =>
         alert(data.error ? "Error : " + data.error : data.message)
       )
@@ -51,10 +35,7 @@ export function initAdminTools() {
   };
 
   window.triggerReset = function () {
-    const adminPassword = prompt("Please enter admin password :");
-    if (!adminPassword) return;
-
-    ApiService.triggerAdminReset(adminPassword)
+    ApiService.triggerAdminReset()
       .then((data) => {
         alert(data.error ? "Error : " + data.error : data.message);
         if (data.success) {
