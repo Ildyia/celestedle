@@ -48,7 +48,11 @@ export const GameTimer = {
   },
 
   getTimeInSeconds() {
-    return this.secondsElapsed;
+    const saved = parseInt(
+      localStorage.getItem("celestedle_elapsed_time") || "0",
+      10
+    );
+    return Math.max(this.secondsElapsed || 0, saved);
   },
 
   render() {
