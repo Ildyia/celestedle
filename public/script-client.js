@@ -63,6 +63,8 @@ const App = {
     GameStateManager.checkApplicationVersion();
     GameStateManager.load(this);
     this.fetchOfficialElements();
+
+    // 🔄 Stats communautaires rafraîchies à chaque chargement de page
     this.fetchDailySuccessCount();
 
     SuggestionsManager.init(this);
@@ -425,6 +427,10 @@ const App = {
           }
           localStorage.setItem("celestedle_gameover", "true");
           localStorage.setItem("celestedle_status", "win");
+
+          // Actualise les stats communautaires instantanément après la victoire
+          this.fetchDailySuccessCount();
+
           this.renderEndGameScreen();
         }
       })
@@ -448,6 +454,10 @@ const App = {
             "celestedle_solution_attributes",
             JSON.stringify(data.secretAttributes)
           );
+
+        // Actualise les stats communautaires instantanément après l'abandon
+        this.fetchDailySuccessCount();
+
         if (this.nodes.forfeitModal)
           this.nodes.forfeitModal.style.display = "none";
         this.renderEndGameScreen();
@@ -455,6 +465,9 @@ const App = {
       .catch(() => {
         localStorage.setItem("celestedle_gameover", "true");
         localStorage.setItem("celestedle_status", "lose");
+
+        this.fetchDailySuccessCount();
+
         if (this.nodes.forfeitModal)
           this.nodes.forfeitModal.style.display = "none";
         this.renderEndGameScreen();
