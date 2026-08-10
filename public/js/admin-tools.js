@@ -27,7 +27,7 @@ function bindAdminActions() {
 
   // 1. Révéler le secret actuel
   document.getElementById("admin-reveal-btn")?.addEventListener("click", () => {
-    sendAdminPost("/api/admin/get-secret")
+    sendAdminPost("/admin/get-secret")
       .then((data) => {
         if (output)
           output.textContent = `Secret actuel : ${data.secretElement}`;
@@ -41,7 +41,7 @@ function bindAdminActions() {
   document
     .getElementById("admin-reset-seed-btn")
     ?.addEventListener("click", () => {
-      sendAdminPost("/api/admin/trigger-reset")
+      sendAdminPost("/admin/trigger-reset")
         .then((data) => {
           if (output)
             output.textContent = `Word Reset ! Nouveau secret : ${data.secretElement}`;
@@ -57,7 +57,7 @@ function bindAdminActions() {
   document
     .getElementById("admin-random-secret-btn")
     ?.addEventListener("click", () => {
-      sendAdminPost("/api/admin/random-hash")
+      sendAdminPost("/admin/random-hash")
         .then((data) => {
           if (output)
             output.textContent = `Secret aléatoire défini : ${data.secretElement}`;
@@ -107,11 +107,11 @@ async function loadAdminDashboardData() {
 
     // Chargement parallèle des détails et de l'historique
     const [elementsRes, historyRes] = await Promise.all([
-      fetchJson("/api/admin/all-elements-details").catch((err) => {
+      fetchJson("/admin/all-elements-details").catch((err) => {
         console.warn("Impossible de charger les détails des éléments :", err);
         return [];
       }),
-      fetchJson("/api/admin/stats-history").catch((err) => {
+      fetchJson("/admin/stats-history").catch((err) => {
         console.warn("Impossible de charger l'historique :", err);
         return [];
       })
@@ -120,7 +120,7 @@ async function loadAdminDashboardData() {
     // Fallback si la route /all-elements-details est vide
     let elementsList = elementsRes;
     if (!elementsList || elementsList.length === 0) {
-      elementsList = await fetchJson("/api/game/elements").catch(() => []);
+      elementsList = await fetchJson("/game/elements").catch(() => []);
     }
 
     // Construction du tableau de données compilées
