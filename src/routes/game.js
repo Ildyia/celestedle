@@ -196,7 +196,7 @@ router.post("/hint", (req, res) => {
         const secret = getSecretElement();
         const elements = getElementsList() || [];
 
-        if (type === "false_friend") {
+        if (type === "opposite") {
           const getNorm = (attr) => {
             if (Array.isArray(attr))
               return attr.map((v) => v.trim().toLowerCase());
