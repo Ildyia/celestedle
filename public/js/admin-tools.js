@@ -1,4 +1,4 @@
-import { ApiService } from "./api.js";
+import { API_BASE_URL } from "./api.js";
 
 let wordsData = [];
 let currentSortKey = "nom";
@@ -12,18 +12,22 @@ export function initAdminTools() {
 function bindAdminActions() {
   const output = document.getElementById("admin-output");
 
-  document.getElementById("admin-reveal-btn")?.addEventListener("click", () => {
-    // Utilisation du fetch direct si getSecretWord n'est pas sur ApiService
-    fetch("/api/admin/get-secret", {
+  // Helper pour les requêtes POST d'admin
+  const sendAdminPost = async (endpoint) => {
+    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: "POST",
       headers: {
+        "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem("celestedle_admin_token") || ""}`
       }
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Erreur ou non autorisé");
-        return res.json();
-      })
+    });
+    if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
+    return res.json();
+  };
+
+  // 1. Révéler le secret actuel
+  document.getElementById("admin-reveal-btn")?.addEventListener("click", () => {
+    sendAdminPost("/api/admin/get-secret")
       .then((data) => {
         if (output)
           output.textContent = `Secret actuel : ${data.secretElement}`;
@@ -33,48 +37,39 @@ function bindAdminActions() {
       });
   });
 
+  // 2. Réinitialiser le mot (Seed Reset)
   document
     .getElementById("admin-reset-seed-btn")
     ?.addEventListener("click", () => {
-      fetch("/api/admin/trigger-reset", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("celestedle_admin_token") || ""}`
-        }
-      })
-        .then((res) => res.json())
+      sendAdminPost("/api/admin/trigger-reset")
         .then((data) => {
           if (output)
             output.textContent = `Word Reset ! Nouveau secret : ${data.secretElement}`;
           loadAdminDashboardData();
         })
-        .catch(() => {
-          if (output) output.textContent = "Erreur lors du reset du seed.";
+        .catch((err) => {
+          if (output)
+            output.textContent = `Erreur lors du reset : ${err.message}`;
         });
     });
 
+  // 3. Définir un secret aléatoire
   document
     .getElementById("admin-random-secret-btn")
     ?.addEventListener("click", () => {
-      fetch("/api/admin/random-hash", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("celestedle_admin_token") || ""}`
-        }
-      })
-        .then((res) => res.json())
+      sendAdminPost("/api/admin/random-hash")
         .then((data) => {
           if (output)
             output.textContent = `Secret aléatoire défini : ${data.secretElement}`;
           loadAdminDashboardData();
         })
-        .catch(() => {
+        .catch((err) => {
           if (output)
-            output.textContent = "Erreur lors de la génération aléatoire.";
+            output.textContent = `Erreur génération aléatoire : ${err.message}`;
         });
     });
 
-  // Gestion du tri au clic sur les entêtes de colonnes
+  // 4. Tri au clic sur les entêtes du tableau
   document
     .querySelectorAll("#words-stats-table th[data-sort]")
     .forEach((th) => {
@@ -95,11 +90,9 @@ function bindAdminActions() {
 }
 
 async function loadAdminDashboardData() {
-  const output = document.getElementById("admin-output");
-
   try {
     const fetchJson = async (endpoint) => {
-      const res = await fetch(endpoint, {
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("celestedle_admin_token") || ""}`
         }
@@ -112,6 +105,7 @@ async function loadAdminDashboardData() {
       return res.json();
     };
 
+    // Chargement parallèle des détails et de l'historique
     const [elementsRes, historyRes] = await Promise.all([
       fetchJson("/api/admin/all-elements-details").catch((err) => {
         console.warn("Impossible de charger les détails des éléments :", err);
@@ -123,11 +117,13 @@ async function loadAdminDashboardData() {
       })
     ]);
 
+    // Fallback si la route /all-elements-details est vide
     let elementsList = elementsRes;
     if (!elementsList || elementsList.length === 0) {
       elementsList = await fetchJson("/api/game/elements").catch(() => []);
     }
 
+    // Construction du tableau de données compilées
     wordsData = elementsList.map((item) => {
       const name = typeof item === "string" ? item : item.nom;
 
@@ -209,20 +205,24 @@ function renderTable() {
   });
 
   tbody.innerHTML = sortedData
-    .map(
-      (item) => `
-    <tr>
-      <td>
-        <img src="${item.image}" alt="${item.nom}" class="word-thumb" onerror="this.style.display='none'" />
-      </td>
-      <td><strong>${item.nom.charAt(0).toUpperCase() + item.nom.slice(1)}</strong></td>
-      <td>${item.count}</td>
-      <td>${item.lastDate}</td>
-      <td>${item.count > 0 ? item.avgTries : "-"}</td>
-      <td>${item.count > 0 ? item.avgHints : "-"}</td>
-      <td>${item.count > 0 ? `${item.avgTime}s` : "-"}</td>
-    </tr>
-  `
-    )
+    .map((item) => {
+      const mins = Math.floor(item.avgTime / 60);
+      const secs = item.avgTime % 60;
+      const formattedAvgTime = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+
+      return `
+        <tr>
+          <td>
+            <img src="${item.image}" alt="${item.nom}" class="word-thumb" onerror="this.style.display='none'" />
+          </td>
+          <td><strong>${item.nom.charAt(0).toUpperCase() + item.nom.slice(1)}</strong></td>
+          <td>${item.count}</td>
+          <td>${item.lastDate}</td>
+          <td>${item.count > 0 ? item.avgTries : "-"}</td>
+          <td>${item.count > 0 ? item.avgHints : "-"}</td>
+          <td>${item.count > 0 ? formattedAvgTime : "-"}</td>
+        </tr>
+      `;
+    })
     .join("");
 }
