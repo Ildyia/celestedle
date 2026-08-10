@@ -8,7 +8,7 @@ const database = JSON.parse(
 const officialElementsList = Object.keys(database).sort();
 
 let secretForce = null;
-let secretVersion = "1.0.1";
+let secretVersion = "1.0.2";
 const dailyStatsStore = createDailyStatsStore();
 
 let globalSeedHash = 0;
