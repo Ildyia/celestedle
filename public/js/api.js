@@ -1,7 +1,10 @@
+const hostname = window.location.hostname;
 const API_BASE_URL =
-  ["localhost", "127.0.0.1", "celestedle-beta.vercel.app", "::1"].includes(
-    window.location.hostname
-  ) || window.location.hostname.endsWith(".vercel.app")
+  hostname === "localhost" ||
+  hostname === "127.0.0.1" ||
+  hostname === "::1" ||
+  hostname.includes("beta") ||
+  hostname.includes("-projects.vercel.app")
     ? "https://celestedle-api.onrender.com"
     : "https://celestedle-api.mizkyosia.fr";
 
