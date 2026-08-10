@@ -30,6 +30,7 @@ jobs:
           echo "DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}" >> .env
           echo "DISCORD_BOT_TOKEN=${{ secrets.DISCORD_BOT_TOKEN }}" >> .env
           echo "RANDOM_SEED=${{ secrets.RANDOM_SEED }}" >> .env
+          echo "JWT_SECRET=${{secrets.JWT_SECRET}}">>.env
 
       - name: Deploy Production
         run: docker compose up -d --build --force-recreate
