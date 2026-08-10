@@ -8,7 +8,7 @@ const database = JSON.parse(
 const officialElementsList = Object.keys(database).sort();
 
 let secretForce = null;
-let secretVersion = "1.0.2";
+let secretVersion = Date.now().toString(); // Version dynamique à chaque reboot
 const dailyStatsStore = createDailyStatsStore();
 
 let globalSeedHash = 0;
@@ -33,11 +33,18 @@ function getSecretOfTheDay() {
   for (let i = 0; i < dateString.length; i++) {
     dateHash = (dateHash * 33 + dateString.charCodeAt(i)) | 0;
   }
-  console.log(process.env.RANDOM_SEED, globalSeedHash);
+
   const combined = (dateHash ^ globalSeedHash) >>> 0;
   const targetedIndex = combined % officialElementsList.length;
+
   return officialElementsList[targetedIndex];
 }
+
+// Log placé APRÈS l'initialisation de globalSeedHash
+console.log(
+  `[INIT] SEED: ${process.env.RANDOM_SEED} | HASH: ${globalSeedHash} | MOT DU JOUR: ${getSecretOfTheDay()}`
+);
+
 // Alias pour compatibilité avec routes/game.js
 function getSecretElement() {
   const secretName = getSecretOfTheDay();
@@ -70,7 +77,7 @@ function normalizeMetaList(data) {
 
 function updateSeedHash(newHash) {
   globalSeedHash = newHash;
-  secretVersion = Date.now().toString(); // Met à jour la version pour forcer le reset client
+  secretVersion = Date.now().toString();
 }
 
 function getSecretVersion() {
