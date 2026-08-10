@@ -181,7 +181,7 @@ const App = {
       });
 
     document
-      .getElementById("hint-opt-false-friend")
+      .getElementById("hint-opt-opposite")
       ?.addEventListener("click", () => HintsManager.request("opposite", this));
     document
       .getElementById("hint-opt-secret")
