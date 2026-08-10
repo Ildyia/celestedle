@@ -5,8 +5,6 @@ const cors = require("cors");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 
-const app = express();
-
 const ALLOWED_ORIGINS = [
   "http://127.0.0.1:5500",
   "http://localhost:5500",
@@ -17,13 +15,17 @@ const ALLOWED_ORIGINS = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+      if (
+        !origin ||
+        ALLOWED_ORIGINS.includes(origin) ||
+        origin.endsWith(".vercel.app")
+      ) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true // nécessaire pour que les cookies passent
+    credentials: true
   })
 );
 

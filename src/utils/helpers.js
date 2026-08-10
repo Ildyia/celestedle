@@ -33,7 +33,7 @@ function getSecretOfTheDay() {
   for (let i = 0; i < dateString.length; i++) {
     dateHash = (dateHash * 33 + dateString.charCodeAt(i)) | 0;
   }
-
+  console.log(process.env.RANDOM_SEED, globalSeedHash);
   const combined = (dateHash ^ globalSeedHash) >>> 0;
   const targetedIndex = combined % officialElementsList.length;
   return officialElementsList[targetedIndex];
