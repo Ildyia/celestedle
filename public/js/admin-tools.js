@@ -5,8 +5,57 @@ let currentSortKey = "nom";
 let currentSortOrder = "asc";
 
 export function initAdminTools() {
+  setupLoginHandler();
   bindAdminActions();
   loadAdminDashboardData();
+}
+
+function setupLoginHandler() {
+  const loginBtn = document.getElementById("admin-login-btn");
+  const passwordInput = document.getElementById("admin-password-input");
+  const errorMsg = document.getElementById("admin-login-error");
+  const loginBlock = document.getElementById("admin-login-block");
+
+  // Masquer le formulaire si déjà connecté
+  if (localStorage.getItem("celestedle_admin_token")) {
+    if (loginBlock) loginBlock.style.display = "none";
+  }
+
+  if (loginBtn) {
+    loginBtn.addEventListener("click", async () => {
+      const password = passwordInput ? passwordInput.value : "";
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/admin/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.token) {
+          // Stocke le token reçu du serveur
+          localStorage.setItem("celestedle_admin_token", data.token);
+          if (loginBlock) loginBlock.style.display = "none";
+          if (errorMsg) errorMsg.style.display = "none";
+
+          // Recharge les données d'admin
+          loadAdminDashboardData();
+        } else {
+          if (errorMsg) {
+            errorMsg.textContent = data.error || "Mot de passe incorrect";
+            errorMsg.style.display = "block";
+          }
+        }
+      } catch (err) {
+        if (errorMsg) {
+          errorMsg.textContent = "Erreur de connexion au serveur";
+          errorMsg.style.display = "block";
+        }
+      }
+    });
+  }
 }
 
 function bindAdminActions() {
