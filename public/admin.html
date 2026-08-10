@@ -116,7 +116,12 @@
         </table>
       </div>
     </div>
+    <script type="module">
+      import { initAdminTools } from "./js/admin-tools.js";
 
-    <script src="js/admin-tools.js" type="module"></script>
+      document.addEventListener("DOMContentLoaded", () => {
+        initAdminTools();
+      });
+    </script>
   </body>
 </html>
