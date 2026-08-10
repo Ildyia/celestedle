@@ -75,12 +75,11 @@ const App = {
     this.checkDisclaimerNotice();
     HintsManager.renderActive();
 
-    // Initialisation et restauration du chronomètre de jeu via le module GameTimer
     GameTimer.init(this.nodes.gameTimerDisplay);
-    if (
-      this.tryCount > 0 &&
-      localStorage.getItem("celestedle_gameover") !== "true"
-    ) {
+
+    if (!this.historyLog || this.historyLog.length === 0) {
+      GameTimer.reset();
+    } else if (localStorage.getItem("celestedle_gameover") !== "true") {
       GameTimer.start();
     }
   },
@@ -235,7 +234,7 @@ const App = {
 
   checkDisclaimerNotice() {
     if (
-      !localStorage.getItem("celestedle_disclaimer_seen") &&
+      !localStorage.getItem("celestedle_disclaimer_seen_v2") &&
       this.nodes.disclaimerModal
     ) {
       this.nodes.disclaimerModal.style.display = "flex";
@@ -245,7 +244,7 @@ const App = {
   closeDisclaimerNotice() {
     if (this.nodes.disclaimerModal)
       this.nodes.disclaimerModal.style.display = "none";
-    localStorage.setItem("celestedle_disclaimer_seen", "true");
+    localStorage.setItem("celestedle_disclaimer_seen_v2", "true");
   },
 
   openBugModal() {
