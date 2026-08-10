@@ -174,6 +174,7 @@ async function loadAdminDashboardData() {
       return res.json();
     };
 
+    // Chargement parallèle des détails et de l'historique
     const [elementsRes, historyRes] = await Promise.all([
       fetchJson("/admin/all-elements-details").catch((err) => {
         console.warn("Impossible de charger les détails des éléments :", err);
@@ -190,60 +191,74 @@ async function loadAdminDashboardData() {
       elementsList = await fetchJson("/game/elements").catch(() => []);
     }
 
-    wordsData = elementsList.map((item) => {
-      const name = typeof item === "string" ? item : item.nom;
+    // 🎯 Promise.all pour attendre la résolution asynchrone des images !
+    wordsData = await Promise.all(
+      elementsList.map(async (item) => {
+        const name = typeof item === "string" ? item : item.nom;
 
-      const imagePath = TableManager.resolveEntityImage
-        ? TableManager.resolveEntityImage(name)
-        : `assets/illustration/${name.toLowerCase().replace(/\s+/g, "_")}.png`;
+        // 🎯 On 'await' la résolution de l'image si la méthode est async
+        let imagePath = "";
+        if (
+          TableManager &&
+          typeof TableManager.resolveEntityImage === "function"
+        ) {
+          imagePath = await TableManager.resolveEntityImage(name);
+        }
 
-      const appearances = (historyRes || []).filter(
-        (h) => h.secretWord && h.secretWord.toLowerCase() === name.toLowerCase()
-      );
+        // Fallback au cas où TableManager retourne null/undefined
+        if (!imagePath) {
+          imagePath = `assets/illustration/${name.toLowerCase().replace(/\s+/g, "_")}.png`;
+        }
 
-      const count = appearances.length;
-
-      let lastDate = "-";
-      if (count > 0) {
-        const sortedDates = appearances
-          .map((a) => a.date)
-          .sort((a, b) => new Date(b) - new Date(a));
-        lastDate = sortedDates[0];
-      }
-
-      let avgTries = 0;
-      let avgHints = 0;
-      let avgTime = 0;
-
-      if (count > 0) {
-        const totalTries = appearances.reduce(
-          (acc, curr) => acc + (curr.avgTries || 0),
-          0
-        );
-        const totalHints = appearances.reduce(
-          (acc, curr) => acc + (curr.avgHints || 0),
-          0
-        );
-        const totalTime = appearances.reduce(
-          (acc, curr) => acc + (curr.avgTimeInSeconds || 0),
-          0
+        const appearances = (historyRes || []).filter(
+          (h) =>
+            h.secretWord && h.secretWord.toLowerCase() === name.toLowerCase()
         );
 
-        avgTries = Number((totalTries / count).toFixed(1));
-        avgHints = Number((totalHints / count).toFixed(1));
-        avgTime = Math.round(totalTime / count);
-      }
+        const count = appearances.length;
 
-      return {
-        nom: name,
-        image: imagePath,
-        count,
-        lastDate,
-        avgTries,
-        avgHints,
-        avgTime
-      };
-    });
+        let lastDate = "-";
+        if (count > 0) {
+          const sortedDates = appearances
+            .map((a) => a.date)
+            .sort((a, b) => new Date(b) - new Date(a));
+          lastDate = sortedDates[0];
+        }
+
+        let avgTries = 0;
+        let avgHints = 0;
+        let avgTime = 0;
+
+        if (count > 0) {
+          const totalTries = appearances.reduce(
+            (acc, curr) => acc + (curr.avgTries || 0),
+            0
+          );
+          const totalHints = appearances.reduce(
+            (acc, curr) => acc + (curr.avgHints || 0),
+            0
+          );
+          const totalTime = appearances.reduce(
+            (acc, curr) => acc + (curr.avgTimeInSeconds || 0),
+            0
+          );
+
+          avgTries = Number((totalTries / count).toFixed(1));
+          avgHints = Number((totalHints / count).toFixed(1));
+          avgTime = Math.round(totalTime / count);
+        }
+
+        return {
+          nom: name,
+          image: imagePath,
+          count,
+          lastDate,
+          avgTries,
+          avgHints,
+          avgTime
+        };
+      })
+    );
 
     renderTable();
   } catch (err) {
