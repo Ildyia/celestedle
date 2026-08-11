@@ -1289,7 +1289,16 @@ th,
    ========================================================================== */
 @media (max-width: 1200px) {
   body {
-    padding: 16px 10px 10px 10px;
+    padding: 16px 4px 10px 4px;
+  }
+
+  body,
+  body * {
+    cursor: auto !important;
+  }
+
+  #custom-cursor {
+    display: none !important;
   }
 
   .personalized-synonyms-modal .input-row {
@@ -1306,10 +1315,16 @@ th,
     flex-direction: column;
     gap: 20px;
     width: 100%;
-    max-width: 100%;
+    max-width: 100vw;
+    padding: 0;
   }
 
-  #main-content-column,
+  #main-content-column {
+    max-width: 100%;
+    padding: 0 2px;
+    box-sizing: border-box;
+  }
+
   #left-sidebar-column,
   #right-sidebar-column {
     margin-top: 0;
@@ -1321,7 +1336,7 @@ th,
     flex-direction: row !important;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 12px;
+    padding: 8px 10px;
     gap: 6px;
   }
 
@@ -1332,7 +1347,7 @@ th,
   #game-status button {
     flex: 1;
     min-width: 0;
-    padding: 0 8px;
+    padding: 0 6px;
   }
 
   #hint-btn-text,
@@ -1355,29 +1370,32 @@ th,
     z-index: 2000;
   }
 
+  /* On s'assure que le conteneur de jeu prend toute la largeur disponible de l'écran */
   #game-container {
     width: 100%;
-    max-width: 100vw;
-    overflow-x: visible;
+    max-width: 100%;
+    padding: 0;
+    box-sizing: border-box;
   }
 
   #guesses-table {
     width: 100%;
-    min-width: 0;
     table-layout: auto;
   }
 
   #guesses-table th,
   #guesses-table td {
-    padding: 8px 4px;
-    font-size: 0.75rem;
+    padding: 8px 2px;
+    font-size: 0.68rem;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
   }
 
   .mobile-scroll-help {
     display: block;
   }
 
-  /* 📱 FIX MODALES MOBILE : Hauteur max et scroll activé */
   #legal-notice,
   .rules-content,
   .disclaimer-content,
@@ -1388,7 +1406,6 @@ th,
     -webkit-overflow-scrolling: touch;
   }
 
-  /* La croix de fermeture reste fixe en haut à droite lors du scroll */
   .close-modal-btn {
     position: sticky !important;
     top: 0;
@@ -1398,6 +1415,7 @@ th,
     padding: 4px 8px;
   }
 }
+
 /* ==========================================================================
    13. HINT CARDS
    ========================================================================== */
