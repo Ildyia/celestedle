@@ -552,7 +552,9 @@ th,
   align-items: center;
   justify-content: center;
   opacity: 0.7;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
   z-index: 1000;
 }
 
@@ -1377,29 +1379,16 @@ th,
 
   #guesses-table {
     width: 100%;
-<<<<<<< HEAD
     table-layout: auto;
-=======
-    min-width: 0;
-    table-layout: fixed;
->>>>>>> fa530fe5e0372f83655c99fc08d62a61c7bff2a2
   }
 
   #guesses-table th,
   #guesses-table td {
     padding: 8px 2px;
-<<<<<<< HEAD
     font-size: 0.68rem;
     white-space: normal;
     word-break: normal;
     overflow-wrap: break-word;
-=======
-    font-size: 0.72rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    box-sizing: border-box;
->>>>>>> fa530fe5e0372f83655c99fc08d62a61c7bff2a2
   }
 
   .mobile-scroll-help {
@@ -1408,7 +1397,7 @@ th,
 
   #legal-notice,
   .rules-content,
-  .disclaimer-block,
+  .disclaimer-content,
   .bug-modal-content,
   .personalized-synonyms-modal {
     max-height: 80vh !important;
@@ -1729,4 +1718,4 @@ input[type="checkbox"]:not(.switch input):checked::after {
   gap: 6px;
   font-size: 0.78rem;
   color: var(--text-muted);
-} 
+}
