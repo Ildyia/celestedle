@@ -10,7 +10,7 @@
   </head>
   <body>
     <!-- WELCOME BANNER / CLOSABLE ANNOUNCEMENT -->
-    <div id="disclaimer-modal" class="rules-modal">
+    <div id="disclaimer-modal" class="rules-modal" style="display: none">
       <div class="rules-content" style="max-width: 550px; text-align: left">
         <span id="close-disclaimer-btn" class="close-modal-btn">&times;</span>
         <h2 style="color: var(--color-indigo); margin-bottom: 16px">
@@ -405,6 +405,22 @@
           <span>Celeste Background & Theme</span>
           <label class="switch">
             <input type="checkbox" id="toggle-theme-checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <hr
+          class="options-separator"
+          style="
+            margin: 12px 0;
+            border: 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+          "
+        />
+
+        <div class="option-row">
+          <span>Show Timer</span>
+          <label class="switch">
+            <input type="checkbox" id="toggle-timer-checkbox" checked />
             <span class="slider"></span>
           </label>
         </div>

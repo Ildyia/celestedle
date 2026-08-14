@@ -171,7 +171,17 @@ th,
   width: 100%;
   margin-top: 8px;
 }
+.tries-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 
+#game-timer-display {
+  min-width: 48px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
 #right-sidebar-column {
   grid-column: 3;
   display: flex;
