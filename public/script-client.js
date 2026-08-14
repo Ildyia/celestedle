@@ -473,43 +473,6 @@ const App = {
         this.renderEndGameScreen();
       });
   },
-  handlePersonalizedSynonymAdd(modal) {
-    const keyInput = modal.querySelector("#synonym-key-input");
-    const valueInput = modal.querySelector("#synonym-value-input");
-    const errorMsg = modal.querySelector("#synonym-error-msg");
-
-    const key = keyInput?.value.trim().toLowerCase();
-    const val = valueInput?.value.trim().toLowerCase();
-
-    if (!key || !val) {
-      if (errorMsg) errorMsg.textContent = "Please fill both fields.";
-      return;
-    }
-
-    const isValidOfficial = this.officialElementsList.some(
-      (el) => el.toLowerCase() === val
-    );
-
-    if (!isValidOfficial) {
-      if (errorMsg)
-        errorMsg.textContent = "Target must be a valid official element.";
-      return;
-    }
-
-    this.synonyms[key] = val;
-
-    const currentSaved = JSON.parse(
-      localStorage.getItem("celestedle_synonyms") || "{}"
-    );
-    currentSaved[key] = val;
-    localStorage.setItem("celestedle_synonyms", JSON.stringify(currentSaved));
-
-    if (errorMsg) errorMsg.textContent = "";
-    keyInput.value = "";
-    valueInput.value = "";
-
-    ModalService.renderSynonymsList(modal, this);
-  },
 
   handleShareScore() {
     const isWin = localStorage.getItem("celestedle_status") !== "lose";

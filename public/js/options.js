@@ -12,15 +12,6 @@ export const OptionsManager = {
       });
     }
 
-    const toggleTimerCheckbox = document.getElementById(
-      "toggle-timer-checkbox"
-    );
-    if (toggleTimerCheckbox) {
-      toggleTimerCheckbox.addEventListener("change", (e) => {
-        this.setShowTimer(e.target.checked);
-      });
-    }
-
     if (this.app.nodes.closeOptionsBtn && this.app.nodes.optionsModal) {
       this.app.nodes.closeOptionsBtn.addEventListener("click", () => {
         this.app.nodes.optionsModal.style.display = "none";
@@ -32,7 +23,7 @@ export const OptionsManager = {
         "change",
         (e) => {
           this.setColorblind(e.target.checked);
-        }
+        },
       );
     }
 
@@ -43,7 +34,7 @@ export const OptionsManager = {
     }
 
     const toggleThemeCheckbox = document.getElementById(
-      "toggle-theme-checkbox"
+      "toggle-theme-checkbox",
     );
     if (toggleThemeCheckbox) {
       toggleThemeCheckbox.addEventListener("change", (e) => {
@@ -61,10 +52,7 @@ export const OptionsManager = {
       localStorage.getItem("celestedle_custom_cursor") !== "false";
     setCustomCursor(isCustomCursor, this.app);
 
-    const savedTimer = localStorage.getItem("celestedle_show_timer");
-    const isShowTimer = savedTimer !== null ? savedTimer === "true" : true;
-    this.setShowTimer(isShowTimer);
-
+    // Activé par défaut si rien n'est encore stocké
     const savedTheme = localStorage.getItem("celestedle_celeste_theme");
     const isCelesteTheme = savedTheme !== null ? savedTheme === "true" : true;
     this.setCelesteTheme(isCelesteTheme);
@@ -75,7 +63,7 @@ export const OptionsManager = {
     localStorage.setItem("celestedle_celeste_theme", enabled);
 
     const toggleThemeCheckbox = document.getElementById(
-      "toggle-theme-checkbox"
+      "toggle-theme-checkbox",
     );
     if (toggleThemeCheckbox) {
       toggleThemeCheckbox.checked = enabled;
@@ -89,22 +77,6 @@ export const OptionsManager = {
       this.app.nodes.toggleColorblindCheckbox.checked = enabled;
     }
   },
-
-  setShowTimer(enabled) {
-    localStorage.setItem("celestedle_show_timer", enabled);
-    const timerBadge = document
-      .getElementById("game-timer-display")
-      ?.closest(".tries-badge");
-    if (timerBadge) {
-      timerBadge.style.display = enabled ? "flex" : "none";
-    }
-    const toggleTimerCheckbox = document.getElementById(
-      "toggle-timer-checkbox"
-    );
-    if (toggleTimerCheckbox) {
-      toggleTimerCheckbox.checked = enabled;
-    }
-  }
 };
 
 function setCustomCursor(enabled, app) {

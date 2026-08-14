@@ -259,6 +259,13 @@
     ],
     "type": "environment"
   },
+
+  "fake heart": {
+    "couleur": ["grey"],
+    "hitbox": "square",
+    "lieu": ["farewell"],
+    "type": "collectibles"
+  },
   "falling block": {
     "couleur": ["blue", "green", "grey", "purple"],
     "hitbox": "rectangular",
