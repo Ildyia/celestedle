@@ -50,14 +50,9 @@
     "type": "hazards"
   },
   "big temple eyeball": {
-    "couleur": [
-      "purple",
-      "white"
-    ],
+    "couleur": ["purple", "white"],
     "hitbox": "rectangular",
-    "lieu": [
-      "temple"
-    ],
+    "lieu": ["temple"],
     "type": "environment"
   },
   "binoculars": {
@@ -66,7 +61,7 @@
     "lieu": ["site", "ridge", "temple", "reflection", "summit", "farewell"],
     "type": "environment"
   },
-  "bird": {
+  "fling bird": {
     "couleur": ["blue"],
     "hitbox": "circular",
     "lieu": ["farewell"],
@@ -170,14 +165,9 @@
     "type": "movement & propulsion"
   },
   "core sandwich": {
-    "couleur": [
-      "blue",
-      "red"
-    ],
+    "couleur": ["blue", "red"],
     "hitbox": "rectangular",
-    "lieu": [
-      "core"
-    ],
+    "lieu": ["core"],
     "type": "hazards"
   },
   "core switch": {
@@ -217,24 +207,15 @@
     "type": "collectibles"
   },
   "dash switch": {
-    "couleur": [
-      "green",
-      "yellow",
-      "purple",
-      "grey"
-    ],
+    "couleur": ["green", "yellow", "purple", "grey"],
     "hitbox": "rectangular",
     "lieu": ["temple", "summit", "farewell"],
     "type": "mechanics"
   },
   "double refill": {
-    "couleur": [
-      "pink"
-    ],
+    "couleur": ["pink"],
     "hitbox": "square",
-    "lieu": [
-      "farewell"
-    ],
+    "lieu": ["farewell"],
     "type": "mechanics"
   },
   "dream block": {
@@ -311,18 +292,9 @@
     "type": "hazards"
   },
   "flutterbirds": {
-    "couleur": [
-      "blue",
-      "pink",
-      "yellow"
-    ],
+    "couleur": ["blue", "pink", "yellow"],
     "hitbox": "square",
-    "lieu": [
-      "prologue",
-      "city",
-      "resort",
-      "ridge"
-    ],
+    "lieu": ["prologue", "city", "resort", "ridge"],
     "type": "environment"
   },
   "golden strawberry": {
@@ -372,13 +344,9 @@
     "type": "hazards"
   },
   "ice barrier": {
-    "couleur": [
-      "blue"
-    ],
+    "couleur": ["blue"],
     "hitbox": "rectangular",
-    "lieu": [
-      "core"
-    ],
+    "lieu": ["core"],
     "type": "hazards"
   },
   "ice crumble block": {
@@ -388,14 +356,9 @@
     "type": "mechanics"
   },
   "ice wall": {
-    "couleur": [
-      "blue"
-    ],
+    "couleur": ["blue"],
     "hitbox": "rectangular",
-    "lieu": [
-      "core",
-      "farewell"
-    ],
+    "lieu": ["core", "farewell"],
     "type": "mechanics"
   },
   "intro car": {
@@ -411,13 +374,7 @@
     "type": "movement & propulsion"
   },
   "jumpthrough": {
-    "couleur": [
-      "brown",
-      "grey",
-      "blue",
-      "pink",
-      "white"
-    ],
+    "couleur": ["brown", "grey", "blue", "pink", "white"],
     "hitbox": "rectangular",
     "lieu": [
       "prologue",
@@ -518,13 +475,9 @@
     "type": "environment"
   },
   "moon berry": {
-    "couleur": [
-      "green"
-    ],
+    "couleur": ["green"],
     "hitbox": "square",
-    "lieu": [
-      "farewell"
-    ],
+    "lieu": ["farewell"],
     "type": "collectibles"
   },
   "move block": {
@@ -684,17 +637,9 @@
     "type": "collectibles"
   },
   "Summit Gems": {
-    "couleur": [
-      "blue",
-      "green",
-      "yellow",
-      "pink",
-      "white"
-    ],
+    "couleur": ["blue", "green", "yellow", "pink", "white"],
     "hitbox": "square",
-    "lieu": [
-      "summit"
-    ],
+    "lieu": ["summit"],
     "type": "collectibles"
   },
   "swap block": {
@@ -703,12 +648,7 @@
     "lieu": ["temple", "summit", "farewell"],
     "type": "movement & propulsion"
   },
-  "big temple eyeball": {
-    "couleur": ["purple", "white"],
-    "hitbox": "rectangular",
-    "lieu": ["temple"],
-    "type": "environment"
-  },
+
   "temple gate": {
     "couleur": ["grey"],
     "hitbox": "rectangular",
@@ -731,7 +671,7 @@
     "couleur": ["blue"],
     "hitbox": "rectangular",
     "lieu": ["temple"],
-    "type": "movement & propulsion"
+    "type": "mechanics"
   },
   "theo gate": {
     "couleur": ["yellow"],
