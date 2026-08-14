@@ -82,7 +82,17 @@
   "breakable tiles": {
     "couleur": ["brown", "grey", "purple"],
     "hitbox": "rectangular",
-    "lieu": ["city", "site", "resort", "ridge", "reflection", "summit", "core"],
+    "lieu": [
+      "city",
+      "site",
+      "resort",
+      "ridge",
+      "temple",
+      "reflection",
+      "summit",
+      "core",
+      "farewell"
+    ],
     "type": "environment"
   },
   "bridge": {
