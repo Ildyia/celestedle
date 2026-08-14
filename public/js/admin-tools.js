@@ -2,8 +2,10 @@ import { API_BASE_URL } from "./api.js";
 import { TableManager } from "./table.js";
 
 let wordsData = [];
+let rawHistoryData = [];
 let currentSortKey = "nom";
 let currentSortOrder = "asc";
+let chartInstance = null;
 
 export function initAdminTools() {
   setupLoginHandler();
@@ -139,6 +141,17 @@ function bindAdminActions() {
         });
     });
 
+  document.getElementById("admin-chart-btn")?.addEventListener("click", () => {
+    openVictoriesChart();
+  });
+
+  document
+    .getElementById("close-chart-modal")
+    ?.addEventListener("click", () => {
+      const modal = document.getElementById("chart-modal");
+      if (modal) modal.style.display = "none";
+    });
+
   document
     .querySelectorAll("#words-stats-table th[data-sort]")
     .forEach((th) => {
@@ -174,7 +187,6 @@ async function loadAdminDashboardData() {
       return res.json();
     };
 
-    // Chargement parallèle des détails et de l'historique
     const [elementsRes, historyRes] = await Promise.all([
       fetchJson("/admin/all-elements-details").catch((err) => {
         console.warn("Impossible de charger les détails des éléments :", err);
@@ -186,20 +198,19 @@ async function loadAdminDashboardData() {
       })
     ]);
 
+    rawHistoryData = historyRes || [];
+
     let elementsList = elementsRes;
     if (!elementsList || elementsList.length === 0) {
       elementsList = await fetchJson("/game/elements").catch(() => []);
     }
 
-    // 🎯 Contexte factice pour éviter que table.js ne plante sur l'objet app manquant
     const adminAppContext = {};
 
-    // Construction du tableau de données compilées avec Promise.all pour les images
     wordsData = await Promise.all(
       elementsList.map(async (item) => {
         const name = typeof item === "string" ? item : item.nom;
 
-        // Récupération de l'image via TableManager avec son contexte simulé
         let imagePath = "";
         if (
           TableManager &&
@@ -215,7 +226,6 @@ async function loadAdminDashboardData() {
           }
         }
 
-        // Fallback de sécurité si l'image est introuvable
         if (!imagePath) {
           imagePath = `assets/illustration/${name.toLowerCase().replace(/\s+/g, "_")}.png`;
         }
@@ -228,18 +238,18 @@ async function loadAdminDashboardData() {
         const count = appearances.length;
 
         let lastDate = "-";
-        if (count > 0) {
-          const sortedDates = appearances
-            .map((a) => a.date)
-            .sort((a, b) => new Date(b) - new Date(a));
-          lastDate = sortedDates[0];
-        }
-
+        let victories = 0;
         let avgTries = 0;
         let avgHints = 0;
         let avgTime = 0;
 
         if (count > 0) {
+          const sortedAppearances = [...appearances].sort(
+            (a, b) => new Date(b.date) - new Date(a.date)
+          );
+          lastDate = sortedAppearances[0].date;
+          victories = sortedAppearances[0].victories || 0;
+
           const totalTries = appearances.reduce(
             (acc, curr) => acc + (curr.avgTries || 0),
             0
@@ -262,6 +272,7 @@ async function loadAdminDashboardData() {
           nom: name,
           image: imagePath,
           count,
+          victories,
           lastDate,
           avgTries,
           avgHints,
@@ -311,6 +322,7 @@ function renderTable() {
           </td>
           <td><strong>${item.nom.charAt(0).toUpperCase() + item.nom.slice(1)}</strong></td>
           <td>${item.count}</td>
+          <td>${item.count > 0 ? item.victories : "-"}</td>
           <td>${item.lastDate}</td>
           <td>${item.count > 0 ? item.avgTries : "-"}</td>
           <td>${item.count > 0 ? item.avgHints : "-"}</td>
@@ -319,4 +331,67 @@ function renderTable() {
       `;
     })
     .join("");
+}
+
+function openVictoriesChart() {
+  const modal = document.getElementById("chart-modal");
+  if (modal) modal.style.display = "flex";
+
+  const dailyMap = {};
+  rawHistoryData.forEach((item) => {
+    if (!item.date) return;
+    dailyMap[item.date] = (dailyMap[item.date] || 0) + (item.victories || 0);
+  });
+
+  const sortedDates = Object.keys(dailyMap).sort(
+    (a, b) => new Date(a) - new Date(b)
+  );
+  const victoryCounts = sortedDates.map((date) => dailyMap[date]);
+
+  const ctx = document.getElementById("victories-chart")?.getContext("2d");
+  if (!ctx) return;
+
+  if (chartInstance) {
+    chartInstance.destroy();
+  }
+
+  chartInstance = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: sortedDates,
+      datasets: [
+        {
+          label: "Nombre de victoires",
+          data: victoryCounts,
+          borderColor: "#38bdf8",
+          backgroundColor: "rgba(56, 189, 248, 0.2)",
+          borderWidth: 2,
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          pointBackgroundColor: "#38bdf8"
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          grid: { color: "rgba(255, 255, 255, 0.1)" },
+          ticks: { color: "#94a3b8" }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: "rgba(255, 255, 255, 0.1)" },
+          ticks: { color: "#94a3b8", precision: 0 }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: { color: "#f8fafc" }
+        }
+      }
+    }
+  });
 }

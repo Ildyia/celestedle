@@ -6,6 +6,7 @@
     <title>Celestedle - Administration</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="theme-celeste.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       .admin-container {
         max-width: 1200px;
@@ -62,7 +63,6 @@
   </head>
   <body class="theme-celeste no-custom-cursor">
     <div class="admin-container">
-      
       <!-- Formulaire de Connexion Admin (Affiches par defaut si deconnecte) -->
       <div
         id="admin-login-block"
@@ -116,6 +116,9 @@
           <button id="admin-sim-hint-btn" class="btn-primary">
             💡 Simulate Hint
           </button>
+          <button id="admin-chart-btn" class="btn-primary">
+            📊 Graphique des Victoires
+          </button>
         </div>
 
         <div
@@ -133,6 +136,9 @@
                 <th data-sort="nom">Nom <span class="sort-icon">⇅</span></th>
                 <th data-sort="count">
                   Nb Mot du jour <span class="sort-icon">⇅</span>
+                </th>
+                <th data-sort="victories">
+                  Victoires <span class="sort-icon">⇅</span>
                 </th>
                 <th data-sort="lastDate">
                   Dernière date <span class="sort-icon">⇅</span>
@@ -153,8 +159,25 @@
             </tbody>
           </table>
         </div>
-      </div>
 
+        <!-- MODAL DU GRAPHIQUE -->
+        <div id="chart-modal" class="rules-modal" style="display: none">
+          <div
+            class="rules-content"
+            style="
+              max-width: 800px;
+              width: 90%;
+              background: var(--bg-card, #1e293b);
+            "
+          >
+            <span id="close-chart-modal" class="close-modal-btn">&times;</span>
+            <h2 style="margin-bottom: 16px">Victoires par Jour</h2>
+            <div style="position: relative; height: 400px; width: 100%">
+              <canvas id="victories-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script type="module">
