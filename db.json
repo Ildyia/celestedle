@@ -679,7 +679,7 @@
     "type": "environment"
   },
   "theo": {
-    "couleur": ["green"],
+    "couleur": ["green", "brown", "yellow"],
     "hitbox": "no hitbox interaction",
     "lieu": ["city", "site", "resort", "ridge", "temple", "reflection"],
     "type": "characters"
