@@ -626,18 +626,16 @@ const App = {
         parsedSolutionAttrs,
         this
       );
-      TableManager.resolveEntityImage(solution, this).then((imgPath) => {
-        if (!imgPath) return;
-        const firstRow = this.nodes.tableBody.querySelector("tr");
-        if (!firstRow) return;
-        const img = document.createElement("img");
-        img.className = "entity-thumb";
-        img.src = imgPath;
-        img.alt = formattedSolution;
-        firstRow
-          .querySelector("td")
-          ?.insertBefore(img, firstRow.querySelector("td").firstChild);
-      });
+      if (!imgPath) return;
+      const firstRow = this.nodes.tableBody.querySelector("tr");
+      if (!firstRow) return;
+      const img = document.createElement("img");
+      img.className = "entity-thumb";
+      img.src = `/sprite/${solution}`;
+      img.alt = formattedSolution;
+      firstRow
+        .querySelector("td")
+        ?.insertBefore(img, firstRow.querySelector("td").firstChild);
     }
 
     targetContainer.appendChild(messageContainer);
@@ -653,8 +651,4 @@ const App = {
   addTableRow(data) {
     TableManager.addRow(data, this);
   },
-
-  resolveEntityImage(name) {
-    return TableManager.resolveEntityImage(name, this);
-  }
 };

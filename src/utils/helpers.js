@@ -6,6 +6,7 @@ const database = JSON.parse(
   fs.readFileSync(path.join(__dirname, "../../db.json"), "utf8")
 );
 const officialElementsList = Object.keys(database).sort();
+const spritesMapping = JSON.parse(fs.readFileSync(path.join(__dirname, "../../public/assets/entities/mapping.json")));
 
 let secretForce = null;
 let secretVersion = "1.2.2";
@@ -119,6 +120,10 @@ function getSeededRandom(offset = 0) {
   return Math.abs(hash);
 }
 
+function getEntitySprite(name) {
+  return spritesMapping[name?.trim?.().replaceAll("%20", " ").toLowerCase()];
+}
+
 module.exports = {
   database,
   officialElementsList,
@@ -131,5 +136,6 @@ module.exports = {
   registerDailySuccess,
   getDailyStats,
   recordDailySuccess,
-  getSeededRandom
+  getSeededRandom,
+  getEntitySprite
 };

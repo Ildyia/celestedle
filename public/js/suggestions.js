@@ -60,7 +60,7 @@ export const SuggestionsManager = {
           const thumb = document.createElement("img");
           thumb.className = "suggestion-thumb";
           thumb.alt = word;
-          thumb.src = "assets/entities/placeholder.svg";
+          thumb.src = `/sprite/${word}`;
 
           const textNode = document.createElement("span");
           textNode.textContent = word;
@@ -82,11 +82,6 @@ export const SuggestionsManager = {
           colorNode.textContent = meta?.colors?.map(c => c.charAt(0).toUpperCase() + c.slice(1))?.join(", ") ?? "";
 
           div.appendChild(colorNode);
-
-          const key = word.toLowerCase();
-          this.app.resolveEntityImage(key).then((path) => {
-            if (path) thumb.src = path;
-          });
 
           div.addEventListener("click", () => this.selectSuggestion(word));
           this.app.nodes.suggestionsBox.appendChild(div);
@@ -157,17 +152,13 @@ export const SuggestionsManager = {
       const thumb = document.createElement("img");
       thumb.className = "suggestion-thumb";
       thumb.alt = displayName;
-      thumb.src = "assets/entities/placeholder.svg";
+      thumb.src = `/sprite/${displayName}`;
 
       const textNode = document.createElement("span");
       textNode.textContent = displayName;
 
       div.appendChild(thumb);
       div.appendChild(textNode);
-
-      this.app.resolveEntityImage(name.toLowerCase()).then((path) => {
-        if (path) thumb.src = path;
-      });
 
       div.addEventListener("click", (e) => {
         e.stopPropagation();

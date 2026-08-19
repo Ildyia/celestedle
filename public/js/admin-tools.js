@@ -199,26 +199,7 @@ async function loadAdminDashboardData() {
       elementsList.map(async (item) => {
         const name = typeof item === "string" ? item : item.nom;
 
-        // Récupération de l'image via TableManager avec son contexte simulé
-        let imagePath = "";
-        if (
-          TableManager &&
-          typeof TableManager.resolveEntityImage === "function"
-        ) {
-          try {
-            imagePath = await TableManager.resolveEntityImage(
-              name,
-              adminAppContext
-            );
-          } catch (err) {
-            console.warn(`Impossible de charger l'image pour ${name}:`, err);
-          }
-        }
-
-        // Fallback de sécurité si l'image est introuvable
-        if (!imagePath) {
-          imagePath = `assets/illustration/${name.toLowerCase().replace(/\s+/g, "_")}.png`;
-        }
+        const imagePath = `sprite/${name}`;
 
         const appearances = (historyRes || []).filter(
           (h) =>
