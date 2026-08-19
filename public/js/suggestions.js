@@ -37,13 +37,13 @@ export const SuggestionsManager = {
     const elements = Array.isArray(this.app.officialElementsList)
       ? this.app.officialElementsList
       : [];
-    elements.forEach((element) => {
-      const lowerName = element.nom.toLowerCase();
+    elements.forEach(({ nom, couleur }) => {
+      const lowerName = nom.toLowerCase();
       if (lowerName.includes(query)) {
-        const displayName = element.nom.charAt(0).toUpperCase() + element.nom.slice(1);
+        const displayName = nom.charAt(0).toUpperCase() + nom.slice(1);
         const priority =
           lowerName === query ? 0 : lowerName.startsWith(query) ? 1 : 2;
-        addSuggestion(displayName, priority, element.couleur, false);
+        addSuggestion(displayName, priority, couleur, false);
       }
     });
 

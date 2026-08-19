@@ -254,10 +254,10 @@ const App = {
       (Array.isArray(this.officialElementsList)
         ? this.officialElementsList
         : []
-      ).forEach((el) => {
+      ).forEach(({ nom }) => {
         const opt = document.createElement("option");
-        opt.value = el;
-        opt.textContent = el.charAt(0).toUpperCase() + el.slice(1);
+        opt.value = nom;
+        opt.textContent = nom.charAt(0).toUpperCase() + nom.slice(1);
         select.appendChild(opt);
       });
     }
@@ -279,7 +279,7 @@ const App = {
   fetchOfficialElements() {
     ApiService.fetchElementsFull()
       .then((elements) => {
-        this.officialElementsList = Array.isArray(elements) ? elements.map(e => { return { nom: e.nom, couleur: e.couleur } }) : [];
+        this.officialElementsList = Array.isArray(elements) ? elements.map(({ nom, couleur }) => { return { nom, couleur } }) : [];
         HintsManager.updateButtonText(this);
       })
       .catch(() => {
@@ -535,7 +535,7 @@ const App = {
     }
 
     const isValidOfficial = this.officialElementsList.some(
-      (el) => el.nom.toLowerCase() === val
+      ({ nom }) => nom.toLowerCase() === val
     );
 
     if (!isValidOfficial) {
