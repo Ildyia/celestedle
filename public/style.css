@@ -1736,3 +1736,8 @@ input[type="checkbox"]:not(.switch input):checked::after {
   font-size: 0.78rem;
   color: var(--text-muted);
 }
+
+
+.hidden {
+  display: none;
+}

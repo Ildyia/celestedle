@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   App.init();
 });
 
-const App = {
+export const App = {
   synonyms: {
     "blue booster": "green booster",
     "red bubble": "red booster",
@@ -54,7 +54,6 @@ const App = {
   hintLimit: 3,
   usedHintTypes: [],
   nodes: {},
-  entityImageMap: null,
 
   init() {
     this.cacheDOM();
@@ -108,6 +107,9 @@ const App = {
       disclaimerModal: document.getElementById("disclaimer-modal"),
       closeDisclaimerBtn: document.getElementById("close-disclaimer-btn"),
       acceptDisclaimerBtn: document.getElementById("accept-disclaimer-btn"),
+      apiDownModal: document.getElementById("api-down-modal"),
+      apiDownCloseBtn: document.getElementById("close-api-down-btn"),
+      apiDownAcceptBtn: document.getElementById("accept-api-down-btn"),
       optionsBtn: document.getElementById("options-btn"),
       optionsModal: document.getElementById("options-modal"),
       closeOptionsBtn: document.getElementById("close-options-btn"),
@@ -134,6 +136,13 @@ const App = {
     );
     this.nodes.acceptDisclaimerBtn?.addEventListener("click", () =>
       this.closeDisclaimerNotice()
+    );
+
+    this.nodes.apiDownCloseBtn?.addEventListener("click", () =>
+      this.closeApiDisclaimer()
+    );
+    this.nodes.apiDownAcceptBtn?.addEventListener("click", () =>
+      this.closeApiDisclaimer()
     );
 
     document
@@ -557,6 +566,14 @@ const App = {
     valueInput.value = "";
 
     ModalService.renderSynonymsList(modal, this);
+  },
+
+  handleApiDown() {
+    this.nodes.apiDownModal.classList.remove("hidden");
+  },
+
+  closeApiDisclaimer() {
+    this.nodes.apiDownModal.classList.add("hidden");
   },
 
   showToastNotification(message) {
