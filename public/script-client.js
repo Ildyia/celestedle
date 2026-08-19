@@ -1,7 +1,6 @@
 import { ApiService } from "./js/api.js";
 import { initTimer } from "./js/timer.js";
 import { ModalService } from "./js/modal.js";
-import { CursorManager } from "./js/cursor.js";
 import { OptionsManager } from "./js/options.js";
 import { SuggestionsManager } from "./js/suggestions.js";
 import { GameStateManager } from "./js/game-state.js";
@@ -69,7 +68,6 @@ const App = {
 
     SuggestionsManager.init(this);
     OptionsManager.init(this);
-    CursorManager.init();
 
     this.bindEvents();
     this.fetchPersonalizedSynonyms();

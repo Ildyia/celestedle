@@ -49,8 +49,27 @@ body {
 }
 
 body,
-body * {
-  cursor: none !important;
+body input:disabled,
+body button:disabled {
+  cursor: url(assets/illustration/birdcursor-32.cur) 1 17, auto;
+}
+
+input[type='text'],
+input:not([type]),
+textarea,
+[contenteditable] {
+  cursor: url(assets/illustration/cursorbirdwriting-32.cur) 2 10, text;
+}
+
+button,
+a,
+[role='button'],
+input[type='submit'],
+input[type='button'],
+select,
+.suggestion-item,
+.switch {
+  cursor: url(assets/illustration/cursorbirdclicking-32.cur) 3 10, pointer;
 }
 
 #custom-cursor {
@@ -72,8 +91,7 @@ body * {
   left: 0;
 }
 
-body.no-custom-cursor,
-body.no-custom-cursor * {
+body.no-custom-cursor {
   cursor: auto !important;
 }
 
@@ -81,25 +99,16 @@ body.no-custom-cursor a,
 body.no-custom-cursor button,
 body.no-custom-cursor [role="button"],
 body.no-custom-cursor input[type="submit"],
-body.no-custom-cursor input[type="button"] {
+body.no-custom-cursor input[type="button"],
+body.no-custom-cursor select,
+body.no-custom-cursor .suggestion-item,
+body.no-custom-cursor .switch {
   cursor: pointer !important;
 }
 
 body.no-custom-cursor input[type="text"],
 body.no-custom-cursor textarea {
   cursor: text !important;
-}
-
-#default-cursor {
-  transform: translate(-1.5px, -26px);
-}
-
-#pointer-cursor {
-  transform: translate(0, 0);
-}
-
-#text-hover-cursor {
-  transform: translate(-10px, -2px);
 }
 
 h1,
@@ -410,7 +419,6 @@ th,
   font-size: 1rem;
   padding: 6px 12px;
   border-radius: 8px;
-  cursor: pointer;
   transition: all 0.25s ease;
   display: flex;
   align-items: center;
@@ -689,7 +697,6 @@ th,
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
-  cursor: pointer;
 }
 
 #guess-form #guess-btn[type="submit"]:hover {
@@ -753,7 +760,6 @@ th,
   align-items: center;
   gap: 12px;
   padding: 8px 14px;
-  cursor: pointer;
   color: var(--text-main);
   font-size: 0.95rem;
   transition: background-color 0.15s ease;
@@ -794,7 +800,6 @@ th,
   align-items: center;
   gap: 12px;
   padding: 8px;
-  cursor: pointer;
 }
 
 .entity-thumb {
@@ -818,7 +823,6 @@ th,
   right: 12px;
   background: transparent;
   border: none;
-  cursor: pointer;
   opacity: 0.6;
   transition: opacity 0.2s ease;
   z-index: 10;
@@ -1084,7 +1088,6 @@ th,
   right: 18px;
   font-size: 22px;
   color: var(--text-muted);
-  cursor: pointer;
   line-height: 1;
 }
 
@@ -1106,7 +1109,6 @@ th,
   padding: 8px 16px;
   border-radius: 6px;
   font-family: "Renogare", sans-serif;
-  cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
@@ -1121,7 +1123,6 @@ th,
   padding: 8px 16px;
   border-radius: 6px;
   font-family: "Renogare", sans-serif;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -1132,7 +1133,6 @@ th,
 
 .btn-primary:disabled {
   opacity: 0.4;
-  cursor: not-allowed;
   filter: grayscale(100%);
   background-color: var(--bg-input) !important;
   border: 1px solid #334155 !important;
@@ -1140,7 +1140,6 @@ th,
 
 #hint-modal .btn-primary:disabled {
   opacity: 0.35 !important;
-  cursor: not-allowed !important;
   filter: grayscale(100%) !important;
   background-color: var(--bg-input) !important;
   color: var(--text-muted) !important;
@@ -1195,7 +1194,6 @@ th,
 
 #close-synonyms-btn {
   float: right;
-  cursor: pointer;
   color: var(--text-muted);
   font-size: 22px;
   line-height: 18px;
@@ -1235,7 +1233,6 @@ th,
   width: 24px;
   height: 24px;
   border-radius: 6px;
-  cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1281,7 +1278,6 @@ th,
   font-size: 0.9rem;
   padding: 10px;
   border-radius: 6px;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -1310,10 +1306,6 @@ th,
   body,
   body * {
     cursor: auto !important;
-  }
-
-  #custom-cursor {
-    display: none !important;
   }
 
   .personalized-synonyms-modal .input-row {
@@ -1653,7 +1645,6 @@ body.colorblind .suggestion-colorblind-helper {
 
 .slider {
   position: absolute;
-  cursor: pointer;
   inset: 0;
   background: var(--bg-input);
   border: 1.5px solid #334155;
@@ -1704,7 +1695,6 @@ input[type="checkbox"]:not(.switch input) {
   background: var(--bg-input);
   border: 1.5px solid #334155;
   border-radius: 4px;
-  cursor: pointer;
   position: relative;
   vertical-align: middle;
   transition: all 0.2s ease;

@@ -147,9 +147,9 @@ export const SuggestionsManager = {
     const elements = Array.isArray(this.app.officialElementsList)
       ? this.app.officialElementsList
       : [];
-    const sortedElements = [...elements].sort((a, b) => a.localeCompare(b));
+    const sortedElements = [...elements].sort((a, b) => a.nom.localeCompare(b.nom));
 
-    sortedElements.forEach((name) => {
+    sortedElements.forEach(({ nom: name }) => {
       const displayName = name.charAt(0).toUpperCase() + name.slice(1);
       const div = document.createElement("div");
       div.classList.add("suggestion-item");
