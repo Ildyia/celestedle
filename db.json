@@ -485,17 +485,11 @@
     "lieu": ["farewell"],
     "type": "collectibles"
   },
-  "moon   block": {
+  "moon block": {
     "couleur": ["grey"],
     "hitbox": "rectangular",
     "lieu": ["farewell"],
     "type": "environment"
-  },
-  "moon berry": {
-    "couleur": ["green"],
-    "hitbox": "square",
-    "lieu": ["farewell"],
-    "type": "collectibles"
   },
   "move block": {
     "couleur": ["black"],
