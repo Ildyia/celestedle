@@ -1,4 +1,4 @@
-import { ApiService } from "./js/api.js";
+import { API_BASE_URL, ApiService } from "./js/api.js";
 import { initTimer } from "./js/timer.js";
 import { ModalService } from "./js/modal.js";
 import { OptionsManager } from "./js/options.js";
@@ -648,7 +648,7 @@ export const App = {
       if (!firstRow) return;
       const img = document.createElement("img");
       img.className = "entity-thumb";
-      img.src = `/sprite/${solution}`;
+      img.src = API_BASE_URL + `/sprite/${solution}`;
       img.alt = formattedSolution;
       firstRow
         .querySelector("td")

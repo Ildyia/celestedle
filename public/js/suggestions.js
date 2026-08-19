@@ -60,7 +60,7 @@ export const SuggestionsManager = {
           const thumb = document.createElement("img");
           thumb.className = "suggestion-thumb";
           thumb.alt = word;
-          thumb.src = `/sprite/${word}`;
+          thumb.src = API_BASE_URL + `/sprite/${word}`;
 
           const textNode = document.createElement("span");
           textNode.textContent = word;
@@ -152,7 +152,7 @@ export const SuggestionsManager = {
       const thumb = document.createElement("img");
       thumb.className = "suggestion-thumb";
       thumb.alt = displayName;
-      thumb.src = `/sprite/${displayName}`;
+      thumb.src = API_BASE_URL + `/sprite/${displayName}`;
 
       const textNode = document.createElement("span");
       textNode.textContent = displayName;

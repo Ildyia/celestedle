@@ -23,7 +23,7 @@ export const TableManager = {
     if (data.nom) {
       const thumb = document.createElement("img");
       thumb.className = "entity-thumb";
-      thumb.src = `/sprite/${data.nom}`;
+      thumb.src = API_BASE_URL + `/sprite/${data.nom}`;
       thumb.alt = formattedName;
       nameCell.insertBefore(thumb, nameCell.firstChild);
     }

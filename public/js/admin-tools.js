@@ -198,7 +198,7 @@ async function loadAdminDashboardData() {
       elementsList.map((item) => {
         const name = typeof item === "string" ? item : item.nom;
 
-        const imagePath = `sprite/${name}`;
+        const imagePath = API_BASE_URL + `sprite/${name}`;
 
         const appearances = (historyRes || []).filter(
           (h) =>
