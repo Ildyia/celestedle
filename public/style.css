@@ -165,6 +165,7 @@ th,
 
 #game-container {
   width: 100%;
+  image-rendering: pixelated;
 }
 
 #rules-sidebar {
