@@ -4,7 +4,8 @@ const {
   getSecretElement,
   getElementsList,
   getSecretVersion,
-  getSeededRandom
+  getSeededRandom,
+  database
 } = require("../utils/helpers");
 
 const { createDailyStatsStore } = require("../utils/stats-store");
@@ -75,6 +76,27 @@ router.get("/elements", (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+router.get("/elements/full", (req, res) => {
+  try {
+    const elements = getElementsList() || [];
+    res.json(elements);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get("/element-data/:id", (req, res) => {
+  try {
+    const id = req.params.id.replaceAll("%20", ' '); // May not be required but just in case ; replaces escaped URL whitespaces into real whitespaces
+    const el = database[id];
+
+    if (!el) res.status(400).json({ error: `No item exists with the given name : "${id}"` });
+    else res.json(el);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+})
 
 router.get("/daily-stats", (req, res) => {
   try {
@@ -273,25 +295,21 @@ router.post("/hint", (req, res) => {
       }
 
       return res.json({
-        text: `<strong>Opposite:</strong> <em>${
-          opposite ? opposite.nom : "Unknown"
-        }</em> ${categoriesText}.`
+        text: `<strong>Opposite:</strong> <em>${opposite ? opposite.nom : "Unknown"
+          }</em> ${categoriesText}.`
       });
 
       return res.json({
-        text: `<strong>Opposite:</strong> <em>${
-          opposite ? opposite.nom : "Unknown"
-        }</em> is opposite to the word on ${categoriesText}.`
+        text: `<strong>Opposite:</strong> <em>${opposite ? opposite.nom : "Unknown"
+          }</em> is opposite to the word on ${categoriesText}.`
       });
     }
 
     if (type === "secret_info") {
       const infos = [
-        `Its type includes: <strong>${
-          Array.isArray(secret.type) ? secret.type[0] : secret.type
+        `Its type includes: <strong>${Array.isArray(secret.type) ? secret.type[0] : secret.type
         }</strong>`,
-        `It can be found in: <strong>${
-          Array.isArray(secret.lieu) ? secret.lieu[0] : secret.lieu
+        `It can be found in: <strong>${Array.isArray(secret.lieu) ? secret.lieu[0] : secret.lieu
         }</strong>`
       ];
       const index = getSeededRandom(2) % infos.length;

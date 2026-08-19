@@ -279,9 +279,9 @@ const App = {
   },
 
   fetchOfficialElements() {
-    ApiService.fetchElements()
+    ApiService.fetchElementsFull()
       .then((elements) => {
-        this.officialElementsList = Array.isArray(elements) ? elements : [];
+        this.officialElementsList = Array.isArray(elements) ? elements.map(e => { return { nom: e.nom, couleur: e.couleur } }) : [];
         HintsManager.updateButtonText(this);
       })
       .catch(() => {
@@ -292,7 +292,7 @@ const App = {
   fetchDailySuccessCount() {
     ApiService.fetchDailySuccessCount()
       .then((data) => this.updateCommunityStats(data))
-      .catch(() => {});
+      .catch(() => { });
   },
 
   updateCommunityStats(data) {
@@ -571,7 +571,7 @@ const App = {
             : rawAttributes;
         parsedSolutionAttrs = attrs || {};
         attributeSummary = `<br><br><strong>Type:</strong> ${attrs.type || "-"}<br><strong>Locations:</strong> ${Array.isArray(attrs.lieu) ? attrs.lieu.join(", ") : attrs.lieu || "-"}<br><strong>Colours:</strong> ${Array.isArray(attrs.couleur) ? attrs.couleur.join(", ") : attrs.couleur || "-"}<br><strong>Hitbox:</strong> ${attrs.hitbox || "-"}`;
-      } catch (e) {}
+      } catch (e) { }
     }
 
     const mins = Math.floor(GameTimer.getTimeInSeconds() / 60);

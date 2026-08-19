@@ -172,6 +172,7 @@ th,
   width: 100%;
   margin-top: 8px;
 }
+
 .tries-badge {
   display: inline-flex;
   align-items: center;
@@ -183,6 +184,7 @@ th,
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
+
 #right-sidebar-column {
   grid-column: 3;
   display: flex;
@@ -248,11 +250,9 @@ th,
 #disclaimer-block {
   width: 100%;
   border-left: 4px solid #6366f1;
-  background: linear-gradient(
-    180deg,
-    rgba(99, 102, 241, 0.14),
-    rgba(15, 23, 42, 0.05)
-  );
+  background: linear-gradient(180deg,
+      rgba(99, 102, 241, 0.14),
+      rgba(15, 23, 42, 0.05));
   border: 1px solid rgba(99, 102, 241, 0.35);
   padding: 18px 22px;
   border-radius: 12px;
@@ -272,11 +272,9 @@ th,
 
 .legal-page-block {
   background:
-    radial-gradient(
-      circle at top right,
+    radial-gradient(circle at top right,
       rgba(99, 102, 241, 0.14),
-      transparent 35%
-    ),
+      transparent 35%),
     linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
   border-radius: 20px;
   padding: 28px 30px;
@@ -403,11 +401,9 @@ th,
 
 #report-bug-btn {
   width: 100%;
-  background: linear-gradient(
-    135deg,
-    rgba(239, 68, 68, 0.2),
-    rgba(185, 28, 28, 0.3)
-  );
+  background: linear-gradient(135deg,
+      rgba(239, 68, 68, 0.2),
+      rgba(185, 28, 28, 0.3));
   border: 1px solid var(--color-wrong);
   color: #fca5a5;
   font-family: "Renogare", sans-serif;
@@ -777,6 +773,10 @@ th,
   filter: invert(1) sepia(0) saturate(0) hue-rotate(180deg) brightness(2);
 }
 
+.suggestion-colorblind-helper {
+  display: none;
+}
+
 .suggestion-thumb,
 .hint-thumb {
   width: 44px;
@@ -914,6 +914,7 @@ th,
     transform: scale(0.97);
     opacity: 0;
   }
+
   100% {
     transform: scale(1);
     opacity: 1;
@@ -925,6 +926,7 @@ th,
     transform: translateX(-50%) scale(0.97);
     opacity: 0;
   }
+
   100% {
     transform: translateX(-50%) scale(1);
     opacity: 1;
@@ -932,14 +934,17 @@ th,
 }
 
 @keyframes shake {
+
   0%,
   100% {
     transform: translateX(0);
   }
+
   20%,
   60% {
     transform: translateX(-5px);
   }
+
   40%,
   80% {
     transform: translateX(5px);
@@ -1169,6 +1174,7 @@ th,
     transform: translate(-50%, -50%) scale(0.97);
     opacity: 0;
   }
+
   100% {
     transform: translate(-50%, -50%) scale(1);
     opacity: 1;
@@ -1494,11 +1500,9 @@ th,
   max-width: 1200px;
   margin: 0 auto 16px auto;
   padding: 12px 18px;
-  background: linear-gradient(
-    135deg,
-    rgba(245, 158, 11, 0.15),
-    rgba(180, 83, 9, 0.25)
-  );
+  background: linear-gradient(135deg,
+      rgba(245, 158, 11, 0.15),
+      rgba(180, 83, 9, 0.25));
   border: 1px solid var(--color-partial);
   border-radius: 10px;
   color: #fef3c7;
@@ -1549,12 +1553,15 @@ th,
 .color-box.correct {
   background-color: var(--color-correct);
 }
+
 .color-box.partial {
   background-color: var(--color-partial);
 }
+
 .color-box.notTotallyWrong {
   background-color: var(--color-not-totally-wrong);
 }
+
 .color-box.wrong {
   background-color: var(--color-wrong);
 }
@@ -1580,12 +1587,15 @@ body.colorblind #guesses-table td {
 body.colorblind #guesses-table td.correct {
   border-color: #56b4e9 !important;
 }
+
 body.colorblind #guesses-table td.partial {
   border-color: #f0e442 !important;
 }
+
 body.colorblind #guesses-table td.notTotallyWrong {
   border-color: #d55e00 !important;
 }
+
 body.colorblind #guesses-table td.wrong {
   border-color: #cc79a7 !important;
   background-color: rgba(204, 121, 167, 0.25) !important;
@@ -1604,17 +1614,26 @@ body.colorblind #guesses-table td.correct::after {
   content: " ✓";
   color: #ffffff;
 }
+
 body.colorblind #guesses-table td.partial::after {
   content: " ~";
   color: #000000;
 }
+
 body.colorblind #guesses-table td.notTotallyWrong::after {
   content: " ≠";
   color: #000000;
 }
+
 body.colorblind #guesses-table td.wrong::after {
   content: " ✕";
   color: #ffffff;
+}
+
+body.colorblind .suggestion-colorblind-helper {
+  display: block;
+  font-size: .8em;
+  font-style: italic;
 }
 
 /* ==========================================================================
@@ -1665,17 +1684,15 @@ body.colorblind #guesses-table td.wrong::after {
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
 }
 
-input:checked + .slider {
-  background: linear-gradient(
-    135deg,
-    var(--color-indigo),
-    var(--color-indigo-hover)
-  );
+input:checked+.slider {
+  background: linear-gradient(135deg,
+      var(--color-indigo),
+      var(--color-indigo-hover));
   border-color: #818cf8;
   box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
 }
 
-input:checked + .slider::before {
+input:checked+.slider::before {
   transform: translateX(19px);
   background: #ffffff;
 }

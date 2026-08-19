@@ -15,10 +15,10 @@ export const SuggestionsManager = {
 
     const matchingSuggestions = new Map();
 
-    const addSuggestion = (word, priority, isSynonym = false) => {
+    const addSuggestion = (word, priority, colors, isSynonym = false) => {
       const existing = matchingSuggestions.get(word);
       if (existing === undefined || priority < existing.priority) {
-        matchingSuggestions.set(word, { priority, isSynonym });
+        matchingSuggestions.set(word, { priority, isSynonym, colors });
       }
     };
 
@@ -30,20 +30,20 @@ export const SuggestionsManager = {
         const lowerName = officialName.toLowerCase();
         const priority =
           lowerName === query ? 0 : lowerName.startsWith(query) ? 1 : 2;
-        addSuggestion(displayName, priority, true);
+        addSuggestion(displayName, priority, [], true);
       }
     });
 
     const elements = Array.isArray(this.app.officialElementsList)
       ? this.app.officialElementsList
       : [];
-    elements.forEach((name) => {
-      const lowerName = name.toLowerCase();
+    elements.forEach((element) => {
+      const lowerName = element.nom.toLowerCase();
       if (lowerName.includes(query)) {
-        const displayName = name.charAt(0).toUpperCase() + name.slice(1);
+        const displayName = element.nom.charAt(0).toUpperCase() + element.nom.slice(1);
         const priority =
           lowerName === query ? 0 : lowerName.startsWith(query) ? 1 : 2;
-        addSuggestion(displayName, priority, false);
+        addSuggestion(displayName, priority, element.couleur, false);
       }
     });
 
@@ -76,6 +76,12 @@ export const SuggestionsManager = {
             img.setAttribute("aria-hidden", "true");
             div.appendChild(img);
           }
+
+          const colorNode = document.createElement("span");
+          colorNode.className = "suggestion-colorblind-helper";
+          colorNode.textContent = meta?.colors?.map(c => c.charAt(0).toUpperCase() + c.slice(1))?.join(", ") ?? "";
+
+          div.appendChild(colorNode);
 
           const key = word.toLowerCase();
           this.app.resolveEntityImage(key).then((path) => {

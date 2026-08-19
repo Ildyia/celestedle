@@ -2,12 +2,13 @@ const hostname = window.location.hostname;
 
 export const API_BASE_URL =
   hostname === "localhost" ||
-  hostname === "127.0.0.1" ||
-  hostname === "::1" ||
-  hostname.includes("beta") ||
-  hostname.includes("-projects.vercel.app")
-    ? "https://celestedle-api.onrender.com"
-    : "https://celestedle-api.mizkyosia.fr";
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ?
+    "http://localhost:5500" :
+    hostname.includes("beta") ||
+      hostname.includes("-projects.vercel.app")
+      ? "https://celestedle-api.onrender.com"
+      : "https://celestedle-api.mizkyosia.fr";
 
 export const ApiService = {
   fetchSecretVersion() {
@@ -74,6 +75,14 @@ export const ApiService = {
 
   fetchElements() {
     return fetch(`${API_BASE_URL}/elements`).then((res) => res.json());
+  },
+
+  fetchElementsFull() {
+    return fetch(`${API_BASE_URL}/elements/full`).then((res) => res.json());
+  },
+
+  fetchElementData(elementId) {
+    return fetch(`${API_BASE_URL}/element/${elementId}`).then((res) => res.json());
   },
 
   fetchDailySuccessCount() {
