@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "./api.js";
 export const SuggestionsManager = {
   init(app) {
     this.app = app;
@@ -79,7 +80,10 @@ export const SuggestionsManager = {
 
           const colorNode = document.createElement("span");
           colorNode.className = "suggestion-colorblind-helper";
-          colorNode.textContent = meta?.colors?.map(c => c.charAt(0).toUpperCase() + c.slice(1))?.join(", ") ?? "";
+          colorNode.textContent =
+            meta?.colors
+              ?.map((c) => c.charAt(0).toUpperCase() + c.slice(1))
+              ?.join(", ") ?? "";
 
           div.appendChild(colorNode);
 
@@ -142,7 +146,9 @@ export const SuggestionsManager = {
     const elements = Array.isArray(this.app.officialElementsList)
       ? this.app.officialElementsList
       : [];
-    const sortedElements = [...elements].sort((a, b) => a.nom.localeCompare(b.nom));
+    const sortedElements = [...elements].sort((a, b) =>
+      a.nom.localeCompare(b.nom)
+    );
 
     sortedElements.forEach(({ nom: name }) => {
       const displayName = name.charAt(0).toUpperCase() + name.slice(1);
@@ -169,5 +175,5 @@ export const SuggestionsManager = {
     });
 
     this.app.nodes.suggestionsBox.style.display = "block";
-  },
+  }
 };

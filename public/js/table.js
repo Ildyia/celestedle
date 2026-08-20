@@ -1,3 +1,5 @@
+import { API_BASE_URL } from "./api.js";
+
 export const TableManager = {
   addRow(data, app) {
     if (!app.nodes.tableBody) return;
@@ -39,10 +41,10 @@ export const TableManager = {
     row.appendChild(createCell(data.valeurs?.type || "-", data.verdict?.type));
     row.appendChild(createCell(data.valeurs?.lieu || "-", data.verdict?.lieu));
     row.appendChild(
-      createCell(data.valeurs?.couleur || "-", data.verdict?.couleur),
+      createCell(data.valeurs?.couleur || "-", data.verdict?.couleur)
     );
     row.appendChild(
-      createCell(data.valeurs?.hitbox || "-", data.verdict?.hitbox),
+      createCell(data.valeurs?.hitbox || "-", data.verdict?.hitbox)
     );
 
     app.nodes.tableBody.insertBefore(row, app.nodes.tableBody.firstChild);
@@ -78,5 +80,5 @@ export const TableManager = {
     row.appendChild(createCell(attrs.hitbox || "-", "correct"));
 
     app.nodes.tableBody.insertBefore(row, app.nodes.tableBody.firstChild);
-  },
+  }
 };
