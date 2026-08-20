@@ -15,10 +15,10 @@ export const SuggestionsManager = {
 
     const matchingSuggestions = new Map();
 
-    const addSuggestion = (word, priority, isSynonym = false) => {
+    const addSuggestion = (word, priority, colors, isSynonym = false) => {
       const existing = matchingSuggestions.get(word);
       if (existing === undefined || priority < existing.priority) {
-        matchingSuggestions.set(word, { priority, isSynonym });
+        matchingSuggestions.set(word, { priority, isSynonym, colors });
       }
     };
 
@@ -30,20 +30,20 @@ export const SuggestionsManager = {
         const lowerName = officialName.toLowerCase();
         const priority =
           lowerName === query ? 0 : lowerName.startsWith(query) ? 1 : 2;
-        addSuggestion(displayName, priority, true);
+        addSuggestion(displayName, priority, [], true);
       }
     });
 
     const elements = Array.isArray(this.app.officialElementsList)
       ? this.app.officialElementsList
       : [];
-    elements.forEach((name) => {
-      const lowerName = name.toLowerCase();
+    elements.forEach(({ nom, couleur }) => {
+      const lowerName = nom.toLowerCase();
       if (lowerName.includes(query)) {
-        const displayName = name.charAt(0).toUpperCase() + name.slice(1);
+        const displayName = nom.charAt(0).toUpperCase() + nom.slice(1);
         const priority =
           lowerName === query ? 0 : lowerName.startsWith(query) ? 1 : 2;
-        addSuggestion(displayName, priority, false);
+        addSuggestion(displayName, priority, couleur, false);
       }
     });
 
@@ -60,7 +60,7 @@ export const SuggestionsManager = {
           const thumb = document.createElement("img");
           thumb.className = "suggestion-thumb";
           thumb.alt = word;
-          thumb.src = "assets/entities/placeholder.svg";
+          thumb.src = API_BASE_URL + `/sprite/${word}`;
 
           const textNode = document.createElement("span");
           textNode.textContent = word;
@@ -77,10 +77,11 @@ export const SuggestionsManager = {
             div.appendChild(img);
           }
 
-          const key = word.toLowerCase();
-          this.app.resolveEntityImage(key).then((path) => {
-            if (path) thumb.src = path;
-          });
+          const colorNode = document.createElement("span");
+          colorNode.className = "suggestion-colorblind-helper";
+          colorNode.textContent = meta?.colors?.map(c => c.charAt(0).toUpperCase() + c.slice(1))?.join(", ") ?? "";
+
+          div.appendChild(colorNode);
 
           div.addEventListener("click", () => this.selectSuggestion(word));
           this.app.nodes.suggestionsBox.appendChild(div);
@@ -141,9 +142,9 @@ export const SuggestionsManager = {
     const elements = Array.isArray(this.app.officialElementsList)
       ? this.app.officialElementsList
       : [];
-    const sortedElements = [...elements].sort((a, b) => a.localeCompare(b));
+    const sortedElements = [...elements].sort((a, b) => a.nom.localeCompare(b.nom));
 
-    sortedElements.forEach((name) => {
+    sortedElements.forEach(({ nom: name }) => {
       const displayName = name.charAt(0).toUpperCase() + name.slice(1);
       const div = document.createElement("div");
       div.classList.add("suggestion-item");
@@ -151,17 +152,13 @@ export const SuggestionsManager = {
       const thumb = document.createElement("img");
       thumb.className = "suggestion-thumb";
       thumb.alt = displayName;
-      thumb.src = "assets/entities/placeholder.svg";
+      thumb.src = API_BASE_URL + `/sprite/${displayName}`;
 
       const textNode = document.createElement("span");
       textNode.textContent = displayName;
 
       div.appendChild(thumb);
       div.appendChild(textNode);
-
-      this.app.resolveEntityImage(name.toLowerCase()).then((path) => {
-        if (path) thumb.src = path;
-      });
 
       div.addEventListener("click", (e) => {
         e.stopPropagation();

@@ -49,8 +49,27 @@ body {
 }
 
 body,
-body * {
-  cursor: none !important;
+body input:disabled,
+body button:disabled {
+  cursor: url(assets/illustration/birdcursor-32.cur) 1 17, auto;
+}
+
+input[type='text'],
+input:not([type]),
+textarea,
+[contenteditable] {
+  cursor: url(assets/illustration/cursorbirdwriting-32.cur) 2 10, text;
+}
+
+button,
+a,
+[role='button'],
+input[type='submit'],
+input[type='button'],
+select,
+.suggestion-item,
+.switch {
+  cursor: url(assets/illustration/cursorbirdclicking-32.cur) 3 10, pointer;
 }
 
 #custom-cursor {
@@ -72,8 +91,7 @@ body * {
   left: 0;
 }
 
-body.no-custom-cursor,
-body.no-custom-cursor * {
+body.no-custom-cursor {
   cursor: auto !important;
 }
 
@@ -81,25 +99,16 @@ body.no-custom-cursor a,
 body.no-custom-cursor button,
 body.no-custom-cursor [role="button"],
 body.no-custom-cursor input[type="submit"],
-body.no-custom-cursor input[type="button"] {
+body.no-custom-cursor input[type="button"],
+body.no-custom-cursor select,
+body.no-custom-cursor .suggestion-item,
+body.no-custom-cursor .switch {
   cursor: pointer !important;
 }
 
 body.no-custom-cursor input[type="text"],
 body.no-custom-cursor textarea {
   cursor: text !important;
-}
-
-#default-cursor {
-  transform: translate(-1.5px, -26px);
-}
-
-#pointer-cursor {
-  transform: translate(0, 0);
-}
-
-#text-hover-cursor {
-  transform: translate(-10px, -2px);
 }
 
 h1,
@@ -165,12 +174,14 @@ th,
 
 #game-container {
   width: 100%;
+  image-rendering: pixelated;
 }
 
 #rules-sidebar {
   width: 100%;
   margin-top: 8px;
 }
+
 .tries-badge {
   display: inline-flex;
   align-items: center;
@@ -182,6 +193,7 @@ th,
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
+
 #right-sidebar-column {
   grid-column: 3;
   display: flex;
@@ -247,11 +259,9 @@ th,
 #disclaimer-block {
   width: 100%;
   border-left: 4px solid #6366f1;
-  background: linear-gradient(
-    180deg,
-    rgba(99, 102, 241, 0.14),
-    rgba(15, 23, 42, 0.05)
-  );
+  background: linear-gradient(180deg,
+      rgba(99, 102, 241, 0.14),
+      rgba(15, 23, 42, 0.05));
   border: 1px solid rgba(99, 102, 241, 0.35);
   padding: 18px 22px;
   border-radius: 12px;
@@ -271,11 +281,9 @@ th,
 
 .legal-page-block {
   background:
-    radial-gradient(
-      circle at top right,
+    radial-gradient(circle at top right,
       rgba(99, 102, 241, 0.14),
-      transparent 35%
-    ),
+      transparent 35%),
     linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
   border-radius: 20px;
   padding: 28px 30px;
@@ -402,18 +410,15 @@ th,
 
 #report-bug-btn {
   width: 100%;
-  background: linear-gradient(
-    135deg,
-    rgba(239, 68, 68, 0.2),
-    rgba(185, 28, 28, 0.3)
-  );
+  background: linear-gradient(135deg,
+      rgba(239, 68, 68, 0.2),
+      rgba(185, 28, 28, 0.3));
   border: 1px solid var(--color-wrong);
   color: #fca5a5;
   font-family: "Renogare", sans-serif;
   font-size: 1rem;
   padding: 6px 12px;
   border-radius: 8px;
-  cursor: pointer;
   transition: all 0.25s ease;
   display: flex;
   align-items: center;
@@ -692,7 +697,6 @@ th,
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
-  cursor: pointer;
 }
 
 #guess-form #guess-btn[type="submit"]:hover {
@@ -756,7 +760,6 @@ th,
   align-items: center;
   gap: 12px;
   padding: 8px 14px;
-  cursor: pointer;
   color: var(--text-main);
   font-size: 0.95rem;
   transition: background-color 0.15s ease;
@@ -776,6 +779,10 @@ th,
   filter: invert(1) sepia(0) saturate(0) hue-rotate(180deg) brightness(2);
 }
 
+.suggestion-colorblind-helper {
+  display: none;
+}
+
 .suggestion-thumb,
 .hint-thumb {
   width: 44px;
@@ -793,7 +800,6 @@ th,
   align-items: center;
   gap: 12px;
   padding: 8px;
-  cursor: pointer;
 }
 
 .entity-thumb {
@@ -817,7 +823,6 @@ th,
   right: 12px;
   background: transparent;
   border: none;
-  cursor: pointer;
   opacity: 0.6;
   transition: opacity 0.2s ease;
   z-index: 10;
@@ -913,6 +918,7 @@ th,
     transform: scale(0.97);
     opacity: 0;
   }
+
   100% {
     transform: scale(1);
     opacity: 1;
@@ -924,6 +930,7 @@ th,
     transform: translateX(-50%) scale(0.97);
     opacity: 0;
   }
+
   100% {
     transform: translateX(-50%) scale(1);
     opacity: 1;
@@ -931,14 +938,17 @@ th,
 }
 
 @keyframes shake {
+
   0%,
   100% {
     transform: translateX(0);
   }
+
   20%,
   60% {
     transform: translateX(-5px);
   }
+
   40%,
   80% {
     transform: translateX(5px);
@@ -1078,7 +1088,6 @@ th,
   right: 18px;
   font-size: 22px;
   color: var(--text-muted);
-  cursor: pointer;
   line-height: 1;
 }
 
@@ -1100,7 +1109,6 @@ th,
   padding: 8px 16px;
   border-radius: 6px;
   font-family: "Renogare", sans-serif;
-  cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
@@ -1115,7 +1123,6 @@ th,
   padding: 8px 16px;
   border-radius: 6px;
   font-family: "Renogare", sans-serif;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -1126,7 +1133,6 @@ th,
 
 .btn-primary:disabled {
   opacity: 0.4;
-  cursor: not-allowed;
   filter: grayscale(100%);
   background-color: var(--bg-input) !important;
   border: 1px solid #334155 !important;
@@ -1134,7 +1140,6 @@ th,
 
 #hint-modal .btn-primary:disabled {
   opacity: 0.35 !important;
-  cursor: not-allowed !important;
   filter: grayscale(100%) !important;
   background-color: var(--bg-input) !important;
   color: var(--text-muted) !important;
@@ -1168,6 +1173,7 @@ th,
     transform: translate(-50%, -50%) scale(0.97);
     opacity: 0;
   }
+
   100% {
     transform: translate(-50%, -50%) scale(1);
     opacity: 1;
@@ -1188,7 +1194,6 @@ th,
 
 #close-synonyms-btn {
   float: right;
-  cursor: pointer;
   color: var(--text-muted);
   font-size: 22px;
   line-height: 18px;
@@ -1228,7 +1233,6 @@ th,
   width: 24px;
   height: 24px;
   border-radius: 6px;
-  cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1247,7 +1251,6 @@ th,
   font-size: 0.78rem;
   font-style: italic;
   margin-bottom: 10px;
-  display: none;
 }
 
 .personalized-synonyms-modal input[type="text"] {
@@ -1275,7 +1278,6 @@ th,
   font-size: 0.9rem;
   padding: 10px;
   border-radius: 6px;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -1304,10 +1306,6 @@ th,
   body,
   body * {
     cursor: auto !important;
-  }
-
-  #custom-cursor {
-    display: none !important;
   }
 
   .personalized-synonyms-modal .input-row {
@@ -1493,11 +1491,9 @@ th,
   max-width: 1200px;
   margin: 0 auto 16px auto;
   padding: 12px 18px;
-  background: linear-gradient(
-    135deg,
-    rgba(245, 158, 11, 0.15),
-    rgba(180, 83, 9, 0.25)
-  );
+  background: linear-gradient(135deg,
+      rgba(245, 158, 11, 0.15),
+      rgba(180, 83, 9, 0.25));
   border: 1px solid var(--color-partial);
   border-radius: 10px;
   color: #fef3c7;
@@ -1548,12 +1544,15 @@ th,
 .color-box.correct {
   background-color: var(--color-correct);
 }
+
 .color-box.partial {
   background-color: var(--color-partial);
 }
+
 .color-box.notTotallyWrong {
   background-color: var(--color-not-totally-wrong);
 }
+
 .color-box.wrong {
   background-color: var(--color-wrong);
 }
@@ -1579,12 +1578,15 @@ body.colorblind #guesses-table td {
 body.colorblind #guesses-table td.correct {
   border-color: #56b4e9 !important;
 }
+
 body.colorblind #guesses-table td.partial {
   border-color: #f0e442 !important;
 }
+
 body.colorblind #guesses-table td.notTotallyWrong {
   border-color: #d55e00 !important;
 }
+
 body.colorblind #guesses-table td.wrong {
   border-color: #cc79a7 !important;
   background-color: rgba(204, 121, 167, 0.25) !important;
@@ -1603,17 +1605,26 @@ body.colorblind #guesses-table td.correct::after {
   content: " ✓";
   color: #ffffff;
 }
+
 body.colorblind #guesses-table td.partial::after {
   content: " ~";
   color: #000000;
 }
+
 body.colorblind #guesses-table td.notTotallyWrong::after {
   content: " ≠";
   color: #000000;
 }
+
 body.colorblind #guesses-table td.wrong::after {
   content: " ✕";
   color: #ffffff;
+}
+
+body.colorblind .suggestion-colorblind-helper {
+  display: block;
+  font-size: .8em;
+  font-style: italic;
 }
 
 /* ==========================================================================
@@ -1634,7 +1645,6 @@ body.colorblind #guesses-table td.wrong::after {
 
 .slider {
   position: absolute;
-  cursor: pointer;
   inset: 0;
   background: var(--bg-input);
   border: 1.5px solid #334155;
@@ -1664,17 +1674,15 @@ body.colorblind #guesses-table td.wrong::after {
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
 }
 
-input:checked + .slider {
-  background: linear-gradient(
-    135deg,
-    var(--color-indigo),
-    var(--color-indigo-hover)
-  );
+input:checked+.slider {
+  background: linear-gradient(135deg,
+      var(--color-indigo),
+      var(--color-indigo-hover));
   border-color: #818cf8;
   box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
 }
 
-input:checked + .slider::before {
+input:checked+.slider::before {
   transform: translateX(19px);
   background: #ffffff;
 }
@@ -1687,7 +1695,6 @@ input[type="checkbox"]:not(.switch input) {
   background: var(--bg-input);
   border: 1.5px solid #334155;
   border-radius: 4px;
-  cursor: pointer;
   position: relative;
   vertical-align: middle;
   transition: all 0.2s ease;
@@ -1728,4 +1735,9 @@ input[type="checkbox"]:not(.switch input):checked::after {
   gap: 6px;
   font-size: 0.78rem;
   color: var(--text-muted);
+}
+
+
+.hidden {
+  display: none;
 }

@@ -59,6 +59,7 @@ body.theme-celeste h3 {
   /*gradient for titles*/
   background: linear-gradient(90deg, #a855f7, #ec4899, #f472b6);
   background-size: 200% 200%;
+  background-clip: border-box;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   /* Animation for gradient */
@@ -170,7 +171,6 @@ body.theme-celeste .switch input {
 
 body.theme-celeste .slider {
   position: absolute;
-  cursor: pointer;
   inset: 0;
   background: rgba(15, 23, 42, 0.6);
   border: 1.5px solid rgba(255, 255, 255, 0.15);
@@ -220,7 +220,6 @@ body.theme-celeste input[type="checkbox"]:not(.switch input) {
   background: rgba(15, 23, 42, 0.6);
   border: 1.5px solid rgba(255, 255, 255, 0.2);
   border-radius: 5px;
-  cursor: pointer;
   position: relative;
   vertical-align: middle;
   transition: all 0.2s ease;

@@ -1,5 +1,4 @@
 import { API_BASE_URL } from "./api.js";
-import { TableManager } from "./table.js";
 
 let wordsData = [];
 let currentSortKey = "nom";
@@ -194,31 +193,12 @@ async function loadAdminDashboardData() {
     // 🎯 Contexte factice pour éviter que table.js ne plante sur l'objet app manquant
     const adminAppContext = {};
 
-    // Construction du tableau de données compilées avec Promise.all pour les images
-    wordsData = await Promise.all(
-      elementsList.map(async (item) => {
+    // Construction du tableau de données compilées
+    wordsData =
+      elementsList.map((item) => {
         const name = typeof item === "string" ? item : item.nom;
 
-        // Récupération de l'image via TableManager avec son contexte simulé
-        let imagePath = "";
-        if (
-          TableManager &&
-          typeof TableManager.resolveEntityImage === "function"
-        ) {
-          try {
-            imagePath = await TableManager.resolveEntityImage(
-              name,
-              adminAppContext
-            );
-          } catch (err) {
-            console.warn(`Impossible de charger l'image pour ${name}:`, err);
-          }
-        }
-
-        // Fallback de sécurité si l'image est introuvable
-        if (!imagePath) {
-          imagePath = `assets/illustration/${name.toLowerCase().replace(/\s+/g, "_")}.png`;
-        }
+        const imagePath = API_BASE_URL + `sprite/${name}`;
 
         const appearances = (historyRes || []).filter(
           (h) =>
@@ -267,8 +247,7 @@ async function loadAdminDashboardData() {
           avgHints,
           avgTime
         };
-      })
-    );
+      });
 
     renderTable();
   } catch (err) {

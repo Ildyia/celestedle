@@ -1,7 +1,6 @@
-import { ApiService } from "./js/api.js";
+import { API_BASE_URL, ApiService } from "./js/api.js";
 import { initTimer } from "./js/timer.js";
 import { ModalService } from "./js/modal.js";
-import { CursorManager } from "./js/cursor.js";
 import { OptionsManager } from "./js/options.js";
 import { SuggestionsManager } from "./js/suggestions.js";
 import { GameStateManager } from "./js/game-state.js";
@@ -13,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   App.init();
 });
 
-const App = {
+export const App = {
   synonyms: {
     "blue booster": "green booster",
     "red bubble": "red booster",
@@ -55,7 +54,6 @@ const App = {
   hintLimit: 3,
   usedHintTypes: [],
   nodes: {},
-  entityImageMap: null,
 
   init() {
     this.cacheDOM();
@@ -69,7 +67,6 @@ const App = {
 
     SuggestionsManager.init(this);
     OptionsManager.init(this);
-    CursorManager.init();
 
     this.bindEvents();
     this.fetchPersonalizedSynonyms();
@@ -110,6 +107,9 @@ const App = {
       disclaimerModal: document.getElementById("disclaimer-modal"),
       closeDisclaimerBtn: document.getElementById("close-disclaimer-btn"),
       acceptDisclaimerBtn: document.getElementById("accept-disclaimer-btn"),
+      apiDownModal: document.getElementById("api-down-modal"),
+      apiDownCloseBtn: document.getElementById("close-api-down-btn"),
+      apiDownAcceptBtn: document.getElementById("accept-api-down-btn"),
       optionsBtn: document.getElementById("options-btn"),
       optionsModal: document.getElementById("options-modal"),
       closeOptionsBtn: document.getElementById("close-options-btn"),
@@ -136,6 +136,13 @@ const App = {
     );
     this.nodes.acceptDisclaimerBtn?.addEventListener("click", () =>
       this.closeDisclaimerNotice()
+    );
+
+    this.nodes.apiDownCloseBtn?.addEventListener("click", () =>
+      this.closeApiDisclaimer()
+    );
+    this.nodes.apiDownAcceptBtn?.addEventListener("click", () =>
+      this.closeApiDisclaimer()
     );
 
     document
@@ -256,10 +263,10 @@ const App = {
       (Array.isArray(this.officialElementsList)
         ? this.officialElementsList
         : []
-      ).forEach((el) => {
+      ).forEach(({ nom }) => {
         const opt = document.createElement("option");
-        opt.value = el;
-        opt.textContent = el.charAt(0).toUpperCase() + el.slice(1);
+        opt.value = nom;
+        opt.textContent = nom.charAt(0).toUpperCase() + nom.slice(1);
         select.appendChild(opt);
       });
     }
@@ -279,9 +286,9 @@ const App = {
   },
 
   fetchOfficialElements() {
-    ApiService.fetchElements()
+    ApiService.fetchElementsFull()
       .then((elements) => {
-        this.officialElementsList = Array.isArray(elements) ? elements : [];
+        this.officialElementsList = Array.isArray(elements) ? elements.map(({ nom, couleur }) => { return { nom, couleur } }) : [];
         HintsManager.updateButtonText(this);
       })
       .catch(() => {
@@ -292,7 +299,7 @@ const App = {
   fetchDailySuccessCount() {
     ApiService.fetchDailySuccessCount()
       .then((data) => this.updateCommunityStats(data))
-      .catch(() => {});
+      .catch(() => { });
   },
 
   updateCommunityStats(data) {
@@ -523,6 +530,52 @@ const App = {
       });
   },
 
+  handlePersonalizedSynonymAdd(modal) {
+    const keyInput = modal.querySelector("#synonym-key-input");
+    const valueInput = modal.querySelector("#synonym-value-input");
+    const errorMsg = modal.querySelector("#synonym-error-msg");
+
+    const key = keyInput?.value.trim().toLowerCase();
+    const val = valueInput?.value.trim().toLowerCase();
+
+    if (!key || !val) {
+      if (errorMsg) errorMsg.textContent = "Please fill both fields.";
+      return;
+    }
+
+    const isValidOfficial = this.officialElementsList.some(
+      ({ nom }) => nom.toLowerCase() === val
+    );
+
+    if (!isValidOfficial) {
+      if (errorMsg)
+        errorMsg.textContent = "Target must be a valid official element.";
+      return;
+    }
+
+    this.synonyms[key] = val;
+
+    const currentSaved = JSON.parse(
+      localStorage.getItem("celestedle_synonyms") || "{}"
+    );
+    currentSaved[key] = val;
+    localStorage.setItem("celestedle_synonyms", JSON.stringify(currentSaved));
+
+    if (errorMsg) errorMsg.textContent = "";
+    keyInput.value = "";
+    valueInput.value = "";
+
+    ModalService.renderSynonymsList(modal, this);
+  },
+
+  handleApiDown() {
+    this.nodes.apiDownModal.classList.remove("hidden");
+  },
+
+  closeApiDisclaimer() {
+    this.nodes.apiDownModal.classList.add("hidden");
+  },
+
   showToastNotification(message) {
     const toast = document.createElement("div");
     toast.className = "toast-notification";
@@ -571,7 +624,7 @@ const App = {
             : rawAttributes;
         parsedSolutionAttrs = attrs || {};
         attributeSummary = `<br><br><strong>Type:</strong> ${attrs.type || "-"}<br><strong>Locations:</strong> ${Array.isArray(attrs.lieu) ? attrs.lieu.join(", ") : attrs.lieu || "-"}<br><strong>Colours:</strong> ${Array.isArray(attrs.couleur) ? attrs.couleur.join(", ") : attrs.couleur || "-"}<br><strong>Hitbox:</strong> ${attrs.hitbox || "-"}`;
-      } catch (e) {}
+      } catch (e) { }
     }
 
     const mins = Math.floor(GameTimer.getTimeInSeconds() / 60);
@@ -590,18 +643,16 @@ const App = {
         parsedSolutionAttrs,
         this
       );
-      TableManager.resolveEntityImage(solution, this).then((imgPath) => {
-        if (!imgPath) return;
-        const firstRow = this.nodes.tableBody.querySelector("tr");
-        if (!firstRow) return;
-        const img = document.createElement("img");
-        img.className = "entity-thumb";
-        img.src = imgPath;
-        img.alt = formattedSolution;
-        firstRow
-          .querySelector("td")
-          ?.insertBefore(img, firstRow.querySelector("td").firstChild);
-      });
+      if (!imgPath) return;
+      const firstRow = this.nodes.tableBody.querySelector("tr");
+      if (!firstRow) return;
+      const img = document.createElement("img");
+      img.className = "entity-thumb";
+      img.src = API_BASE_URL + `/sprite/${solution}`;
+      img.alt = formattedSolution;
+      firstRow
+        .querySelector("td")
+        ?.insertBefore(img, firstRow.querySelector("td").firstChild);
     }
 
     targetContainer.appendChild(messageContainer);
@@ -617,8 +668,4 @@ const App = {
   addTableRow(data) {
     TableManager.addRow(data, this);
   },
-
-  resolveEntityImage(name) {
-    return TableManager.resolveEntityImage(name, this);
-  }
 };

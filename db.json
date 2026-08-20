@@ -372,12 +372,6 @@
     "lieu": ["core", "farewell"],
     "type": "mechanics"
   },
-  "ice wall": {
-    "couleur": ["blue"],
-    "hitbox": "rectangular",
-    "lieu": ["core", "farewell"],
-    "type": "mechanics"
-  },
   "intro car": {
     "couleur": ["blue", "brown"],
     "hitbox": "other shape",
@@ -485,17 +479,11 @@
     "lieu": ["farewell"],
     "type": "collectibles"
   },
-  "moon   block": {
+  "moon block": {
     "couleur": ["grey"],
     "hitbox": "rectangular",
     "lieu": ["farewell"],
     "type": "environment"
-  },
-  "moon berry": {
-    "couleur": ["green"],
-    "hitbox": "square",
-    "lieu": ["farewell"],
-    "type": "collectibles"
   },
   "move block": {
     "couleur": ["black"],
