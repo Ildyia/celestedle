@@ -3,8 +3,8 @@ const router = express.Router();
 const fs = require("fs");
 const path = require("path");
 
-const reportsFile = path.join(__dirname, "reports.json");
-
+// Remonte de "routes" vers "src"
+const reportsFile = path.join(__dirname, "..", "reports.json");
 function loadReports() {
   if (!fs.existsSync(reportsFile)) return {};
   try {
