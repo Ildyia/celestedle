@@ -256,7 +256,7 @@ export const App = {
     localStorage.setItem("celestedle_disclaimer_seen_v2", "true");
   },
 
-  openBugModal() {
+  async openBugModal() {
     const select = document.getElementById("bug-element-select");
     if (select) {
       select.innerHTML = '<option value="">-- None / General bug --</option>';
@@ -270,6 +270,48 @@ export const App = {
         select.appendChild(opt);
       });
     }
+
+    // Chargement de la liste des reports
+    try {
+      const reports = await ApiService.fetchReportsList();
+      const container = document.getElementById("reports-list");
+      if (container && reports) {
+        container.innerHTML = "";
+        reports.forEach((r) => {
+          container.innerHTML += `
+            <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+              <div><strong>${r.elementName}</strong> - ${r.bugType}</div>
+              <div style="font-size: 0.85em; margin: 5px 0;">${r.description}</div>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <span>Score: ${r.score}</span>
+                <button type="button" class="btn-primary vote-btn" data-id="${r.id}" data-up="true" style="padding: 4px 8px;">👍</button>
+                <button type="button" class="btn-primary vote-btn" data-id="${r.id}" data-up="false" style="padding: 4px 8px;">👎</button>
+              </div>
+            </div>
+          `;
+        });
+
+        // Ajout des écouteurs de clics pour les votes
+        container.querySelectorAll(".vote-btn").forEach((btn) => {
+          btn.addEventListener("click", async (e) => {
+            const reportId = e.target.getAttribute("data-id");
+            const isUp = e.target.getAttribute("data-up") === "true";
+
+            let userId = localStorage.getItem("userId");
+            if (!userId) {
+              userId = "web-" + Math.random().toString(36).substring(7);
+              localStorage.setItem("userId", userId);
+            }
+
+            await ApiService.voteReport(reportId, userId, isUp);
+            this.openBugModal(); // Recharge la liste pour actualiser les scores
+          });
+        });
+      }
+    } catch (e) {
+      console.error("Impossible de charger les reports en cours", e);
+    }
+
     const modal = document.getElementById("bug-modal");
     if (modal) modal.style.display = "flex";
   },
@@ -288,7 +330,11 @@ export const App = {
   fetchOfficialElements() {
     ApiService.fetchElementsFull()
       .then((elements) => {
-        this.officialElementsList = Array.isArray(elements) ? elements.map(({ nom, couleur }) => { return { nom, couleur } }) : [];
+        this.officialElementsList = Array.isArray(elements)
+          ? elements.map(({ nom, couleur }) => {
+              return { nom, couleur };
+            })
+          : [];
         HintsManager.updateButtonText(this);
       })
       .catch(() => {
@@ -299,7 +345,7 @@ export const App = {
   fetchDailySuccessCount() {
     ApiService.fetchDailySuccessCount()
       .then((data) => this.updateCommunityStats(data))
-      .catch(() => { });
+      .catch(() => {});
   },
 
   updateCommunityStats(data) {
@@ -624,7 +670,7 @@ export const App = {
             : rawAttributes;
         parsedSolutionAttrs = attrs || {};
         attributeSummary = `<br><br><strong>Type:</strong> ${attrs.type || "-"}<br><strong>Locations:</strong> ${Array.isArray(attrs.lieu) ? attrs.lieu.join(", ") : attrs.lieu || "-"}<br><strong>Colours:</strong> ${Array.isArray(attrs.couleur) ? attrs.couleur.join(", ") : attrs.couleur || "-"}<br><strong>Hitbox:</strong> ${attrs.hitbox || "-"}`;
-      } catch (e) { }
+      } catch (e) {}
     }
 
     const mins = Math.floor(GameTimer.getTimeInSeconds() / 60);
@@ -667,5 +713,5 @@ export const App = {
 
   addTableRow(data) {
     TableManager.addRow(data, this);
-  },
+  }
 };

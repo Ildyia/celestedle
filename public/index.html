@@ -650,46 +650,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="script-client.js" type="module" defer></script>
-    <script>
-      document
-        .getElementById("report-bug-btn")
-        ?.addEventListener("click", async () => {
-          try {
-            const res = await fetch("/api/report/list"); // Ajuster la route si nécessaire
-            const reports = await res.json();
-            const container = document.getElementById("reports-list");
-            container.innerHTML = "";
-            reports.forEach((r) => {
-              container.innerHTML += `
-              <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
-                <div><strong>${r.elementName}</strong> - ${r.bugType}</div>
-                <div style="font-size: 0.85em; margin: 5px 0;">${r.description}</div>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                  <span>Score: ${r.score}</span>
-                  <button type="button" class="btn-primary" style="padding: 4px 8px;" onclick="voteReport('${r.id}', true)">👍</button>
-                  <button type="button" class="btn-primary" style="padding: 4px 8px;" onclick="voteReport('${r.id}', false)">👎</button>
-                </div>
-              </div>
-            `;
-            });
-          } catch (e) {
-            console.error("Impossible de charger les reports en cours", e);
-          }
-        });
-
-      window.voteReport = async (reportId, isUp) => {
-        let userId = localStorage.getItem("userId");
-        if (!userId) {
-          userId = "web-" + Math.random().toString(36).substring(7);
-          localStorage.setItem("userId", userId);
-        }
-        await fetch("/api/report/vote", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reportId, userId, isUp })
-        });
-        document.getElementById("report-bug-btn").click();
-      };
-    </script>
   </body>
 </html>
