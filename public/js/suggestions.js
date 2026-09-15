@@ -109,7 +109,10 @@ export const SuggestionsManager = {
     } else if (e.key === "Enter") {
       if (this.app.selectedIndex > -1 && items[this.app.selectedIndex]) {
         e.preventDefault();
-        this.selectSuggestion(items[this.app.selectedIndex].textContent);
+        this.selectSuggestion(
+          items[this.app.selectedIndex].textContent.querySelector("span")
+            .textContent
+        );
       }
     }
   },
@@ -172,5 +175,5 @@ export const SuggestionsManager = {
     });
 
     this.app.nodes.suggestionsBox.style.display = "block";
-  },
+  }
 };
