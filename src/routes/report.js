@@ -3,8 +3,8 @@ const router = express.Router();
 const fs = require("fs");
 const path = require("path");
 
-// Remonte de "routes" vers "src"
 const reportsFile = path.join(__dirname, "..", "reports.json");
+
 function loadReports() {
   if (!fs.existsSync(reportsFile)) return {};
   try {
@@ -59,8 +59,19 @@ router.post("/", async (req, res) => {
       description: description || "None",
       isSpoiler: Boolean(isSpoiler)
     });
+
+    const reports = loadReports();
+    reports[reportId] = {
+      votes: {},
+      elementName: elementName || "N/A",
+      bugType: bugType || "Not specified",
+      description: description || "None"
+    };
+    fs.writeFileSync(reportsFile, JSON.stringify(reports, null, 2));
+
     res.json({ success: true, reportId });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Error occurred" });
   }
 });

@@ -18,8 +18,8 @@ let publicChannelId =
   process.env.DISCORD_PUBLIC_CHANNEL_ID || "1534624008614576209";
 let privateChannelId =
   process.env.DISCORD_PRIVATE_CHANNEL_ID || "1534616690287972498";
-const reportsFile = path.join(__dirname, "reports.json");
-
+// Remonte de "utils" vers "src"
+const reportsFile = path.join(__dirname, "..", "reports.json");
 function loadReports() {
   if (!fs.existsSync(reportsFile)) return {};
   try {
