@@ -6,6 +6,8 @@ const {
   SlashCommandBuilder,
   PermissionFlagsBits
 } = require("discord.js");
+const fs = require("fs");
+const path = require("path");
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
@@ -16,9 +18,20 @@ let publicChannelId =
   process.env.DISCORD_PUBLIC_CHANNEL_ID || "1534624008614576209";
 let privateChannelId =
   process.env.DISCORD_PRIVATE_CHANNEL_ID || "1534616690287972498";
+const reportsFile = path.join(__dirname, "reports.json");
 
-const reportsMap = new Map();
-global.reportsMap = reportsMap;
+function loadReports() {
+  if (!fs.existsSync(reportsFile)) return {};
+  try {
+    return JSON.parse(fs.readFileSync(reportsFile, "utf8"));
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveReports(data) {
+  fs.writeFileSync(reportsFile, JSON.stringify(data, null, 2));
+}
 
 const commands = [
   new SlashCommandBuilder()
@@ -40,7 +53,6 @@ const commands = [
 ].map((cmd) => cmd.toJSON());
 
 client.on("ready", async () => {
-  console.log(`Discord Bot connected: ${client.user.tag}`);
   try {
     const rest = new REST({ version: "10" }).setToken(
       process.env.DISCORD_BOT_TOKEN
@@ -48,10 +60,7 @@ client.on("ready", async () => {
     await rest.put(Routes.applicationCommands(client.user.id), {
       body: commands
     });
-    console.log("Slash commands successfully registered.");
-  } catch (err) {
-    console.error("Error registering slash commands:", err);
-  }
+  } catch (err) {}
 });
 
 client.handleBugReport = async ({
@@ -153,27 +162,33 @@ client.handleBugReport = async ({
     ]
   });
 
-  reportsMap.set(reportId, {
+  const reports = loadReports();
+  reports[reportId] = {
     publicMessageId: publicMsg.id,
     privateMessageId: privateMsg.id,
-    votes: new Map(),
+    votes: {},
     elementName,
     bugType,
     description
-  });
+  };
+  saveReports(reports);
 };
 
 client.handleWebVote = async (reportId, userId, isUp) => {
-  let reportData = reportsMap.get(reportId);
+  const reports = loadReports();
+  let reportData = reports[reportId];
   if (!reportData) return false;
-  const currentVote = reportData.votes.get(userId);
+
+  const currentVote = reportData.votes[userId];
   if ((isUp && currentVote === 1) || (!isUp && currentVote === -1)) {
-    reportData.votes.delete(userId);
+    delete reportData.votes[userId];
   } else {
-    reportData.votes.set(userId, isUp ? 1 : -1);
+    reportData.votes[userId] = isUp ? 1 : -1;
   }
+  saveReports(reports);
+
   let totalScore = 0;
-  reportData.votes.forEach((val) => (totalScore += val));
+  Object.values(reportData.votes).forEach((val) => (totalScore += val));
 
   const publicChannel = await client.channels.fetch(publicChannelId);
   const msg = await publicChannel.messages.fetch(reportData.publicMessageId);
@@ -191,15 +206,13 @@ client.handleWebVote = async (reportId, userId, isUp) => {
 };
 
 client.on("interactionCreate", async (interaction) => {
-  if (interaction.isChatInputCommand()) {
-    if (interaction.commandName === "setup-reports") {
-      publicChannelId = interaction.options.getChannel("public").id;
-      privateChannelId = interaction.options.getChannel("private").id;
-      return interaction.reply({
-        content: `Configuration successfully updated!\n- **Public Channel**: <#${publicChannelId}>\n- **Private Channel**: <#${privateChannelId}>`,
-        ephemeral: true
-      });
-    }
+  if (
+    interaction.isChatInputCommand() &&
+    interaction.commandName === "setup-reports"
+  ) {
+    publicChannelId = interaction.options.getChannel("public").id;
+    privateChannelId = interaction.options.getChannel("private").id;
+    return interaction.reply({ content: `Configured!`, ephemeral: true });
   }
 
   if (!interaction.isButton()) return;
@@ -208,19 +221,25 @@ client.on("interactionCreate", async (interaction) => {
   if (customId.startsWith("vote_")) {
     const isUp = customId.startsWith("vote_up_");
     const reportId = customId.replace(isUp ? "vote_up_" : "vote_down_", "");
-    let reportData = reportsMap.get(reportId);
+
+    const reports = loadReports();
+    let reportData = reports[reportId];
     if (!reportData) {
-      reportData = { votes: new Map() };
-      reportsMap.set(reportId, reportData);
+      reportData = { votes: {} };
+      reports[reportId] = reportData;
     }
+
     const userId = interaction.user.id;
-    const currentVote = reportData.votes.get(userId);
-    if ((isUp && currentVote === 1) || (!isUp && currentVote === -1))
-      reportData.votes.delete(userId);
-    else reportData.votes.set(userId, isUp ? 1 : -1);
+    const currentVote = reportData.votes[userId];
+    if ((isUp && currentVote === 1) || (!isUp && currentVote === -1)) {
+      delete reportData.votes[userId];
+    } else {
+      reportData.votes[userId] = isUp ? 1 : -1;
+    }
+    saveReports(reports);
 
     let totalScore = 0;
-    reportData.votes.forEach((val) => (totalScore += val));
+    Object.values(reportData.votes).forEach((val) => (totalScore += val));
 
     const embed = interaction.message.embeds[0];
     const updatedEmbed = {

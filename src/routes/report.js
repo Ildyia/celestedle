@@ -1,11 +1,26 @@
 const express = require("express");
 const router = express.Router();
+const fs = require("fs");
+const path = require("path");
+
+const reportsFile = path.join(__dirname, "reports.json");
+
+function loadReports() {
+  if (!fs.existsSync(reportsFile)) return {};
+  try {
+    return JSON.parse(fs.readFileSync(reportsFile, "utf8"));
+  } catch (e) {
+    return {};
+  }
+}
 
 router.get("/list", (req, res) => {
-  if (!global.reportsMap) return res.json([]);
-  const reports = Array.from(global.reportsMap.entries()).map(([id, data]) => {
+  const reports = loadReports();
+  const list = Object.entries(reports).map(([id, data]) => {
     let total = 0;
-    data.votes.forEach((v) => (total += v));
+    if (data.votes) {
+      Object.values(data.votes).forEach((v) => (total += v));
+    }
     return {
       id,
       score: total,
@@ -14,7 +29,7 @@ router.get("/list", (req, res) => {
       description: data.description || "N/A"
     };
   });
-  res.json(reports);
+  res.json(list);
 });
 
 router.post("/vote", async (req, res) => {
@@ -35,7 +50,7 @@ router.post("/", async (req, res) => {
 
   try {
     if (!global.discordBotClient) {
-      throw new Error("Discord bot not ready yet. Please try again later.");
+      throw new Error("Discord bot not ready.");
     }
     await global.discordBotClient.handleBugReport({
       reportId,
@@ -46,8 +61,7 @@ router.post("/", async (req, res) => {
     });
     res.json({ success: true, reportId });
   } catch (err) {
-    console.error("Error reporting bug:", err);
-    res.status(500).json({ error: "Error occurred while submitting report." });
+    res.status(500).json({ error: "Error occurred" });
   }
 });
 
