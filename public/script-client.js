@@ -278,10 +278,7 @@ export const App = {
         localStorage.setItem("userId", userId);
       }
 
-      const res = await fetch(
-        `https://celestedle-api.mizkyosia.fr/report/list?userId=${userId}`
-      );
-      const reports = await res.json();
+      const reports = await ApiService.fetchReportsList(userId);
       const container = document.getElementById("reports-list");
       if (container && reports) {
         container.innerHTML = "";
@@ -291,20 +288,23 @@ export const App = {
           const downActive =
             r.userVote === -1 ? "background-color: #ef4444; color: white;" : "";
 
-          container.innerHTML += `
-            <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; display: flex; flex-direction: column; gap: 6px;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <strong>${r.elementName}</strong> - ${r.bugType}
-                <span style="font-size: 0.85em;">${r.status}</span>
-              </div>
-              <div style="font-size: 0.85em;">${r.description}</div>
-              <div style="display: flex; gap: 10px; align-items: center;">
-                <span>Score: ${r.score}</span>
-                <button type="button" class="btn-primary vote-btn" data-id="${r.id}" data-up="true" style="padding: 4px 8px; ${upActive}">👍</button>
-                <button type="button" class="btn-primary vote-btn" data-id="${r.id}" data-up="false" style="padding: 4px 8px; ${downActive}">👎</button>
-              </div>
+          const item = document.createElement("div");
+          item.style.cssText =
+            "background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; display: flex; flex-direction: column; gap: 6px;";
+
+          item.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <strong>${r.elementName}</strong> - ${r.bugType}
+              <span style="font-size: 0.85em;">${r.status}</span>
+            </div>
+            <div style="font-size: 0.85em;">${r.description}</div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <span>Score: ${r.score}</span>
+              <button type="button" class="btn-primary vote-btn" data-id="${r.id}" data-up="true" style="padding: 4px 8px; ${upActive}">👍</button>
+              <button type="button" class="btn-primary vote-btn" data-id="${r.id}" data-up="false" style="padding: 4px 8px; ${downActive}">👎</button>
             </div>
           `;
+          container.appendChild(item);
         });
 
         container.querySelectorAll(".vote-btn").forEach((btn) => {
@@ -324,7 +324,6 @@ export const App = {
     const modal = document.getElementById("bug-modal");
     if (modal) modal.style.display = "flex";
   },
-
   closeBugModal() {
     const modal = document.getElementById("bug-modal");
     if (modal) modal.style.display = "none";
