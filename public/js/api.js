@@ -192,9 +192,9 @@ export const ApiService = {
     );
   },
 
-  fetchReportsList() {
+fetchReportsList(userId) {
     return catchMaybeError(
-      fetch(`${API_BASE_URL}/report-bug/list`).then((res) => res.json())
+      fetch(`${API_BASE_URL}/report-bug/list?userId=${userId || ""}`).then((res) => res.json())
     );
   },
 
@@ -207,4 +207,3 @@ export const ApiService = {
       }).then((res) => res.json())
     );
   }
-};
