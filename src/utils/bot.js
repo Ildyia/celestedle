@@ -10,7 +10,6 @@ const {
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
 });
-
 global.discordBotClient = client;
 
 let publicChannelId =
@@ -19,6 +18,7 @@ let privateChannelId =
   process.env.DISCORD_PRIVATE_CHANNEL_ID || "1534616690287972498";
 
 const reportsMap = new Map();
+global.reportsMap = reportsMap;
 
 const commands = [
   new SlashCommandBuilder()
@@ -41,7 +41,6 @@ const commands = [
 
 client.on("ready", async () => {
   console.log(`Discord Bot connected: ${client.user.tag}`);
-
   try {
     const rest = new REST({ version: "10" }).setToken(
       process.env.DISCORD_BOT_TOKEN
@@ -64,14 +63,11 @@ client.handleBugReport = async ({
 }) => {
   const privateChannel = await client.channels.fetch(privateChannelId);
   const publicChannel = await client.channels.fetch(publicChannelId);
-
-  if (!privateChannel || !publicChannel) {
-    throw new Error("Discord channels not found. Please check configuration.");
-  }
+  if (!privateChannel || !publicChannel)
+    throw new Error("Discord channels not found.");
 
   const cleanElement = elementName.trim();
   const cleanDescription = description.trim();
-
   const formattedElement = isSpoiler ? `||${cleanElement}||` : cleanElement;
   const formattedDescription = isSpoiler
     ? cleanDescription
@@ -83,7 +79,6 @@ client.handleBugReport = async ({
   const spoilerTag = isSpoiler ? " ⚠️ [TODAY'S WORD SPOILER]" : "";
   const embedColor = isSpoiler ? 0xf59e0b : 15158332;
 
-  // Send public message first to get its ID
   const publicMsg = await publicChannel.send({
     embeds: [
       {
@@ -104,18 +99,12 @@ client.handleBugReport = async ({
         type: 1,
         components: [
           { type: 2, style: 2, emoji: "👍", custom_id: `vote_up_${reportId}` },
-          {
-            type: 2,
-            style: 2,
-            emoji: "👎",
-            custom_id: `vote_down_${reportId}`
-          }
+          { type: 2, style: 2, emoji: "👎", custom_id: `vote_down_${reportId}` }
         ]
       }
     ]
   });
 
-  // Attach publicMsg.id to custom_id so we can fetch it directly later
   const privateMsg = await privateChannel.send({
     embeds: [
       {
@@ -167,19 +156,45 @@ client.handleBugReport = async ({
   reportsMap.set(reportId, {
     publicMessageId: publicMsg.id,
     privateMessageId: privateMsg.id,
-    votes: new Map()
+    votes: new Map(),
+    elementName,
+    bugType,
+    description
   });
+};
+
+client.handleWebVote = async (reportId, userId, isUp) => {
+  let reportData = reportsMap.get(reportId);
+  if (!reportData) return false;
+  const currentVote = reportData.votes.get(userId);
+  if ((isUp && currentVote === 1) || (!isUp && currentVote === -1)) {
+    reportData.votes.delete(userId);
+  } else {
+    reportData.votes.set(userId, isUp ? 1 : -1);
+  }
+  let totalScore = 0;
+  reportData.votes.forEach((val) => (totalScore += val));
+
+  const publicChannel = await client.channels.fetch(publicChannelId);
+  const msg = await publicChannel.messages.fetch(reportData.publicMessageId);
+  const embed = msg.embeds[0];
+  const updatedEmbed = {
+    ...embed.data,
+    fields: embed.fields.map((f) =>
+      f.name === "Votes"
+        ? { name: "Votes", value: `${totalScore}`, inline: true }
+        : f
+    )
+  };
+  await msg.edit({ embeds: [updatedEmbed] });
+  return true;
 };
 
 client.on("interactionCreate", async (interaction) => {
   if (interaction.isChatInputCommand()) {
     if (interaction.commandName === "setup-reports") {
-      const pubChan = interaction.options.getChannel("public");
-      const privChan = interaction.options.getChannel("private");
-
-      publicChannelId = pubChan.id;
-      privateChannelId = privChan.id;
-
+      publicChannelId = interaction.options.getChannel("public").id;
+      privateChannelId = interaction.options.getChannel("private").id;
       return interaction.reply({
         content: `Configuration successfully updated!\n- **Public Channel**: <#${publicChannelId}>\n- **Private Channel**: <#${privateChannelId}>`,
         ephemeral: true
@@ -188,27 +203,21 @@ client.on("interactionCreate", async (interaction) => {
   }
 
   if (!interaction.isButton()) return;
-
   const customId = interaction.customId;
 
   if (customId.startsWith("vote_")) {
     const isUp = customId.startsWith("vote_up_");
     const reportId = customId.replace(isUp ? "vote_up_" : "vote_down_", "");
     let reportData = reportsMap.get(reportId);
-
     if (!reportData) {
       reportData = { votes: new Map() };
       reportsMap.set(reportId, reportData);
     }
-
     const userId = interaction.user.id;
     const currentVote = reportData.votes.get(userId);
-
-    if ((isUp && currentVote === 1) || (!isUp && currentVote === -1)) {
+    if ((isUp && currentVote === 1) || (!isUp && currentVote === -1))
       reportData.votes.delete(userId);
-    } else {
-      reportData.votes.set(userId, isUp ? 1 : -1);
-    }
+    else reportData.votes.set(userId, isUp ? 1 : -1);
 
     let totalScore = 0;
     reportData.votes.forEach((val) => (totalScore += val));
@@ -222,14 +231,12 @@ client.on("interactionCreate", async (interaction) => {
           : f
       )
     };
-
     await interaction.update({ embeds: [updatedEmbed] });
   }
 
   if (customId.startsWith("status_")) {
     let newStatus = "";
     let newColor = 0xef4444;
-
     if (customId.includes("_fixed_")) {
       newStatus = "🟢 Fixed";
       newColor = 0x10b981;
@@ -266,17 +273,12 @@ client.on("interactionCreate", async (interaction) => {
 
     try {
       const publicChannel = await client.channels.fetch(publicChannelId);
-
-      // Fetch public message directly by its ID
       let publicMsg;
       if (publicMsgId && publicMsgId !== reportId) {
         try {
           publicMsg = await publicChannel.messages.fetch(publicMsgId);
-        } catch (e) {
-          // Fallback search if fetching directly fails
-        }
+        } catch (e) {}
       }
-
       if (!publicMsg) {
         const fetchedMessages = await publicChannel.messages.fetch({
           limit: 100
@@ -285,7 +287,6 @@ client.on("interactionCreate", async (interaction) => {
           msg.embeds.some((e) => e.title && e.title.includes(`[${reportId}]`))
         );
       }
-
       if (publicMsg) {
         const publicEmbed = publicMsg.embeds[0];
         const updatedPublicEmbed = {
@@ -297,18 +298,12 @@ client.on("interactionCreate", async (interaction) => {
               : f
           )
         };
-
         await publicMsg.edit({ embeds: [updatedPublicEmbed] });
-      } else {
-        console.error(`Public message for report ${reportId} not found.`);
       }
-    } catch (err) {
-      console.error("Public sync error:", err);
-    }
+    } catch (err) {}
   }
 });
+
 if (process.env.DISCORD_BOT_TOKEN) {
   client.login(process.env.DISCORD_BOT_TOKEN);
-} else {
-  console.warn("No TOKEN for discord bot");
 }

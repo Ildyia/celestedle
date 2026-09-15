@@ -8,16 +8,13 @@
     <link rel="stylesheet" href="theme-celeste.css" />
     <link rel="icon" href="assets/berrywinged.png" type="image/png" />
   </head>
-
   <body>
-    <!-- WELCOME BANNER / CLOSABLE ANNOUNCEMENT -->
     <div id="disclaimer-modal" class="rules-modal" style="display: none">
       <div class="rules-content" style="max-width: 550px; text-align: left">
         <span id="close-disclaimer-btn" class="close-modal-btn">&times;</span>
         <h2 style="color: var(--color-indigo); margin-bottom: 16px">
           The Visual Update Pt. 1 is here !
         </h2>
-
         <p
           style="margin-bottom: 12px; line-height: 1.5; color: var(--text-main)"
         >
@@ -25,10 +22,8 @@
             src="./assets/illustration/paint.png"
             alt="paint logo"
             style="max-width: 150px; object-fit: contain; display: block"
-          />
-          <br />
-          Hey everyone ! <br />
-          <br />
+          /><br />
+          Hey everyone ! <br /><br />
           The <b>Visual Update Pt. 1</b> is here ! <br />
           You can check in the options to change the theme or the cursor if you
           want. <br /><br />
@@ -37,9 +32,9 @@
           lmao), and a timer ! <br />
           You can also now support me on Ko-fi if you like the game. I'm a
           student working on this project on my free time, so any support is
-          greatly appreciated !
-          <br /><br />The next coming major update should be the hard mode,
-          except if I find something more interesting before lmao <br /><br />
+          greatly appreciated !<br /><br />
+          The next coming major update should be the hard mode, except if I find
+          something more interesting before lmao <br /><br />
           A special thanks to <b> Jade Chameleon</b> who made the sprites for
           the new custom cursor ! <br /><br />
         </p>
@@ -48,7 +43,6 @@
         >
           Thanks for playing my game, it means a lot to me! Hope you like it!
         </p>
-
         <p
           id="My-Name"
           style="
@@ -61,7 +55,6 @@
         >
           — Amélia / Ildyia
         </p>
-
         <div style="text-align: center">
           <button
             id="accept-disclaimer-btn"
@@ -74,12 +67,10 @@
       </div>
     </div>
 
-    <!-- In case API is down again :P -->
     <div id="api-down-modal" class="rules-modal hidden">
       <div class="rules-content" style="max-width: 550px; text-align: left">
         <span id="close-api-down-btn" class="close-modal-btn">&times;</span>
         <h2 style="margin-bottom: 16px">The API is currently down</h2>
-
         <p
           style="margin-bottom: 12px; line-height: 1.5; color: var(--text-main)"
         >
@@ -93,11 +84,9 @@
               border-radius: 8px;
             "
           />
-          The game's host server is likely experiencing issues right now.
-          <br />
+          The game's host server is likely experiencing issues right now.<br />
           If this persists, please report it in the official Discord server !
         </p>
-
         <div style="text-align: center">
           <button
             id="accept-api-down-btn"
@@ -110,7 +99,6 @@
       </div>
     </div>
 
-    <!-- Options Button (Top Left) -->
     <button id="options-btn" aria-label="Options">
       <img
         src="assets/illustration/options.png"
@@ -142,7 +130,6 @@
         <button id="rules-btn" class="sidebar-toggle-btn">
           <img src="assets/illustration/journal.png" class="btn-icon" /> Rules
         </button>
-
         <div id="rules-sidebar" class="sidebar-block" style="display: none">
           <div class="rules-content-static">
             <h2>Rules of Celestedle</h2>
@@ -226,7 +213,6 @@
           </div>
         </div>
 
-        <!-- COMMUNITY STATS BLOCK -->
         <div id="stats-sidebar" class="sidebar-block">
           <div class="sidebar-header">
             <img
@@ -247,8 +233,6 @@
 
       <div id="main-content-column">
         <h1>Celestedle</h1>
-
-        <!-- CONTROLS & ACTION BUTTONS -->
         <div id="game-status">
           <p class="tries-badge">
             <img
@@ -266,7 +250,6 @@
             <img src="assets/illustration/assist.png" alt="" class="btn-icon" />
             <span id="hint-btn-text">Hints</span>
           </button>
-
           <button id="giveup-btn" class="btn">
             <img src="assets/illustration/skull.png" alt="" class="btn-icon" />
             <span>Give Up</span>
@@ -308,7 +291,6 @@
             gap: 8px;
           "
         ></div>
-
         <div id="message-container"></div>
 
         <div id="game-container">
@@ -350,7 +332,6 @@
         </div>
       </div>
 
-      <!-- RIGHT SIDEBAR -->
       <div id="right-sidebar-column">
         <div class="bug-card">
           <h3>Found a bug?</h3>
@@ -435,18 +416,17 @@
       <a href="legal-notice.html" class="legal-link">Legal Notice</a>
     </footer>
 
-    <!-- OPTIONS MODAL -->
     <div id="options-modal" class="rules-modal" style="display: none">
       <div class="rules-content bug-modal-content" style="max-width: 450px">
         <span id="close-options-btn" class="close-modal-btn">&times;</span>
         <h2>Options</h2>
-
         <div class="option-row">
           <span>Celeste Background & Theme</span>
-          <label class="switch">
-            <input type="checkbox" id="toggle-theme-checkbox" />
-            <span class="slider"></span>
-          </label>
+          <label class="switch"
+            ><input type="checkbox" id="toggle-theme-checkbox" /><span
+              class="slider"
+            ></span
+          ></label>
         </div>
         <hr
           class="options-separator"
@@ -456,15 +436,14 @@
             border-top: 1px solid rgba(255, 255, 255, 0.1);
           "
         />
-
         <div class="option-row">
           <span>Show Timer</span>
-          <label class="switch">
-            <input type="checkbox" id="toggle-timer-checkbox" checked />
-            <span class="slider"></span>
-          </label>
+          <label class="switch"
+            ><input type="checkbox" id="toggle-timer-checkbox" checked /><span
+              class="slider"
+            ></span
+          ></label>
         </div>
-
         <hr
           class="options-separator"
           style="
@@ -473,15 +452,14 @@
             border-top: 1px solid rgba(255, 255, 255, 0.1);
           "
         />
-
         <div class="option-row">
           <span>Custom Cursor</span>
-          <label class="switch">
-            <input type="checkbox" id="toggle-cursor-checkbox" checked />
-            <span class="slider"></span>
-          </label>
+          <label class="switch"
+            ><input type="checkbox" id="toggle-cursor-checkbox" checked /><span
+              class="slider"
+            ></span
+          ></label>
         </div>
-
         <hr
           class="options-separator"
           style="
@@ -490,15 +468,14 @@
             border-top: 1px solid rgba(255, 255, 255, 0.1);
           "
         />
-
         <div class="option-row">
           <span>Colorblind Mode</span>
-          <label class="switch">
-            <input type="checkbox" id="toggle-colorblind-checkbox" />
-            <span class="slider"></span>
-          </label>
+          <label class="switch"
+            ><input type="checkbox" id="toggle-colorblind-checkbox" /><span
+              class="slider"
+            ></span
+          ></label>
         </div>
-
         <hr
           class="options-separator"
           style="
@@ -507,7 +484,6 @@
             border-top: 1px solid rgba(255, 255, 255, 0.1);
           "
         />
-
         <div class="colorblind-preview" style="margin-top: 16px">
           <p class="small-subtext">Colorblind preview:</p>
           <div
@@ -555,7 +531,6 @@
       </div>
     </div>
 
-    <!-- FORFEIT MODAL -->
     <div id="forfeit-modal" class="rules-modal" style="display: none">
       <div class="rules-content" style="max-width: 450px; text-align: center">
         <h2 style="color: var(--color-wrong)">Give up?</h2>
@@ -592,7 +567,6 @@
       </div>
     </div>
 
-    <!-- BUG REPORT MODAL -->
     <div id="bug-modal" class="rules-modal" style="display: none">
       <div class="rules-content bug-modal-content">
         <span id="close-bug-btn" class="close-modal-btn">&times;</span>
@@ -609,7 +583,6 @@
               <option value="">-- None / General bug --</option>
             </select>
           </div>
-
           <div class="form-group">
             <label for="bug-type-select">Type of report:</label>
             <select id="bug-type-select" class="bug-input" required>
@@ -619,7 +592,6 @@
               <option value="Other">Other</option>
             </select>
           </div>
-
           <div class="form-group">
             <label for="bug-description-input">Details:</label>
             <textarea
@@ -643,7 +615,6 @@
               >Concerns today's secret word (hide text with spoiler)</label
             >
           </div>
-
           <div class="modal-actions">
             <button type="button" id="cancel-bug-btn" class="btn-secondary">
               Cancel
@@ -653,10 +624,72 @@
             </button>
           </div>
         </form>
+
+        <div
+          style="
+            margin-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+          "
+        >
+          <h3>Current Reports</h3>
+          <div
+            id="reports-list"
+            style="
+              max-height: 200px;
+              overflow-y: auto;
+              display: flex;
+              flex-direction: column;
+              gap: 10px;
+              margin-top: 10px;
+            "
+          ></div>
+        </div>
       </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="script-client.js" type="module" defer></script>
+    <script>
+      document
+        .getElementById("report-bug-btn")
+        ?.addEventListener("click", async () => {
+          try {
+            const res = await fetch("/api/report/list"); // Ajuster la route si nécessaire
+            const reports = await res.json();
+            const container = document.getElementById("reports-list");
+            container.innerHTML = "";
+            reports.forEach((r) => {
+              container.innerHTML += `
+              <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                <div><strong>${r.elementName}</strong> - ${r.bugType}</div>
+                <div style="font-size: 0.85em; margin: 5px 0;">${r.description}</div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                  <span>Score: ${r.score}</span>
+                  <button type="button" class="btn-primary" style="padding: 4px 8px;" onclick="voteReport('${r.id}', true)">👍</button>
+                  <button type="button" class="btn-primary" style="padding: 4px 8px;" onclick="voteReport('${r.id}', false)">👎</button>
+                </div>
+              </div>
+            `;
+            });
+          } catch (e) {
+            console.error("Impossible de charger les reports en cours", e);
+          }
+        });
+
+      window.voteReport = async (reportId, isUp) => {
+        let userId = localStorage.getItem("userId");
+        if (!userId) {
+          userId = "web-" + Math.random().toString(36).substring(7);
+          localStorage.setItem("userId", userId);
+        }
+        await fetch("/api/report/vote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reportId, userId, isUp })
+        });
+        document.getElementById("report-bug-btn").click();
+      };
+    </script>
   </body>
 </html>
