@@ -3,7 +3,10 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const fs = require('fs');
 const cookieParser = require("cookie-parser");
+
+const { getEntitySprite } = require("./utils/helpers");
 
 const app = express();
 
@@ -41,15 +44,24 @@ const adminRoutes = require("./routes/admin");
 const reportRoutes = require("./routes/report");
 const bot = require("./utils/bot");
 
-app.get("/db.json", (req, res) => {
+app.get("/db.json", (_, res) => {
   res.sendFile(path.join(__dirname, "..", "db.json"));
+});
+
+app.get("/sprite/:name", (req, res) => {
+  const mappedName = getEntitySprite(req.params.name);
+  const fileName = path.join(__dirname, "../public", mappedName ?? "");
+  if (mappedName && fs.existsSync(fileName))
+    res.sendFile(fileName);
+  else
+    res.sendFile(path.join(__dirname, "../public/assets/placeholder.svg"))
 });
 
 app.use("/", gameRoutes);
 app.use("/admin", adminRoutes);
 app.use("/report-bug", reportRoutes);
 
-app.use((req, res) => {
+app.use((_, res) => {
   res.status(404).json({ error: "Route not found" });
 });
 
