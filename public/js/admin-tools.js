@@ -3,6 +3,7 @@ import { API_BASE_URL } from "./api.js";
 let wordsData = [];
 let currentSortKey = "nom";
 let currentSortOrder = "asc";
+let victoriesChartInstance = null;
 
 export function initAdminTools() {
   setupLoginHandler();
@@ -157,6 +158,72 @@ function bindAdminActions() {
     });
 }
 
+function initChartModal(historyRes) {
+  const chartBtn = document.getElementById("admin-chart-btn");
+  const chartModal = document.getElementById("chart-modal");
+  const closeBtn = document.getElementById("close-chart-modal");
+
+  chartBtn?.addEventListener("click", () => {
+    if (chartModal) chartModal.style.display = "flex";
+    renderVictoriesChart(historyRes);
+  });
+
+  closeBtn?.addEventListener("click", () => {
+    if (chartModal) chartModal.style.display = "none";
+  });
+}
+
+function renderVictoriesChart(historyRes) {
+  const ctx = document.getElementById("victories-chart")?.getContext("2d");
+  if (!ctx) return;
+
+  const sortedHistory = [...(historyRes || [])].sort(
+    (a, b) => new Date(a.date) - new Date(b.date)
+  );
+
+  const labels = sortedHistory.map((h) => h.date);
+  const dataCounts = sortedHistory.map((h) => h.count || 0);
+
+  if (victoriesChartInstance) {
+    victoriesChartInstance.destroy();
+  }
+
+  victoriesChartInstance = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Victoires journalières",
+          data: dataCounts,
+          borderColor: "#a855f7",
+          backgroundColor: "rgba(168, 85, 247, 0.1)",
+          borderWidth: 2,
+          fill: true,
+          tension: 0.3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: "#f8fafc" } }
+      },
+      scales: {
+        x: {
+          ticks: { color: "#94a3b8" },
+          grid: { color: "rgba(255, 255, 255, 0.05)" }
+        },
+        y: {
+          ticks: { color: "#94a3b8" },
+          grid: { color: "rgba(255, 255, 255, 0.05)" }
+        }
+      }
+    }
+  });
+}
+
 async function loadAdminDashboardData() {
   try {
     const fetchJson = async (endpoint) => {
@@ -190,64 +257,89 @@ async function loadAdminDashboardData() {
       elementsList = await fetchJson("/game/elements").catch(() => []);
     }
 
-    // 🎯 Contexte factice pour éviter que table.js ne plante sur l'objet app manquant
-    const adminAppContext = {};
+    // Calculs KPI globaux
+    const totalAppearances = historyRes.reduce((acc, curr) => acc + 1, 0);
+    const totalVictories = historyRes.reduce(
+      (acc, curr) => acc + (curr.count || 0),
+      0
+    );
+    const validTriesArr = historyRes.filter((h) => h.avgTries > 0);
+    const globalAvgTries =
+      validTriesArr.length > 0
+        ? (
+            validTriesArr.reduce((acc, curr) => acc + curr.avgTries, 0) /
+            validTriesArr.length
+          ).toFixed(1)
+        : "-";
+
+    const elTotalWords = document.getElementById("kpi-total-words");
+    const elTotalVictories = document.getElementById("kpi-total-victories");
+    const elGlobalTries = document.getElementById("kpi-global-tries");
+
+    if (elTotalWords) elTotalWords.textContent = totalAppearances;
+    if (elTotalVictories) elTotalVictories.textContent = totalVictories;
+    if (elGlobalTries) elGlobalTries.textContent = globalAvgTries;
+
+    initChartModal(historyRes);
 
     // Construction du tableau de données compilées
-    wordsData =
-      elementsList.map((item) => {
-        const name = typeof item === "string" ? item : item.nom;
+    wordsData = elementsList.map((item) => {
+      const name = typeof item === "string" ? item : item.nom;
 
-        const imagePath = API_BASE_URL + `sprite/${name}`;
+      const imagePath = API_BASE_URL + `sprite/${name}`;
 
-        const appearances = (historyRes || []).filter(
-          (h) =>
-            h.secretWord && h.secretWord.toLowerCase() === name.toLowerCase()
+      const appearances = (historyRes || []).filter(
+        (h) => h.secretWord && h.secretWord.toLowerCase() === name.toLowerCase()
+      );
+
+      const count = appearances.length;
+      const victories = appearances.reduce(
+        (acc, curr) => acc + (curr.count || 0),
+        0
+      );
+
+      let lastDate = "-";
+      if (count > 0) {
+        const sortedDates = appearances
+          .map((a) => a.date)
+          .sort((a, b) => new Date(b) - new Date(a));
+        lastDate = sortedDates[0];
+      }
+
+      let avgTries = 0;
+      let avgHints = 0;
+      let avgTime = 0;
+
+      if (count > 0) {
+        const totalTries = appearances.reduce(
+          (acc, curr) => acc + (curr.avgTries || 0),
+          0
+        );
+        const totalHints = appearances.reduce(
+          (acc, curr) => acc + (curr.avgHints || 0),
+          0
+        );
+        const totalTime = appearances.reduce(
+          (acc, curr) => acc + (curr.avgTimeInSeconds || 0),
+          0
         );
 
-        const count = appearances.length;
+        avgTries = Number((totalTries / count).toFixed(1));
+        avgHints = Number((totalHints / count).toFixed(1));
+        avgTime = Math.round(totalTime / count);
+      }
 
-        let lastDate = "-";
-        if (count > 0) {
-          const sortedDates = appearances
-            .map((a) => a.date)
-            .sort((a, b) => new Date(b) - new Date(a));
-          lastDate = sortedDates[0];
-        }
-
-        let avgTries = 0;
-        let avgHints = 0;
-        let avgTime = 0;
-
-        if (count > 0) {
-          const totalTries = appearances.reduce(
-            (acc, curr) => acc + (curr.avgTries || 0),
-            0
-          );
-          const totalHints = appearances.reduce(
-            (acc, curr) => acc + (curr.avgHints || 0),
-            0
-          );
-          const totalTime = appearances.reduce(
-            (acc, curr) => acc + (curr.avgTimeInSeconds || 0),
-            0
-          );
-
-          avgTries = Number((totalTries / count).toFixed(1));
-          avgHints = Number((totalHints / count).toFixed(1));
-          avgTime = Math.round(totalTime / count);
-        }
-
-        return {
-          nom: name,
-          image: imagePath,
-          count,
-          lastDate,
-          avgTries,
-          avgHints,
-          avgTime
-        };
-      });
+      return {
+        nom: name,
+        image: imagePath,
+        count,
+        victories,
+        lastDate,
+        avgTries,
+        avgHints,
+        avgTime
+      };
+    });
 
     renderTable();
   } catch (err) {
@@ -290,6 +382,7 @@ function renderTable() {
           </td>
           <td><strong>${item.nom.charAt(0).toUpperCase() + item.nom.slice(1)}</strong></td>
           <td>${item.count}</td>
+          <td>${item.victories}</td>
           <td>${item.lastDate}</td>
           <td>${item.count > 0 ? item.avgTries : "-"}</td>
           <td>${item.count > 0 ? item.avgHints : "-"}</td>

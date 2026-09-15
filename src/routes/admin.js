@@ -1,415 +1,121 @@
-import { API_BASE_URL } from "./api.js";
-import { TableManager } from "./table.js";
+const express = require("express");
+const router = express.Router();
+const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const path = require("path");
+const {
+  updateSeedHash,
+  getSecretOfTheDay,
+  getSecretElement,
+  getElementsList
+} = require("../utils/helpers");
 
-let wordsData = [];
-let currentSortKey = "nom";
-let currentSortOrder = "asc";
-let victoriesChartInstance = null;
+const JWT_SECRET = process.env.JWT_SECRET;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-export function initAdminTools() {
-  setupLoginHandler();
-  bindAdminActions();
+function verifyAdminToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Token manquant" });
+  }
 
-  if (localStorage.getItem("celestedle_admin_token")) {
-    showDashboard(true);
-    loadAdminDashboardData();
-  } else {
-    showDashboard(false);
+  try {
+    const token = authHeader.split(" ")[1];
+    jwt.verify(token, JWT_SECRET);
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: "Session expirée" });
   }
 }
 
-function showDashboard(isLoggedIn) {
-  const loginBlock = document.getElementById("admin-login-block");
-  const dashboardContent = document.getElementById("admin-dashboard-content");
-
-  if (isLoggedIn) {
-    if (loginBlock) loginBlock.style.display = "none";
-    if (dashboardContent) dashboardContent.style.display = "block";
-  } else {
-    if (loginBlock) loginBlock.style.display = "block";
-    if (dashboardContent) dashboardContent.style.display = "none";
+router.post("/login", (req, res) => {
+  const { password } = req.body || {};
+  if (password === ADMIN_PASSWORD) {
+    const token = jwt.sign({ role: "admin" }, JWT_SECRET, { expiresIn: "8h" });
+    return res.json({ success: true, token });
   }
-}
+  return res.status(401).json({ error: "Mot de passe incorrect" });
+});
 
-function setupLoginHandler() {
-  const loginBtn = document.getElementById("admin-login-btn");
-  const passwordInput = document.getElementById("admin-password-input");
-  const errorMsg = document.getElementById("admin-login-error");
+router.get("/session", verifyAdminToken, (req, res) => {
+  res.json({ authenticated: true });
+});
 
-  passwordInput?.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") loginBtn?.click();
+router.post("/trigger-reset", verifyAdminToken, (req, res) => {
+  const newHash = Math.floor(Math.random() * 1000000);
+  updateSeedHash(newHash);
+  const secret = getSecretElement();
+  res.json({
+    message: "Reset réussi",
+    secretElement: secret.nom,
+    details: secret,
+    newHash
   });
+});
 
-  if (loginBtn) {
-    loginBtn.addEventListener("click", async () => {
-      const password = passwordInput ? passwordInput.value : "";
-
-      try {
-        const res = await fetch(`${API_BASE_URL}/admin/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ password })
-        });
-
-        const data = await res.json();
-
-        if (res.ok && data.token) {
-          localStorage.setItem("celestedle_admin_token", data.token);
-          if (errorMsg) errorMsg.style.display = "none";
-
-          showDashboard(true);
-          loadAdminDashboardData();
-        } else {
-          if (errorMsg) {
-            errorMsg.textContent = data.error || "Mot de passe incorrect";
-            errorMsg.style.display = "block";
-          }
-        }
-      } catch (err) {
-        if (errorMsg) {
-          errorMsg.textContent = "Erreur de connexion au serveur";
-          errorMsg.style.display = "block";
-        }
-      }
-    });
-  }
-}
-
-function bindAdminActions() {
-  const output = document.getElementById("admin-output");
-
-  const sendAdminPost = async (endpoint) => {
-    const token = localStorage.getItem("celestedle_admin_token") || "";
-
-    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      }
-    });
-
-    if (res.status === 401) {
-      localStorage.removeItem("celestedle_admin_token");
-      showDashboard(false);
-      throw new Error("Session expirée, veuillez vous reconnecter.");
-    }
-
-    if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
-    return res.json();
-  };
-
-  document.getElementById("admin-reveal-btn")?.addEventListener("click", () => {
-    sendAdminPost("/admin/get-secret")
-      .then((data) => {
-        if (output)
-          output.textContent = `Secret actuel : ${data.secretElement}`;
-      })
-      .catch((err) => {
-        if (output) output.textContent = `Erreur : ${err.message}`;
-      });
+router.post("/random-hash", verifyAdminToken, (req, res) => {
+  const newHash = req.body.newHash || Math.floor(Math.random() * 1000000);
+  updateSeedHash(newHash);
+  const secret = getSecretElement();
+  res.json({
+    message: "Hash à jour",
+    secretElement: secret.nom,
+    details: secret,
+    newHash
   });
+});
 
-  document
-    .getElementById("admin-reset-seed-btn")
-    ?.addEventListener("click", () => {
-      sendAdminPost("/admin/trigger-reset")
-        .then((data) => {
-          if (output)
-            output.textContent = `Word Reset ! Nouveau secret : ${data.secretElement}`;
-          loadAdminDashboardData();
-        })
-        .catch((err) => {
-          if (output)
-            output.textContent = `Erreur lors du reset : ${err.message}`;
-        });
-    });
+router.post("/get-secret", verifyAdminToken, (req, res) => {
+  const secret = getSecretElement();
+  res.json({ secretElement: secret.nom, details: secret });
+});
 
-  document
-    .getElementById("admin-random-secret-btn")
-    ?.addEventListener("click", () => {
-      sendAdminPost("/admin/random-hash")
-        .then((data) => {
-          if (output)
-            output.textContent = `Secret aléatoire défini : ${data.secretElement}`;
-          loadAdminDashboardData();
-        })
-        .catch((err) => {
-          if (output)
-            output.textContent = `Erreur génération aléatoire : ${err.message}`;
-        });
-    });
+router.post("/set-secret", verifyAdminToken, (req, res) => {
+  const { elementName } = req.body || {};
+  const elements = getElementsList() || [];
 
-  document
-    .querySelectorAll("#words-stats-table th[data-sort]")
-    .forEach((th) => {
-      th.addEventListener("click", () => {
-        const sortKey = th.getAttribute("data-sort");
-        if (sortKey === "image") return;
-
-        if (currentSortKey === sortKey) {
-          currentSortOrder = currentSortOrder === "asc" ? "desc" : "asc";
-        } else {
-          currentSortKey = sortKey;
-          currentSortOrder = "asc";
-        }
-
-        renderTable();
-      });
-    });
-}
-
-function initChartModal(historyRes) {
-  const chartBtn = document.getElementById("admin-chart-btn");
-  const chartModal = document.getElementById("chart-modal");
-  const closeBtn = document.getElementById("close-chart-modal");
-
-  chartBtn?.addEventListener("click", () => {
-    if (chartModal) chartModal.style.display = "flex";
-    renderVictoriesChart(historyRes);
-  });
-
-  closeBtn?.addEventListener("click", () => {
-    if (chartModal) chartModal.style.display = "none";
-  });
-}
-
-function renderVictoriesChart(historyRes) {
-  const ctx = document.getElementById("victories-chart")?.getContext("2d");
-  if (!ctx) return;
-
-  const sortedHistory = [...(historyRes || [])].sort(
-    (a, b) => new Date(a.date) - new Date(b.date)
+  const found = elements.find(
+    (el) => el.nom && el.nom.toLowerCase() === (elementName || "").toLowerCase()
   );
 
-  const labels = sortedHistory.map((h) => h.date);
-  const dataCounts = sortedHistory.map((h) => h.count || 0);
-
-  if (victoriesChartInstance) {
-    victoriesChartInstance.destroy();
+  if (!found) {
+    return res.status(404).json({ error: "Élément introuvable" });
   }
 
-  victoriesChartInstance = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: "Victoires journalières",
-          data: dataCounts,
-          borderColor: "#a855f7",
-          backgroundColor: "rgba(168, 85, 247, 0.1)",
-          borderWidth: 2,
-          fill: true,
-          tension: 0.3
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: "#f8fafc" } }
-      },
-      scales: {
-        x: {
-          ticks: { color: "#94a3b8" },
-          grid: { color: "rgba(255, 255, 255, 0.05)" }
-        },
-        y: {
-          ticks: { color: "#94a3b8" },
-          grid: { color: "rgba(255, 255, 255, 0.05)" }
-        }
-      }
-    }
+  res.json({
+    message: `Mot secret défini sur : ${found.nom}`,
+    secretElement: found.nom,
+    details: found
   });
-}
+});
 
-async function loadAdminDashboardData() {
+router.get("/elements-list", verifyAdminToken, (req, res) => {
+  const elements = getElementsList() || [];
+  res.json(elements);
+});
+
+// Route publique/admin pour charger les détails de tous les éléments pour le tableau
+router.get("/all-elements-details", (req, res) => {
   try {
-    const fetchJson = async (endpoint) => {
-      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("celestedle_admin_token") || ""}`
-        }
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const contentType = res.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Réponse non-JSON reçue");
-      }
-      return res.json();
-    };
-
-    const [elementsRes, historyRes] = await Promise.all([
-      fetchJson("/admin/all-elements-details").catch((err) => {
-        console.warn("Impossible de charger les détails des éléments :", err);
-        return [];
-      }),
-      fetchJson("/admin/stats-history").catch((err) => {
-        console.warn("Impossible de charger l'historique :", err);
-        return [];
-      })
-    ]);
-
-    let elementsList = elementsRes;
-    if (!elementsList || elementsList.length === 0) {
-      elementsList = await fetchJson("/game/elements").catch(() => []);
-    }
-
-    // Calculs KPI globaux
-    const totalAppearances = historyRes.reduce((acc, curr) => acc + 1, 0);
-    const totalVictories = historyRes.reduce(
-      (acc, curr) => acc + (curr.count || 0),
-      0
-    );
-    const validTriesArr = historyRes.filter((h) => h.avgTries > 0);
-    const globalAvgTries =
-      validTriesArr.length > 0
-        ? (
-            validTriesArr.reduce((acc, curr) => acc + curr.avgTries, 0) /
-            validTriesArr.length
-          ).toFixed(1)
-        : "-";
-
-    const elTotalWords = document.getElementById("kpi-total-words");
-    const elTotalVictories = document.getElementById("kpi-total-victories");
-    const elGlobalTries = document.getElementById("kpi-global-tries");
-
-    if (elTotalWords) elTotalWords.textContent = totalAppearances;
-    if (elTotalVictories) elTotalVictories.textContent = totalVictories;
-    if (elGlobalTries) elGlobalTries.textContent = globalAvgTries;
-
-    initChartModal(historyRes);
-
-    const adminAppContext = {};
-
-    wordsData = await Promise.all(
-      elementsList.map(async (item) => {
-        const name = typeof item === "string" ? item : item.nom;
-
-        let imagePath = "";
-        if (
-          TableManager &&
-          typeof TableManager.resolveEntityImage === "function"
-        ) {
-          try {
-            imagePath = await TableManager.resolveEntityImage(
-              name,
-              adminAppContext
-            );
-          } catch (err) {
-            console.warn(`Impossible de charger l'image pour ${name}:`, err);
-          }
-        }
-
-        if (!imagePath) {
-          imagePath = `assets/illustration/${name.toLowerCase().replace(/\s+/g, "_")}.png`;
-        }
-
-        const appearances = (historyRes || []).filter(
-          (h) =>
-            h.secretWord && h.secretWord.toLowerCase() === name.toLowerCase()
-        );
-
-        const count = appearances.length;
-        const victories = appearances.reduce(
-          (acc, curr) => acc + (curr.count || 0),
-          0
-        );
-
-        let lastDate = "-";
-        if (count > 0) {
-          const sortedDates = appearances
-            .map((a) => a.date)
-            .sort((a, b) => new Date(b) - new Date(a));
-          lastDate = sortedDates[0];
-        }
-
-        let avgTries = 0;
-        let avgHints = 0;
-        let avgTime = 0;
-
-        if (count > 0) {
-          const totalTries = appearances.reduce(
-            (acc, curr) => acc + (curr.avgTries || 0),
-            0
-          );
-          const totalHints = appearances.reduce(
-            (acc, curr) => acc + (curr.avgHints || 0),
-            0
-          );
-          const totalTime = appearances.reduce(
-            (acc, curr) => acc + (curr.avgTimeInSeconds || 0),
-            0
-          );
-
-          avgTries = Number((totalTries / count).toFixed(1));
-          avgHints = Number((totalHints / count).toFixed(1));
-          avgTime = Math.round(totalTime / count);
-        }
-
-        return {
-          nom: name,
-          image: imagePath,
-          count,
-          victories,
-          lastDate,
-          avgTries,
-          avgHints,
-          avgTime
-        };
-      })
-    );
-
-    renderTable();
+    const elements = getElementsList() || [];
+    res.json(elements);
   } catch (err) {
-    console.error("Erreur lors du chargement des stats d'admin :", err);
+    res.status(500).json({ error: err.message });
   }
-}
+});
 
-function renderTable() {
-  const tbody = document.getElementById("words-stats-body");
-  if (!tbody) return;
-
-  const sortedData = [...wordsData].sort((a, b) => {
-    let valA = a[currentSortKey];
-    let valB = b[currentSortKey];
-
-    if (currentSortKey === "lastDate") {
-      valA = valA === "-" ? 0 : new Date(valA).getTime();
-      valB = valB === "-" ? 0 : new Date(valB).getTime();
+// Route publique/admin pour lire l'historique des statistiques
+router.get("/stats-history", (req, res) => {
+  try {
+    const historyPath = path.join(__dirname, "../../stats-history.json");
+    if (fs.existsSync(historyPath)) {
+      const data = JSON.parse(fs.readFileSync(historyPath, "utf8"));
+      return res.json(data);
     }
+    return res.json([]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-    if (typeof valA === "string") {
-      return currentSortOrder === "asc"
-        ? valA.localeCompare(valB)
-        : valB.localeCompare(valA);
-    }
-
-    return currentSortOrder === "asc" ? valA - valB : valB - valA;
-  });
-
-  tbody.innerHTML = sortedData
-    .map((item) => {
-      const mins = Math.floor(item.avgTime / 60);
-      const secs = item.avgTime % 60;
-      const formattedAvgTime = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-
-      return `
-        <tr>
-          <td>
-            <img src="${item.image}" alt="${item.nom}" class="word-thumb" onerror="this.style.display='none'" />
-          </td>
-          <td><strong>${item.nom.charAt(0).toUpperCase() + item.nom.slice(1)}</strong></td>
-          <td>${item.count}</td>
-          <td>${item.victories}</td>
-          <td>${item.lastDate}</td>
-          <td>${item.count > 0 ? item.avgTries : "-"}</td>
-          <td>${item.count > 0 ? item.avgHints : "-"}</td>
-          <td>${item.count > 0 ? formattedAvgTime : "-"}</td>
-        </tr>
-      `;
-    })
-    .join("");
-}
+module.exports = router;
