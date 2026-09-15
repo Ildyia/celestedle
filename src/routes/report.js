@@ -16,6 +16,7 @@ function loadReports() {
 
 router.get("/list", (req, res) => {
   const reports = loadReports();
+  const userId = req.query.userId; // Récupère l'ID utilisateur s'il est envoyé
   const list = Object.entries(reports).map(([id, data]) => {
     let total = 0;
     if (data.votes) {
@@ -27,7 +28,9 @@ router.get("/list", (req, res) => {
       elementName: data.elementName || "N/A",
       bugType: data.bugType || "N/A",
       description: data.description || "N/A",
-      status: data.status || "🔴 New"
+      status: data.status || "🔴 New",
+      userVote:
+        userId && data.votes && data.votes[userId] ? data.votes[userId] : 0
     };
   });
   res.json(list);
@@ -35,14 +38,36 @@ router.get("/list", (req, res) => {
 
 router.post("/vote", async (req, res) => {
   const { reportId, userId, isUp } = req.body;
-  if (!global.discordBotClient)
-    return res.status(500).json({ error: "Bot offline" });
-  const success = await global.discordBotClient.handleWebVote(
-    reportId,
-    userId,
-    isUp
-  );
-  res.json({ success });
+
+  const reports = loadReports();
+  let reportData = reports[reportId];
+
+  if (!reportData) {
+    return res.status(404).json({ error: "Report not found" });
+  }
+
+  const currentVote = reportData.votes[userId];
+  if ((isUp && currentVote === 1) || (!isUp && currentVote === -1)) {
+    delete reportData.votes[userId];
+  } else {
+    reportData.votes[userId] = isUp ? 1 : -1;
+  }
+  fs.writeFileSync(reportsFile, JSON.stringify(reports, null, 2));
+
+  if (global.discordBotClient) {
+    await global.discordBotClient
+      .handleWebVote(reportId, userId, isUp)
+      .catch(() => {});
+  }
+
+  let totalScore = 0;
+  Object.values(reportData.votes).forEach((val) => (totalScore += val));
+
+  res.json({
+    success: true,
+    score: totalScore,
+    userVote: reportData.votes[userId] || 0
+  });
 });
 
 router.post("/", async (req, res) => {
@@ -50,16 +75,15 @@ router.post("/", async (req, res) => {
   const reportId = `BUG-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
   try {
-    if (!global.discordBotClient) {
-      throw new Error("Discord bot not ready.");
+    if (global.discordBotClient) {
+      await global.discordBotClient.handleBugReport({
+        reportId,
+        elementName: elementName || "N/A",
+        bugType: bugType || "Not specified",
+        description: description || "None",
+        isSpoiler: Boolean(isSpoiler)
+      });
     }
-    await global.discordBotClient.handleBugReport({
-      reportId,
-      elementName: elementName || "N/A",
-      bugType: bugType || "Not specified",
-      description: description || "None",
-      isSpoiler: Boolean(isSpoiler)
-    });
 
     const reports = loadReports();
     reports[reportId] = {

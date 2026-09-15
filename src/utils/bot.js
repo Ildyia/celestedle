@@ -18,7 +18,7 @@ let publicChannelId =
   process.env.DISCORD_PUBLIC_CHANNEL_ID || "1534624008614576209";
 let privateChannelId =
   process.env.DISCORD_PRIVATE_CHANNEL_ID || "1534616690287972498";
-// Remonte de "utils" vers "src"
+
 const reportsFile = path.join(__dirname, "..", "reports.json");
 function loadReports() {
   if (!fs.existsSync(reportsFile)) return {};
@@ -169,7 +169,8 @@ client.handleBugReport = async ({
     votes: {},
     elementName,
     bugType,
-    description
+    description,
+    status: "🔴 New"
   };
   saveReports(reports);
 };
@@ -190,18 +191,21 @@ client.handleWebVote = async (reportId, userId, isUp) => {
   let totalScore = 0;
   Object.values(reportData.votes).forEach((val) => (totalScore += val));
 
-  const publicChannel = await client.channels.fetch(publicChannelId);
-  const msg = await publicChannel.messages.fetch(reportData.publicMessageId);
-  const embed = msg.embeds[0];
-  const updatedEmbed = {
-    ...embed.data,
-    fields: embed.fields.map((f) =>
-      f.name === "Votes"
-        ? { name: "Votes", value: `${totalScore}`, inline: true }
-        : f
-    )
-  };
-  await msg.edit({ embeds: [updatedEmbed] });
+  try {
+    const publicChannel = await client.channels.fetch(publicChannelId);
+    const msg = await publicChannel.messages.fetch(reportData.publicMessageId);
+    const embed = msg.embeds[0];
+    const updatedEmbed = {
+      ...embed.data,
+      fields: embed.fields.map((f) =>
+        f.name === "Votes"
+          ? { name: "Votes", value: `${totalScore}`, inline: true }
+          : f
+      )
+    };
+    await msg.edit({ embeds: [updatedEmbed] });
+  } catch (err) {}
+
   return true;
 };
 
@@ -241,6 +245,10 @@ client.on("interactionCreate", async (interaction) => {
     let totalScore = 0;
     Object.values(reportData.votes).forEach((val) => (totalScore += val));
 
+    const newVoteState = reportData.votes[userId];
+    const upStyle = newVoteState === 1 ? 1 : 2;
+    const downStyle = newVoteState === -1 ? 1 : 2;
+
     const embed = interaction.message.embeds[0];
     const updatedEmbed = {
       ...embed.data,
@@ -250,15 +258,40 @@ client.on("interactionCreate", async (interaction) => {
           : f
       )
     };
-    await interaction.update({ embeds: [updatedEmbed] });
+
+    await interaction.update({
+      embeds: [updatedEmbed],
+      components: [
+        {
+          type: 1,
+          components: [
+            {
+              type: 2,
+              style: upStyle,
+              emoji: "👍",
+              custom_id: `vote_up_${reportId}`
+            },
+            {
+              type: 2,
+              style: downStyle,
+              emoji: "👎",
+              custom_id: `vote_down_${reportId}`
+            }
+          ]
+        }
+      ]
+    });
   }
 
   if (customId.startsWith("status_")) {
     let newStatus = "";
     let newColor = 0xef4444;
+    let isFixed = false;
+
     if (customId.includes("_fixed_")) {
       newStatus = "🟢 Fixed";
       newColor = 0x10b981;
+      isFixed = true;
     } else if (customId.includes("_working_")) {
       newStatus = "🟡 Working on it";
       newColor = 0xf59e0b;
@@ -273,6 +306,14 @@ client.on("interactionCreate", async (interaction) => {
     const parts = customId.split("_");
     const publicMsgId = parts.pop();
     const reportId = parts.pop();
+
+    const reports = loadReports();
+    if (isFixed) {
+      delete reports[reportId];
+    } else if (reports[reportId]) {
+      reports[reportId].status = newStatus;
+    }
+    saveReports(reports);
 
     const privateEmbed = interaction.message.embeds[0];
     const updatedPrivateEmbed = {
