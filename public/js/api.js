@@ -127,6 +127,7 @@ export const ApiService = {
       })
     );
   },
+
   validateGuess(choice, tryCount, hintUses) {
     return catchMaybeError(
       fetch(`${API_BASE_URL}/validate`, {
@@ -154,7 +155,7 @@ export const ApiService = {
 
   sendBugReport(reportData) {
     return catchMaybeError(
-      fetch(`${API_BASE_URL}/src/routes/report-bug`, {
+      fetch(`${API_BASE_URL}/report-bug`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reportData)
@@ -193,13 +194,13 @@ export const ApiService = {
 
   fetchReportsList() {
     return catchMaybeError(
-      fetch(`${API_BASE_URL}/src/routes/report/list`).then((res) => res.json())
+      fetch(`${API_BASE_URL}/report-bug/list`).then((res) => res.json())
     );
   },
 
   voteReport(reportId, userId, isUp) {
     return catchMaybeError(
-      fetch(`${API_BASE_URL}/src/routes/report/vote`, {
+      fetch(`${API_BASE_URL}/report-bug/vote`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reportId, userId, isUp })
