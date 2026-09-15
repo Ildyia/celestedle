@@ -3,7 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const fs = require('fs');
+const fs = require("fs");
 const cookieParser = require("cookie-parser");
 
 const { getEntitySprite } = require("./utils/helpers");
@@ -33,7 +33,7 @@ app.use(
     credentials: true
   })
 );
-
+app.use("/report", reportRoutes);
 app.use(cookieParser());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
@@ -51,10 +51,8 @@ app.get("/db.json", (_, res) => {
 app.get("/sprite/:name", (req, res) => {
   const mappedName = getEntitySprite(req.params.name);
   const fileName = path.join(__dirname, "../public", mappedName ?? "");
-  if (mappedName && fs.existsSync(fileName))
-    res.sendFile(fileName);
-  else
-    res.sendFile(path.join(__dirname, "../public/assets/placeholder.svg"))
+  if (mappedName && fs.existsSync(fileName)) res.sendFile(fileName);
+  else res.sendFile(path.join(__dirname, "../public/assets/placeholder.svg"));
 });
 
 app.use("/", gameRoutes);
