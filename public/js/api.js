@@ -155,7 +155,7 @@ export const ApiService = {
 
   sendBugReport(reportData) {
     return catchMaybeError(
-      fetch(`${API_BASE_URL}/report`, {
+      fetch(`${API_BASE_URL}/report-bug`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reportData)
@@ -194,15 +194,15 @@ export const ApiService = {
 
   fetchReportsList(userId) {
     return catchMaybeError(
-      fetch(`${API_BASE_URL}/report/list?userId=${userId || ""}`).then((res) =>
-        res.json()
+      fetch(`${API_BASE_URL}/report-bug/list?userId=${userId || ""}`).then(
+        (res) => res.json()
       )
     );
   },
 
   voteReport(reportId, userId, isUp) {
     return catchMaybeError(
-      fetch(`${API_BASE_URL}/report/vote`, {
+      fetch(`${API_BASE_URL}/report-bug/vote`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reportId, userId, isUp })
