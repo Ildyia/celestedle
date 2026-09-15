@@ -32,7 +32,7 @@
     "type": "hazards"
   },
   "badeline laser": {
-    "couleur": ["pink", "red"],
+    "couleur": ["red"],
     "hitbox": "other shape",
     "lieu": ["reflection"],
     "type": "hazards"
@@ -139,7 +139,7 @@
     "type": "collectibles"
   },
   "checkpoint flag": {
-    "couleur": ["grey", "pink"],
+    "couleur": ["purple", "pink"],
     "hitbox": "square",
     "lieu": ["summit"],
     "type": "environment"
@@ -468,7 +468,7 @@
     "type": "mechanics"
   },
   "mirror": {
-    "couleur": ["grey"],
+    "couleur": ["grey", "blue"],
     "hitbox": "rectangular",
     "lieu": ["site", "resort", "temple"],
     "type": "environment"
@@ -486,12 +486,12 @@
     "type": "environment"
   },
   "move block": {
-    "couleur": ["black"],
+    "couleur": ["black", "purple"],
     "hitbox": "rectangular",
     "lieu": ["ridge", "summit", "farewell"],
     "type": "movement & propulsion"
   },
-  "moving platform": {
+  "moving/sinking platform": {
     "couleur": ["brown", "purple"],
     "hitbox": "rectangular",
     "lieu": ["resort", "ridge", "summit"],
