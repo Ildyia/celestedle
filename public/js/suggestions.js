@@ -115,8 +115,7 @@ export const SuggestionsManager = {
       if (this.app.selectedIndex > -1 && items[this.app.selectedIndex]) {
         e.preventDefault();
         this.selectSuggestion(
-          items[this.app.selectedIndex].textContent.querySelector("span")
-            .textContent
+          items[this.app.selectedIndex].querySelector("span").textContent
         );
       }
     }
