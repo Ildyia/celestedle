@@ -1,8 +1,9 @@
 import { API_BASE_URL } from "./api.js";
+import { TableManager } from "./table.js";
 
 let wordsData = [];
-let currentSortKey = "nom";
-let currentSortOrder = "asc";
+let currentSortKey = "count";
+let currentSortOrder = "desc";
 let victoriesChartInstance = null;
 
 export function initAdminTools() {
@@ -20,7 +21,6 @@ export function initAdminTools() {
 function showDashboard(isLoggedIn) {
   const loginBlock = document.getElementById("admin-login-block");
   const dashboardContent = document.getElementById("admin-dashboard-content");
-
   if (isLoggedIn) {
     if (loginBlock) loginBlock.style.display = "none";
     if (dashboardContent) dashboardContent.style.display = "block";
@@ -42,20 +42,16 @@ function setupLoginHandler() {
   if (loginBtn) {
     loginBtn.addEventListener("click", async () => {
       const password = passwordInput ? passwordInput.value : "";
-
       try {
         const res = await fetch(`${API_BASE_URL}/admin/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ password })
         });
-
         const data = await res.json();
-
         if (res.ok && data.token) {
           localStorage.setItem("celestedle_admin_token", data.token);
           if (errorMsg) errorMsg.style.display = "none";
-
           showDashboard(true);
           loadAdminDashboardData();
         } else {
@@ -79,7 +75,6 @@ function bindAdminActions() {
 
   const sendAdminPost = async (endpoint) => {
     const token = localStorage.getItem("celestedle_admin_token") || "";
-
     const res = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: "POST",
       headers: {
@@ -87,13 +82,11 @@ function bindAdminActions() {
         Authorization: `Bearer ${token}`
       }
     });
-
     if (res.status === 401) {
       localStorage.removeItem("celestedle_admin_token");
       showDashboard(false);
       throw new Error("Session expirée, veuillez vous reconnecter.");
     }
-
     if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
     return res.json();
   };
@@ -145,32 +138,25 @@ function bindAdminActions() {
       th.addEventListener("click", () => {
         const sortKey = th.getAttribute("data-sort");
         if (sortKey === "image") return;
-
         if (currentSortKey === sortKey) {
           currentSortOrder = currentSortOrder === "asc" ? "desc" : "asc";
         } else {
           currentSortKey = sortKey;
           currentSortOrder = "asc";
         }
-
         renderTable();
       });
     });
-}
 
-function initChartModal(historyRes) {
-  const chartBtn = document.getElementById("admin-chart-btn");
   const chartModal = document.getElementById("chart-modal");
-  const closeBtn = document.getElementById("close-chart-modal");
-
-  chartBtn?.addEventListener("click", () => {
+  document.getElementById("admin-chart-btn")?.addEventListener("click", () => {
     if (chartModal) chartModal.style.display = "flex";
-    renderVictoriesChart(historyRes);
   });
-
-  closeBtn?.addEventListener("click", () => {
-    if (chartModal) chartModal.style.display = "none";
-  });
+  document
+    .getElementById("close-chart-modal")
+    ?.addEventListener("click", () => {
+      if (chartModal) chartModal.style.display = "none";
+    });
 }
 
 function renderVictoriesChart(historyRes) {
@@ -180,13 +166,10 @@ function renderVictoriesChart(historyRes) {
   const sortedHistory = [...(historyRes || [])].sort(
     (a, b) => new Date(a.date) - new Date(b.date)
   );
-
   const labels = sortedHistory.map((h) => h.date);
   const dataCounts = sortedHistory.map((h) => h.count || 0);
 
-  if (victoriesChartInstance) {
-    victoriesChartInstance.destroy();
-  }
+  if (victoriesChartInstance) victoriesChartInstance.destroy();
 
   victoriesChartInstance = new Chart(ctx, {
     type: "line",
@@ -197,19 +180,17 @@ function renderVictoriesChart(historyRes) {
           label: "Victoires journalières",
           data: dataCounts,
           borderColor: "#a855f7",
-          backgroundColor: "rgba(168, 85, 247, 0.1)",
+          backgroundColor: "rgba(168, 85, 247, 0.15)",
           borderWidth: 2,
           fill: true,
-          tension: 0.3
+          tension: 0.35
         }
       ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: "#f8fafc" } }
-      },
+      plugins: { legend: { labels: { color: "#f8fafc" } } },
       scales: {
         x: {
           ticks: { color: "#94a3b8" },
@@ -233,117 +214,127 @@ async function loadAdminDashboardData() {
         }
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const contentType = res.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Réponse non-JSON reçue");
-      }
       return res.json();
     };
 
-    // Chargement parallèle des détails et de l'historique
     const [elementsRes, historyRes] = await Promise.all([
-      fetchJson("/admin/all-elements-details").catch((err) => {
-        console.warn("Impossible de charger les détails des éléments :", err);
-        return [];
-      }),
-      fetchJson("/admin/stats-history").catch((err) => {
-        console.warn("Impossible de charger l'historique :", err);
-        return [];
-      })
+      fetchJson("/admin/all-elements-details").catch(() => []),
+      fetchJson("/admin/stats-history").catch(() => [])
     ]);
 
-    let elementsList = elementsRes;
-    if (!elementsList || elementsList.length === 0) {
-      elementsList = await fetchJson("/game/elements").catch(() => []);
-    }
+    const elementsList =
+      elementsRes.length > 0
+        ? elementsRes
+        : await fetchJson("/game/elements").catch(() => []);
 
-    // Calculs KPI globaux
-    const totalAppearances = historyRes.reduce((acc, curr) => acc + 1, 0);
+    const totalAppearances = historyRes.length;
     const totalVictories = historyRes.reduce(
       (acc, curr) => acc + (curr.count || 0),
       0
     );
-    const validTriesArr = historyRes.filter((h) => h.avgTries > 0);
+
+    const validTries = historyRes.filter((h) => h.avgTries > 0);
     const globalAvgTries =
-      validTriesArr.length > 0
+      validTries.length > 0
         ? (
-            validTriesArr.reduce((acc, curr) => acc + curr.avgTries, 0) /
-            validTriesArr.length
+            validTries.reduce((acc, curr) => acc + curr.avgTries, 0) /
+            validTries.length
           ).toFixed(1)
         : "-";
 
-    const elTotalWords = document.getElementById("kpi-total-words");
-    const elTotalVictories = document.getElementById("kpi-total-victories");
-    const elGlobalTries = document.getElementById("kpi-global-tries");
-
-    if (elTotalWords) elTotalWords.textContent = totalAppearances;
-    if (elTotalVictories) elTotalVictories.textContent = totalVictories;
-    if (elGlobalTries) elGlobalTries.textContent = globalAvgTries;
-
-    initChartModal(historyRes);
-
-    // Construction du tableau de données compilées
-    wordsData = elementsList.map((item) => {
-      const name = typeof item === "string" ? item : item.nom;
-
-      const imagePath = API_BASE_URL + `sprite/${name}`;
-
-      const appearances = (historyRes || []).filter(
-        (h) => h.secretWord && h.secretWord.toLowerCase() === name.toLowerCase()
+    const validTimes = historyRes.filter((h) => h.avgTimeInSeconds > 0);
+    let globalAvgTimeFormatted = "-";
+    if (validTimes.length > 0) {
+      const avgSecs = Math.round(
+        validTimes.reduce((acc, curr) => acc + curr.avgTimeInSeconds, 0) /
+          validTimes.length
       );
+      const mins = Math.floor(avgSecs / 60);
+      const secs = avgSecs % 60;
+      globalAvgTimeFormatted = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
 
-      const count = appearances.length;
-      const victories = appearances.reduce(
-        (acc, curr) => acc + (curr.count || 0),
-        0
-      );
+    document.getElementById("kpi-total-appearances").textContent =
+      totalAppearances;
+    document.getElementById("kpi-total-victories").textContent = totalVictories;
+    document.getElementById("kpi-global-tries").textContent = globalAvgTries;
+    document.getElementById("kpi-global-time").textContent =
+      globalAvgTimeFormatted;
 
-      let lastDate = "-";
-      if (count > 0) {
-        const sortedDates = appearances
-          .map((a) => a.date)
-          .sort((a, b) => new Date(b) - new Date(a));
-        lastDate = sortedDates[0];
-      }
+    renderVictoriesChart(historyRes);
 
-      let avgTries = 0;
-      let avgHints = 0;
-      let avgTime = 0;
+    const adminAppContext = {};
+    wordsData = await Promise.all(
+      elementsList.map(async (item) => {
+        const name = typeof item === "string" ? item : item.nom;
+        let imagePath = "";
+        try {
+          imagePath = await TableManager.resolveEntityImage(
+            name,
+            adminAppContext
+          );
+        } catch (e) {}
+        if (!imagePath)
+          imagePath = `assets/illustration/${name.toLowerCase().replace(/\s+/g, "_")}.png`;
 
-      if (count > 0) {
-        const totalTries = appearances.reduce(
-          (acc, curr) => acc + (curr.avgTries || 0),
+        const appearances = historyRes.filter(
+          (h) =>
+            h.secretWord && h.secretWord.toLowerCase() === name.toLowerCase()
+        );
+        const count = appearances.length;
+        const victories = appearances.reduce(
+          (acc, curr) => acc + (curr.count || 0),
           0
         );
-        const totalHints = appearances.reduce(
-          (acc, curr) => acc + (curr.avgHints || 0),
-          0
-        );
-        const totalTime = appearances.reduce(
-          (acc, curr) => acc + (curr.avgTimeInSeconds || 0),
-          0
-        );
 
-        avgTries = Number((totalTries / count).toFixed(1));
-        avgHints = Number((totalHints / count).toFixed(1));
-        avgTime = Math.round(totalTime / count);
-      }
+        let lastDate = "-";
+        if (count > 0) {
+          const sortedDates = appearances
+            .map((a) => a.date)
+            .sort((a, b) => new Date(b) - new Date(a));
+          lastDate = sortedDates[0];
+        }
 
-      return {
-        nom: name,
-        image: imagePath,
-        count,
-        victories,
-        lastDate,
-        avgTries,
-        avgHints,
-        avgTime
-      };
-    });
+        let avgTries = 0,
+          avgHints = 0,
+          avgTime = 0;
+        if (count > 0) {
+          avgTries = Number(
+            (
+              appearances.reduce((acc, curr) => acc + (curr.avgTries || 0), 0) /
+              count
+            ).toFixed(1)
+          );
+          avgHints = Number(
+            (
+              appearances.reduce((acc, curr) => acc + (curr.avgHints || 0), 0) /
+              count
+            ).toFixed(1)
+          );
+          avgTime = Math.round(
+            appearances.reduce(
+              (acc, curr) => acc + (curr.avgTimeInSeconds || 0),
+              0
+            ) / count
+          );
+        }
+
+        return {
+          nom: name,
+          image: imagePath,
+          count,
+          victories,
+          lastDate,
+          avgTries,
+          avgHints,
+          avgTime
+        };
+      })
+    );
 
     renderTable();
   } catch (err) {
-    console.error("Erreur lors du chargement des stats d'admin :", err);
+    console.error("Erreur chargement dashboard admin :", err);
   }
 }
 
@@ -365,7 +356,6 @@ function renderTable() {
         ? valA.localeCompare(valB)
         : valB.localeCompare(valA);
     }
-
     return currentSortOrder === "asc" ? valA - valB : valB - valA;
   });
 
@@ -373,22 +363,23 @@ function renderTable() {
     .map((item) => {
       const mins = Math.floor(item.avgTime / 60);
       const secs = item.avgTime % 60;
-      const formattedAvgTime = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+      const formattedAvgTime =
+        item.count > 0
+          ? `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`
+          : "-";
 
       return `
-        <tr>
-          <td>
-            <img src="${item.image}" alt="${item.nom}" class="word-thumb" onerror="this.style.display='none'" />
-          </td>
-          <td><strong>${item.nom.charAt(0).toUpperCase() + item.nom.slice(1)}</strong></td>
-          <td>${item.count}</td>
-          <td>${item.victories}</td>
-          <td>${item.lastDate}</td>
-          <td>${item.count > 0 ? item.avgTries : "-"}</td>
-          <td>${item.count > 0 ? item.avgHints : "-"}</td>
-          <td>${item.count > 0 ? formattedAvgTime : "-"}</td>
-        </tr>
-      `;
+      <tr>
+        <td><img src="${item.image}" alt="${item.nom}" class="word-thumb" onerror="this.style.display='none'" /></td>
+        <td><strong>${item.nom.charAt(0).toUpperCase() + item.nom.slice(1)}</strong></td>
+        <td>${item.count}</td>
+        <td>${item.victories}</td>
+        <td>${item.lastDate}</td>
+        <td>${item.count > 0 ? item.avgTries : "-"}</td>
+        <td>${item.count > 0 ? item.avgHints : "-"}</td>
+        <td>${formattedAvgTime}</td>
+      </tr>
+    `;
     })
     .join("");
 }

@@ -15,7 +15,31 @@
         padding: 20px;
         color: var(--text-main);
       }
-
+      .admin-kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .admin-kpi-card {
+        background: var(--bg-card, #1e293b);
+        padding: 16px;
+        border-radius: 12px;
+        text-align: center;
+        border: 1px solid #334155;
+      }
+      .admin-kpi-card h4 {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+      }
+      .admin-kpi-card p {
+        font-size: 1.6rem;
+        font-weight: bold;
+        color: var(--color-indigo);
+        margin: 0;
+      }
       .admin-actions-bar {
         display: flex;
         flex-wrap: wrap;
@@ -26,20 +50,18 @@
         margin-bottom: 24px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
       }
-
       .admin-table-wrapper {
         background: var(--bg-card, #1e293b);
         padding: 16px;
         border-radius: 12px;
         overflow-x: auto;
+        border: 1px solid #334155;
       }
-
       .admin-table {
         width: 100%;
         border-collapse: collapse;
         text-align: left;
       }
-
       .admin-table th {
         background-color: var(--bg-header, #0f172a);
         padding: 12px;
@@ -47,22 +69,19 @@
         user-select: none;
         border-bottom: 2px solid #334155;
       }
-
       .admin-table th:hover {
         background-color: #1e293b;
       }
-
       .admin-table td {
         padding: 10px 12px;
         border-bottom: 1px solid #334155;
+        vertical-align: middle;
       }
-
       .admin-table img.word-thumb {
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
         object-fit: contain;
       }
-
       .sort-icon {
         font-size: 0.8em;
         margin-left: 4px;
@@ -70,10 +89,8 @@
       }
     </style>
   </head>
-
   <body class="theme-celeste no-custom-cursor">
     <div class="admin-container">
-      <!-- Formulaire de Connexion Admin -->
       <div
         id="admin-login-block"
         class="sidebar-block"
@@ -108,67 +125,30 @@
         ></p>
       </div>
 
-      <!-- Contenu du Dashboard -->
       <div id="admin-dashboard-content" style="display: none">
         <h1>Panel Administration Celestedle</h1>
 
-        <!-- KPI CARDS -->
-        <div
-          style="
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-          "
-        >
-          <div class="sidebar-block" style="padding: 16px; text-align: center">
-            <h4 style="color: var(--text-muted); margin-bottom: 4px">
-              Total Apparitions
-            </h4>
-            <p
-              id="kpi-total-words"
-              style="
-                font-size: 1.5rem;
-                font-weight: bold;
-                color: var(--color-indigo);
-              "
-            >
+        <div class="admin-kpi-grid">
+          <div class="admin-kpi-card">
+            <h4>Total Apparitions</h4>
+            <p id="kpi-total-appearances">-</p>
+          </div>
+          <div class="admin-kpi-card">
+            <h4>Victoires Totales</h4>
+            <p id="kpi-total-victories" style="color: var(--color-correct)">
               -
             </p>
           </div>
-          <div class="sidebar-block" style="padding: 16px; text-align: center">
-            <h4 style="color: var(--text-muted); margin-bottom: 4px">
-              Victoires Globales
-            </h4>
-            <p
-              id="kpi-total-victories"
-              style="
-                font-size: 1.5rem;
-                font-weight: bold;
-                color: var(--color-correct);
-              "
-            >
-              -
-            </p>
+          <div class="admin-kpi-card">
+            <h4>Moyenne Essais Globale</h4>
+            <p id="kpi-global-tries" style="color: var(--color-partial)">-</p>
           </div>
-          <div class="sidebar-block" style="padding: 16px; text-align: center">
-            <h4 style="color: var(--text-muted); margin-bottom: 4px">
-              Moyenne Essais Globale
-            </h4>
-            <p
-              id="kpi-global-tries"
-              style="
-                font-size: 1.5rem;
-                font-weight: bold;
-                color: var(--color-partial);
-              "
-            >
-              -
-            </p>
+          <div class="admin-kpi-card">
+            <h4>Temps Moyen Global</h4>
+            <p id="kpi-global-time" style="color: #38bdf8">-</p>
           </div>
         </div>
 
-        <!-- ACTIONS EN HAUT -->
         <div class="admin-actions-bar">
           <button id="admin-reveal-btn" class="btn-primary">
             👁️ Reveal Secret Word
@@ -178,9 +158,6 @@
           </button>
           <button id="admin-random-secret-btn" class="btn-primary">
             🎲 Random Secret Word
-          </button>
-          <button id="admin-sim-hint-btn" class="btn-primary">
-            💡 Simulate Hint
           </button>
           <button id="admin-chart-btn" class="btn-primary">
             📊 Graphique des Victoires
@@ -192,16 +169,15 @@
           style="margin-bottom: 20px; font-weight: bold"
         ></div>
 
-        <!-- TABLEAU RECAPITULATIF DES MOTS & STATS -->
         <div class="admin-table-wrapper">
-          <h2>Base de données & Historique</h2>
+          <h2 style="margin-bottom: 12px">Base de données & Historique</h2>
           <table class="admin-table" id="words-stats-table">
             <thead>
               <tr>
                 <th data-sort="image">Image</th>
                 <th data-sort="nom">Nom <span class="sort-icon">⇅</span></th>
                 <th data-sort="count">
-                  Nb Apparitions <span class="sort-icon">⇅</span>
+                  Apparitions <span class="sort-icon">⇅</span>
                 </th>
                 <th data-sort="victories">
                   Victoires <span class="sort-icon">⇅</span>
@@ -216,17 +192,14 @@
                   Indices moy. <span class="sort-icon">⇅</span>
                 </th>
                 <th data-sort="avgTime">
-                  Temps moy. (s) <span class="sort-icon">⇅</span>
+                  Temps moy. <span class="sort-icon">⇅</span>
                 </th>
               </tr>
             </thead>
-            <tbody id="words-stats-body">
-              <!-- Rempli dynamiquement en JS -->
-            </tbody>
+            <tbody id="words-stats-body"></tbody>
           </table>
         </div>
 
-        <!-- MODAL DU GRAPHIQUE -->
         <div id="chart-modal" class="rules-modal" style="display: none">
           <div
             class="rules-content"
@@ -248,7 +221,6 @@
 
     <script type="module">
       import { initAdminTools } from "./js/admin-tools.js";
-
       document.addEventListener("DOMContentLoaded", () => {
         initAdminTools();
       });
