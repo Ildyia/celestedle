@@ -271,40 +271,49 @@ export const App = {
       });
     }
 
-    // Chargement de la liste des reports
     try {
-      const reports = await ApiService.fetchReportsList();
+      let userId = localStorage.getItem("userId");
+      if (!userId) {
+        userId = "web-" + Math.random().toString(36).substring(7);
+        localStorage.setItem("userId", userId);
+      }
+
+      const res = await fetch(
+        `https://celestedle-api.mizkyosia.fr/report/list?userId=${userId}`
+      );
+      const reports = await res.json();
       const container = document.getElementById("reports-list");
       if (container && reports) {
         container.innerHTML = "";
         reports.forEach((r) => {
+          const upActive =
+            r.userVote === 1 ? "background-color: #10b981; color: white;" : "";
+          const downActive =
+            r.userVote === -1 ? "background-color: #ef4444; color: white;" : "";
+
           container.innerHTML += `
-            <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
-              <div><strong>${r.elementName}</strong> - ${r.bugType}</div>
-              <div style="font-size: 0.85em; margin: 5px 0;">${r.description}</div>
+            <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; display: flex; flex-direction: column; gap: 6px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <strong>${r.elementName}</strong> - ${r.bugType}
+                <span style="font-size: 0.85em;">${r.status}</span>
+              </div>
+              <div style="font-size: 0.85em;">${r.description}</div>
               <div style="display: flex; gap: 10px; align-items: center;">
                 <span>Score: ${r.score}</span>
-                <button type="button" class="btn-primary vote-btn" data-id="${r.id}" data-up="true" style="padding: 4px 8px;">👍</button>
-                <button type="button" class="btn-primary vote-btn" data-id="${r.id}" data-up="false" style="padding: 4px 8px;">👎</button>
+                <button type="button" class="btn-primary vote-btn" data-id="${r.id}" data-up="true" style="padding: 4px 8px; ${upActive}">👍</button>
+                <button type="button" class="btn-primary vote-btn" data-id="${r.id}" data-up="false" style="padding: 4px 8px; ${downActive}">👎</button>
               </div>
             </div>
           `;
         });
 
-        // Ajout des écouteurs de clics pour les votes
         container.querySelectorAll(".vote-btn").forEach((btn) => {
           btn.addEventListener("click", async (e) => {
-            const reportId = e.target.getAttribute("data-id");
-            const isUp = e.target.getAttribute("data-up") === "true";
-
-            let userId = localStorage.getItem("userId");
-            if (!userId) {
-              userId = "web-" + Math.random().toString(36).substring(7);
-              localStorage.setItem("userId", userId);
-            }
+            const reportId = e.currentTarget.getAttribute("data-id");
+            const isUp = e.currentTarget.getAttribute("data-up") === "true";
 
             await ApiService.voteReport(reportId, userId, isUp);
-            this.openBugModal(); // Recharge la liste pour actualiser les scores
+            this.openBugModal();
           });
         });
       }
