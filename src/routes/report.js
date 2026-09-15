@@ -26,7 +26,8 @@ router.get("/list", (req, res) => {
       score: total,
       elementName: data.elementName || "N/A",
       bugType: data.bugType || "N/A",
-      description: data.description || "N/A"
+      description: data.description || "N/A",
+      status: data.status || "🔴 New"
     };
   });
   res.json(list);
@@ -65,7 +66,8 @@ router.post("/", async (req, res) => {
       votes: {},
       elementName: elementName || "N/A",
       bugType: bugType || "Not specified",
-      description: description || "None"
+      description: description || "None",
+      status: "🔴 New"
     };
     fs.writeFileSync(reportsFile, JSON.stringify(reports, null, 2));
 
