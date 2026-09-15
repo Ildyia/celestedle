@@ -82,7 +82,17 @@
   "breakable tiles": {
     "couleur": ["brown", "grey", "purple"],
     "hitbox": "rectangular",
-    "lieu": ["city", "site", "resort", "ridge", "reflection", "summit", "core"],
+    "lieu": [
+      "city",
+      "site",
+      "resort",
+      "ridge",
+      "temple",
+      "reflection",
+      "summit",
+      "core",
+      "farewell"
+    ],
     "type": "environment"
   },
   "bridge": {
@@ -154,7 +164,7 @@
   },
   "clutter tiles": {
     "couleur": ["blue", "brown", "green", "pink", "purple", "white"],
-    "hitbox": "square",
+    "hitbox": "rectangular",
     "lieu": ["resort"],
     "type": "environment"
   },
@@ -172,7 +182,7 @@
   },
   "core switch": {
     "couleur": ["blue", "red"],
-    "hitbox": "square",
+    "hitbox": "rectangular",
     "lieu": ["core"],
     "type": "mechanics"
   },
@@ -362,12 +372,6 @@
     "lieu": ["core", "farewell"],
     "type": "mechanics"
   },
-  "ice wall": {
-    "couleur": ["blue"],
-    "hitbox": "rectangular",
-    "lieu": ["core", "farewell"],
-    "type": "mechanics"
-  },
   "intro car": {
     "couleur": ["blue", "brown"],
     "hitbox": "other shape",
@@ -475,17 +479,11 @@
     "lieu": ["farewell"],
     "type": "collectibles"
   },
-  "moon   block": {
+  "moon block": {
     "couleur": ["grey"],
     "hitbox": "rectangular",
     "lieu": ["farewell"],
     "type": "environment"
-  },
-  "moon berry": {
-    "couleur": ["green"],
-    "hitbox": "square",
-    "lieu": ["farewell"],
-    "type": "collectibles"
   },
   "move block": {
     "couleur": ["black"],
@@ -588,7 +586,7 @@
     "type": "hazards"
   },
   "spikes": {
-    "couleur": ["blue", "purple", "red", "white"],
+    "couleur": ["blue", "purple", "red", "white", "pink"],
     "hitbox": "rectangular",
     "lieu": [
       "city",
@@ -626,7 +624,7 @@
     "type": "movement & propulsion"
   },
   "starjump block": {
-    "couleur": ["white"],
+    "couleur": ["white", "blue"],
     "hitbox": "rectangular",
     "lieu": ["reflection", "core"],
     "type": "environment"
@@ -657,7 +655,7 @@
   },
 
   "temple gate": {
-    "couleur": ["grey"],
+    "couleur": ["grey", "purple"],
     "hitbox": "rectangular",
     "lieu": ["temple", "summit", "farewell"],
     "type": "mechanics"
@@ -669,7 +667,7 @@
     "type": "environment"
   },
   "theo": {
-    "couleur": ["green"],
+    "couleur": ["green", "brown", "yellow"],
     "hitbox": "no hitbox interaction",
     "lieu": ["city", "site", "resort", "ridge", "temple", "reflection"],
     "type": "characters"
@@ -734,12 +732,12 @@
     "type": "mechanics"
   },
   "trigger dust": {
-    "couleur": ["red"],
+    "couleur": ["red", "black"],
     "hitbox": "rectangular",
     "lieu": ["resort", "summit", "farewell"],
     "type": "hazards"
   },
-  "tutorial bird": {
+  "granny's bird": {
     "couleur": ["blue"],
     "hitbox": "no hitbox interaction",
     "lieu": ["prologue", "city", "ridge", "reflection", "core", "farewell"],
