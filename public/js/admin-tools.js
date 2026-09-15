@@ -227,7 +227,6 @@ async function loadAdminDashboardData() {
         ? elementsRes
         : await fetchJson("/game/elements").catch(() => []);
 
-    const totalAppearances = historyRes.length;
     const totalVictories = historyRes.reduce(
       (acc, curr) => acc + (curr.count || 0),
       0
@@ -254,8 +253,6 @@ async function loadAdminDashboardData() {
       globalAvgTimeFormatted = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
     }
 
-    document.getElementById("kpi-total-appearances").textContent =
-      totalAppearances;
     document.getElementById("kpi-total-victories").textContent = totalVictories;
     document.getElementById("kpi-global-tries").textContent = globalAvgTries;
     document.getElementById("kpi-global-time").textContent =
@@ -267,15 +264,23 @@ async function loadAdminDashboardData() {
     wordsData = await Promise.all(
       elementsList.map(async (item) => {
         const name = typeof item === "string" ? item : item.nom;
+
         let imagePath = "";
         try {
-          imagePath = await TableManager.resolveEntityImage(
-            name,
-            adminAppContext
-          );
+          if (
+            TableManager &&
+            typeof TableManager.resolveEntityImage === "function"
+          ) {
+            imagePath = await TableManager.resolveEntityImage(
+              name,
+              adminAppContext
+            );
+          }
         } catch (e) {}
-        if (!imagePath)
-          imagePath = `assets/illustration/${name.toLowerCase().replace(/\s+/g, "_")}.png`;
+
+        if (!imagePath) {
+          imagePath = `${API_BASE_URL}/sprite/${encodeURIComponent(name)}`;
+        }
 
         const appearances = historyRes.filter(
           (h) =>
