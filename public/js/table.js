@@ -44,7 +44,7 @@ export const TableManager = {
       createCell(data.valeurs?.couleur || "-", data.verdict?.couleur)
     );
     row.appendChild(
-      createCell(data.valeurs?.hitbox || "-", data.verdict?.hitbox)
+      createCell(data.valeurs?.shape || "-", data.verdict?.shape)
     );
 
     app.nodes.tableBody.insertBefore(row, app.nodes.tableBody.firstChild);
@@ -77,7 +77,7 @@ export const TableManager = {
       ? attrs.couleur.join(", ")
       : attrs.couleur || "-";
     row.appendChild(createCell(couleurText, "correct"));
-    row.appendChild(createCell(attrs.hitbox || "-", "correct"));
+    row.appendChild(createCell(attrs.shape || "-", "correct"));
 
     app.nodes.tableBody.insertBefore(row, app.nodes.tableBody.firstChild);
   }

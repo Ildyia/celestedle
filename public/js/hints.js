@@ -37,8 +37,7 @@ export const HintsManager = {
           if (row.verdict.lieu === "correct") excludedCategories.push("lieu");
           if (row.verdict.couleur === "correct")
             excludedCategories.push("couleur");
-          if (row.verdict.hitbox === "correct")
-            excludedCategories.push("hitbox");
+          if (row.verdict.shape === "correct") excludedCategories.push("shape");
         }
       });
       payload.excludedCategories = excludedCategories;

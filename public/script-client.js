@@ -569,7 +569,7 @@ export const App = {
 
     this.historyLog.forEach((tryData) => {
       if (!tryData.verdict) return;
-      shareOutputText += `${scoreToEmojiMap[tryData.verdict.type] || "🟥"}${scoreToEmojiMap[tryData.verdict.lieu] || "🟥"}${scoreToEmojiMap[tryData.verdict.couleur] || "🟥"}${scoreToEmojiMap[tryData.verdict.hitbox] || "🟥"}\n`;
+      shareOutputText += `${scoreToEmojiMap[tryData.verdict.type] || "🟥"}${scoreToEmojiMap[tryData.verdict.lieu] || "🟥"}${scoreToEmojiMap[tryData.verdict.couleur] || "🟥"}${scoreToEmojiMap[tryData.verdict.shape] || "🟥"}\n`;
     });
 
     navigator.clipboard
@@ -677,7 +677,7 @@ export const App = {
             ? JSON.parse(rawAttributes)
             : rawAttributes;
         parsedSolutionAttrs = attrs || {};
-        attributeSummary = `<br><br><strong>Type:</strong> ${attrs.type || "-"}<br><strong>Locations:</strong> ${Array.isArray(attrs.lieu) ? attrs.lieu.join(", ") : attrs.lieu || "-"}<br><strong>Colours:</strong> ${Array.isArray(attrs.couleur) ? attrs.couleur.join(", ") : attrs.couleur || "-"}<br><strong>Hitbox:</strong> ${attrs.hitbox || "-"}`;
+        attributeSummary = `<br><br><strong>Type:</strong> ${attrs.type || "-"}<br><strong>Locations:</strong> ${Array.isArray(attrs.lieu) ? attrs.lieu.join(", ") : attrs.lieu || "-"}<br><strong>Colours:</strong> ${Array.isArray(attrs.couleur) ? attrs.couleur.join(", ") : attrs.couleur || "-"}<br><strong>Shape:</strong> ${attrs.shape || "-"}`;
       } catch (e) {}
     }
 

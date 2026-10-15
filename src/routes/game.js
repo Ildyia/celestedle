@@ -20,8 +20,8 @@ const ALL_TYPES = [
   "characters",
   "collectibles"
 ];
-const ALL_HITBOXES = [
-  "no hitbox interaction",
+const ALL_shapeES = [
+  "no shape interaction",
   "circular",
   "square",
   "rectangular",
@@ -89,15 +89,18 @@ router.get("/elements/full", (req, res) => {
 
 router.get("/element-data/:id", (req, res) => {
   try {
-    const id = req.params.id.replaceAll("%20", ' '); // May not be required but just in case ; replaces escaped URL whitespaces into real whitespaces
+    const id = req.params.id.replaceAll("%20", " "); // May not be required but just in case ; replaces escaped URL whitespaces into real whitespaces
     const el = database[id];
 
-    if (!el) res.status(400).json({ error: `No item exists with the given name : "${id}"` });
+    if (!el)
+      res
+        .status(400)
+        .json({ error: `No item exists with the given name : "${id}"` });
     else res.json(el);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
-})
+});
 
 router.get("/daily-stats", (req, res) => {
   try {
@@ -152,7 +155,7 @@ router.post("/validate", (req, res) => {
       type: checkMatch(userGuess.type, secret.type),
       lieu: checkMatch(userGuess.lieu, secret.lieu),
       couleur: checkMatch(userGuess.couleur, secret.couleur),
-      hitbox: checkMatch(userGuess.hitbox, secret.hitbox)
+      shape: checkMatch(userGuess.shape, secret.shape)
     };
 
     if (isCorrect) {
@@ -173,9 +176,9 @@ router.post("/validate", (req, res) => {
         couleur: Array.isArray(userGuess.couleur)
           ? userGuess.couleur.join(", ")
           : userGuess.couleur,
-        hitbox: Array.isArray(userGuess.hitbox)
-          ? userGuess.hitbox.join(", ")
-          : userGuess.hitbox
+        shape: Array.isArray(userGuess.shape)
+          ? userGuess.shape.join(", ")
+          : userGuess.shape
       },
       verdict,
       secretVersion: getSecretVersion ? getSecretVersion() : "1.0.0",
@@ -200,9 +203,9 @@ router.post("/getSecretWord", (req, res) => {
         couleur: Array.isArray(secret.couleur)
           ? secret.couleur.join(", ")
           : secret.couleur,
-        hitbox: Array.isArray(secret.hitbox)
-          ? secret.hitbox.join(", ")
-          : secret.hitbox
+        shape: Array.isArray(secret.shape)
+          ? secret.shape.join(", ")
+          : secret.shape
       }
     });
   } catch (err) {
@@ -228,7 +231,7 @@ router.post("/hint", (req, res) => {
       const secretType = getRawArr(secret.type);
       const secretLieu = getRawArr(secret.lieu);
       const secretCouleur = getRawArr(secret.couleur);
-      const secretHitbox = getRawArr(secret.hitbox);
+      const secretshape = getRawArr(secret.shape);
 
       // 1. On évalue chaque élément selon son nombre de catégories totallement différentes (max 4)
       const scoredCandidates = elements
@@ -240,12 +243,12 @@ router.post("/hint", (req, res) => {
           const elType = getRawArr(el.type);
           const elLieu = getRawArr(el.lieu);
           const elCouleur = getRawArr(el.couleur);
-          const elHitbox = getRawArr(el.hitbox);
+          const elshape = getRawArr(el.shape);
 
           if (!elType.some((t) => secretType.includes(t))) diffCount++;
           if (!elLieu.some((l) => secretLieu.includes(l))) diffCount++;
           if (!elCouleur.some((c) => secretCouleur.includes(c))) diffCount++;
-          if (!elHitbox.some((h) => secretHitbox.includes(h))) diffCount++;
+          if (!elshape.some((h) => secretshape.includes(h))) diffCount++;
 
           return { el, diffCount };
         });
@@ -269,7 +272,7 @@ router.post("/hint", (req, res) => {
         const opType = getRawArr(opposite.type);
         const opLieu = getRawArr(opposite.lieu);
         const opCouleur = getRawArr(opposite.couleur);
-        const opHitbox = getRawArr(opposite.hitbox);
+        const opshape = getRawArr(opposite.shape);
 
         if (!opType.some((t) => secretType.includes(t)))
           differentCategories.push("Type");
@@ -277,8 +280,8 @@ router.post("/hint", (req, res) => {
           differentCategories.push("Location");
         if (!opCouleur.some((c) => secretCouleur.includes(c)))
           differentCategories.push("Colour");
-        if (!opHitbox.some((h) => secretHitbox.includes(h)))
-          differentCategories.push("Hitbox");
+        if (!opshape.some((h) => secretshape.includes(h)))
+          differentCategories.push("shape");
       }
 
       let categoriesText = "its attributes";
@@ -296,21 +299,25 @@ router.post("/hint", (req, res) => {
       }
 
       return res.json({
-        text: `<strong>Opposite:</strong> <em>${opposite ? opposite.nom : "Unknown"
-          }</em> ${categoriesText}.`
+        text: `<strong>Opposite:</strong> <em>${
+          opposite ? opposite.nom : "Unknown"
+        }</em> ${categoriesText}.`
       });
 
       return res.json({
-        text: `<strong>Opposite:</strong> <em>${opposite ? opposite.nom : "Unknown"
-          }</em> is opposite to the word on ${categoriesText}.`
+        text: `<strong>Opposite:</strong> <em>${
+          opposite ? opposite.nom : "Unknown"
+        }</em> is opposite to the word on ${categoriesText}.`
       });
     }
 
     if (type === "secret_info") {
       const infos = [
-        `Its type includes: <strong>${Array.isArray(secret.type) ? secret.type[0] : secret.type
+        `Its type includes: <strong>${
+          Array.isArray(secret.type) ? secret.type[0] : secret.type
         }</strong>`,
-        `It can be found in: <strong>${Array.isArray(secret.lieu) ? secret.lieu[0] : secret.lieu
+        `It can be found in: <strong>${
+          Array.isArray(secret.lieu) ? secret.lieu[0] : secret.lieu
         }</strong>`
       ];
       const index = getSeededRandom(2) % infos.length;
@@ -323,12 +330,12 @@ router.post("/hint", (req, res) => {
       const secretColor = Array.isArray(secret.couleur)
         ? secret.couleur[0]
         : secret.couleur;
-      const secretHitbox = Array.isArray(secret.hitbox)
-        ? secret.hitbox[0]
-        : secret.hitbox;
+      const secretshape = Array.isArray(secret.shape)
+        ? secret.shape[0]
+        : secret.shape;
 
       const truthPool = [
-        `Hitbox is "${secretHitbox || "Unknown"}"`,
+        `shape is "${secretshape || "Unknown"}"`,
         `Color includes "${secretColor || "Unknown"}"`
       ];
 
@@ -343,11 +350,11 @@ router.post("/hint", (req, res) => {
         return filtered[idx];
       };
 
-      const fakeHitbox = getSeededWrong(secret.hitbox, ALL_HITBOXES, 11);
+      const fakeshape = getSeededWrong(secret.shape, ALL_shapeES, 11);
       const fakeColor = getSeededWrong(secret.couleur, ALL_COLORS, 13);
 
       const liesPool = [
-        `Hitbox is "${fakeHitbox}"`,
+        `shape is "${fakeshape}"`,
         `Color includes "${fakeColor}"`
       ];
 
