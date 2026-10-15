@@ -140,7 +140,7 @@
   },
   "checkpoint flag": {
     "couleur": ["purple", "pink"],
-    "shape": "irregular",
+    "shape": "rectangle",
     "lieu": ["summit"],
     "type": "environment"
   },
@@ -158,7 +158,7 @@
   },
   "clutter switch": {
     "couleur": ["blue"],
-    "shape": "square",
+    "shape": "irregular",
     "lieu": ["resort"],
     "type": "environment"
   },
@@ -182,7 +182,7 @@
   },
   "core switch": {
     "couleur": ["blue", "red"],
-    "shape": "square",
+    "shape": "irregular",
     "lieu": ["core"],
     "type": "mechanics"
   },
@@ -218,13 +218,13 @@
   },
   "dash switch": {
     "couleur": ["green", "yellow", "purple", "grey"],
-    "shape": "square",
+    "shape": "rectangle",
     "lieu": ["temple", "summit", "farewell"],
     "type": "mechanics"
   },
   "double refill": {
     "couleur": ["pink"],
-    "shape": "round",
+    "shape": "irregular",
     "lieu": ["farewell"],
     "type": "mechanics"
   },
@@ -236,7 +236,7 @@
   },
   "dust bunnies": {
     "couleur": ["black", "red"],
-    "shape": "irregular",
+    "shape": "round",
     "lieu": ["resort", "summit"],
     "type": "hazards"
   },
