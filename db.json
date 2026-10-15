@@ -232,7 +232,7 @@
     "couleur": ["black"],
     "hitbox": "rectangular",
     "lieu": ["site", "summit", "farewell"],
-    "type": "mechanics"
+    "type": "movement & propulsion"
   },
   "dust bunnies": {
     "couleur": ["black", "red"],
@@ -414,7 +414,7 @@
     "type": "collectibles"
   },
   "lantern": {
-    "couleur": ["yellow"],
+    "couleur": ["yellow", "red"],
     "hitbox": "rectangular",
     "lieu": ["site", "resort", "summit"],
     "type": "environment"
