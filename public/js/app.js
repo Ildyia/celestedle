@@ -77,10 +77,7 @@ async function init() {
   new ProfilePanel();
   new LeaderboardPanel({ getMode: () => game.mode });
 
-  byId("rules-btn")?.addEventListener("click", () => {
-    const sidebar = byId("rules-sidebar");
-    sidebar.hidden = !sidebar.hidden;
-  });
+  byId("rules-btn")?.addEventListener("click", () => openModal("rules-modal"));
   document.querySelectorAll("[data-mode]").forEach((btn) =>
     btn.addEventListener("click", () => refreshCommunityStats(btn.dataset.mode))
   );

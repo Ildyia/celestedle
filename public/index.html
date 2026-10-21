@@ -70,10 +70,6 @@
       </div>
     </div>
 
-    <button id="options-btn" aria-label="Options">
-      <img src="assets/illustration/options.png" class="btn-icon" alt="Options" />
-    </button>
-
     <div id="custom-cursor">
       <img src="assets/illustration/birdcursor.png" id="default-cursor" alt="" />
       <img src="assets/illustration/cursorbirdclicking.png" id="pointer-cursor" alt="" />
@@ -82,97 +78,6 @@
 
     <div id="layout-wrapper">
       <div id="left-sidebar-column">
-        <div class="sidebar-buttons">
-          <button id="rules-btn" class="sidebar-toggle-btn">
-            <img src="assets/illustration/journal.png" class="btn-icon" alt="" /> Rules
-          </button>
-          <button id="profile-btn" class="sidebar-toggle-btn">
-            <img src="assets/illustration/strawberry.png" id="profile-btn-avatar" class="btn-icon" alt="" />
-            <span id="profile-btn-label">Profile</span>
-          </button>
-          <button id="leaderboard-btn" class="sidebar-toggle-btn">
-            <img src="assets/illustration/goldflag.png" class="btn-icon" alt="" /> Rankings
-          </button>
-        </div>
-
-        <div id="rules-sidebar" class="sidebar-block" hidden>
-          <div class="rules-content-static">
-            <h2>Rules of Celestedle</h2>
-            <p>
-              Guess the secret element of the day by entering its name. You'll
-              receive feedback based on its attributes.
-            </p>
-
-            <h4>Type</h4>
-            <ul>
-              <li><strong>Collectibles</strong>: items collected in-game (strawberries, hearts...).</li>
-              <li><strong>Characters</strong>: characters of the story like Theo, Granny, Oshiro...</li>
-              <li><strong>Environment</strong>: entities without a major impact on the gameplay (binoculars).</li>
-              <li><strong>Mechanics</strong>: entities that create the main gameplay (crumble blocks).</li>
-              <li><strong>Movement &amp; Propulsion</strong>: mechanics that you use to move around or gain speed (move blocks, zippers...).</li>
-              <li><strong>Hazards</strong>: obstacles that kill the player (spikes, spinners).</li>
-            </ul>
-
-            <h4>Chapter</h4>
-            <p>
-              Every level the element appears in, among the prologue, the
-              A-sides and Farewell.
-            </p>
-
-            <h4>Colour</h4>
-            <p>
-              Only the <strong>dominant colour</strong> counts, the one that
-              covers most of the element. Outlines and small details don't
-              count. If the element exists in several forms (a different
-              version per chapter, several states, or separate parts like a
-              block and its track), each form adds its own dominant colour.
-            </p>
-
-            <h4>Shape</h4>
-            <ul>
-              <li><strong>Square</strong>: as wide as it is tall.</li>
-              <li><strong>Rectangle</strong>: clearly longer in one direction.</li>
-              <li><strong>Round</strong>: a circle or an oval.</li>
-              <li><strong>Humanoid</strong>: a character with a body.</li>
-              <li><strong>Irregular</strong>: any other silhouette.</li>
-            </ul>
-
-            <h4>Colour indicators</h4>
-            <ul class="rules-color-list">
-              <li><span class="color-box correct"></span><strong>Correct</strong> (✓): perfect match.</li>
-              <li><span class="color-box partial"></span><strong>Partial</strong> (~): your guess is part of the answer.</li>
-              <li><span class="color-box notTotallyWrong"></span><strong>Not wrong</strong> (≠): part of the answer, plus extra values.</li>
-              <li><span class="color-box wrong"></span><strong>Wrong</strong> (✕): nothing in common.</li>
-            </ul>
-
-            <h4>Hints</h4>
-            <ul>
-              <li><strong>Opposite</strong>: the element with the most opposite attributes to the word of the day.</li>
-              <li><strong>Secret Info</strong>: one value of the secret word, in a category you haven't found yet.</li>
-              <li><strong>1 Truth &amp; 2 Lies</strong>: three statements, only one of them is true.</li>
-            </ul>
-            <p>In normal mode, each hint can be used once per day.</p>
-
-            <h4>Hard mode</h4>
-            <ul>
-              <li>Its own secret word, different from the normal one.</li>
-              <li>1 hint, 8 tries and 5 minutes from your first guess (or your hint, if you take it first).</li>
-              <li>No suggestions: type the full name (official synonyms work).</li>
-              <li>
-                Every guess must fit the clues you already have: if your guess
-                were the answer, all your previous guesses would have got the
-                same colours. Guesses that don't fit are refused and don't count.
-              </li>
-            </ul>
-
-            <h4>Rankings</h4>
-            <p>
-              Daily: fewest tries, then fastest time. Weekly and all-time: a
-              win is worth 11 points minus the number of tries (1 minimum).
-            </p>
-          </div>
-        </div>
-
         <div id="stats-sidebar" class="sidebar-block">
           <div class="sidebar-header">
             <img src="./assets/illustration/backpack.png" alt="" class="sidebar-header-icon" />
@@ -189,6 +94,25 @@
 
       <div id="main-content-column">
         <h1>Celestedle</h1>
+
+        <nav id="top-actions" class="top-actions" aria-label="Menu">
+          <button type="button" id="rules-btn" class="action-btn">
+            <img src="assets/illustration/journal.png" alt="" />
+            <span>Rules</span>
+          </button>
+          <button type="button" id="profile-btn" class="action-btn">
+            <img src="assets/illustration/strawberry.png" id="profile-btn-avatar" alt="" />
+            <span id="profile-btn-label">Profile</span>
+          </button>
+          <button type="button" id="leaderboard-btn" class="action-btn">
+            <img src="assets/illustration/goldflag.png" alt="" />
+            <span>Rankings</span>
+          </button>
+          <button type="button" id="options-btn" class="action-btn">
+            <img src="assets/illustration/options.png" alt="" />
+            <span>Options</span>
+          </button>
+        </nav>
 
         <div id="mode-switch" role="group" aria-label="Game mode">
           <button type="button" data-mode="normal" aria-pressed="true">Normal</button>
@@ -310,6 +234,87 @@
       <a href="legal-notice.html" class="legal-link">Legal Notice</a>
       <span id="app-version" class="app-version"></span>
     </footer>
+
+    <div id="rules-modal" class="rules-modal hidden">
+      <div class="rules-content bug-modal-content">
+        <button type="button" class="close-modal-btn" data-close-modal="rules-modal" aria-label="Close">&times;</button>
+        <div class="rules-content-static">
+          <h2>Rules of Celestedle</h2>
+          <p>
+            Guess the secret element of the day by entering its name. You'll
+            receive feedback based on its attributes.
+          </p>
+
+          <h4>Type</h4>
+          <ul>
+            <li><strong>Collectibles</strong>: items collected in-game (strawberries, hearts...).</li>
+            <li><strong>Characters</strong>: characters of the story like Theo, Granny, Oshiro...</li>
+            <li><strong>Environment</strong>: entities without a major impact on the gameplay (binoculars).</li>
+            <li><strong>Mechanics</strong>: entities that create the main gameplay (crumble blocks).</li>
+            <li><strong>Movement &amp; Propulsion</strong>: mechanics that you use to move around or gain speed (move blocks, zippers...).</li>
+            <li><strong>Hazards</strong>: obstacles that kill the player (spikes, spinners).</li>
+          </ul>
+
+          <h4>Chapter</h4>
+          <p>
+            Every level the element appears in, among the prologue, the
+            A-sides and Farewell.
+          </p>
+
+          <h4>Colour</h4>
+          <p>
+            Only the <strong>dominant colour</strong> counts, the one that
+            covers most of the element. Outlines and small details don't
+            count. If the element exists in several forms (a different
+            version per chapter, several states, or separate parts like a
+            block and its track), each form adds its own dominant colour.
+          </p>
+
+          <h4>Shape</h4>
+          <ul>
+            <li><strong>Square</strong>: as wide as it is tall.</li>
+            <li><strong>Rectangle</strong>: clearly longer in one direction.</li>
+            <li><strong>Round</strong>: a circle or an oval.</li>
+            <li><strong>Humanoid</strong>: a character with a body.</li>
+            <li><strong>Irregular</strong>: any other silhouette.</li>
+          </ul>
+
+          <h4>Colour indicators</h4>
+          <ul class="rules-color-list">
+            <li><span class="color-box correct"></span><strong>Correct</strong> (✓): perfect match.</li>
+            <li><span class="color-box partial"></span><strong>Partial</strong> (~): your guess is part of the answer.</li>
+            <li><span class="color-box notTotallyWrong"></span><strong>Not wrong</strong> (≠): part of the answer, plus extra values.</li>
+            <li><span class="color-box wrong"></span><strong>Wrong</strong> (✕): nothing in common.</li>
+          </ul>
+
+          <h4>Hints</h4>
+          <ul>
+            <li><strong>Opposite</strong>: the element with the most opposite attributes to the word of the day.</li>
+            <li><strong>Secret Info</strong>: one value of the secret word, in a category you haven't found yet.</li>
+            <li><strong>1 Truth &amp; 2 Lies</strong>: three statements, only one of them is true.</li>
+          </ul>
+          <p>In normal mode, each hint can be used once per day.</p>
+
+          <h4>Hard mode</h4>
+          <ul>
+            <li>Its own secret word, different from the normal one.</li>
+            <li>1 hint, 8 tries and 5 minutes from your first guess (or your hint, if you take it first).</li>
+            <li>No suggestions: type the full name (official synonyms work).</li>
+            <li>
+              Every guess must fit the clues you already have: if your guess
+              were the answer, all your previous guesses would have got the
+              same colours. Guesses that don't fit are refused and don't count.
+            </li>
+          </ul>
+
+          <h4>Rankings</h4>
+          <p>
+            Daily: fewest tries, then fastest time. Weekly and all-time: a
+            win is worth 11 points minus the number of tries (1 minimum).
+          </p>
+        </div>
+      </div>
+    </div>
 
     <div id="options-modal" class="rules-modal hidden">
       <div class="rules-content bug-modal-content modal-narrow">

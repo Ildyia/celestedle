@@ -177,10 +177,6 @@ th,
   image-rendering: pixelated;
 }
 
-#rules-sidebar {
-  width: 100%;
-  margin-top: 8px;
-}
 
 .tries-badge {
   display: inline-flex;
@@ -475,8 +471,7 @@ th,
 
 #game-status button,
 .tries-badge,
-.status-link-btn,
-.sidebar-toggle-btn {
+.status-link-btn {
   font-family: "Renogare", sans-serif;
   font-size: 0.88rem;
   height: 38px;
@@ -539,18 +534,7 @@ th,
   object-fit: contain;
 }
 
-#rules-btn {
-  background-color: #70a7d4;
-  border-color: #2571af;
-  color: #ffffff;
-  width: 100%;
-}
 
-#rules-btn:hover {
-  background-color: #3b82f6;
-  border-color: #1e40af;
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
-}
 
 .status-link-btn {
   background-color: var(--bg-card);
@@ -564,33 +548,8 @@ th,
   transform: translateY(-1px);
 }
 
-#options-btn {
-  position: fixed;
-  top: 16px;
-  left: 16px;
-  background: transparent;
-  border: none;
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.7;
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
-  z-index: 1000;
-}
 
-#options-btn:hover {
-  opacity: 1;
-  transform: scale(1.1);
-}
 
-#options-btn .btn-icon {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-}
 
 #share-btn {
   display: inline-flex;
@@ -720,34 +679,8 @@ th,
   display: block;
 }
 
-.hint-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 8px;
-}
 
-#hint-counter {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
 
-.hint-list {
-  display: none;
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 0;
-  right: 0;
-  max-height: 240px;
-  overflow-y: auto;
-  background-color: var(--bg-input);
-  border: 2px solid #334155;
-  border-radius: 8px;
-  padding: 10px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-  z-index: 1001;
-  box-sizing: border-box;
-}
 
 .suggestions-box {
   position: absolute;
@@ -792,8 +725,7 @@ th,
   display: none;
 }
 
-.suggestion-thumb,
-.hint-thumb {
+.suggestion-thumb {
   width: 44px;
   height: 44px;
   object-fit: contain;
@@ -804,12 +736,6 @@ th,
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
 }
 
-.hint-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px;
-}
 
 .entity-thumb {
   width: 44px;
@@ -1207,14 +1133,6 @@ th,
 
 
 
-.mobile-scroll-help {
-  display: none;
-  text-align: right;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  font-style: italic;
-  margin-bottom: 4px;
-}
 
 /* ==========================================================================
    12. TABLET & MOBILE RESPONSIVE
@@ -1313,9 +1231,6 @@ th,
     overflow-wrap: break-word;
   }
 
-  .mobile-scroll-help {
-    display: block;
-  }
 
   #legal-notice,
   .rules-content,
@@ -1844,24 +1759,71 @@ input[type="checkbox"]:not(.switch input):checked::after {
   gap: 10px;
 }
 
-/* Boutons du haut de la colonne de gauche */
-.sidebar-buttons {
-  display: flex;
-  flex-wrap: wrap;
+/* Barre d'actions sous le titre : un seul style de bouton pour le menu */
+.top-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
+  width: 100%;
+  max-width: 560px;
 }
 
-.sidebar-buttons .sidebar-toggle-btn {
-  flex: 1 1 auto;
-  gap: 6px;
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  height: 42px;
+  padding: 0 10px;
+  font-family: "Renogare", sans-serif;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  background-color: rgba(15, 22, 38, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.15s ease;
 }
 
-#profile-btn-label {
-  max-width: 120px;
+.action-btn:hover {
+  border-color: var(--color-indigo);
+  background-color: rgba(99, 102, 241, 0.18);
+  transform: translateY(-1px);
+}
+
+.action-btn:focus-visible {
+  outline: 2px solid var(--color-partial);
+  outline-offset: 2px;
+}
+
+.action-btn img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
+.action-btn span {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Boutons de la barre de jeu : même hauteur et même arrondi */
+#game-status .btn,
+#share-btn {
+  height: 38px;
+  border-radius: 8px;
+}
+
+
 
 /* Sélecteur Normal / Hard (aussi utilisé pour les onglets des fenêtres) */
 #mode-switch,
@@ -1928,6 +1890,11 @@ body.hard-mode #game-status {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+#active-hints-container:empty,
+#message-container:empty {
+  display: none;
 }
 
 #active-hints-container .hint-card p {
@@ -2249,5 +2216,92 @@ body.hard-mode #game-status {
 @media (max-width: 600px) {
   .stat-tiles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ==========================================================================
+   15. MOBILE ET TABLETTE
+   Le jeu passe en premier ; les blocs d'information suivent, plus compacts.
+   ========================================================================== */
+@media (max-width: 1200px) {
+  #main-content-column {
+    order: 1;
+  }
+
+  #left-sidebar-column {
+    order: 2;
+  }
+
+  #right-sidebar-column {
+    order: 3;
+  }
+
+  #left-sidebar-column,
+  #right-sidebar-column {
+    max-width: 640px;
+    align-self: center;
+  }
+
+  #main-content-column h1 {
+    margin: 4px 0 6px;
+  }
+}
+
+@media (max-width: 600px) {
+  #main-content-column h1 {
+    font-size: 2.4rem;
+  }
+
+  .top-actions {
+    gap: 6px;
+  }
+
+  /* Icône au-dessus du libellé, comme une barre d'onglets */
+  .action-btn {
+    flex-direction: column;
+    gap: 2px;
+    height: 54px;
+    padding: 4px;
+    font-size: 0.68rem;
+  }
+
+  .action-btn img {
+    width: 22px;
+    height: 22px;
+  }
+
+  .bug-card p,
+  .discord-promo-content p {
+    display: none;
+  }
+
+  .stats-list p {
+    margin: 2px 0;
+  }
+}
+
+/* Colonnes latérales étroites (écrans de 1200 à ~1500 px) : blocs compacts */
+#left-sidebar-column,
+#right-sidebar-column {
+  container-type: inline-size;
+}
+
+@container (max-width: 300px) {
+  .bug-card p,
+  .discord-promo-content p {
+    display: none;
+  }
+
+  #report-bug-btn {
+    font-size: 0.85rem;
+    justify-content: center;
+  }
+
+  .sidebar-header h3 {
+    font-size: 1rem;
+  }
+
+  .stats-list p {
+    font-size: 0.8rem;
   }
 }
