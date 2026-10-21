@@ -6,220 +6,168 @@
     <title>Celestedle - Administration</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="theme-celeste.css" />
+    <link rel="stylesheet" href="admin.css" />
     <link rel="icon" href="assets/berrywinged.png" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-      .admin-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-        color: var(--text-main);
-      }
-      .admin-kpi-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 16px;
-        margin-bottom: 24px;
-      }
-      .admin-kpi-card {
-        background: var(--bg-card, #1e293b);
-        padding: 16px;
-        border-radius: 12px;
-        text-align: center;
-        border: 1px solid #334155;
-      }
-      .admin-kpi-card h4 {
-        color: var(--text-muted);
-        font-size: 0.85rem;
-        margin-bottom: 6px;
-        text-transform: uppercase;
-      }
-      .admin-kpi-card p {
-        font-size: 1.6rem;
-        font-weight: bold;
-        color: var(--color-indigo);
-        margin: 0;
-      }
-      .admin-actions-bar {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        background: var(--bg-card, #1e293b);
-        padding: 16px;
-        border-radius: 12px;
-        margin-bottom: 24px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-      }
-      .admin-table-wrapper {
-        background: var(--bg-card, #1e293b);
-        padding: 16px;
-        border-radius: 12px;
-        overflow-x: auto;
-        border: 1px solid #334155;
-      }
-      .admin-table {
-        width: 100%;
-        border-collapse: collapse;
-        text-align: left;
-      }
-      .admin-table th {
-        background-color: var(--bg-header, #0f172a);
-        padding: 12px;
-        cursor: pointer;
-        user-select: none;
-        border-bottom: 2px solid #334155;
-      }
-      .admin-table th:hover {
-        background-color: #1e293b;
-      }
-      .admin-table td {
-        padding: 10px 12px;
-        border-bottom: 1px solid #334155;
-        vertical-align: middle;
-      }
-      .admin-table img.word-thumb {
-        width: 36px;
-        height: 36px;
-        object-fit: contain;
-      }
-      .sort-icon {
-        font-size: 0.8em;
-        margin-left: 4px;
-        opacity: 0.6;
-      }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   </head>
   <body class="theme-celeste no-custom-cursor">
     <div class="admin-container">
-      <div
-        id="admin-login-block"
-        class="sidebar-block"
-        style="max-width: 400px; margin: 40px auto"
-      >
-        <h3 style="text-align: center; margin-bottom: 12px">Connexion Admin</h3>
+      <form id="admin-login-block" class="sidebar-block admin-login">
+        <h3>Connexion Admin</h3>
         <div class="form-group">
-          <label for="admin-password-input">Mot de passe :</label>
-          <input
-            type="password"
-            id="admin-password-input"
-            class="bug-input"
-            placeholder="Entrez le mot de passe..."
-          />
+          <label for="admin-password-input">Mot de passe</label>
+          <input type="password" id="admin-password-input" class="bug-input" autocomplete="current-password" required />
         </div>
-        <button
-          id="admin-login-btn"
-          class="btn-primary"
-          style="width: 100%; margin-top: 12px"
-        >
-          Se connecter
-        </button>
-        <p
-          id="admin-login-error"
-          style="
-            color: var(--color-wrong);
-            font-size: 0.85rem;
-            margin-top: 8px;
-            display: none;
-            text-align: center;
-          "
-        ></p>
-      </div>
+        <button type="submit" class="btn-primary btn-wide">Se connecter</button>
+        <p id="admin-login-error" class="form-error"></p>
+      </form>
 
-      <div id="admin-dashboard-content" style="display: none">
-        <h1>Panel Administration Celestedle</h1>
+      <div id="admin-dashboard" hidden>
+        <header class="admin-header">
+          <h1>Administration Celestedle</h1>
+          <span id="admin-version" class="small-subtext"></span>
+          <button type="button" id="admin-logout-btn" class="btn-secondary">Se déconnecter</button>
+        </header>
 
-        <div class="admin-kpi-grid">
-          <div class="admin-kpi-card">
-            <h4>Victoires Totales</h4>
-            <p id="kpi-total-victories" style="color: var(--color-correct)">
-              -
-            </p>
+        <nav class="admin-tabs" role="tablist" aria-label="Sections">
+          <button type="button" role="tab" data-tab="overview" aria-selected="true">Aujourd'hui</button>
+          <button type="button" role="tab" data-tab="history" aria-selected="false">Historique</button>
+          <button type="button" role="tab" data-tab="words" aria-selected="false">Mots</button>
+          <button type="button" role="tab" data-tab="elements" aria-selected="false">Éléments</button>
+          <button type="button" role="tab" data-tab="reports" aria-selected="false">Reports</button>
+          <button type="button" role="tab" data-tab="settings" aria-selected="false">Réglages</button>
+        </nav>
+
+        <p id="admin-message" class="admin-message" role="status"></p>
+
+        <section id="tab-overview" class="admin-panel" role="tabpanel">
+          <div id="overview-kpis" class="admin-kpi-grid"></div>
+          <div id="overview-modes" class="admin-modes"></div>
+          <datalist id="element-names"></datalist>
+        </section>
+
+        <section id="tab-history" class="admin-panel" role="tabpanel" hidden>
+          <div class="admin-card chart-card">
+            <canvas id="history-chart" aria-label="Joueurs et victoires par jour"></canvas>
           </div>
-          <div class="admin-kpi-card">
-            <h4>Moyenne Essais Globale</h4>
-            <p id="kpi-global-tries" style="color: var(--color-partial)">-</p>
+          <div class="admin-table-wrapper">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Date</th><th>Mode</th><th>Mot</th><th>Origine</th><th>Joueurs</th>
+                  <th>Victoires</th><th>Abandons</th><th>Défaites</th><th>Jamais finies</th>
+                  <th>Essais moy.</th><th>Temps moy.</th>
+                </tr>
+              </thead>
+              <tbody id="history-body"></tbody>
+            </table>
           </div>
-          <div class="admin-kpi-card">
-            <h4>Temps Moyen Global</h4>
-            <p id="kpi-global-time" style="color: #38bdf8">-</p>
+          <h3 class="admin-subtitle">Avant la 2.0</h3>
+          <div class="admin-table-wrapper">
+            <table class="admin-table">
+              <thead>
+                <tr><th>Date</th><th>Mot</th><th>Victoires</th><th>Essais moy.</th><th>Indices moy.</th><th>Temps moy.</th></tr>
+              </thead>
+              <tbody id="legacy-body"></tbody>
+            </table>
           </div>
-        </div>
+        </section>
 
-        <div class="admin-actions-bar">
-          <button id="admin-reveal-btn" class="btn-primary">
-            👁️ Reveal Secret Word
-          </button>
-          <button id="admin-reset-seed-btn" class="btn-primary">
-            🔄 Reset Seed / Change Word
-          </button>
-          <button id="admin-random-secret-btn" class="btn-primary">
-            🎲 Random Secret Word
-          </button>
-          <button id="admin-chart-btn" class="btn-primary">
-            📊 Graphique des Victoires
-          </button>
-        </div>
+        <section id="tab-words" class="admin-panel" role="tabpanel" hidden>
+          <div class="admin-toolbar">
+            <input type="search" id="words-search" class="bug-input" placeholder="Rechercher un mot" aria-label="Rechercher un mot" />
+          </div>
+          <div class="admin-table-wrapper">
+            <table class="admin-table sortable">
+              <thead id="words-head"></thead>
+              <tbody id="words-body"></tbody>
+            </table>
+          </div>
+        </section>
 
-        <div
-          id="admin-output"
-          style="margin-bottom: 20px; font-weight: bold"
-        ></div>
-
-        <div class="admin-table-wrapper">
-          <h2 style="margin-bottom: 12px">Base de données & Historique</h2>
-          <table class="admin-table" id="words-stats-table">
-            <thead>
-              <tr>
-                <th data-sort="image">Image</th>
-                <th data-sort="nom">Nom <span class="sort-icon">⇅</span></th>
-                <th data-sort="count">
-                  Apparitions <span class="sort-icon">⇅</span>
-                </th>
-                <th data-sort="victories">
-                  Victoires <span class="sort-icon">⇅</span>
-                </th>
-                <th data-sort="lastDate">
-                  Dernière date <span class="sort-icon">⇅</span>
-                </th>
-                <th data-sort="avgTries">
-                  Essais moy. <span class="sort-icon">⇅</span>
-                </th>
-                <th data-sort="avgHints">
-                  Indices moy. <span class="sort-icon">⇅</span>
-                </th>
-                <th data-sort="avgTime">
-                  Temps moy. <span class="sort-icon">⇅</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody id="words-stats-body"></tbody>
-          </table>
-        </div>
-
-        <div id="chart-modal" class="rules-modal" style="display: none">
-          <div
-            class="rules-content"
-            style="
-              max-width: 800px;
-              width: 90%;
-              background: var(--bg-card, #1e293b);
-            "
-          >
-            <span id="close-chart-modal" class="close-modal-btn">&times;</span>
-            <h2 style="margin-bottom: 16px">Victoires par Jour</h2>
-            <div style="position: relative; height: 400px; width: 100%">
-              <canvas id="victories-chart"></canvas>
+        <section id="tab-elements" class="admin-panel" role="tabpanel" hidden>
+          <div class="admin-toolbar">
+            <input type="search" id="elements-search" class="bug-input" placeholder="Rechercher un élément" aria-label="Rechercher un élément" />
+            <button type="button" id="new-element-btn" class="btn-primary">Nouvel élément</button>
+            <button type="button" id="export-db-btn" class="btn-secondary">Exporter db.json</button>
+          </div>
+          <p class="small-subtext">
+            Un élément modifié ici n'est plus mis à jour par db.json au démarrage.
+            Exporte la base pour recopier les changements dans le dépôt.
+          </p>
+          <div class="elements-layout">
+            <div class="admin-table-wrapper">
+              <table class="admin-table">
+                <thead>
+                  <tr><th></th><th>Nom</th><th>Type</th><th>Forme</th><th>Couleurs</th><th>Lieux</th><th>Source</th></tr>
+                </thead>
+                <tbody id="elements-body"></tbody>
+              </table>
             </div>
+            <form id="element-form" class="admin-card element-form" hidden>
+              <h3 id="element-form-title">Modifier</h3>
+              <div class="form-group">
+                <label for="element-name">Nom</label>
+                <input type="text" id="element-name" class="bug-input" maxlength="60" required />
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="element-type">Type</label>
+                  <select id="element-type" class="bug-input"></select>
+                </div>
+                <div class="form-group">
+                  <label for="element-shape">Forme</label>
+                  <select id="element-shape" class="bug-input"></select>
+                </div>
+              </div>
+              <fieldset class="checkbox-grid">
+                <legend>Couleurs</legend>
+                <div id="element-colors"></div>
+              </fieldset>
+              <fieldset class="checkbox-grid">
+                <legend>Lieux</legend>
+                <div id="element-locations"></div>
+              </fieldset>
+              <div class="form-group">
+                <label for="element-sprite">Sprite</label>
+                <input type="text" id="element-sprite" class="bug-input" placeholder="assets/entities/nom.png" />
+              </div>
+              <div class="form-group form-inline">
+                <input type="checkbox" id="element-active" />
+                <label for="element-active">Jouable (peut être tiré et proposé)</label>
+              </div>
+              <div class="modal-actions">
+                <button type="button" id="element-cancel-btn" class="btn-secondary">Annuler</button>
+                <button type="submit" class="btn-primary">Enregistrer</button>
+              </div>
+            </form>
           </div>
-        </div>
+        </section>
+
+        <section id="tab-reports" class="admin-panel" role="tabpanel" hidden>
+          <div class="admin-table-wrapper">
+            <table class="admin-table">
+              <thead>
+                <tr><th>ID</th><th>Élément</th><th>Type</th><th>Description</th><th>Score</th><th>Date</th><th>Statut</th></tr>
+              </thead>
+              <tbody id="reports-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="tab-settings" class="admin-panel" role="tabpanel" hidden>
+          <form id="settings-form" class="admin-card settings-form">
+            <div class="form-group">
+              <label for="repeat-delay-input">Délai avant qu'un mot puisse revenir (jours)</label>
+              <input type="number" id="repeat-delay-input" class="bug-input" min="0" max="60" step="1" required />
+              <p class="small-subtext">0 : le même mot peut tomber deux jours de suite. S'applique aux prochains tirages.</p>
+            </div>
+            <button type="submit" class="btn-primary">Enregistrer</button>
+          </form>
+        </section>
       </div>
     </div>
 
-    <script type="module">
-      import { initAdminTools } from "./js/admin-tools.js";
-      document.addEventListener("DOMContentLoaded", () => {
-        initAdminTools();
-      });
-    </script>
+    <script type="module" src="js/admin/main.js"></script>
   </body>
 </html>

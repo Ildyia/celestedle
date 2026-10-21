@@ -30,6 +30,13 @@ const stmts = {
   finish: db.prepare(`
     UPDATE games SET status = @status, finished_at = @finishedAt
     WHERE id = @id AND status = 'playing'
+  `),
+  expire: db.prepare(`
+    UPDATE games
+    SET status = 'lost',
+        finished_at = strftime('%Y-%m-%dT%H:%M:%fZ', started_at, '+' || @limit || ' seconds')
+    WHERE mode = @mode AND status = 'playing'
+      AND julianday(started_at) < julianday(@now) - @limit / 86400.0
   `)
 };
 
@@ -75,7 +82,14 @@ function finish(gameId, status, finishedAt) {
   return stmts.finish.run({ id: gameId, status, finishedAt }).changes === 1;
 }
 
+// Parties chronométrées dont le temps est écoulé, même si le joueur n'est
+// pas revenu : comptées comme perdues à l'heure limite
+function expireOverdue(mode, limitSeconds, now) {
+  return stmts.expire.run({ mode, limit: limitSeconds, now }).changes;
+}
+
 module.exports = {
+  expireOverdue,
   find,
   findById,
   create,

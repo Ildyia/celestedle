@@ -4,6 +4,7 @@ const playersRepo = require("../../repositories/players");
 const statsRepo = require("../../repositories/stats");
 const daily = require("../../services/daily");
 const reports = require("../../services/reports");
+const { expireOverdueGames } = require("../../services/games");
 const { MODE_IDS } = require("../../services/modes");
 const { login, requireAdmin } = require("../../middleware/admin-auth");
 const { rateLimit } = require("../../middleware/rate-limit");
@@ -20,6 +21,12 @@ router.post("/admin/login", loginLimit, async (req, res) => {
 });
 
 router.use("/admin", requireAdmin);
+
+// Les chiffres de l'admin comptent comme perdues les parties Hard expirées
+router.use("/admin", (req, res, next) => {
+  expireOverdueGames();
+  next();
+});
 
 router.get("/admin/session", (req, res) => {
   res.json({ authenticated: true });

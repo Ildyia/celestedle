@@ -152,6 +152,20 @@ test("mode Hard : la partie est perdue quand le temps est écoulé", async () =>
   assert.equal(state.data.solution.nom, secret.nom);
 });
 
+test("mode Hard : une partie expirée compte comme perdue sans que le joueur revienne", async () => {
+  const { token, player } = await api.newPlayer();
+  const secret = daily.getTodaySecret("hard").element;
+  await api.request("POST", "/api/game/guess", { token, body: { mode: "hard", guess: wrongGuessFor(secret.nom) } });
+  const started = new Date(Date.now() - 10 * 60 * 1000);
+  db.prepare("UPDATE games SET started_at = ? WHERE player_id = ? AND mode = 'hard'")
+    .run(started.toISOString(), player.id);
+
+  require("../src/services/games").expireOverdueGames();
+  const game = db.prepare("SELECT * FROM game_summaries WHERE player_id = ? AND mode = 'hard'").get(player.id);
+  assert.equal(game.status, "lost");
+  assert.equal(game.seconds, 300);
+});
+
 test("abandon : la réponse est révélée et la partie est close", async () => {
   const { token } = await api.newPlayer();
   const res = await api.request("POST", "/api/game/forfeit", { token, body: { mode: "normal" } });

@@ -4,7 +4,7 @@ const db = require("../db");
 const { HttpError } = require("../utils/http-error");
 const { nowIso, secondsBetween } = require("../utils/dates");
 const { verdictFor, displayValues } = require("./compare");
-const { getMode, findInconsistency } = require("./modes");
+const { MODES, getMode, findInconsistency } = require("./modes");
 const { HINT_TYPES, buildHint } = require("./hints");
 const daily = require("./daily");
 
@@ -195,4 +195,10 @@ const forfeit = db.transaction((player, modeId) => {
   return buildState({ mode, secret, game: gamesRepo.findById(game.id) });
 });
 
-module.exports = { getState, guess, useHint, forfeit };
+function expireOverdueGames() {
+  for (const mode of Object.values(MODES)) {
+    if (mode.timeLimitSeconds) gamesRepo.expireOverdue(mode.id, mode.timeLimitSeconds, nowIso());
+  }
+}
+
+module.exports = { getState, guess, useHint, forfeit, expireOverdueGames };

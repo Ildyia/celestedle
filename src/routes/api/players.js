@@ -3,6 +3,7 @@ const players = require("../../services/players");
 const playersRepo = require("../../repositories/players");
 const { requirePlayer } = require("../../middleware/player");
 const { rateLimit } = require("../../middleware/rate-limit");
+const { expireOverdueGames } = require("../../services/games");
 
 const router = express.Router();
 
@@ -28,6 +29,7 @@ router.patch("/players/me", requirePlayer, (req, res) => {
 });
 
 router.get("/players/me/stats", requirePlayer, (req, res) => {
+  expireOverdueGames();
   res.json(players.playerStats(req.player, req.query.mode));
 });
 
