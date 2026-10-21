@@ -14,6 +14,13 @@ function catchMaybeError(promise) {
 }
 
 export const ApiService = {
+  // Pas de fenêtre « API indisponible » pour un simple affichage
+  fetchAppVersion() {
+    return fetch(`${API_BASE_URL}/version`)
+      .then((res) => (res.ok ? res.json() : null))
+      .catch(() => null);
+  },
+
   fetchSecretVersion() {
     return catchMaybeError(
       fetch(`${API_BASE_URL}/secret-version`).then((res) => res.json())

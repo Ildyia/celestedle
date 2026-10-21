@@ -250,6 +250,14 @@ th,
   transition: all 0.2s ease;
 }
 
+.app-version {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  opacity: 0.4;
+}
+
 .legal-link:hover {
   opacity: 1;
   color: var(--text-main);

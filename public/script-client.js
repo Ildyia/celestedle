@@ -73,6 +73,7 @@ export const App = {
     this.fetchPersonalizedSynonyms();
     initTimer(this.nodes.timerContainer);
     this.checkDisclaimerNotice();
+    this.showAppVersion();
     HintsManager.renderActive();
 
     GameTimer.init(this.nodes.gameTimerDisplay);
@@ -241,6 +242,14 @@ export const App = {
       this.nodes.input.focus();
     });
     document.addEventListener("click", (e) => this.handleOutsideClick(e));
+  },
+
+  showAppVersion() {
+    const node = document.getElementById("app-version");
+    if (!node) return;
+    ApiService.fetchAppVersion().then((data) => {
+      if (data?.version) node.textContent = `v${data.version}`;
+    });
   },
 
   checkDisclaimerNotice() {

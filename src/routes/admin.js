@@ -4,10 +4,11 @@ const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
 const {
-  updateSeedHash,
-  getSecretOfTheDay,
   getSecretElement,
-  getElementsList
+  getElementsList,
+  findElementByName,
+  setSecret,
+  drawRandomSecret
 } = require("../utils/helpers");
 const { dataPath } = require("../utils/data-dir");
 
@@ -42,27 +43,23 @@ router.get("/session", verifyAdminToken, (req, res) => {
   res.json({ authenticated: true });
 });
 
+// Les deux boutons de l'admin tirent un autre mot pour aujourd'hui ; le choix
+// est enregistré en base et survit aux redémarrages
 router.post("/trigger-reset", verifyAdminToken, (req, res) => {
-  const newHash = Math.floor(Math.random() * 1000000);
-  updateSeedHash(newHash);
-  const secret = getSecretElement();
+  const secret = drawRandomSecret();
   res.json({
     message: "Reset réussi",
     secretElement: secret.nom,
-    details: secret,
-    newHash
+    details: secret
   });
 });
 
 router.post("/random-hash", verifyAdminToken, (req, res) => {
-  const newHash = req.body.newHash || Math.floor(Math.random() * 1000000);
-  updateSeedHash(newHash);
-  const secret = getSecretElement();
+  const secret = drawRandomSecret();
   res.json({
-    message: "Hash à jour",
+    message: "Mot tiré au hasard",
     secretElement: secret.nom,
-    details: secret,
-    newHash
+    details: secret
   });
 });
 
@@ -73,20 +70,17 @@ router.post("/get-secret", verifyAdminToken, (req, res) => {
 
 router.post("/set-secret", verifyAdminToken, (req, res) => {
   const { elementName } = req.body || {};
-  const elements = getElementsList() || [];
+  const found = findElementByName(elementName);
 
-  const found = elements.find(
-    (el) => el.nom && el.nom.toLowerCase() === (elementName || "").toLowerCase()
-  );
-
-  if (!found) {
+  if (!found || !found.isActive) {
     return res.status(404).json({ error: "Élément introuvable" });
   }
 
+  const secret = setSecret(found);
   res.json({
-    message: `Mot secret défini sur : ${found.nom}`,
-    secretElement: found.nom,
-    details: found
+    message: `Mot secret défini sur : ${secret.nom}`,
+    secretElement: secret.nom,
+    details: secret
   });
 });
 

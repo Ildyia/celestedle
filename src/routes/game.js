@@ -6,7 +6,7 @@ const {
   getElementsList,
   getSecretVersion,
   getSeededRandom,
-  database
+  findElementByName
 } = require("../utils/helpers");
 
 const { createDailyStatsStore } = require("../utils/stats-store");
@@ -89,14 +89,16 @@ router.get("/elements/full", (req, res) => {
 
 router.get("/element-data/:id", (req, res) => {
   try {
-    const id = req.params.id.replaceAll("%20", " "); // May not be required but just in case ; replaces escaped URL whitespaces into real whitespaces
-    const el = database[id];
+    const el = findElementByName(req.params.id);
 
-    if (!el)
+    if (!el || !el.isActive)
       res
-        .status(400)
-        .json({ error: `No item exists with the given name : "${id}"` });
-    else res.json(el);
+        .status(404)
+        .json({ error: `No item exists with the given name : "${req.params.id}"` });
+    else {
+      const { couleur, shape, lieu, type } = el;
+      res.json({ couleur, shape, lieu, type });
+    }
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

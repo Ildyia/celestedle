@@ -7,6 +7,7 @@ const fs = require("fs");
 const cookieParser = require("cookie-parser");
 
 const { getEntitySprite } = require("./utils/helpers");
+const { version: APP_VERSION } = require("../package.json");
 
 const app = express();
 
@@ -42,6 +43,10 @@ const gameRoutes = require("./routes/game");
 const adminRoutes = require("./routes/admin");
 const reportRoutes = require("./routes/report");
 const bot = require("./utils/bot");
+
+app.get("/version", (_, res) => {
+  res.json({ version: APP_VERSION });
+});
 
 app.get("/db.json", (_, res) => {
   res.sendFile(path.join(__dirname, "..", "db.json"));
