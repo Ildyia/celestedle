@@ -1,8 +1,10 @@
 const fs = require("fs");
 const path = require("path");
 
-const ELEMENTS_FILE = path.join(__dirname, "../../db.json");
-const SPRITES_FILE = path.join(__dirname, "../../public/assets/entities/mapping.json");
+const ROOT = path.join(__dirname, "../..");
+const ELEMENTS_FILE = path.join(ROOT, "db.json");
+const ALIASES_FILE = path.join(ROOT, "aliases.json");
+const SPRITES_FILE = path.join(ROOT, "public/assets/entities/mapping.json");
 
 // Ordre des chapitres, pour trier les lieux
 const CHAPTERS = [
@@ -26,96 +28,138 @@ function toSlug(name) {
 }
 
 function asList(value) {
-  return (Array.isArray(value) ? value : [value]).map((v) => String(v).trim());
+  return (Array.isArray(value) ? value : [value]).map((v) =>
+    String(v).trim().toLowerCase()
+  );
 }
 
-// Recopie db.json et mapping.json dans la base à chaque démarrage. Les
-// éléments retirés de db.json sont désactivés, pas supprimés, pour garder
-// l'historique des mots du jour.
-function syncElementsFromJson(db) {
-  const elements = JSON.parse(fs.readFileSync(ELEMENTS_FILE, "utf8"));
-  const sprites = JSON.parse(fs.readFileSync(SPRITES_FILE, "utf8"));
+function readJson(file) {
+  return JSON.parse(fs.readFileSync(file, "utf8"));
+}
 
-  const vocabIds = {};
-  const vocabStatements = {};
+// Trouve ou crée une valeur de vocabulaire (types, shapes, colors, locations)
+function vocabResolver(db) {
+  const cache = new Map();
+  const statements = {};
   for (const table of ["types", "shapes", "colors", "locations"]) {
-    const insert =
-      table === "locations"
-        ? `INSERT INTO locations (slug, label, chapter) VALUES (@slug, @slug, @chapter)
-           ON CONFLICT(slug) DO NOTHING`
-        : `INSERT INTO ${table} (slug, label) VALUES (@slug, @slug)
-           ON CONFLICT(slug) DO NOTHING`;
-    vocabStatements[table] = {
-      insert: db.prepare(insert),
+    statements[table] = {
+      insert: db.prepare(
+        table === "locations"
+          ? `INSERT INTO locations (slug, label, chapter) VALUES (@slug, @slug, @chapter)
+             ON CONFLICT(slug) DO NOTHING`
+          : `INSERT INTO ${table} (slug, label) VALUES (@slug, @slug)
+             ON CONFLICT(slug) DO NOTHING`
+      ),
       get: db.prepare(`SELECT id FROM ${table} WHERE slug = ?`)
     };
-    vocabIds[table] = new Map();
   }
 
-  const vocabId = (table, slug) => {
-    const cache = vocabIds[table];
-    if (!cache.has(slug)) {
+  return (table, slug) => {
+    const key = `${table}:${slug}`;
+    if (!cache.has(key)) {
       const chapter = CHAPTERS.indexOf(slug);
-      vocabStatements[table].insert.run({
-        slug,
-        chapter: chapter === -1 ? 99 : chapter
-      });
-      cache.set(slug, vocabStatements[table].get.get(slug).id);
+      statements[table].insert.run({ slug, chapter: chapter === -1 ? 99 : chapter });
+      cache.set(key, statements[table].get.get(slug).id);
     }
-    return cache.get(slug);
+    return cache.get(key);
   };
+}
 
-  const upsertElement = db.prepare(`
-    INSERT INTO elements (slug, name, type_id, shape_id, sprite, is_active)
-    VALUES (@slug, @name, @typeId, @shapeId, @sprite, 1)
-    ON CONFLICT(name) DO UPDATE SET
-      type_id = excluded.type_id,
-      shape_id = excluded.shape_id,
-      sprite = excluded.sprite,
-      is_active = 1,
-      updated_at = datetime('now')
-  `);
-  const getElementId = db.prepare("SELECT id FROM elements WHERE name = ?");
-  const clearLocations = db.prepare("DELETE FROM element_locations WHERE element_id = ?");
-  const clearColors = db.prepare("DELETE FROM element_colors WHERE element_id = ?");
+// Écrit type, forme, lieux et couleurs d'un élément. Partagé avec l'éditeur
+// de l'admin.
+function writeElementAttributes(db, elementId, attrs) {
+  const vocabId = vocabResolver(db);
+  db.prepare(
+    `UPDATE elements SET type_id = ?, shape_id = ?, updated_at = datetime('now')
+     WHERE id = ?`
+  ).run(
+    vocabId("types", asList(attrs.type)[0]),
+    vocabId("shapes", asList(attrs.shape)[0]),
+    elementId
+  );
+
+  db.prepare("DELETE FROM element_locations WHERE element_id = ?").run(elementId);
   const addLocation = db.prepare(
     "INSERT INTO element_locations (element_id, location_id, position) VALUES (?, ?, ?)"
   );
+  asList(attrs.lieu).forEach((slug, i) =>
+    addLocation.run(elementId, vocabId("locations", slug), i)
+  );
+
+  db.prepare("DELETE FROM element_colors WHERE element_id = ?").run(elementId);
   const addColor = db.prepare(
     "INSERT INTO element_colors (element_id, color_id, position) VALUES (?, ?, ?)"
   );
+  asList(attrs.couleur).forEach((slug, i) =>
+    addColor.run(elementId, vocabId("colors", slug), i)
+  );
+}
+
+// Recopie db.json, mapping.json et aliases.json dans la base à chaque
+// démarrage. Les éléments modifiés dans l'admin (managed_by = 'admin') ne
+// sont pas touchés. Les éléments retirés de db.json sont désactivés, pas
+// supprimés, pour garder l'historique des mots du jour.
+function syncElementsFromJson(db) {
+  const elements = readJson(ELEMENTS_FILE);
+  const sprites = readJson(SPRITES_FILE);
+  const aliases = fs.existsSync(ALIASES_FILE) ? readJson(ALIASES_FILE) : {};
+  const vocabId = vocabResolver(db);
+
+  const findElement = db.prepare("SELECT id, managed_by FROM elements WHERE name = ?");
+  const insertElement = db.prepare(`
+    INSERT INTO elements (slug, name, type_id, shape_id, sprite, is_active)
+    VALUES (@slug, @name, @typeId, @shapeId, @sprite, 1)
+  `);
+  const refreshElement = db.prepare(`
+    UPDATE elements SET sprite = @sprite, is_active = 1, updated_at = datetime('now')
+    WHERE id = @id
+  `);
 
   const sync = db.transaction(() => {
-    const activeIds = [];
+    const seenIds = [];
 
     for (const [name, attrs] of Object.entries(elements)) {
-      upsertElement.run({
-        slug: toSlug(name),
-        name,
-        typeId: vocabId("types", String(attrs.type).trim()),
-        shapeId: vocabId("shapes", String(attrs.shape).trim()),
-        sprite: sprites[name.toLowerCase()] ?? null
-      });
-      const id = getElementId.get(name).id;
-      activeIds.push(id);
+      const existing = findElement.get(name);
+      if (existing?.managed_by === "admin") {
+        seenIds.push(existing.id);
+        continue;
+      }
 
-      clearLocations.run(id);
-      asList(attrs.lieu).forEach((slug, i) =>
-        addLocation.run(id, vocabId("locations", slug), i)
-      );
-      clearColors.run(id);
-      asList(attrs.couleur).forEach((slug, i) =>
-        addColor.run(id, vocabId("colors", slug), i)
-      );
+      let id = existing?.id;
+      const sprite = sprites[name.toLowerCase()] ?? null;
+      if (id) {
+        refreshElement.run({ id, sprite });
+      } else {
+        id = insertElement.run({
+          slug: toSlug(name),
+          name,
+          typeId: vocabId("types", asList(attrs.type)[0]),
+          shapeId: vocabId("shapes", asList(attrs.shape)[0]),
+          sprite
+        }).lastInsertRowid;
+      }
+      writeElementAttributes(db, id, attrs);
+      seenIds.push(id);
     }
 
-    const placeholders = activeIds.map(() => "?").join(",");
-    return db
+    const placeholders = seenIds.map(() => "?").join(",");
+    const deactivated = db
       .prepare(
         `UPDATE elements SET is_active = 0, updated_at = datetime('now')
-         WHERE is_active = 1 AND id NOT IN (${placeholders})`
+         WHERE is_active = 1 AND managed_by = 'json' AND id NOT IN (${placeholders})`
       )
-      .run(...activeIds).changes;
+      .run(...seenIds).changes;
+
+    // Synonymes officiels : remplacés entièrement par aliases.json
+    db.prepare("DELETE FROM aliases").run();
+    const addAlias = db.prepare(
+      "INSERT OR IGNORE INTO aliases (alias, element_id) SELECT ?, id FROM elements WHERE name = ?"
+    );
+    for (const [alias, target] of Object.entries(aliases)) {
+      addAlias.run(alias.trim().toLowerCase(), target);
+    }
+
+    return deactivated;
   });
 
   const deactivated = sync();
@@ -125,4 +169,4 @@ function syncElementsFromJson(db) {
   );
 }
 
-module.exports = { syncElementsFromJson };
+module.exports = { syncElementsFromJson, writeElementAttributes, toSlug, CHAPTERS };

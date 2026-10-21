@@ -1,15 +1,15 @@
 const db = require("../db");
 
 const stmts = {
-  get: db.prepare("SELECT * FROM daily_secrets WHERE date = ?"),
+  get: db.prepare("SELECT * FROM daily_secrets WHERE date = ? AND mode = ?"),
   insertIfMissing: db.prepare(`
-    INSERT OR IGNORE INTO daily_secrets (date, element_id, source)
-    VALUES (?, ?, 'auto')
+    INSERT OR IGNORE INTO daily_secrets (date, mode, element_id, source)
+    VALUES (?, ?, ?, 'auto')
   `),
   replace: db.prepare(`
-    INSERT INTO daily_secrets (date, element_id, source)
-    VALUES (@date, @elementId, @source)
-    ON CONFLICT(date) DO UPDATE SET
+    INSERT INTO daily_secrets (date, mode, element_id, source)
+    VALUES (@date, @mode, @elementId, @source)
+    ON CONFLICT(date, mode) DO UPDATE SET
       element_id = excluded.element_id,
       source = excluded.source,
       version = version + 1,
@@ -17,30 +17,32 @@ const stmts = {
   `),
   recentElementIds: db.prepare(`
     SELECT element_id FROM daily_secrets
-    WHERE date < @date AND date >= date(@date, @window)
+    WHERE mode = @mode AND date < @date AND date >= date(@date, @window)
   `)
 };
 
-function get(date) {
-  return stmts.get.get(date) ?? null;
+function get(date, mode) {
+  return stmts.get.get(date, mode) ?? null;
 }
 
 // INSERT OR IGNORE : si deux requêtes tirent le mot en même temps, la
 // première l'emporte et les deux lisent la même ligne ensuite.
-function createIfMissing(date, elementId) {
-  stmts.insertIfMissing.run(date, elementId);
-  return get(date);
+function createIfMissing(date, mode, elementId) {
+  stmts.insertIfMissing.run(date, mode, elementId);
+  return get(date, mode);
 }
 
-function replace(date, elementId, source) {
-  stmts.replace.run({ date, elementId, source });
-  return get(date);
+function replace(date, mode, elementId, source) {
+  stmts.replace.run({ date, mode, elementId, source });
+  return get(date, mode);
 }
 
-function recentElementIds(date, days) {
+// Éléments tirés pour ce mode pendant les `days` jours précédant `date`
+function recentElementIds(date, mode, days) {
+  if (days <= 0) return new Set();
   return new Set(
     stmts.recentElementIds
-      .all({ date, window: `-${days} days` })
+      .all({ date, mode, window: `-${days} days` })
       .map((r) => r.element_id)
   );
 }

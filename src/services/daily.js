@@ -1,14 +1,13 @@
+const config = require("../config");
 const elementsRepo = require("../repositories/elements");
 const secretsRepo = require("../repositories/secrets");
+const settingsRepo = require("../repositories/settings");
+const { todayParis } = require("../utils/dates");
+const { getMode } = require("./modes");
 
-// Un même mot ne revient pas avant ce nombre de jours (tant qu'il reste assez
-// d'éléments jouables)
-const NO_REPEAT_DAYS = 30;
-
-// Valeur de secretVersion avant la base de données. On la garde pour la
-// version 1 d'un jour afin que la mise à jour ne réinitialise pas les parties
-// en cours (le client compare cette valeur à celle qu'il a stockée).
-const LEGACY_SECRET_VERSION = "1.2.2";
+// Un mot ne revient pas avant ce délai (jours). Réglable dans l'admin.
+const REPEAT_DELAY_KEY = "repeat_delay_days";
+const DEFAULT_REPEAT_DELAY = 2;
 
 function parseSeed(raw) {
   if (!raw) return 0;
@@ -21,68 +20,79 @@ function parseSeed(raw) {
   return hash;
 }
 
-const seedHash = parseSeed(process.env.RANDOM_SEED);
+const seedHash = parseSeed(config.randomSeed);
 
-function todayParis() {
-  return new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Paris" });
-}
-
-// Index de l'ancien tirage (hash de la date XOR seed) : le premier jour avec
-// la base donne donc le même mot que l'ancien code.
-function legacyIndex(date, count) {
-  let dateHash = 0;
-  for (let i = 0; i < date.length; i++) {
-    dateHash = (dateHash * 33 + date.charCodeAt(i)) | 0;
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 33 + str.charCodeAt(i)) | 0;
   }
-  return ((dateHash ^ seedHash) >>> 0) % count;
+  return hash;
 }
 
-function pickAuto(date) {
+// Mode normal : même index que le tirage de la v1 (hash de la date XOR
+// seed), donc le jour de la mise à jour garde le mot prévu.
+function startIndex(date, mode, count) {
+  const key = mode === "normal" ? date : `${date}|${mode}`;
+  return ((hashString(key) ^ seedHash) >>> 0) % count;
+}
+
+function getRepeatDelay() {
+  return settingsRepo.getNumber(REPEAT_DELAY_KEY, DEFAULT_REPEAT_DELAY);
+}
+
+function setRepeatDelay(days) {
+  settingsRepo.set(REPEAT_DELAY_KEY, days);
+}
+
+function pickAuto(date, mode) {
   const elements = elementsRepo.listActive();
   if (elements.length === 0) throw new Error("Aucun élément actif en base");
 
-  const recent = secretsRepo.recentElementIds(date, NO_REPEAT_DAYS);
-  const start = legacyIndex(date, elements.length);
+  const excluded = secretsRepo.recentElementIds(date, mode, getRepeatDelay());
+  // Le mode Hard évite le mot du mode normal du même jour
+  if (mode !== "normal") excluded.add(getSecretRow(date, "normal").element_id);
+
+  const start = startIndex(date, mode, elements.length);
   for (let i = 0; i < elements.length; i++) {
     const candidate = elements[(start + i) % elements.length];
-    if (!recent.has(candidate.id)) return candidate;
+    if (!excluded.has(candidate.id)) return candidate;
   }
   return elements[start];
 }
 
-function getTodayRow() {
-  const date = todayParis();
-  return secretsRepo.get(date) ?? secretsRepo.createIfMissing(date, pickAuto(date).id);
+function getSecretRow(date, mode) {
+  getMode(mode);
+  return (
+    secretsRepo.get(date, mode) ??
+    secretsRepo.createIfMissing(date, mode, pickAuto(date, mode).id)
+  );
 }
 
-function getSecretElement() {
-  return elementsRepo.findById(getTodayRow().element_id);
-}
-
-function getSecretVersion() {
-  const row = getTodayRow();
-  return row.version === 1 ? LEGACY_SECRET_VERSION : `${row.date}.${row.version}`;
+function getTodaySecret(mode = "normal") {
+  const row = getSecretRow(todayParis(), mode);
+  return { ...row, element: elementsRepo.findById(row.element_id) };
 }
 
 // Choix de l'admin : remplace le mot du jour et incrémente sa version, ce qui
-// réinitialise les parties en cours côté client.
-function setSecret(element) {
-  secretsRepo.replace(todayParis(), element.id, "admin");
-  return getSecretElement();
+// fait repartir à zéro les parties en cours de ce mode.
+function setSecret(mode, element) {
+  getMode(mode);
+  secretsRepo.replace(todayParis(), mode, element.id, "admin");
+  return getTodaySecret(mode);
 }
 
-function drawRandomSecret() {
-  const current = getTodayRow().element_id;
+function drawRandomSecret(mode) {
+  const current = getTodaySecret(mode).element_id;
   const candidates = elementsRepo.listActive().filter((e) => e.id !== current);
-  const pick = candidates[Math.floor(Math.random() * candidates.length)];
-  return setSecret(pick);
+  return setSecret(mode, candidates[Math.floor(Math.random() * candidates.length)]);
 }
 
-// Nombre pseudo-aléatoire stable pour la journée (indices)
-function getSeededRandom(offset = 0) {
-  const secretName = getSecretElement().nom;
+// Nombre pseudo-aléatoire stable pour la journée et le mode (indices)
+function seededRandom(mode, offset = 0) {
+  const { element } = getTodaySecret(mode);
   let hash = seedHash;
-  const str = secretName + offset;
+  const str = `${element.nom}${mode === "normal" ? "" : mode}${offset}`;
   for (let i = 0; i < str.length; i++) {
     hash = (hash * 33 + str.charCodeAt(i)) | 0;
     hash = (Math.sin(hash) * 10000) | 0;
@@ -91,10 +101,12 @@ function getSeededRandom(offset = 0) {
 }
 
 module.exports = {
-  todayParis,
-  getSecretElement,
-  getSecretVersion,
+  DEFAULT_REPEAT_DELAY,
+  getTodaySecret,
+  getSecretRow,
   setSecret,
   drawRandomSecret,
-  getSeededRandom
+  getRepeatDelay,
+  setRepeatDelay,
+  seededRandom
 };
