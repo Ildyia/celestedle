@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - betatest
+      - beta
 
 # Annule les déploiements précédents sur la même branche/environnement
 concurrency:
