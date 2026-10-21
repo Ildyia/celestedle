@@ -1,10 +1,10 @@
 name: Deploy Celestedle API
 
+# La bêta (branche beta) est déployée par l'Auto-Deploy de Render
 on:
   push:
     branches:
       - main
-      - beta
 
 # Annule les déploiements précédents sur la même branche/environnement
 concurrency:
@@ -35,10 +35,3 @@ jobs:
       - name: Deploy Production
         run: docker compose up -d --build --force-recreate
 
-  deploy-staging:
-    if: github.ref_name == 'beta'
-    runs-on: ubuntu-latest
-    environment: celestedleEnv
-    steps:
-      - name: Trigger Render Deployment
-        run: curl -X GET "${{ secrets.RENDER_DEPLOY_HOOK }}"
