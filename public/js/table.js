@@ -50,10 +50,14 @@ export const TableManager = {
     app.nodes.tableBody.insertBefore(row, app.nodes.tableBody.firstChild);
   },
 
-  insertSolutionRow(solutionName, attrs = {}, app) {
+  insertSolutionRow(solutionId, solutionName, attrs = {}, app) {
     if (!app.nodes.tableBody) return;
 
+    // L'écran de fin peut être rendu plusieurs fois : une seule ligne solution
+    app.nodes.tableBody.querySelector("tr.solution-row")?.remove();
+
     const row = document.createElement("tr");
+    row.className = "solution-row";
     const createCell = (text, className) => {
       const cell = document.createElement("td");
       cell.textContent = text;
@@ -66,6 +70,14 @@ export const TableManager = {
     const nameText = document.createElement("div");
     nameText.textContent = solutionName;
     nameCell.appendChild(nameText);
+
+    if (solutionId && solutionId !== "Unknown") {
+      const thumb = document.createElement("img");
+      thumb.className = "entity-thumb";
+      thumb.src = API_BASE_URL + `/sprite/${solutionId}`;
+      thumb.alt = solutionName;
+      nameCell.insertBefore(thumb, nameCell.firstChild);
+    }
 
     row.appendChild(nameCell);
     row.appendChild(createCell(attrs.type || "-", "correct"));

@@ -1741,3 +1741,57 @@ input[type="checkbox"]:not(.switch input):checked::after {
 .hidden {
   display: none;
 }
+/* ==========================================================================
+   13. PHONE GUESSES TABLE
+   Les cellules d'un tableau ne rétrécissent pas sous leur mot le plus long
+   avec overflow-wrap: break-word : on fixe les largeurs et on autorise la
+   coupure n'importe où pour que les 5 colonnes tiennent dans l'écran.
+   ========================================================================== */
+@media (max-width: 600px) {
+  #guesses-table {
+    table-layout: fixed;
+  }
+
+  /* Nom, Type, Chapter, Colour, Shape : largeurs calées sur les mots les plus
+     longs de chaque colonne (« environment », « reflection », « humanoid ») */
+  #guesses-table th:nth-child(1) {
+    width: 21%;
+  }
+
+  #guesses-table th:nth-child(2) {
+    width: 23%;
+  }
+
+  #guesses-table th:nth-child(3),
+  #guesses-table th:nth-child(5) {
+    width: 20%;
+  }
+
+  #guesses-table th:nth-child(4) {
+    width: 16%;
+  }
+
+  #guesses-table th,
+  #guesses-table td {
+    padding: 6px 1px;
+    font-size: 0.58rem;
+    overflow-wrap: anywhere;
+    hyphens: auto;
+  }
+
+  #guesses-table th {
+    letter-spacing: 0;
+  }
+
+  #guesses-table .entity-thumb {
+    display: block;
+    width: 28px;
+    height: 28px;
+    margin: 0 auto 4px;
+  }
+
+  body.colorblind #guesses-table td::after {
+    margin-left: 2px;
+    font-size: 0.75rem;
+  }
+}

@@ -1,4 +1,4 @@
-import { API_BASE_URL, ApiService } from "./js/api.js";
+import { ApiService } from "./js/api.js";
 import { initTimer } from "./js/timer.js";
 import { ModalService } from "./js/modal.js";
 import { OptionsManager } from "./js/options.js";
@@ -59,22 +59,24 @@ export const App = {
     this.cacheDOM();
     GameStateManager.checkDailyReset();
     GameStateManager.checkApplicationVersion();
-    GameStateManager.load(this);
+
+    // Thème, boutons et stats d'abord : une erreur dans le rendu de la partie
+    // sauvegardée (load) ne doit pas laisser la page sans événements ni fond
+    OptionsManager.init(this);
+    SuggestionsManager.init(this);
+    this.bindEvents();
     this.fetchOfficialElements();
 
     // 🔄 Stats communautaires rafraîchies à chaque chargement de page
     this.fetchDailySuccessCount();
 
-    SuggestionsManager.init(this);
-    OptionsManager.init(this);
-
-    this.bindEvents();
     this.fetchPersonalizedSynonyms();
     initTimer(this.nodes.timerContainer);
     this.checkDisclaimerNotice();
     HintsManager.renderActive();
 
     GameTimer.init(this.nodes.gameTimerDisplay);
+    GameStateManager.load(this);
 
     if (!this.historyLog || this.historyLog.length === 0) {
       GameTimer.reset();
@@ -504,7 +506,10 @@ export const App = {
 
   handleForfeit() {
     GameTimer.stop();
+    // Le catch ne couvre que la requête : une erreur dans le rendu ne doit pas
+    // relancer renderEndGameScreen une deuxième fois
     ApiService.forfeitGame()
+      .catch(() => null)
       .then((data) => {
         localStorage.setItem("celestedle_gameover", "true");
         localStorage.setItem("celestedle_status", "lose");
@@ -517,16 +522,6 @@ export const App = {
           );
 
         // Actualise les stats communautaires instantanément après l'abandon
-        this.fetchDailySuccessCount();
-
-        if (this.nodes.forfeitModal)
-          this.nodes.forfeitModal.style.display = "none";
-        this.renderEndGameScreen();
-      })
-      .catch(() => {
-        localStorage.setItem("celestedle_gameover", "true");
-        localStorage.setItem("celestedle_status", "lose");
-
         this.fetchDailySuccessCount();
 
         if (this.nodes.forfeitModal)
@@ -693,20 +688,11 @@ export const App = {
 
     if (!isWin && solution) {
       TableManager.insertSolutionRow(
+        solution,
         formattedSolution,
         parsedSolutionAttrs,
         this
       );
-      if (!imgPath) return;
-      const firstRow = this.nodes.tableBody.querySelector("tr");
-      if (!firstRow) return;
-      const img = document.createElement("img");
-      img.className = "entity-thumb";
-      img.src = API_BASE_URL + `/sprite/${solution}`;
-      img.alt = formattedSolution;
-      firstRow
-        .querySelector("td")
-        ?.insertBefore(img, firstRow.querySelector("td").firstChild);
     }
 
     targetContainer.appendChild(messageContainer);
