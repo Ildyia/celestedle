@@ -2,16 +2,44 @@
 
 A daily Wordle-inspired guessing game based on the video game **Celeste**.
 
-Each day, a secret element or entity from Celeste is chosen deterministically for all players. Your goal is to deduce what it is in as few attempts as possible. With each attempt, you receive clues based on various attributes—such as type, location, color, and hitbox properties—to guide you toward the correct answer.
+Each day, a secret element or entity from Celeste is picked for all players. Your goal is to deduce what it is in as few attempts as possible. With each attempt, you receive clues based on its attributes (type, chapters, colour and shape) to guide you toward the correct answer.
 
 ## Features
 
-- **Daily Challenges**: A new secret Celeste entity to discover every day at midnight (Europe/Paris timezone).
-- **Detailed Attributes**: Compare your guesses across categories including **Type**, **Location**, **Color**, and **Hitbox**.
-- **Interactive Hints**: Use daily hints when stuck (*False Friend*, *Secret Info*, *1 Truth & 2 Lies*).
-- **Custom Synonyms**: Create and save your own personalized entity shortcuts.
-- **Community Statistics**: Compare your scores and average tries against global player statistics.
-- **In-Game Bug Reporting**: Submit entity issues or feedback directly to our Discord server.
+- **Daily Challenges**: a new secret Celeste entity every day at midnight (Europe/Paris timezone).
+- **Hard Mode**: its own daily word, 1 hint, 8 tries, 5 minutes, no suggestions, and every guess must fit the clues you already found.
+- **Detailed Attributes**: compare your guesses on **Type**, **Chapter**, **Colour** and **Shape**.
+- **Hints**: *Opposite*, *Secret Info* and *1 Truth & 2 Lies*.
+- **Profiles**: name, avatar and colour, personal stats and streaks, and a recovery code to play on several devices.
+- **Leaderboards**: daily, weekly and all-time, for both modes.
+- **Custom Synonyms**: create your own shortcuts for element names.
+- **Community Statistics**: compare your scores with the other players of the day.
+- **Bug Reporting**: report a mistake from the game, or vote for an existing report; reports are mirrored on Discord.
+
+## Development
+
+Requires Node.js 22 or later.
+
+```bash
+npm install
+npm start          # http://localhost:3000
+npm test           # node:test suite
+npm run lint
+```
+
+Useful environment variables (`.env`):
+
+| Variable | Purpose |
+| --- | --- |
+| `PORT` | HTTP port (default 3000) |
+| `DATA_DIR` | Folder for the SQLite database and v1 JSON files (default `data/`) |
+| `RANDOM_SEED` | Seed of the daily word draw |
+| `ADMIN_PASSWORD` or `ADMIN_PASSWORD_HASH` | Admin password, in clear or as a bcrypt hash |
+| `JWT_SECRET` | Secret for admin sessions |
+| `DISCORD_BOT_TOKEN` | Enables the Discord bot for bug reports |
+| `CORS_ORIGINS` | Extra allowed origins, comma separated |
+
+Elements live in `db.json` (attributes), `public/assets/entities/mapping.json` (sprites) and `aliases.json` (official synonyms). They are copied into the database at startup, except elements edited from the admin page.
 
 ## Community & Support
 
@@ -21,4 +49,4 @@ Join our official Discord server to share your daily scores, report bugs, discus
 
 ## Contributing
 
-Celestedle is an open project built by and for Celeste fans! If you encounter any bugs, have suggestions for new attributes, or want to contribute—especially for entity visuals and artwork—feel free to join our Discord server or open an issue.
+Celestedle is an open project built by and for Celeste fans! If you encounter any bugs, have suggestions for new attributes, or want to contribute (especially for entity visuals and artwork), feel free to join our Discord server or open an issue.

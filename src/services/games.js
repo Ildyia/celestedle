@@ -100,7 +100,8 @@ const guess = db.transaction((player, modeId, input) => {
     throw new HttpError(400, "Unknown element. Check the spelling.");
   }
 
-  let { game, reset } = loadGame(player.id, mode, secret);
+  const loaded = loadGame(player.id, mode, secret);
+  let { game } = loaded;
   ensurePlaying(game);
 
   const history = guessHistory(game, secret.element);
@@ -131,7 +132,7 @@ const guess = db.transaction((player, modeId, input) => {
     gamesRepo.finish(game.id, "lost", at);
   }
 
-  const state = buildState({ mode, secret, game: gamesRepo.findById(game.id), reset });
+  const state = buildState({ mode, secret, game: gamesRepo.findById(game.id), reset: loaded.reset });
   return { state, guess: { nom: element.nom, valeurs: displayValues(element), verdict } };
 });
 
