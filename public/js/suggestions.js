@@ -1,181 +1,134 @@
-import { API_BASE_URL } from "./api.js";
-export const SuggestionsManager = {
-  init(app) {
-    this.app = app;
-  },
+import { spriteUrl } from "./api.js";
+import { el, clear } from "./dom.js";
+import { capitalize } from "./format.js";
 
-  handleFilter(e) {
-    const query = e.target.value.trim().toLowerCase();
-    this.app.nodes.suggestionsBox.innerHTML = "";
-    this.app.selectedIndex = -1;
+// Liste déroulante sous le champ de saisie. Désactivée en mode Hard.
+export class Suggestions {
+  constructor({ input, box, showAllButton }) {
+    this.input = input;
+    this.box = box;
+    this.showAllButton = showAllButton;
+    this.elements = [];
+    this.synonyms = {};
+    this.enabled = true;
+    this.selectedIndex = -1;
 
-    if (query.length < 3) {
-      this.app.nodes.suggestionsBox.style.display = "none";
-      return;
-    }
+    input.addEventListener("input", () => this.filter());
+    input.addEventListener("keydown", (e) => this.handleKeyboard(e));
+    showAllButton?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.input.value = "";
+      this.showAll();
+      this.input.focus();
+    });
+    document.addEventListener("click", (e) => {
+      if (e.target !== this.input && !this.box.contains(e.target)) this.hide();
+    });
+  }
 
-    const matchingSuggestions = new Map();
+  setData({ elements, synonyms }) {
+    if (elements) this.elements = elements;
+    if (synonyms) this.synonyms = synonyms;
+  }
 
-    const addSuggestion = (word, priority, colors, isSynonym = false) => {
-      const existing = matchingSuggestions.get(word);
-      if (existing === undefined || priority < existing.priority) {
-        matchingSuggestions.set(word, { priority, isSynonym, colors });
-      }
+  setEnabled(enabled) {
+    this.enabled = enabled;
+    if (this.showAllButton) this.showAllButton.hidden = !enabled;
+    if (!enabled) this.hide();
+  }
+
+  hide() {
+    clear(this.box);
+    this.box.style.display = "none";
+    this.selectedIndex = -1;
+  }
+
+  filter() {
+    if (!this.enabled) return;
+    const query = this.input.value.trim().toLowerCase();
+    if (query.length < 3) return this.hide();
+
+    const matches = new Map();
+    const add = (name, priority, colors, isSynonym) => {
+      const existing = matches.get(name);
+      if (!existing || priority < existing.priority) matches.set(name, { priority, colors, isSynonym });
     };
+    const priorityOf = (name) => (name === query ? 0 : name.startsWith(query) ? 1 : 2);
 
-    Object.keys(this.app.synonyms).forEach((syn) => {
-      if (syn.startsWith(query)) {
-        const officialName = this.app.synonyms[syn];
-        const displayName =
-          officialName.charAt(0).toUpperCase() + officialName.slice(1);
-        const lowerName = officialName.toLowerCase();
-        const priority =
-          lowerName === query ? 0 : lowerName.startsWith(query) ? 1 : 2;
-        addSuggestion(displayName, priority, [], true);
-      }
-    });
-
-    const elements = Array.isArray(this.app.officialElementsList)
-      ? this.app.officialElementsList
-      : [];
-    elements.forEach(({ nom, couleur }) => {
-      const lowerName = nom.toLowerCase();
-      if (lowerName.includes(query)) {
-        const displayName = nom.charAt(0).toUpperCase() + nom.slice(1);
-        const priority =
-          lowerName === query ? 0 : lowerName.startsWith(query) ? 1 : 2;
-        addSuggestion(displayName, priority, couleur, false);
-      }
-    });
-
-    if (matchingSuggestions.size > 0) {
-      Array.from(matchingSuggestions.entries())
-        .sort(([a, vA], [b, vB]) => {
-          if (vA.priority !== vB.priority) return vA.priority - vB.priority;
-          return a.localeCompare(b);
-        })
-        .forEach(([word, meta]) => {
-          const div = document.createElement("div");
-          div.classList.add("suggestion-item");
-
-          const thumb = document.createElement("img");
-          thumb.className = "suggestion-thumb";
-          thumb.alt = word;
-          thumb.src = API_BASE_URL + `/sprite/${word}`;
-
-          const textNode = document.createElement("span");
-          textNode.textContent = word;
-
-          div.appendChild(thumb);
-          div.appendChild(textNode);
-
-          if (meta && meta.isSynonym) {
-            const img = document.createElement("img");
-            img.className = "synonym-marker";
-            img.src = "assets/entities/switch.svg";
-            img.alt = "(synonym)";
-            img.setAttribute("aria-hidden", "true");
-            div.appendChild(img);
-          }
-
-          const colorNode = document.createElement("span");
-          colorNode.className = "suggestion-colorblind-helper";
-          colorNode.textContent =
-            meta?.colors
-              ?.map((c) => c.charAt(0).toUpperCase() + c.slice(1))
-              ?.join(", ") ?? "";
-
-          div.appendChild(colorNode);
-
-          div.addEventListener("click", () => this.selectSuggestion(word));
-          this.app.nodes.suggestionsBox.appendChild(div);
-        });
-      this.app.nodes.suggestionsBox.style.display = "block";
-    } else {
-      this.app.nodes.suggestionsBox.style.display = "none";
-    }
-  },
-
-  handleKeyboard(e) {
-    const items =
-      this.app.nodes.suggestionsBox.querySelectorAll(".suggestion-item");
-    if (items.length === 0) return;
-
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      this.app.selectedIndex++;
-      if (this.app.selectedIndex >= items.length) this.app.selectedIndex = 0;
-      this.updateSelectionHighlight(items);
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      this.app.selectedIndex--;
-      if (this.app.selectedIndex < 0) this.app.selectedIndex = items.length - 1;
-      this.updateSelectionHighlight(items);
-    } else if (e.key === "Enter") {
-      if (this.app.selectedIndex > -1 && items[this.app.selectedIndex]) {
-        e.preventDefault();
-        this.selectSuggestion(
-          items[this.app.selectedIndex].querySelector("span").textContent
-        );
+    for (const [synonym, official] of Object.entries(this.synonyms)) {
+      if (synonym.startsWith(query)) {
+        const element = this.elements.find((e) => e.nom.toLowerCase() === official.toLowerCase());
+        add(official, priorityOf(official.toLowerCase()), element?.couleur ?? [], true);
       }
     }
-  },
+    for (const { nom, couleur } of this.elements) {
+      const lower = nom.toLowerCase();
+      if (lower.includes(query)) add(nom, priorityOf(lower), couleur, false);
+    }
 
-  updateSelectionHighlight(items) {
-    items.forEach((item, idx) => {
-      if (idx === this.app.selectedIndex) {
-        item.classList.add("selected");
-        item.scrollIntoView({ block: "nearest" });
-      } else {
-        item.classList.remove("selected");
-      }
-    });
-  },
-
-  selectSuggestion(word) {
-    this.app.nodes.input.value = word;
-    this.app.nodes.suggestionsBox.innerHTML = "";
-    this.app.nodes.suggestionsBox.style.display = "none";
-    this.app.selectedIndex = -1;
-    this.app.nodes.input.focus();
-  },
+    const sorted = [...matches.entries()].sort(
+      ([a, ma], [b, mb]) => ma.priority - mb.priority || a.localeCompare(b)
+    );
+    this.render(sorted.map(([name, meta]) => ({ name, ...meta })));
+  }
 
   showAll() {
-    if (!this.app.nodes.suggestionsBox) return;
-    this.app.nodes.suggestionsBox.innerHTML = "";
-    this.app.selectedIndex = -1;
-
-    const elements = Array.isArray(this.app.officialElementsList)
-      ? this.app.officialElementsList
-      : [];
-    const sortedElements = [...elements].sort((a, b) =>
-      a.nom.localeCompare(b.nom)
-    );
-
-    sortedElements.forEach(({ nom: name }) => {
-      const displayName = name.charAt(0).toUpperCase() + name.slice(1);
-      const div = document.createElement("div");
-      div.classList.add("suggestion-item");
-
-      const thumb = document.createElement("img");
-      thumb.className = "suggestion-thumb";
-      thumb.alt = displayName;
-      thumb.src = API_BASE_URL + `/sprite/${displayName}`;
-
-      const textNode = document.createElement("span");
-      textNode.textContent = displayName;
-
-      div.appendChild(thumb);
-      div.appendChild(textNode);
-
-      div.addEventListener("click", (e) => {
-        e.stopPropagation();
-        this.selectSuggestion(displayName);
-      });
-
-      this.app.nodes.suggestionsBox.appendChild(div);
-    });
-
-    this.app.nodes.suggestionsBox.style.display = "block";
+    if (!this.enabled) return;
+    const sorted = [...this.elements].sort((a, b) => a.nom.localeCompare(b.nom));
+    this.render(sorted.map((e) => ({ name: e.nom, colors: e.couleur, isSynonym: false })));
   }
-};
+
+  render(items) {
+    clear(this.box);
+    this.selectedIndex = -1;
+    if (items.length === 0) return this.hide();
+
+    for (const item of items) {
+      const row = el(
+        "div",
+        { className: "suggestion-item", dataset: { name: item.name } },
+        [
+          el("img", { className: "suggestion-thumb", attrs: { src: spriteUrl(item.name), alt: "", loading: "lazy" } }),
+          el("span", { text: capitalize(item.name) }),
+          item.isSynonym
+            ? el("img", { className: "synonym-marker", attrs: { src: "assets/entities/switch.svg", alt: "(synonym)" } })
+            : null,
+          el("span", {
+            className: "suggestion-colorblind-helper",
+            text: (item.colors || []).map(capitalize).join(", ")
+          })
+        ]
+      );
+      row.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.select(item.name);
+      });
+      this.box.append(row);
+    }
+    this.box.style.display = "block";
+  }
+
+  handleKeyboard(e) {
+    const items = this.box.querySelectorAll(".suggestion-item");
+    if (items.length === 0) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const step = e.key === "ArrowDown" ? 1 : -1;
+      this.selectedIndex = (this.selectedIndex + step + items.length) % items.length;
+      items.forEach((item, i) => item.classList.toggle("selected", i === this.selectedIndex));
+      items[this.selectedIndex].scrollIntoView({ block: "nearest" });
+    } else if (e.key === "Enter" && this.selectedIndex > -1) {
+      e.preventDefault();
+      this.select(items[this.selectedIndex].dataset.name);
+    } else if (e.key === "Escape") {
+      this.hide();
+    }
+  }
+
+  select(name) {
+    this.input.value = capitalize(name);
+    this.hide();
+    this.input.focus();
+  }
+}

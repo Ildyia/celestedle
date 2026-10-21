@@ -1,87 +1,65 @@
-import { ApiService } from "./api.js";
+import { el, clear } from "./dom.js";
+import { capitalize, CATEGORY_LABELS } from "./format.js";
 
-export const HintsManager = {
-  updateButtonsState(app) {
-    const btnFF = document.getElementById("hint-opt-opposite");
-    const btnSecret = document.getElementById("hint-opt-secret");
-    const btnTruthLies = document.getElementById("hint-opt-truth-lies");
-
-    if (btnFF) btnFF.disabled = app.usedHintTypes.includes("opposite");
-    if (btnSecret)
-      btnSecret.disabled = app.usedHintTypes.includes("secret_info");
-    if (btnTruthLies)
-      btnTruthLies.disabled = app.usedHintTypes.includes("truth_and_lies");
-  },
-
-  updateButtonText(app) {
-    const textSpan = document.getElementById("hint-btn-text");
-    if (!app.nodes.hintBtn || !textSpan) return;
-    const remaining = Math.max(app.hintLimit - app.hintUses, 0);
-    textSpan.textContent =
-      remaining > 0 ? `Hints (${remaining} left)` : `No hints left`;
-    app.nodes.hintBtn.disabled = remaining === 0;
-  },
-
-  request(type, app) {
-    if (app.usedHintTypes.includes(type)) return;
-
-    const modal = document.getElementById("hint-modal");
-    if (modal) modal.style.display = "none";
-
-    const payload = { type };
-    if (type === "secret_info") {
-      const excludedCategories = [];
-      app.historyLog.forEach((row) => {
-        if (row.verdict) {
-          if (row.verdict.type === "correct") excludedCategories.push("type");
-          if (row.verdict.lieu === "correct") excludedCategories.push("lieu");
-          if (row.verdict.couleur === "correct")
-            excludedCategories.push("couleur");
-          if (row.verdict.shape === "correct") excludedCategories.push("shape");
-        }
-      });
-      payload.excludedCategories = excludedCategories;
-    }
-
-    ApiService.fetchHint(payload)
-      .then((data) => {
-        if (!data || !data.text) return;
-        app.hintUses += 1;
-        app.usedHintTypes.push(type);
-        localStorage.setItem(
-          "celestedle_used_hint_types",
-          JSON.stringify(app.usedHintTypes)
-        );
-
-        this.updateButtonsState(app);
-        this.updateButtonText(app);
-        this.saveAndRender(data.text);
-      })
-      .catch(() => app.showToastNotification("Error fetching hint."));
-  },
-
-  saveAndRender(text) {
-    const savedHints = JSON.parse(
-      localStorage.getItem("celestedle_saved_hints") || "[]"
-    );
-    savedHints.push(text);
-    localStorage.setItem("celestedle_saved_hints", JSON.stringify(savedHints));
-    this.renderActive();
-  },
-
-  renderActive() {
-    const container = document.getElementById("active-hints-container");
-    if (!container) return;
-    const savedHints = JSON.parse(
-      localStorage.getItem("celestedle_saved_hints") || "[]"
-    );
-
-    container.innerHTML = "";
-    savedHints.forEach((hintText) => {
-      const card = document.createElement("div");
-      card.className = "hint-card";
-      card.innerHTML = hintText;
-      container.appendChild(card);
-    });
-  }
+export const HINT_NAMES = {
+  opposite: "Opposite",
+  secret_info: "Secret Info",
+  truth_and_lies: "1 Truth & 2 Lies"
 };
+
+function statementText({ category, value }) {
+  return category === "shape" ? `Shape is "${value}"` : `${CATEGORY_LABELS[category]} includes "${value}"`;
+}
+
+function oppositeText(hint) {
+  if (!hint.element) return "No opposite element found.";
+  const categories = hint.categories.map((c) => CATEGORY_LABELS[c]);
+  if (categories.length === 4) return `${capitalize(hint.element)} is a perfect opposite!`;
+  if (categories.length === 0) return `${capitalize(hint.element)} shares something in every category.`;
+  const list =
+    categories.length === 1
+      ? categories[0]
+      : `${categories.slice(0, -1).join(", ")} and ${categories.at(-1)}`;
+  return `${capitalize(hint.element)} is opposite to the word on ${list}.`;
+}
+
+function hintBody(hint) {
+  if (hint.type === "opposite") return [el("p", { text: oppositeText(hint) })];
+  if (hint.type === "secret_info") {
+    const verb = hint.category === "lieu" ? "can be found in" : hint.partial ? "includes" : "is";
+    return [
+      el("p", {}, [
+        `Its ${CATEGORY_LABELS[hint.category].toLowerCase()} ${verb}: `,
+        el("strong", { text: hint.value })
+      ])
+    ];
+  }
+  return [el("ul", { className: "hint-statements" }, hint.statements.map((s) => el("li", { text: statementText(s) })))];
+}
+
+export function renderHints(container, hints) {
+  clear(container);
+  for (const hint of hints) {
+    container.append(
+      el("div", { className: "hint-card" }, [
+        el("span", { className: "hint-card-title", text: HINT_NAMES[hint.type] }),
+        ...hintBody(hint)
+      ])
+    );
+  }
+}
+
+// Boutons de la fenêtre d'indices : un indice déjà utilisé est grisé, et
+// tous le sont quand la limite du mode est atteinte
+export function updateHintButtons(state) {
+  const used = state.hints.map((h) => h.type);
+  const left = Math.max(0, state.rules.maxHints - used.length);
+  document.querySelectorAll("[data-hint-type]").forEach((btn) => {
+    btn.disabled = used.includes(btn.dataset.hintType) || left === 0;
+  });
+  const label = document.getElementById("hint-btn-text");
+  if (label) label.textContent = left > 0 ? `Hints (${left} left)` : "No hints left";
+  const button = document.getElementById("hint-btn");
+  if (button) button.disabled = left === 0 || state.status !== "playing";
+  return left;
+}

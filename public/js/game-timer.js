@@ -1,67 +1,56 @@
-export const GameTimer = {
-  intervalId: null,
-  secondsElapsed: 0,
-  displayNode: null,
+import { formatDuration } from "./format.js";
 
-  init(displayNode) {
-    this.displayNode = displayNode;
-    this.secondsElapsed = parseInt(
-      localStorage.getItem("celestedle_elapsed_time") || "0",
-      10
-    );
-    this.render();
-  },
+// Chrono de la partie, calé sur les heures du serveur : temps écoulé en mode
+// normal, compte à rebours en mode Hard
+export class GameTimer {
+  constructor(display) {
+    this.display = display;
+    this.intervalId = null;
+    this.onExpire = () => {};
+  }
 
-  start() {
-    if (this.intervalId) return;
-
-    this.render();
-
-    this.intervalId = setInterval(() => {
-      // Si la partie est terminée, on met en pause automatiquement
-      if (localStorage.getItem("celestedle_gameover") === "true") {
-        this.stop();
-        return;
-      }
-
-      this.secondsElapsed += 1;
-      localStorage.setItem(
-        "celestedle_elapsed_time",
-        this.secondsElapsed.toString()
-      );
-      this.render();
-    }, 1000);
-  },
-
-  stop() {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-      this.intervalId = null;
-    }
-  },
-
-  reset() {
+  update(state) {
     this.stop();
-    this.secondsElapsed = 0;
-    localStorage.removeItem("celestedle_elapsed_time");
+    this.state = state;
+    // Décalage entre l'horloge du joueur et celle du serveur
+    this.offset = state.startedAt
+      ? Date.now() - (Date.parse(state.startedAt) + state.elapsedSeconds * 1000)
+      : 0;
     this.render();
-  },
+    if (state.status === "playing" && state.startedAt) {
+      this.intervalId = setInterval(() => this.render(), 1000);
+    }
+  }
 
-  getTimeInSeconds() {
-    const saved = parseInt(
-      localStorage.getItem("celestedle_elapsed_time") || "0",
-      10
-    );
-    return Math.max(this.secondsElapsed || 0, saved);
-  },
+  elapsed() {
+    const { state } = this;
+    if (!state?.startedAt) return 0;
+    if (state.status !== "playing") return state.elapsedSeconds;
+    return Math.floor((Date.now() - this.offset - Date.parse(state.startedAt)) / 1000);
+  }
 
   render() {
-    if (!this.displayNode) return;
+    const { state } = this;
+    if (!this.display || !state) return;
 
-    const mins = Math.floor(this.secondsElapsed / 60);
-    const secs = this.secondsElapsed % 60;
-    const formatted = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-
-    this.displayNode.textContent = formatted;
+    if (state.rules.timeLimitSeconds) {
+      const left = state.startedAt
+        ? state.rules.timeLimitSeconds - this.elapsed()
+        : state.rules.timeLimitSeconds;
+      this.display.textContent = formatDuration(Math.max(0, left));
+      this.display.classList.toggle("timer-urgent", state.status === "playing" && left <= 30);
+      if (left <= 0 && state.status === "playing" && state.startedAt) {
+        this.stop();
+        this.onExpire();
+      }
+    } else {
+      this.display.textContent = formatDuration(this.elapsed());
+      this.display.classList.remove("timer-urgent");
+    }
   }
-};
+
+  stop() {
+    clearInterval(this.intervalId);
+    this.intervalId = null;
+  }
+}
