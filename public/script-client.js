@@ -663,7 +663,6 @@ export const App = {
       "celestedle_solution_attributes"
     );
 
-    let attributeSummary = "";
     let parsedSolutionAttrs = {};
     if (rawAttributes) {
       try {
@@ -672,7 +671,6 @@ export const App = {
             ? JSON.parse(rawAttributes)
             : rawAttributes;
         parsedSolutionAttrs = attrs || {};
-        attributeSummary = `<br><br><strong>Type:</strong> ${attrs.type || "-"}<br><strong>Locations:</strong> ${Array.isArray(attrs.lieu) ? attrs.lieu.join(", ") : attrs.lieu || "-"}<br><strong>Colours:</strong> ${Array.isArray(attrs.couleur) ? attrs.couleur.join(", ") : attrs.couleur || "-"}<br><strong>Shape:</strong> ${attrs.shape || "-"}`;
       } catch (e) {}
     }
 
@@ -682,7 +680,7 @@ export const App = {
 
     const matchSummary = isWin
       ? `You found the secret element in <strong>${this.tryCount}</strong> tries and <strong>${finalTime}</strong>. Used <strong>${this.hintUses}</strong> hints.`
-      : `You didn't find today's celestedle ! The answer was : <strong>${formattedSolution}</strong> (Time: <strong>${finalTime}</strong>). Used <strong>${this.hintUses}</strong> hints.${attributeSummary}`;
+      : `You didn't find today's celestedle ! The answer was : <strong>${formattedSolution}</strong> (Time: <strong>${finalTime}</strong>). Used <strong>${this.hintUses}</strong> hints.`;
 
     messageContainer.innerHTML = `<h2>${isWin ? "GG ! Victory ! 🎉" : "Nice try... Aba(n)ddon ! ❌"}</h2><div>${matchSummary}</div>`;
 
