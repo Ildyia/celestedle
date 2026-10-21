@@ -7,7 +7,6 @@ const {
   PermissionFlagsBits
 } = require("discord.js");
 const fs = require("fs");
-const path = require("path");
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
@@ -19,7 +18,9 @@ let publicChannelId =
 let privateChannelId =
   process.env.DISCORD_PRIVATE_CHANNEL_ID || "1534616690287972498";
 
-const reportsFile = path.join(__dirname, "..", "reports.json");
+const { dataPath } = require("./data-dir");
+
+const reportsFile = dataPath("reports.json");
 function loadReports() {
   if (!fs.existsSync(reportsFile)) return {};
   try {
@@ -175,21 +176,11 @@ client.handleBugReport = async ({
   saveReports(reports);
 };
 
-client.handleWebVote = async (reportId, userId, isUp) => {
-  const reports = loadReports();
-  let reportData = reports[reportId];
-  if (!reportData) return false;
-
-  const currentVote = reportData.votes[userId];
-  if ((isUp && currentVote === 1) || (!isUp && currentVote === -1)) {
-    delete reportData.votes[userId];
-  } else {
-    reportData.votes[userId] = isUp ? 1 : -1;
-  }
-  saveReports(reports);
-
-  let totalScore = 0;
-  Object.values(reportData.votes).forEach((val) => (totalScore += val));
+// Le vote web est déjà enregistré par la route : ici on met seulement à jour
+// le compteur affiché dans l'embed public
+client.updateVoteCount = async (reportId, totalScore) => {
+  const reportData = loadReports()[reportId];
+  if (!reportData?.publicMessageId) return false;
 
   try {
     const publicChannel = await client.channels.fetch(publicChannelId);

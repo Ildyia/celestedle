@@ -9,6 +9,7 @@ const {
   getSecretElement,
   getElementsList
 } = require("../utils/helpers");
+const { dataPath } = require("../utils/data-dir");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -107,7 +108,7 @@ router.get("/all-elements-details", (req, res) => {
 // Route publique/admin pour lire l'historique des statistiques
 router.get("/stats-history", (req, res) => {
   try {
-    const historyPath = path.join(__dirname, "../../stats-history.json");
+    const historyPath = dataPath("stats-history.json");
     if (fs.existsSync(historyPath)) {
       const data = JSON.parse(fs.readFileSync(historyPath, "utf8"));
       return res.json(data);

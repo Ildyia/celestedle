@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const fs = require("fs");
-const path = require("path");
 
-const reportsFile = path.join(__dirname, "..", "reports.json");
+const { dataPath } = require("../utils/data-dir");
+
+const reportsFile = dataPath("reports.json");
 
 function loadReports() {
   if (!fs.existsSync(reportsFile)) return {};
@@ -37,7 +38,8 @@ router.get("/list", (req, res) => {
 });
 
 router.post("/vote", async (req, res) => {
-  const { reportId, userId, isUp } = req.body;
+  const { reportId, userId, isUp } = req.body || {};
+  if (!userId) return res.status(400).json({ error: "Missing userId" });
 
   const reports = loadReports();
   let reportData = reports[reportId];
@@ -45,6 +47,7 @@ router.post("/vote", async (req, res) => {
   if (!reportData) {
     return res.status(404).json({ error: "Report not found" });
   }
+  reportData.votes ??= {};
 
   const currentVote = reportData.votes[userId];
   if ((isUp && currentVote === 1) || (!isUp && currentVote === -1)) {
@@ -54,14 +57,14 @@ router.post("/vote", async (req, res) => {
   }
   fs.writeFileSync(reportsFile, JSON.stringify(reports, null, 2));
 
-  if (global.discordBotClient) {
-    await global.discordBotClient
-      .handleWebVote(reportId, userId, isUp)
-      .catch(() => {});
-  }
-
   let totalScore = 0;
   Object.values(reportData.votes).forEach((val) => (totalScore += val));
+
+  if (global.discordBotClient) {
+    await global.discordBotClient
+      .updateVoteCount(reportId, totalScore)
+      .catch(() => {});
+  }
 
   res.json({
     success: true,
@@ -85,13 +88,16 @@ router.post("/", async (req, res) => {
       });
     }
 
+    // Le bot a peut-être déjà enregistré le report avec les IDs des messages
+    // Discord : on complète l'entrée au lieu de l'écraser
     const reports = loadReports();
     reports[reportId] = {
       votes: {},
       elementName: elementName || "N/A",
       bugType: bugType || "Not specified",
       description: description || "None",
-      status: "🔴 New"
+      status: "🔴 New",
+      ...reports[reportId]
     };
     fs.writeFileSync(reportsFile, JSON.stringify(reports, null, 2));
 

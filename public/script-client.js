@@ -296,16 +296,26 @@ export const App = {
 
           item.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <strong>${r.elementName}</strong> - ${r.bugType}
-              <span style="font-size: 0.85em;">${r.status}</span>
+              <strong class="report-element"></strong>
+              <span class="report-type"></span>
+              <span class="report-status" style="font-size: 0.85em;"></span>
             </div>
-            <div style="font-size: 0.85em;">${r.description}</div>
+            <div class="report-description" style="font-size: 0.85em;"></div>
             <div style="display: flex; gap: 10px; align-items: center;">
-              <span>Score: ${r.score}</span>
-              <button type="button" class="btn-primary vote-btn" data-id="${r.id}" data-up="true" style="padding: 4px 8px; ${upActive}">👍</button>
-              <button type="button" class="btn-primary vote-btn" data-id="${r.id}" data-up="false" style="padding: 4px 8px; ${downActive}">👎</button>
+              <span class="report-score"></span>
+              <button type="button" class="btn-primary vote-btn" data-up="true" style="padding: 4px 8px; ${upActive}">👍</button>
+              <button type="button" class="btn-primary vote-btn" data-up="false" style="padding: 4px 8px; ${downActive}">👎</button>
             </div>
           `;
+          // Textes saisis par les joueurs : jamais interprétés comme du HTML
+          item.querySelector(".report-element").textContent = r.elementName;
+          item.querySelector(".report-type").textContent = `- ${r.bugType}`;
+          item.querySelector(".report-status").textContent = r.status;
+          item.querySelector(".report-description").textContent = r.description;
+          item.querySelector(".report-score").textContent = `Score: ${r.score}`;
+          item
+            .querySelectorAll(".vote-btn")
+            .forEach((btn) => (btn.dataset.id = r.id));
           container.appendChild(item);
         });
 

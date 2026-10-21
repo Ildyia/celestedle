@@ -13,3 +13,7 @@ yarn-error.log*
 Thumbs.db
 .vscode/
 .idea/
+# Données écrites à l'exécution (reports, stats)
+data/
+stats-history.json
+daily-stats-db.json

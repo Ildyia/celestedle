@@ -32,6 +32,35 @@ jobs:
           echo "RANDOM_SEED=${{ secrets.RANDOM_SEED }}" >> .env
           echo "JWT_SECRET=${{secrets.JWT_SECRET}}">>.env
 
+      # Copie les reports et stats du conteneur en place avant de le recréer.
+      # Les anciens chemins (/api/src, /api) sont lus d'abord pour que
+      # /api/data, s'il existe, l'emporte.
+      - name: Back up game data
+        run: |
+          BACKUP_ROOT="$HOME/celestedle-backups"
+          BACKUP_DIR="$BACKUP_ROOT/$(date -u +%Y-%m-%dT%H%M%SZ)"
+          mkdir -p "$BACKUP_DIR"
+          if docker container inspect celestedle-api >/dev/null 2>&1; then
+            for f in /api/src/reports.json /api/stats-history.json \
+                     /api/data/reports.json /api/data/stats-history.json; do
+              docker cp "celestedle-api:$f" "$BACKUP_DIR/" 2>/dev/null || true
+            done
+          fi
+          ls -la "$BACKUP_DIR"
+          echo "BACKUP_DIR=$BACKUP_DIR" >> "$GITHUB_ENV"
+          # Garde les 30 dernières sauvegardes
+          ls -1dt "$BACKUP_ROOT"/*/ | tail -n +31 | xargs -r rm -rf
+
+      # Remplit le volume avec la sauvegarde, sans écraser ce qu'il contient
+      # déjà : utile au premier déploiement avec le volume.
+      - name: Seed the data volume
+        run: |
+          docker volume create celestedle-data >/dev/null
+          docker run --rm \
+            -v celestedle-data:/data \
+            -v "$BACKUP_DIR":/backup:ro \
+            alpine sh -c 'for f in /backup/*.json; do [ -e "$f" ] && cp -n "$f" /data/; done; ls -la /data'
+
       - name: Deploy Production
         run: docker compose up -d --build --force-recreate
 

@@ -1,0 +1,12 @@
+node_modules
+.env
+.git
+.github
+.claude
+.vscode
+.idea
+
+# Données d'exécution : elles vivent dans le volume celestedle-data
+data
+stats-history.json
+daily-stats-db.json

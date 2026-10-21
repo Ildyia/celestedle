@@ -128,12 +128,12 @@ export const ApiService = {
     );
   },
 
-  validateGuess(choice, tryCount, hintUses) {
+  validateGuess(choice, tryCount, hintUses, timeInSeconds) {
     return catchMaybeError(
       fetch(`${API_BASE_URL}/validate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ choix: choice, tryCount, hintUses })
+        body: JSON.stringify({ choix: choice, tryCount, hintUses, timeInSeconds })
       }).then((res) => {
         if (!res.ok) throw new Error("Invalid entities or server error");
         return res.json();

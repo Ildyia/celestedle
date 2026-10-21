@@ -5,6 +5,9 @@ services:
     container_name: celestedle-api
     ports:
         - "3000:3000"
+    volumes:
+      # Reports et stats : conservés quand le conteneur est recréé
+      - celestedle-data:/api/data
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.celestedle.rule=Host(`celestedle-api.mizkyosia.fr`)"
@@ -12,6 +15,10 @@ services:
       - "traefik.http.services.celestedle.loadbalancer.server.port=${PORT}"
     networks:
      - traefik-public
+
+volumes:
+  celestedle-data:
+    name: celestedle-data
 
 networks:
  traefik-public:
