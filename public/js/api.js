@@ -2,14 +2,14 @@ import { storage, KEYS } from "./storage.js";
 
 const hostname = window.location.hostname;
 
-// En local, le site est servi par l'API elle-même. Sur Vercel, le front
-// appelle l'API de prod, ou celle de la bêta (Render) pour les déploiements bêta.
-export const API_BASE_URL =
-  hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1"
-    ? window.location.origin
-    : hostname.includes("beta") || hostname.includes("-projects.vercel.app")
-      ? "https://celestedle-api.onrender.com"
-      : "https://celestedle-api.mizkyosia.fr";
+// Hors Vercel (local, Render, serveur de prod), le site est servi par l'API
+// elle-même. Sur Vercel, le front appelle l'API de prod, ou celle de la bêta
+// (Render) pour les déploiements bêta et les prévisualisations.
+export const API_BASE_URL = !hostname.endsWith(".vercel.app")
+  ? window.location.origin
+  : hostname.includes("beta") || hostname.includes("-projects.vercel.app")
+    ? "https://celestedle-api.onrender.com"
+    : "https://celestedle-api.mizkyosia.fr";
 
 export class ApiError extends Error {
   constructor(status, message, details) {
