@@ -1,29 +1,30 @@
-export function initTimer(containerNode) {
-  if (!containerNode) return;
+import { formatDuration } from "./format.js";
 
-  const updateTimer = () => {
-    const now = new Date();
-    const parisStr = now.toLocaleString("en-US", { timeZone: "Europe/Paris" });
-    const parisDate = new Date(parisStr);
+// Compte à rebours jusqu'au prochain mot (minuit, heure de Paris)
+export function initNextWordTimer(node, onNewDay) {
+  if (!node) return;
 
-    const parisReset = new Date(parisStr);
-    parisReset.setHours(24, 0, 0, 0);
-
-    const diff = parisReset - parisDate;
-
-    if (diff <= 0) {
-      containerNode.textContent = "00:00:00";
-      setTimeout(() => location.reload(), 1000);
-      return;
-    }
-
-    const hours = String(Math.floor((diff / (1000 * 60 * 60)) % 24)).padStart(2, "0");
-    const minutes = String(Math.floor((diff / (1000 * 60)) % 60)).padStart(2, "0");
-    const seconds = String(Math.floor((diff / 1000) % 60)).padStart(2, "0");
-
-    containerNode.textContent = `${hours}:${minutes}:${seconds}`;
+  const msUntilParisMidnight = () => {
+    const parisNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+    const midnight = new Date(parisNow);
+    midnight.setHours(24, 0, 0, 0);
+    return midnight - parisNow;
   };
 
-  updateTimer();
-  setInterval(updateTimer, 1000);
+  let fired = false;
+  const tick = () => {
+    const seconds = Math.ceil(msUntilParisMidnight() / 1000);
+    const hours = Math.floor(seconds / 3600);
+    node.textContent = `${String(hours).padStart(2, "0")}:${formatDuration(seconds % 3600)}`;
+    // Juste après minuit, l'écart repasse à ~24 h : on charge le nouveau mot une fois
+    if (seconds >= 24 * 3600 - 2 && !fired) {
+      fired = true;
+      onNewDay();
+    } else if (seconds < 24 * 3600 - 10) {
+      fired = false;
+    }
+  };
+
+  tick();
+  setInterval(tick, 1000);
 }

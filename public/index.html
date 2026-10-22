@@ -9,218 +9,79 @@
     <link rel="icon" href="assets/berrywinged.png" type="image/png" />
   </head>
   <body>
-    <div id="disclaimer-modal" class="rules-modal" style="display: none">
-      <div class="rules-content" style="max-width: 550px; text-align: left">
-        <span id="close-disclaimer-btn" class="close-modal-btn">&times;</span>
-        <h2 style="color: var(--color-indigo); margin-bottom: 16px">
-          The Visual Update Pt. 1 is here !
-        </h2>
-        <p
-          style="margin-bottom: 12px; line-height: 1.5; color: var(--text-main)"
-        >
-          <img
-            src="./assets/illustration/paint.png"
-            alt="paint logo"
-            style="max-width: 150px; object-fit: contain; display: block"
-          /><br />
-          Hey everyone ! <br /><br />
-          The <b>Visual Update Pt. 1</b> is here ! <br />
-          You can check in the options to change the theme or the cursor if you
-          want. <br /><br />
-          In addition to all the visual changes, we now have a proper admin
-          interface (this change nothing for you, but it means a lot for me
-          lmao), and a timer ! <br />
-          You can also now support me on Ko-fi if you like the game. I'm a
-          student working on this project on my free time, so any support is
-          greatly appreciated !<br /><br />
-          The next coming major update should be the hard mode, except if I find
-          something more interesting before lmao <br /><br />
-          A special thanks to <b> Jade Chameleon</b> who made the sprites for
-          the new custom cursor ! <br /><br />
+    <div id="disclaimer-modal" class="rules-modal hidden">
+      <div class="rules-content modal-narrow text-left">
+        <button type="button" id="close-disclaimer-btn" class="close-modal-btn" data-close-modal="disclaimer-modal" aria-label="Close">&times;</button>
+        <h2 class="modal-title">Celestedle 2.0 is here!</h2>
+        <img src="./assets/illustration/start.png" alt="" class="disclaimer-illustration" />
+        <p>Hey everyone!</p>
+        <p>
+          First, sorry for the long wait since the last update. This one took
+          a lot more time than planned, because almost everything under the
+          hood has been rebuilt. Here is what's new:
         </p>
-        <p
-          style="margin-bottom: 16px; line-height: 1.5; color: var(--text-main)"
-        >
-          Thanks for playing my game, it means a lot to me! Hope you like it!
+        <ul class="disclaimer-list">
+          <li>
+            <strong>Hard mode</strong>: its own daily word, limited hints,
+            tries and time, suggestions only after a few letters, and every
+            guess must fit the clues you already found.
+          </li>
+          <li>
+            <strong>Profiles</strong>: pick a name, an avatar and a colour,
+            and follow your own stats and streaks.
+          </li>
+          <li>
+            <strong>Leaderboards</strong>: daily, weekly and all-time, for
+            both modes. You can hide your profile if you prefer.
+          </li>
+          <li>
+            <strong>Bug reports</strong>: similar reports show up while you
+            type, so you can vote for them instead of posting the same thing.
+          </li>
+          <li>
+            Clearer rules for colours and shapes, words that can come back
+            sooner, and a lot of bug fixes.
+          </li>
+        </ul>
+        <p>
+          Your game is now saved on the server: use the recovery code in your
+          profile to play on another device.
         </p>
-        <p
-          id="My-Name"
-          style="
-            font-family: &quot;Renogare&quot;, sans-serif;
-            font-weight: bold;
-            color: var(--color-indigo);
-            text-align: right;
-            margin-bottom: 20px;
-          "
-        >
-          — Amélia / Ildyia
-        </p>
-        <div style="text-align: center">
-          <button
-            id="accept-disclaimer-btn"
-            class="btn-primary"
-            style="width: 100%; padding: 12px"
-          >
-            Got it, let's play!
-          </button>
-        </div>
+        <p>Thanks for playing my game, it means a lot to me!</p>
+        <p id="My-Name">— Amélia / Ildyia</p>
+        <button type="button" id="accept-disclaimer-btn" class="btn-primary btn-wide" data-close-modal="disclaimer-modal">
+          Got it, let's play!
+        </button>
       </div>
     </div>
 
     <div id="api-down-modal" class="rules-modal hidden">
-      <div class="rules-content" style="max-width: 550px; text-align: left">
-        <span id="close-api-down-btn" class="close-modal-btn">&times;</span>
-        <h2 style="margin-bottom: 16px">The API is currently down</h2>
-        <p
-          style="margin-bottom: 12px; line-height: 1.5; color: var(--text-main)"
-        >
-          <img
-            src="/assets/illustration/madeline-upset.png"
-            alt="Upset Madeline"
-            style="
-              max-width: 150px;
-              object-fit: contain;
-              display: block;
-              border-radius: 8px;
-            "
-          />
+      <div class="rules-content modal-narrow text-left">
+        <button type="button" class="close-modal-btn" data-close-modal="api-down-modal" aria-label="Close">&times;</button>
+        <h2 class="modal-title">The API is currently down</h2>
+        <img src="assets/illustration/madeline-upset.png" alt="Upset Madeline" class="disclaimer-illustration rounded" />
+        <p>
           The game's host server is likely experiencing issues right now.<br />
-          If this persists, please report it in the official Discord server !
+          If this persists, please report it in the official Discord server!
         </p>
-        <div style="text-align: center">
-          <button
-            id="accept-api-down-btn"
-            class="btn-primary"
-            style="width: 100%; padding: 12px"
-          >
-            Very sad &colon;&lpar;
-          </button>
-        </div>
+        <button type="button" class="btn-primary btn-wide" data-close-modal="api-down-modal">
+          Very sad &colon;&lpar;
+        </button>
       </div>
     </div>
 
-    <button id="options-btn" aria-label="Options">
-      <img
-        src="assets/illustration/options.png"
-        class="btn-icon"
-        alt="Options"
-      />
-    </button>
-
     <div id="custom-cursor">
-      <img
-        src="assets/illustration/birdcursor.png"
-        id="default-cursor"
-        alt=""
-      />
-      <img
-        src="assets/illustration/cursorbirdclicking.png"
-        id="pointer-cursor"
-        alt=""
-      />
-      <img
-        src="assets/illustration/cursorbirdwriting.png"
-        id="text-hover-cursor"
-        alt=""
-      />
+      <img src="assets/illustration/birdcursor.png" id="default-cursor" alt="" />
+      <img src="assets/illustration/cursorbirdclicking.png" id="pointer-cursor" alt="" />
+      <img src="assets/illustration/cursorbirdwriting.png" id="text-hover-cursor" alt="" />
     </div>
 
     <div id="layout-wrapper">
       <div id="left-sidebar-column">
-        <button id="rules-btn" class="sidebar-toggle-btn">
-          <img src="assets/illustration/journal.png" class="btn-icon" /> Rules
-        </button>
-        <div id="rules-sidebar" class="sidebar-block" style="display: none">
-          <div class="rules-content-static">
-            <h2>Rules of Celestedle</h2>
-            <p>
-              Guess the secret element of the day by entering its name. You'll
-              receive feedback based on its attributes.
-            </p>
-            <h4>Categories</h4>
-            <ul>
-              <li>
-                <strong>Collectibles</strong>: Items collected in-game
-                (strawberries, hearts...).
-              </li>
-              <li>
-                <strong>Characters</strong>: Characters of the story like Theo,
-                Granny, Oshiro...
-              </li>
-              <li>
-                <strong>Environments</strong>: Entities without a major impact
-                on the gameplay (Binoculars).
-              </li>
-              <li>
-                <strong>Mechanics</strong>: Entities that create the main
-                gameplay (Crumble blocks).
-              </li>
-              <li>
-                <strong>Movement & Propulsion</strong>: Mechanics that you use
-                to move around or gain speed (move block, zippers...).
-              </li>
-              <li>
-                <strong>Hazards</strong>: Obstacles that kill the player
-                (Spikes, Spinners).
-              </li>
-            </ul>
-            <h4>Chapters</h4>
-            <p>
-              The "CHAPTER" column indicates which level.s (amongst prologue,
-              the A-sides, farewell) the element can be found in.
-            </p>
-            <h4>Colors Indicator</h4>
-            <ul class="rules-color-list">
-              <li>
-                <span class="color-box correct"></span>
-                <strong>Correct</strong> (✓): Perfect match.
-              </li>
-              <li>
-                <span class="color-box partial"></span>
-                <strong>Partial</strong> (~): Guess is part of the answer.
-              </li>
-              <li>
-                <span class="color-box notTotallyWrong"></span>
-                <strong>Not Wrong</strong> (≠): Contains part of the answer +
-                extra.
-              </li>
-              <li>
-                <span class="color-box wrong"></span>
-                <strong>Wrong</strong> (✕): Incorrect attribute.
-              </li>
-            </ul>
-            <h4>Hints</h4>
-            <p>
-              Click the "Hints" button to access 3 seeded hints based on the
-              word of the day:
-            </p>
-            <br />
-            <ul>
-              <li>
-                <strong>Opposite</strong>: Reveals the element with the most
-                opposite infos to the word of the day
-              </li>
-              <li>
-                <strong>Secret Info</strong>: Reveals 1 correct attribute of the
-                secret word (Type, Location, Colour, or shape).
-              </li>
-              <li>
-                <strong>1 Truth & 2 Lies</strong>: Reveals 3 attributes, one of
-                them is from the secret word, the 2 other are a bait.
-              </li>
-            </ul>
-            <p>Each type of hint can only be used once per day.</p>
-          </div>
-        </div>
-
         <div id="stats-sidebar" class="sidebar-block">
           <div class="sidebar-header">
-            <img
-              src="./assets/illustration/backpack.png"
-              alt="Backpack"
-              class="sidebar-header-icon"
-            />
-            <h3>Community Stats</h3>
+            <img src="./assets/illustration/backpack.png" alt="" class="sidebar-header-icon" />
+            <h3>Community Stats <span id="stats-mode-label" class="small-subtext"></span></h3>
           </div>
           <div class="stats-list">
             <p>Victories today: <span id="success-count">0</span></p>
@@ -233,17 +94,39 @@
 
       <div id="main-content-column">
         <h1>Celestedle</h1>
+
+        <nav id="top-actions" class="top-actions" aria-label="Menu">
+          <button type="button" id="rules-btn" class="action-btn">
+            <img src="assets/illustration/journal.png" alt="" />
+            <span>Rules</span>
+          </button>
+          <button type="button" id="profile-btn" class="action-btn">
+            <img src="assets/illustration/strawberry.png" id="profile-btn-avatar" alt="" />
+            <span id="profile-btn-label">Profile</span>
+          </button>
+          <button type="button" id="leaderboard-btn" class="action-btn">
+            <img src="assets/illustration/goldflag.png" alt="" />
+            <span>Rankings</span>
+          </button>
+          <button type="button" id="options-btn" class="action-btn">
+            <img src="assets/illustration/options.png" alt="" />
+            <span>Options</span>
+          </button>
+        </nav>
+
+        <div id="mode-switch" role="group" aria-label="Game mode">
+          <button type="button" data-mode="normal" aria-pressed="true">Normal</button>
+          <button type="button" data-mode="hard" aria-pressed="false">Hard</button>
+        </div>
+        <p id="hard-rules" class="hard-rules" data-rules-mode="hard" data-rules-text="summary" hidden></p>
+
         <div id="game-status">
           <p class="tries-badge">
-            <img
-              src="assets/illustration/normalflag.png"
-              alt=""
-              class="btn-icon"
-            />
+            <img src="assets/illustration/normalflag.png" alt="Tries" class="btn-icon" />
             <span id="try-count">0</span>
           </p>
-          <p class="tries-badge">
-            <img src="assets/illustration/time.png" alt="" class="btn-icon" />
+          <p class="tries-badge" id="game-timer-badge">
+            <img src="assets/illustration/time.png" alt="Time" class="btn-icon" />
             <span id="game-timer-display">00:00</span>
           </p>
           <button id="hint-btn" class="btn">
@@ -254,66 +137,35 @@
             <img src="assets/illustration/skull.png" alt="" class="btn-icon" />
             <span>Give Up</span>
           </button>
-          <button id="share-btn" style="display: none">Share</button>
+          <button id="share-btn" hidden>Share</button>
         </div>
 
-        <div id="hint-modal" class="rules-modal" style="display: none">
-          <div class="rules-content" style="max-width: 500px">
-            <span id="close-hint-modal" class="close-modal-btn">&times;</span>
+        <div id="hint-modal" class="rules-modal hidden">
+          <div class="rules-content modal-narrow">
+            <button type="button" class="close-modal-btn" data-close-modal="hint-modal" aria-label="Close">&times;</button>
             <h2>Choose a Hint</h2>
-            <div
-              style="
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-                margin-top: 15px;
-              "
-            >
-              <button id="hint-opt-opposite" class="btn-primary">
-                1. Reveal the opposite element
-              </button>
-              <button id="hint-opt-secret" class="btn-primary">
-                2. Reveal 1 correct attribute
-              </button>
-              <button id="hint-opt-truth-lies" class="btn-primary">
-                3. 1 Truth & 2 Lies
-              </button>
+            <div class="modal-stack">
+              <button type="button" class="btn-primary" data-hint-type="opposite">Reveal the opposite element</button>
+              <button type="button" class="btn-primary" data-hint-type="secret_info">Reveal 1 correct attribute</button>
+              <button type="button" class="btn-primary" data-hint-type="truth_and_lies">1 Truth &amp; 2 Lies</button>
             </div>
           </div>
         </div>
 
-        <div
-          id="active-hints-container"
-          style="
-            margin: 15px 0;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-          "
-        ></div>
+        <div id="active-hints-container"></div>
         <div id="message-container"></div>
 
         <div id="game-container">
           <form id="guess-form">
             <div class="input-container">
-              <input
-                type="text"
-                id="element-input"
-                autocomplete="off"
-                placeholder="Guess an element..."
-              />
+              <input type="text" id="element-input" autocomplete="off" placeholder="Guess an element..." aria-label="Element name" />
               <button type="button" id="show-all-btn" title="Show all elements">
                 <img src="assets/illustration/eye.png" alt="Show all" />
               </button>
               <div id="element-suggestions" class="suggestions-box"></div>
-              <div id="hint-list" class="hint-list"></div>
             </div>
-            <button type="submit" id="guess-btn" class="btn-primary">
-              <img
-                src="assets/illustration/right arrow.png"
-                alt=""
-                class="btn-icon-primary"
-              />
+            <button type="submit" id="guess-btn" class="btn-primary" aria-label="Guess">
+              <img src="assets/illustration/right arrow.png" alt="" class="btn-icon-primary" />
             </button>
           </form>
 
@@ -324,7 +176,7 @@
                 <th>Type</th>
                 <th>Chapter</th>
                 <th>Colour</th>
-                <th>shape</th>
+                <th>Shape</th>
               </tr>
             </thead>
             <tbody id="guesses-body"></tbody>
@@ -338,16 +190,10 @@
           <p>
             If you encounter a bug, or think there is a mistake somewhere,
             please report it to help improve the game. <br />
-            The report will be automatically send on Discord.
+            Already reported? Vote for it: the most voted reports are fixed first.
           </p>
           <button id="report-bug-btn">
-            <img
-              src="assets/illustration/wtf.png"
-              alt=""
-              class="btn-icon"
-              id="reporticon"
-              style="margin-right: 8px"
-            />
+            <img src="assets/illustration/wtf.png" alt="" class="btn-icon" id="reporticon" />
             I found a bug / an error
           </button>
         </div>
@@ -364,45 +210,17 @@
             <p>
               Join the Discord server to catch updates, read changelogs, or talk
               to the dev! <br />
-              You can also check the code on github, or help me with a small tip
-              on Ko-fi !
+              You can also check the code on GitHub, or help me with a small tip
+              on Ko-fi!
             </p>
-            <a
-              href="https://discord.gg/3yqgMbuMbX"
-              target="_blank"
-              class="social-sidebar-link discord-sidebar-link"
-            >
-              <img
-                src="assets/discordlogo.png"
-                alt="Discord"
-                class="social-icon"
-              />
-              Join Discord
+            <a href="https://discord.gg/3yqgMbuMbX" target="_blank" rel="noopener noreferrer" class="social-sidebar-link discord-sidebar-link">
+              <img src="assets/discordlogo.png" alt="" class="social-icon" /> Join Discord
             </a>
-            <a
-              href="https://github.com/Ildyia/celestedle"
-              target="_blank"
-              class="social-sidebar-link github-sidebar-link"
-            >
-              <img
-                src="assets/githublogo.png"
-                alt="GitHub"
-                class="social-icon"
-              />
-              View on GitHub
+            <a href="https://github.com/Ildyia/celestedle" target="_blank" rel="noopener noreferrer" class="social-sidebar-link github-sidebar-link">
+              <img src="assets/githublogo.png" alt="" class="social-icon" /> View on GitHub
             </a>
-            <a
-              href="https://ko-fi.com/ildyia"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="social-sidebar-link kofi-sidebar-link"
-            >
-              <img
-                src="assets/illustration/love.png"
-                alt="Love"
-                class="social-icon"
-              />
-              Support me on Ko-fi !
+            <a href="https://ko-fi.com/ildyia" target="_blank" rel="noopener noreferrer" class="social-sidebar-link kofi-sidebar-link">
+              <img src="assets/illustration/love.png" alt="" class="social-icon" /> Support me on Ko-fi!
             </a>
           </div>
         </div>
@@ -410,245 +228,295 @@
     </div>
 
     <footer id="site-footer">
-      <a href="credits.html" class="legal-link" style="margin-right: 15px"
-        >Credits</a
-      >
+      <a href="credits.html" class="legal-link">Credits</a>
       <a href="legal-notice.html" class="legal-link">Legal Notice</a>
+      <span id="app-version" class="app-version"></span>
     </footer>
 
-    <div id="options-modal" class="rules-modal" style="display: none">
-      <div class="rules-content bug-modal-content" style="max-width: 450px">
-        <span id="close-options-btn" class="close-modal-btn">&times;</span>
+    <div id="rules-modal" class="rules-modal hidden">
+      <div class="rules-content bug-modal-content">
+        <button type="button" class="close-modal-btn" data-close-modal="rules-modal" aria-label="Close">&times;</button>
+        <div class="rules-content-static">
+          <h2>Rules of Celestedle</h2>
+          <p>
+            Guess the secret element of the day by entering its name. You'll
+            receive feedback based on its attributes.
+          </p>
+
+          <h4>Type</h4>
+          <ul>
+            <li><strong>Collectibles</strong>: items collected in-game (strawberries, hearts...).</li>
+            <li><strong>Characters</strong>: characters of the story like Theo, Granny, Oshiro...</li>
+            <li><strong>Environment</strong>: entities without a major impact on the gameplay (binoculars).</li>
+            <li><strong>Mechanics</strong>: entities that create the main gameplay (crumble blocks).</li>
+            <li><strong>Movement &amp; Propulsion</strong>: mechanics that you use to move around or gain speed (move blocks, zippers...).</li>
+            <li><strong>Hazards</strong>: obstacles that kill the player (spikes, spinners).</li>
+          </ul>
+
+          <h4>Chapter</h4>
+          <p>
+            Every level the element appears in, among the prologue, the
+            A-sides and Farewell.
+          </p>
+
+          <h4>Colour</h4>
+          <p>
+            Only the <strong>dominant colour</strong> counts, the one that
+            covers most of the element. Outlines and small details don't
+            count. If the element exists in several forms (a different
+            version per chapter, several states, or separate parts like a
+            block and its track), each form adds its own dominant colour.
+          </p>
+
+          <h4>Shape</h4>
+          <ul>
+            <li><strong>Square</strong>: as wide as it is tall.</li>
+            <li><strong>Rectangle</strong>: clearly longer in one direction.</li>
+            <li><strong>Round</strong>: a circle or an oval.</li>
+            <li><strong>Humanoid</strong>: a character with a body.</li>
+            <li><strong>Irregular</strong>: any other silhouette.</li>
+          </ul>
+
+          <h4>Colour indicators</h4>
+          <ul class="rules-color-list">
+            <li><span class="color-box correct"></span><strong>Correct</strong> (✓): perfect match.</li>
+            <li><span class="color-box partial"></span><strong>Partial</strong> (~): your guess is part of the answer.</li>
+            <li><span class="color-box notTotallyWrong"></span><strong>Not wrong</strong> (≠): part of the answer, plus extra values.</li>
+            <li><span class="color-box wrong"></span><strong>Wrong</strong> (✕): nothing in common.</li>
+          </ul>
+
+          <h4>Hints</h4>
+          <ul>
+            <li><strong>Opposite</strong>: the element with the most opposite attributes to the word of the day.</li>
+            <li><strong>Secret Info</strong>: one value of the secret word, in a category you haven't found yet.</li>
+            <li><strong>1 Truth &amp; 2 Lies</strong>: three statements, only one of them is true.</li>
+          </ul>
+          <p>In normal mode, each hint can be used once per day.</p>
+
+          <h4>Hard mode</h4>
+          <ul>
+            <li>Its own secret word, different from the normal one.</li>
+            <li data-rules-mode="hard" data-rules-text="sentence">Limited hints, tries and time.</li>
+            <li>
+              Suggestions only appear after
+              <span data-rules-mode="hard" data-rules-text="suggestions">a few</span>
+              letters, and there is no full list (official synonyms work).
+            </li>
+            <li>
+              Every guess must fit the clues you already have: if your guess
+              were the answer, all your previous guesses would have got the
+              same colours. Guesses that don't fit are refused and don't count.
+            </li>
+          </ul>
+
+          <h4>Rankings</h4>
+          <p>
+            Daily: fewest tries, then fastest time. Weekly and all-time: a
+            win is worth 11 points minus the number of tries (1 minimum).
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div id="options-modal" class="rules-modal hidden">
+      <div class="rules-content bug-modal-content modal-narrow">
+        <button type="button" class="close-modal-btn" data-close-modal="options-modal" aria-label="Close">&times;</button>
         <h2>Options</h2>
         <div class="option-row">
-          <span>Celeste Background & Theme</span>
-          <label class="switch"
-            ><input type="checkbox" id="toggle-theme-checkbox" /><span
-              class="slider"
-            ></span
-          ></label>
+          <label for="toggle-theme-checkbox">Celeste Background &amp; Theme</label>
+          <label class="switch"><input type="checkbox" id="toggle-theme-checkbox" /><span class="slider"></span></label>
         </div>
-        <hr
-          class="options-separator"
-          style="
-            margin: 12px 0;
-            border: 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-          "
-        />
+        <hr class="options-separator" />
         <div class="option-row">
-          <span>Show Timer</span>
-          <label class="switch"
-            ><input type="checkbox" id="toggle-timer-checkbox" checked /><span
-              class="slider"
-            ></span
-          ></label>
+          <label for="toggle-timer-checkbox">Show Timer</label>
+          <label class="switch"><input type="checkbox" id="toggle-timer-checkbox" checked /><span class="slider"></span></label>
         </div>
-        <hr
-          class="options-separator"
-          style="
-            margin: 12px 0;
-            border: 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-          "
-        />
+        <hr class="options-separator" />
         <div class="option-row">
-          <span>Custom Cursor</span>
-          <label class="switch"
-            ><input type="checkbox" id="toggle-cursor-checkbox" checked /><span
-              class="slider"
-            ></span
-          ></label>
+          <label for="toggle-cursor-checkbox">Custom Cursor</label>
+          <label class="switch"><input type="checkbox" id="toggle-cursor-checkbox" checked /><span class="slider"></span></label>
         </div>
-        <hr
-          class="options-separator"
-          style="
-            margin: 12px 0;
-            border: 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-          "
-        />
+        <hr class="options-separator" />
         <div class="option-row">
-          <span>Colorblind Mode</span>
-          <label class="switch"
-            ><input type="checkbox" id="toggle-colorblind-checkbox" /><span
-              class="slider"
-            ></span
-          ></label>
+          <label for="toggle-colorblind-checkbox">Colorblind Mode</label>
+          <label class="switch"><input type="checkbox" id="toggle-colorblind-checkbox" /><span class="slider"></span></label>
         </div>
-        <hr
-          class="options-separator"
-          style="
-            margin: 12px 0;
-            border: 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-          "
-        />
-        <div class="colorblind-preview" style="margin-top: 16px">
+        <hr class="options-separator" />
+        <div class="colorblind-preview">
           <p class="small-subtext">Colorblind preview:</p>
-          <div
-            class="preview-grid"
-            style="display: flex; gap: 8px; margin-top: 8px"
-          >
-            <div class="preview-item">
-              <span class="color-box correct"></span> Correct
-            </div>
-            <div class="preview-item">
-              <span class="color-box partial"></span> Partial
-            </div>
-            <div class="preview-item">
-              <span class="color-box notTotallyWrong"></span> Close
-            </div>
-            <div class="preview-item">
-              <span class="color-box wrong"></span> Wrong
-            </div>
+          <div class="preview-grid">
+            <div class="preview-item"><span class="color-box correct"></span> Correct</div>
+            <div class="preview-item"><span class="color-box partial"></span> Partial</div>
+            <div class="preview-item"><span class="color-box notTotallyWrong"></span> Close</div>
+            <div class="preview-item"><span class="color-box wrong"></span> Wrong</div>
           </div>
         </div>
-        <div style="margin: 16px 0 8px 0">
-          <button
-            id="personalized-btn"
-            class="btn-primary"
-            style="
-              width: 100%;
-              padding: 10px 16px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              gap: 10px;
-              font-size: 0.95rem;
-              border-radius: 8px;
-              box-sizing: border-box;
-            "
-          >
-            <img
-              src="assets/illustration/variant.png"
-              alt=""
-              style="height: 24px; width: auto; object-fit: contain"
-            />
-            <span>Manage Custom Synonyms</span>
-          </button>
+        <button type="button" id="personalized-btn" class="btn-primary btn-wide btn-with-icon">
+          <img src="assets/illustration/variant.png" alt="" />
+          <span>Manage Custom Synonyms</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="synonyms-modal" class="rules-modal hidden">
+      <div class="rules-content modal-narrow">
+        <button type="button" class="close-modal-btn" data-close-modal="synonyms-modal" aria-label="Close">&times;</button>
+        <h2>Personalized Synonyms</h2>
+        <p class="small-subtext">Saved in this browser only.</p>
+        <ul id="synonyms-list" class="synonyms-list"></ul>
+        <form id="synonyms-form" class="synonyms-form">
+          <input type="text" id="synonym-key-input" class="bug-input" placeholder="synonym" aria-label="Synonym" />
+          <input type="text" id="synonym-value-input" class="bug-input" placeholder="official name" aria-label="Official name" />
+          <button type="submit" class="btn-primary">Add</button>
+        </form>
+        <p id="synonym-error-msg" class="form-error"></p>
+      </div>
+    </div>
+
+    <div id="forfeit-modal" class="rules-modal hidden">
+      <div class="rules-content modal-narrow text-center">
+        <h2 class="text-wrong">Give up?</h2>
+        <p>Are you sure you want to forfeit today's Celestedle and reveal the secret answer?</p>
+        <div class="modal-actions centered">
+          <button type="button" id="confirm-forfeit-btn" class="btn-danger">Yes, Forfeit</button>
+          <button type="button" class="btn-secondary" data-close-modal="forfeit-modal">Cancel</button>
         </div>
       </div>
     </div>
 
-    <div id="forfeit-modal" class="rules-modal" style="display: none">
-      <div class="rules-content" style="max-width: 450px; text-align: center">
-        <h2 style="color: var(--color-wrong)">Give up?</h2>
-        <p style="margin-bottom: 24px">
-          Are you sure you want to forfeit today's Celestedle and reveal the
-          secret answer?
-        </p>
-        <div style="display: flex; gap: 16px; justify-content: center">
-          <button
-            id="confirm-forfeit-btn"
-            style="
-              background-color: var(--color-wrong);
-              color: white;
-              padding: 12px 24px;
-              border-radius: 8px;
-              border: none;
-            "
-          >
-            Yes, Forfeit
-          </button>
-          <button
-            id="cancel-forfeit-btn"
-            style="
-              background-color: var(--bg-input);
-              color: white;
-              padding: 12px 24px;
-              border-radius: 8px;
-              border: 1px solid #334155;
-            "
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div id="bug-modal" class="rules-modal" style="display: none">
+    <div id="profile-modal" class="rules-modal hidden">
       <div class="rules-content bug-modal-content">
-        <span id="close-bug-btn" class="close-modal-btn">&times;</span>
+        <button type="button" class="close-modal-btn" data-close-modal="profile-modal" aria-label="Close">&times;</button>
+        <h2>My Profile</h2>
+        <form id="profile-form">
+          <div class="form-group">
+            <label for="profile-name-input">Name</label>
+            <input type="text" id="profile-name-input" class="bug-input" maxlength="20" minlength="3" required />
+          </div>
+          <div class="form-group">
+            <span class="form-label">Avatar</span>
+            <div id="profile-avatars" class="avatar-grid"></div>
+          </div>
+          <div class="form-group">
+            <span class="form-label">Colour</span>
+            <div id="profile-colors" class="color-grid"></div>
+          </div>
+          <div class="form-group form-inline">
+            <input type="checkbox" id="profile-hidden-checkbox" />
+            <label for="profile-hidden-checkbox">Hide my profile from the leaderboards</label>
+          </div>
+          <button type="submit" class="btn-primary btn-wide">Save profile</button>
+        </form>
+
+        <div class="modal-section">
+          <h3>My stats</h3>
+          <div class="segmented" role="group" aria-label="Stats mode">
+            <button type="button" data-stats-mode="normal" aria-pressed="true">Normal</button>
+            <button type="button" data-stats-mode="hard" aria-pressed="false">Hard</button>
+          </div>
+          <div id="profile-stats"></div>
+        </div>
+
+        <div class="modal-section">
+          <h3>Recovery code</h3>
+          <p class="small-subtext">
+            Paste this code on another device to play with the same profile.
+            Keep it private: anyone with it can use your profile.
+          </p>
+          <div class="recovery-row">
+            <code id="recovery-code" data-visible="false">••••••••••••</code>
+            <button type="button" id="show-code-btn" class="btn-secondary">Show</button>
+            <button type="button" id="copy-code-btn" class="btn-secondary">Copy</button>
+          </div>
+          <form id="restore-form" class="recovery-row">
+            <input type="text" id="restore-code-input" class="bug-input" placeholder="Paste a recovery code" aria-label="Recovery code" autocomplete="off" />
+            <button type="submit" class="btn-secondary">Use this code</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div id="leaderboard-modal" class="rules-modal hidden">
+      <div class="rules-content bug-modal-content">
+        <button type="button" class="close-modal-btn" data-close-modal="leaderboard-modal" aria-label="Close">&times;</button>
+        <h2>Rankings</h2>
+        <div class="segmented" role="group" aria-label="Period">
+          <button type="button" data-board-period="daily" aria-pressed="true">Today</button>
+          <button type="button" data-board-period="weekly" aria-pressed="false">This week</button>
+          <button type="button" data-board-period="global" aria-pressed="false">All time</button>
+        </div>
+        <div class="segmented" role="group" aria-label="Mode">
+          <button type="button" data-board-mode="normal" aria-pressed="true">Normal</button>
+          <button type="button" data-board-mode="hard" aria-pressed="false">Hard</button>
+        </div>
+        <div class="board-scroll">
+          <table class="leaderboard-table">
+            <thead id="leaderboard-head"></thead>
+            <tbody id="leaderboard-body"></tbody>
+          </table>
+        </div>
+        <p id="leaderboard-note" class="small-subtext"></p>
+      </div>
+    </div>
+
+    <div id="bug-modal" class="rules-modal hidden">
+      <div class="rules-content bug-modal-content">
+        <button type="button" class="close-modal-btn" data-close-modal="bug-modal" aria-label="Close">&times;</button>
         <h2>Report a Bug</h2>
-        <h4>
-          Please be carefull to indicate if the bug concern today's word to not
-          spoil other players
-        </h4>
-        <br />
+        <p class="small-subtext">
+          Please tick the spoiler box if the report is about today's word, so
+          other players don't get spoiled.
+        </p>
         <form id="bug-form">
           <div class="form-group">
-            <label for="bug-element-select">Related Element (Optional):</label>
-            <select id="bug-element-select" class="bug-input">
-              <option value="">-- None / General bug --</option>
-            </select>
+            <label for="bug-element-select">Related element (optional)</label>
+            <select id="bug-element-select" class="bug-input"></select>
           </div>
           <div class="form-group">
-            <label for="bug-type-select">Type of report:</label>
-            <select id="bug-type-select" class="bug-input" required>
-              <option value="Error in hints">Error in hints</option>
-              <option value="Typo / Grammar">Typo / Grammar</option>
-              <option value="Technical Bug">Technical Bug</option>
-              <option value="Other">Other</option>
-            </select>
+            <label for="bug-type-select">Type of report</label>
+            <select id="bug-type-select" class="bug-input" required></select>
           </div>
           <div class="form-group">
-            <label for="bug-description-input">Details:</label>
-            <textarea
-              id="bug-description-input"
-              class="bug-input"
-              rows="4"
-              placeholder="Describe the issue..."
-              required
-            ></textarea>
+            <label for="bug-description-input">Details</label>
+            <textarea id="bug-description-input" class="bug-input" rows="4" maxlength="1000" placeholder="Describe the issue..." required></textarea>
           </div>
-          <div
-            class="form-group"
-            style="flex-direction: row; align-items: center; gap: 8px"
-          >
-            <input
-              type="checkbox"
-              id="bug-spoiler-checkbox"
-              style="cursor: pointer"
-            />
-            <label for="bug-spoiler-checkbox" style="margin: 0"
-              >Concerns today's secret word (hide text with spoiler)</label
-            >
+
+          <div id="similar-reports" class="similar-reports" hidden>
+            <h4>Already reported?</h4>
+            <p class="small-subtext">
+              These open reports look similar. If one matches, vote for it:
+              it helps more than a new report.
+            </p>
+            <div id="similar-reports-list" class="reports-list"></div>
           </div>
+
+          <div class="form-group form-inline">
+            <input type="checkbox" id="bug-spoiler-checkbox" />
+            <label for="bug-spoiler-checkbox">Concerns today's secret word (hide text with spoiler)</label>
+          </div>
+
+          <div id="duplicate-warning" class="duplicate-warning" hidden>
+            <p>Your report looks like one above. Vote for it instead, or send yours anyway.</p>
+            <button type="button" id="send-anyway-btn" class="btn-secondary">Send anyway</button>
+          </div>
+
           <div class="modal-actions">
-            <button type="button" id="cancel-bug-btn" class="btn-secondary">
-              Cancel
-            </button>
-            <button type="submit" id="submit-bug-btn" class="btn-primary">
-              Send Report
-            </button>
+            <button type="button" class="btn-secondary" data-close-modal="bug-modal">Cancel</button>
+            <button type="submit" id="submit-bug-btn" class="btn-primary">Send Report</button>
           </div>
         </form>
 
-        <div
-          style="
-            margin-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 20px;
-          "
-        >
-          <h3>Current Reports</h3>
-          <div
-            id="reports-list"
-            style="
-              max-height: 200px;
-              overflow-y: auto;
-              display: flex;
-              flex-direction: column;
-              gap: 10px;
-              margin-top: 10px;
-            "
-          ></div>
+        <div class="modal-section">
+          <div class="reports-header">
+            <h3>Open Reports</h3>
+            <select id="reports-filter" class="bug-input" aria-label="Filter by element"></select>
+          </div>
+          <div id="reports-list" class="reports-list scrollable"></div>
         </div>
       </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="script-client.js" type="module" defer></script>
+    <script src="js/app.js" type="module"></script>
   </body>
 </html>

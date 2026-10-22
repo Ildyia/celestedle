@@ -1,10 +1,10 @@
 name: Deploy Celestedle API
 
+# La bêta (branche beta) est déployée par l'Auto-Deploy de Render
 on:
   push:
     branches:
       - main
-      - betatest
 
 # Annule les déploiements précédents sur la même branche/environnement
 concurrency:
@@ -32,13 +32,49 @@ jobs:
           echo "RANDOM_SEED=${{ secrets.RANDOM_SEED }}" >> .env
           echo "JWT_SECRET=${{secrets.JWT_SECRET}}">>.env
 
+      # Copie les reports et stats du conteneur en place avant de le recréer.
+      # Les anciens chemins (/api/src, /api) sont lus d'abord pour que
+      # /api/data, s'il existe, l'emporte.
+      - name: Back up game data
+        run: |
+          BACKUP_ROOT="$HOME/celestedle-backups"
+          BACKUP_DIR="$BACKUP_ROOT/$(date -u +%Y-%m-%dT%H%M%SZ)"
+          mkdir -p "$BACKUP_DIR"
+          HAD_CONTAINER=0
+          if docker container inspect celestedle-api >/dev/null 2>&1; then
+            HAD_CONTAINER=1
+            for f in /api/src/reports.json /api/stats-history.json \
+                     /api/data/reports.json /api/data/stats-history.json; do
+              docker cp "celestedle-api:$f" "$BACKUP_DIR/" 2>/dev/null || true
+            done
+          fi
+          ls -la "$BACKUP_DIR"
+          echo "BACKUP_DIR=$BACKUP_DIR" >> "$GITHUB_ENV"
+          echo "HAD_CONTAINER=$HAD_CONTAINER" >> "$GITHUB_ENV"
+          # Garde les 30 dernières sauvegardes
+          ls -1dt "$BACKUP_ROOT"/*/ | tail -n +31 | xargs -r rm -rf
+
+      # Remplit le volume avec la sauvegarde, sans écraser ce qu'il contient
+      # déjà : utile au premier déploiement avec le volume.
+      - name: Seed the data volume
+        run: |
+          docker volume create celestedle-data >/dev/null
+          docker run --rm \
+            -v celestedle-data:/data \
+            -v "$BACKUP_DIR":/backup:ro \
+            alpine sh -c 'for f in /backup/*.json; do [ -e "$f" ] && cp -n "$f" /data/; done; ls -la /data'
+
+      # Garde-fou : on ne remplace pas un conteneur existant si aucune donnée
+      # n'a pu être récupérée (la recréation supprimerait les seules copies)
+      - name: Check game data before replacing the container
+        run: |
+          FILES=$(docker run --rm -v celestedle-data:/data alpine sh -c 'ls /data/*.json /data/*.db 2>/dev/null | wc -l')
+          echo "Fichiers de données dans le volume : $FILES"
+          if [ "$HAD_CONTAINER" = "1" ] && [ "$FILES" = "0" ]; then
+            echo "::error::Aucune donnée récupérée depuis le conteneur actuel, déploiement annulé."
+            exit 1
+          fi
+
       - name: Deploy Production
         run: docker compose up -d --build --force-recreate
 
-  deploy-staging:
-    if: github.ref_name == 'beta'
-    runs-on: ubuntu-latest
-    environment: celestedleEnv
-    steps:
-      - name: Trigger Render Deployment
-        run: curl -X GET "${{ secrets.RENDER_DEPLOY_HOOK }}"

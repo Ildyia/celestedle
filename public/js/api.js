@@ -1,212 +1,85 @@
-import { App } from "../script-client.js";
+import { storage, KEYS } from "./storage.js";
 
 const hostname = window.location.hostname;
 
-export const API_BASE_URL =
-  hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1"
-    ? "http://localhost:5500"
-    : hostname.includes("beta") || hostname.includes("-projects.vercel.app")
-      ? "https://celestedle-api.onrender.com"
-      : "https://celestedle-api.mizkyosia.fr";
+// Hors Vercel (local, Render, serveur de prod), le site est servi par l'API
+// elle-même. Sur Vercel, le front appelle l'API de prod, ou celle de la bêta
+// (Render) pour les déploiements bêta et les prévisualisations.
+export const API_BASE_URL = !hostname.endsWith(".vercel.app")
+  ? window.location.origin
+  : hostname.includes("beta") || hostname.includes("-projects.vercel.app")
+    ? "https://celestedle-api.onrender.com"
+    : "https://celestedle-api.mizkyosia.fr";
 
-function catchMaybeError(promise) {
-  return promise.catch(() => App.handleApiDown());
+export class ApiError extends Error {
+  constructor(status, message, details) {
+    super(message);
+    this.status = status;
+    this.details = details;
+  }
 }
 
-export const ApiService = {
-  fetchSecretVersion() {
-    return catchMaybeError(
-      fetch(`${API_BASE_URL}/secret-version`).then((res) => res.json())
-    );
-  },
+// Appelé quand l'API ne répond pas du tout (réseau, serveur arrêté)
+let onUnavailable = () => {};
+export function setUnavailableHandler(handler) {
+  onUnavailable = handler;
+}
 
-  adminLogin(password) {
-    return catchMaybeError(
-      fetch(`${API_BASE_URL}/admin/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password })
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error("Incorrect credentials");
-          return res.json();
-        })
-        .then((data) => {
-          if (data.token) {
-            sessionStorage.setItem("admin_token", data.token);
-          }
-          return data;
-        })
-    );
-  },
+export function spriteUrl(name) {
+  return `${API_BASE_URL}/sprite/${encodeURIComponent(name)}`;
+}
 
-  checkAdminSession() {
-    const token = sessionStorage.getItem("admin_token");
-    if (!token) return Promise.resolve(false);
-
-    return catchMaybeError(
-      fetch(`${API_BASE_URL}/admin/session`, {
-        headers: { Authorization: `Bearer ${token}` }
-      }).then((res) => res.ok)
-    );
-  },
-
-  getSecretWordAdmin() {
-    const token = sessionStorage.getItem("admin_token");
-    return catchMaybeError(
-      fetch(`${API_BASE_URL}/admin/get-secret`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
-      }).then((res) => res.json())
-    );
-  },
-
-  triggerRandomSecret(newHash) {
-    const token = sessionStorage.getItem("admin_token");
-    return catchMaybeError(
-      fetch(`${API_BASE_URL}/admin/random-hash`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ newHash })
-      }).then((res) => res.json())
-    );
-  },
-
-  triggerAdminReset() {
-    const token = sessionStorage.getItem("admin_token");
-    return catchMaybeError(
-      fetch(`${API_BASE_URL}/admin/trigger-reset`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
-      }).then((res) => {
-        if (!res.ok) throw new Error("Access denied or server error");
-        return res.json();
-      })
-    );
-  },
-
-  fetchElements() {
-    return catchMaybeError(
-      fetch(`${API_BASE_URL}/elements`).then((res) => res.json())
-    );
-  },
-
-  fetchElementsFull() {
-    return catchMaybeError(
-      fetch(`${API_BASE_URL}/elements/full`).then((res) => res.json())
-    );
-  },
-
-  fetchElementData(elementId) {
-    return catchMaybeError(
-      fetch(`${API_BASE_URL}/element/${elementId}`).then((res) => res.json())
-    );
-  },
-
-  fetchDailySuccessCount() {
-    return catchMaybeError(
-      fetch(`${API_BASE_URL}/daily-stats`).then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch daily stats");
-        return res.json();
-      })
-    );
-  },
-
-  fetchHint(payload) {
-    return catchMaybeError(
-      fetch(`${API_BASE_URL}/hint`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      }).then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch hint");
-        return res.json();
-      })
-    );
-  },
-
-  validateGuess(choice, tryCount, hintUses) {
-    return catchMaybeError(
-      fetch(`${API_BASE_URL}/validate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ choix: choice, tryCount, hintUses })
-      }).then((res) => {
-        if (!res.ok) throw new Error("Invalid entities or server error");
-        return res.json();
-      })
-    );
-  },
-
-  forfeitGame() {
-    return catchMaybeError(
-      fetch(`${API_BASE_URL}/getSecretWord`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" }
-      }).then((res) => {
-        if (!res.ok) throw new Error("Server error during forfeit");
-        return res.json();
-      })
-    );
-  },
-
-  sendBugReport(reportData) {
-    return catchMaybeError(
-      fetch(`${API_BASE_URL}/report-bug`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(reportData)
-      }).then((res) => {
-        if (!res.ok) throw new Error("Erreur réseau");
-        return res.json();
-      })
-    );
-  },
-
-  setSecretWordAdmin(elementName) {
-    const token = sessionStorage.getItem("admin_token");
-    return catchMaybeError(
-      fetch(`${API_BASE_URL}/admin/set-secret`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ elementName })
-      }).then((res) => {
-        if (!res.ok) throw new Error("Élément introuvable ou erreur");
-        return res.json();
-      })
-    );
-  },
-
-  fetchAdminElementsList() {
-    const token = sessionStorage.getItem("admin_token");
-    return catchMaybeError(
-      fetch(`${API_BASE_URL}/admin/elements-list`, {
-        headers: { Authorization: `Bearer ${token}` }
-      }).then((res) => res.json())
-    );
-  },
-
-  fetchReportsList(userId) {
-    return catchMaybeError(
-      fetch(`${API_BASE_URL}/report-bug/list?userId=${userId || ""}`).then(
-        (res) => res.json()
-      )
-    );
-  },
-
-  voteReport(reportId, userId, isUp) {
-    return catchMaybeError(
-      fetch(`${API_BASE_URL}/report-bug/vote`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reportId, userId, isUp })
-      }).then((res) => res.json())
-    );
+async function request(method, path, { body, auth = true, headers = {} } = {}) {
+  const token = storage.get(KEYS.playerToken);
+  let res;
+  try {
+    res = await fetch(`${API_BASE_URL}/api${path}`, {
+      method,
+      headers: {
+        ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+        ...(auth && token ? { "X-Player-Token": token } : {}),
+        ...headers
+      },
+      body: body !== undefined ? JSON.stringify(body) : undefined
+    });
+  } catch (err) {
+    onUnavailable();
+    throw new ApiError(0, "The server can't be reached right now.");
   }
+
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    if (res.status >= 502) onUnavailable();
+    throw new ApiError(res.status, data?.error || `Server error (${res.status})`, data?.details);
+  }
+  return data;
+}
+
+export const api = {
+  version: () => request("GET", "/version", { auth: false }),
+
+  game: (mode) => request("GET", `/game?mode=${mode}`),
+  guess: (mode, guess) => request("POST", "/game/guess", { body: { mode, guess } }),
+  hint: (mode, type) => request("POST", "/game/hint", { body: { mode, type } }),
+  forfeit: (mode) => request("POST", "/game/forfeit", { body: { mode } }),
+  modes: () => request("GET", "/modes", { auth: false }),
+  communityStats: (mode) => request("GET", `/stats/today?mode=${mode}`, { auth: false }),
+
+  elements: () => request("GET", "/elements", { auth: false }),
+  aliases: () => request("GET", "/aliases", { auth: false }),
+
+  createPlayer: () => request("POST", "/players", { auth: false }),
+  me: (token) =>
+    request("GET", "/players/me", token ? { auth: false, headers: { "X-Player-Token": token } } : {}),
+  updateMe: (changes) => request("PATCH", "/players/me", { body: changes }),
+  myStats: (mode) => request("GET", `/players/me/stats?mode=${mode}`),
+  profileOptions: () => request("GET", "/players/options", { auth: false }),
+
+  leaderboard: (period, mode) => request("GET", `/leaderboard?period=${period}&mode=${mode}`),
+
+  reports: () => request("GET", "/reports"),
+  similarReports: (elementName, description) =>
+    request("POST", "/reports/similar", { body: { elementName, description } }),
+  sendReport: (report) => request("POST", "/reports", { body: report }),
+  voteReport: (id, isUp) => request("POST", `/reports/${encodeURIComponent(id)}/vote`, { body: { isUp } })
 };
