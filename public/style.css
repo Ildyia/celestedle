@@ -2305,3 +2305,12 @@ body.hard-mode #game-status {
     font-size: 0.8rem;
   }
 }
+
+.player-id {
+  align-self: flex-start;
+  background: var(--bg-input);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  user-select: all;
+}

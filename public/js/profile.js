@@ -71,6 +71,7 @@ export class ProfilePanel {
     const profile = player.profile;
     this.selected = { avatar: profile.avatar, color: profile.color };
     this.nodes.name.value = profile.name;
+    byId("player-id").textContent = profile.id;
     this.nodes.discord.value = profile.discordTag ?? "";
     this.nodes.hidden.checked = profile.isHidden;
     this.nodes.code.textContent = "••••••••••••";

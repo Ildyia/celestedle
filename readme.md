@@ -34,8 +34,7 @@ Useful environment variables (`.env`):
 | `PORT` | HTTP port (default 3000) |
 | `DATA_DIR` | Folder for the SQLite database and v1 JSON files (default `data/`) |
 | `RANDOM_SEED` | Seed of the daily word draw |
-| `ADMIN_PASSWORD` or `ADMIN_PASSWORD_HASH` | Admin password, in clear or as a bcrypt hash |
-| `JWT_SECRET` | Secret for admin sessions |
+| `ADMIN_PASSWORD` or `ADMIN_PASSWORD_HASH` | Used once to make a player profile the site owner (in clear or as a bcrypt hash) |
 | `DISCORD_BOT_TOKEN` | Enables the Discord bot for bug reports |
 | `CORS_ORIGINS` | Extra allowed origins, comma separated |
 

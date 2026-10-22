@@ -1,49 +1,33 @@
-const crypto = require("crypto");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const config = require("../config");
+const staff = require("../services/staff");
 const { HttpError } = require("../utils/http-error");
 
-const SESSION_DURATION = "8h";
+// L'accès admin passe par le profil du joueur (jeton X-Player-Token) et son rôle
 
-function sha256(value) {
-  return crypto.createHash("sha256").update(String(value)).digest();
+function requireStaff(req, res, next) {
+  if (!req.player) return next(new HttpError(401, "Sign in with your player profile first."));
+  if (!staff.isStaff(req.player)) return next(new HttpError(403, "This profile has no admin rights."));
+  next();
 }
 
-// ADMIN_PASSWORD_HASH (bcrypt) est prioritaire ; ADMIN_PASSWORD en clair
-// reste accepté, comparé en temps constant.
-async function checkPassword(password) {
-  if (typeof password !== "string" || !password) return false;
-  if (config.adminPasswordHash) {
-    return bcrypt.compare(password, config.adminPasswordHash);
-  }
-  if (config.adminPassword) {
-    return crypto.timingSafeEqual(sha256(password), sha256(config.adminPassword));
-  }
-  return false;
+function requireOwner(req, res, next) {
+  if (req.player?.role !== "owner") return next(new HttpError(403, "Only the owner can do this."));
+  next();
 }
 
-async function login(password) {
-  if (!config.adminPasswordHash && !config.adminPassword) {
-    throw new HttpError(503, "Admin access is not configured on this server.");
-  }
-  if (!(await checkPassword(password))) {
-    throw new HttpError(401, "Mot de passe incorrect");
-  }
-  return jwt.sign({ role: "admin" }, config.jwtSecret, { expiresIn: SESSION_DURATION });
-}
-
-function requireAdmin(req, res, next) {
-  const header = req.get("authorization") || "";
-  if (!header.startsWith("Bearer ")) {
-    return next(new HttpError(401, "Token manquant"));
-  }
-  try {
-    jwt.verify(header.slice(7), config.jwtSecret);
+// Modification comptée dans le quota du jour. Elle n'est enregistrée au
+// journal que si la requête réussit. `target(req)` décrit l'objet modifié.
+function limitedAction(action, target = () => null) {
+  return (req, res, next) => {
+    try {
+      staff.assertCanModify(req.player);
+    } catch (err) {
+      return next(err);
+    }
+    res.on("finish", () => {
+      if (res.statusCode < 400) staff.recordAction(req.player, action, target(req));
+    });
     next();
-  } catch {
-    next(new HttpError(401, "Session expirée"));
-  }
+  };
 }
 
-module.exports = { login, requireAdmin };
+module.exports = { requireStaff, requireOwner, limitedAction };

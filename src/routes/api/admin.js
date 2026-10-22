@@ -7,30 +7,40 @@ const reports = require("../../services/reports");
 const { expireOverdueGames } = require("../../services/games");
 const { allModeRules, updateModeRules } = require("../../services/mode-rules");
 const { MODE_IDS } = require("../../services/modes");
-const { login, requireAdmin } = require("../../middleware/admin-auth");
+const staff = require("../../services/staff");
+const { requireStaff, requireOwner, limitedAction } = require("../../middleware/admin-auth");
+const { requirePlayer } = require("../../middleware/player");
 const { rateLimit } = require("../../middleware/rate-limit");
 const { HttpError } = require("../../utils/http-error");
 const { todayParis } = require("../../utils/dates");
 
 const router = express.Router();
 
-const loginLimit = rateLimit({ name: "admin-login", windowMs: 15 * 60 * 1000, max: 10 });
+const claimLimit = rateLimit({ name: "admin-claim", windowMs: 15 * 60 * 1000, max: 10 });
 
-router.post("/admin/login", loginLimit, async (req, res) => {
-  const token = await login(req.body?.password);
-  res.json({ success: true, token });
+// Rôle du profil connecté et quota de modifications du jour
+router.get("/admin/me", requirePlayer, (req, res) => {
+  const isStaff = staff.isStaff(req.player);
+  res.json({
+    player: req.player,
+    role: req.player.role,
+    quota: isStaff ? staff.quota(req.player) : null,
+    ownerClaimable: !staff.ownerExists()
+  });
 });
 
-router.use("/admin", requireAdmin);
+// Premier propriétaire : un profil connecté qui donne le mot de passe admin
+router.post("/admin/claim-owner", requirePlayer, claimLimit, async (req, res) => {
+  const player = await staff.claimOwnership(req.player, req.body?.password);
+  res.json({ player, role: player.role });
+});
+
+router.use("/admin", requireStaff);
 
 // Les chiffres de l'admin comptent comme perdues les parties Hard expirées
 router.use("/admin", (req, res, next) => {
   expireOverdueGames();
   next();
-});
-
-router.get("/admin/session", (req, res) => {
-  res.json({ authenticated: true });
 });
 
 function secretSummary(mode) {
@@ -72,7 +82,7 @@ router.get("/admin/words", (req, res) => {
 });
 
 // Tirer un autre mot ou imposer un élément, pour un mode
-router.post("/admin/secret", (req, res) => {
+router.post("/admin/secret", limitedAction("set_secret", (req) => `${req.body?.mode ?? "normal"}:${req.body?.action}`), (req, res) => {
   const { mode = "normal", action, elementName } = req.body || {};
   if (action === "random") {
     daily.drawRandomSecret(mode);
@@ -140,12 +150,12 @@ function saveElement(fn) {
   }
 }
 
-router.post("/admin/elements", (req, res) => {
+router.post("/admin/elements", limitedAction("create_element", (req) => req.body?.name), (req, res) => {
   const input = validateElementInput(req.body || {}, { partial: false });
   res.status(201).json(saveElement(() => elementsRepo.create(input)));
 });
 
-router.patch("/admin/elements/:id", (req, res) => {
+router.patch("/admin/elements/:id", limitedAction("edit_element", (req) => req.params.id), (req, res) => {
   const input = validateElementInput(req.body || {}, { partial: true });
   const element = saveElement(() => elementsRepo.update(Number(req.params.id), input));
   if (!element) throw new HttpError(404, "Élément introuvable");
@@ -162,31 +172,39 @@ router.get("/admin/reports", (req, res) => {
   res.json({ statuses: reports.STATUSES, reports: reports.listAll() });
 });
 
-router.patch("/admin/reports/:id", (req, res) => {
+router.patch("/admin/reports/:id", limitedAction("report_status", (req) => req.params.id), (req, res) => {
   res.json(reports.setStatus(req.params.id, req.body?.status));
 });
 
-router.delete("/admin/reports/:id", (req, res) => {
+router.delete("/admin/reports/:id", limitedAction("delete_report", (req) => req.params.id), (req, res) => {
   reports.remove(req.params.id);
   res.status(204).end();
 });
 
 // Supprime tous les reports clos (corrigés, non reproductibles, erronés)
-router.post("/admin/reports/purge-closed", (req, res) => {
+router.post("/admin/reports/purge-closed", limitedAction("purge_reports"), (req, res) => {
   res.json({ deleted: reports.removeClosed() });
 });
 
 function currentSettings() {
-  return { repeatDelayDays: daily.getRepeatDelay(), modes: allModeRules() };
+  return {
+    repeatDelayDays: daily.getRepeatDelay(),
+    modes: allModeRules(),
+    adminDailyLimit: staff.dailyLimit()
+  };
 }
 
 router.get("/admin/settings", (req, res) => {
   res.json(currentSettings());
 });
 
-// { repeatDelayDays?, modes?: { hard: { maxTries: 10, ... } } }
-router.put("/admin/settings", (req, res) => {
-  const { repeatDelayDays, modes = {} } = req.body || {};
+// { repeatDelayDays?, modes?: { hard: { maxTries: 10, ... } }, adminDailyLimit? }
+router.put("/admin/settings", limitedAction("settings"), (req, res) => {
+  const { repeatDelayDays, modes = {}, adminDailyLimit } = req.body || {};
+  if (adminDailyLimit !== undefined) {
+    if (req.player.role !== "owner") throw new HttpError(403, "Only the owner can change the admin limit.");
+    staff.setDailyLimit(Number(adminDailyLimit));
+  }
   if (repeatDelayDays !== undefined) {
     const days = Number(repeatDelayDays);
     if (!Number.isInteger(days) || days < 0 || days > 60) {
@@ -198,6 +216,23 @@ router.put("/admin/settings", (req, res) => {
     updateModeRules(modeId, changes || {});
   }
   res.json(currentSettings());
+});
+
+// Équipe : réservé au propriétaire
+router.get("/admin/team", requireOwner, (req, res) => {
+  res.json({ team: staff.team(), dailyLimit: staff.dailyLimit() });
+});
+
+router.post("/admin/team", requireOwner, (req, res) => {
+  res.status(201).json(staff.grantAdministrator(req.player, req.body?.playerId));
+});
+
+router.delete("/admin/team/:playerId", requireOwner, (req, res) => {
+  res.json(staff.revokeAdministrator(req.player, req.params.playerId));
+});
+
+router.get("/admin/audit", requireOwner, (req, res) => {
+  res.json(staff.recentActions(200));
 });
 
 module.exports = router;

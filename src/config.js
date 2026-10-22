@@ -1,5 +1,4 @@
 require("dotenv").config();
-const crypto = require("crypto");
 
 function list(value) {
   return (value || "")
@@ -8,18 +7,10 @@ function list(value) {
     .filter(Boolean);
 }
 
-// Sans JWT_SECRET, un secret aléatoire est généré : le serveur démarre, mais
-// les sessions admin sont perdues à chaque redémarrage.
-function jwtSecret() {
-  if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
-  console.warn("[CONFIG] JWT_SECRET absent : secret temporaire généré");
-  return crypto.randomBytes(32).toString("hex");
-}
-
 module.exports = {
   port: Number(process.env.PORT) || 3000,
   randomSeed: process.env.RANDOM_SEED || "",
-  jwtSecret: jwtSecret(),
+  // Sert uniquement à désigner le premier propriétaire (voir services/staff.js)
   adminPassword: process.env.ADMIN_PASSWORD || "",
   adminPasswordHash: process.env.ADMIN_PASSWORD_HASH || "",
 

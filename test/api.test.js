@@ -31,6 +31,20 @@ test.before(async () => {
 });
 test.after(() => api.close());
 
+// Profil propriétaire, créé une fois avec le mot de passe admin de test
+let owner = null;
+async function ownerHeaders() {
+  if (!owner) {
+    owner = await api.newPlayer();
+    const claim = await api.request("POST", "/api/admin/claim-owner", {
+      token: owner.token,
+      body: { password: "test-admin-password" }
+    });
+    assert.equal(claim.status, 200, JSON.stringify(claim.data));
+  }
+  return { "X-Player-Token": owner.token };
+}
+
 function wrongGuessFor(secretName, exclude = []) {
   const all = db.prepare("SELECT name FROM elements WHERE is_active = 1 ORDER BY name").all();
   return all.map((r) => r.name).find((n) => n !== secretName && !exclude.includes(n));
@@ -244,14 +258,30 @@ test("reports : import v1, doublons, création et votes", async () => {
   assert.equal(down.data.score, -1);
 });
 
-test("admin : connexion, tableau de bord, éditeur et réglages", async () => {
-  const refused = await api.request("POST", "/api/admin/login", { body: { password: "nope" } });
-  assert.equal(refused.status, 401);
+test("admin : accès par le profil, propriétaire désigné une seule fois", async () => {
   const noToken = await api.request("GET", "/api/admin/overview");
   assert.equal(noToken.status, 401);
 
-  const login = await api.request("POST", "/api/admin/login", { body: { password: "test-admin-password" } });
-  const headers = { Authorization: `Bearer ${login.data.token}` };
+  const { token } = await api.newPlayer();
+  const noRights = await api.request("GET", "/api/admin/overview", { token });
+  assert.equal(noRights.status, 403);
+  const me = await api.request("GET", "/api/admin/me", { token });
+  assert.deepEqual([me.data.role, me.data.quota], ["player", null]);
+
+  const wrong = await api.request("POST", "/api/admin/claim-owner", { token, body: { password: "nope" } });
+  assert.equal(wrong.status, 401);
+
+  await ownerHeaders();
+  const second = await api.request("POST", "/api/admin/claim-owner", { token, body: { password: "test-admin-password" } });
+  assert.equal(second.status, 409);
+  const ownerMe = await api.request("GET", "/api/admin/me", { token: owner.token });
+  assert.equal(ownerMe.data.role, "owner");
+  assert.equal(ownerMe.data.quota.limit, null);
+  assert.equal(ownerMe.data.ownerClaimable, false);
+});
+
+test("admin : tableau de bord, éditeur et réglages", async () => {
+  const headers = await ownerHeaders();
 
   const overview = await api.request("GET", "/api/admin/overview", { headers });
   assert.ok(overview.data.modes.normal.secret.nom);
@@ -286,8 +316,7 @@ test("admin : connexion, tableau de bord, éditeur et réglages", async () => {
 });
 
 test("admin : les règles du mode Hard sont réglables et appliquées", async () => {
-  const login = await api.request("POST", "/api/admin/login", { body: { password: "test-admin-password" } });
-  const headers = { Authorization: `Bearer ${login.data.token}` };
+  const headers = await ownerHeaders();
 
   const invalid = await api.request("PUT", "/api/admin/settings", { headers, body: { modes: { hard: { maxHints: 9 } } } });
   assert.equal(invalid.status, 400);
@@ -339,8 +368,7 @@ test("profil : tag Discord facultatif, validé et privé", async () => {
 });
 
 test("admin : auteur des reports, tri, suppression et purge des reports clos", async () => {
-  const login = await api.request("POST", "/api/admin/login", { body: { password: "test-admin-password" } });
-  const headers = { Authorization: `Bearer ${login.data.token}` };
+  const headers = await ownerHeaders();
 
   const { token } = await api.newPlayer();
   await api.request("PATCH", "/api/players/me", { token, body: { name: "Reporter", discordTag: "reporter_one" } });
@@ -368,6 +396,49 @@ test("admin : auteur des reports, tri, suppression et purge des reports clos", a
   assert.ok(purge.data.deleted >= 1);
   const after = await api.request("GET", "/api/admin/reports", { headers });
   assert.ok(after.data.reports.every((r) => ["new", "working"].includes(r.status)));
+});
+
+test("rôles : le propriétaire gère l'équipe, l'administrateur a un quota", async () => {
+  const headers = await ownerHeaders();
+  const helper = await api.newPlayer();
+  const adminHeaders = { "X-Player-Token": helper.token };
+
+  const unknown = await api.request("POST", "/api/admin/team", { headers, body: { playerId: "nobody" } });
+  assert.equal(unknown.status, 404);
+  const granted = await api.request("POST", "/api/admin/team", { headers, body: { playerId: helper.player.id } });
+  assert.equal(granted.data.role, "administrator");
+
+  // L'administrateur consulte, mais ne gère pas l'équipe
+  assert.equal((await api.request("GET", "/api/admin/overview", { headers: adminHeaders })).status, 200);
+  assert.equal((await api.request("GET", "/api/admin/team", { headers: adminHeaders })).status, 403);
+  const selfGrant = await api.request("POST", "/api/admin/team", { headers: adminHeaders, body: { playerId: helper.player.id } });
+  assert.equal(selfGrant.status, 403);
+  const limitChange = await api.request("PUT", "/api/admin/settings", { headers: adminHeaders, body: { adminDailyLimit: 999 } });
+  assert.equal(limitChange.status, 403);
+
+  // Quota de 2 modifications : une requête refusée ne compte pas
+  await api.request("PUT", "/api/admin/settings", { headers, body: { adminDailyLimit: 2 } });
+  const report = await api.request("POST", "/api/reports", { body: { description: "Quota test report" } });
+  const statusOf = (status) =>
+    api.request("PATCH", `/api/admin/reports/${report.data.id}`, { headers: adminHeaders, body: { status } });
+  assert.equal((await statusOf("not-a-status")).status, 400);
+  assert.equal((await statusOf("working")).status, 200);
+  assert.equal((await statusOf("new")).status, 200);
+  const blocked = await statusOf("working");
+  assert.equal(blocked.status, 429);
+  const quota = await api.request("GET", "/api/admin/me", { headers: adminHeaders });
+  assert.deepEqual([quota.data.quota.used, quota.data.quota.remaining], [2, 0]);
+
+  // Le propriétaire n'a pas de limite
+  assert.equal((await api.request("PATCH", `/api/admin/reports/${report.data.id}`, { headers, body: { status: "fixed" } })).status, 200);
+
+  const audit = await api.request("GET", "/api/admin/audit", { headers });
+  const actions = audit.data.map((a) => a.action);
+  assert.ok(actions.includes("grant_admin") && actions.includes("report_status") && actions.includes("claim_owner"));
+
+  const revoked = await api.request("DELETE", `/api/admin/team/${helper.player.id}`, { headers });
+  assert.equal(revoked.data.role, "player");
+  assert.equal((await api.request("GET", "/api/admin/overview", { headers: adminHeaders })).status, 403);
 });
 
 test("sprites : image de l'élément, ou image par défaut", async () => {

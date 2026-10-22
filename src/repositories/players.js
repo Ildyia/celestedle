@@ -24,6 +24,7 @@ function toPlayer(row) {
     avatar: row.avatar,
     color: row.color,
     isHidden: row.is_hidden === 1,
+    role: row.role ?? "player",
     // Renvoyé seulement au joueur lui-même et à l'admin
     discordTag: row.discord_tag ?? null,
     createdAt: row.created_at
