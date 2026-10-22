@@ -11,6 +11,7 @@ import { Game } from "./game.js";
 import { ReportsPanel } from "./reports.js";
 import { ProfilePanel } from "./profile.js";
 import { LeaderboardPanel } from "./leaderboard.js";
+import { fillRulesText } from "./rules-text.js";
 
 let elements = [];
 const getElements = () => elements;
@@ -97,6 +98,11 @@ async function init() {
   elements = loadedElements;
   suggestions.setData({ elements });
   synonyms.setOfficial(aliases);
+
+  api
+    .modes()
+    .then((modes) => Object.entries(modes).forEach(([id, rules]) => fillRulesText(id, rules)))
+    .catch(() => {});
 
   await game.load();
   refreshCommunityStats(game.mode);

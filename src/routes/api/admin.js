@@ -5,6 +5,7 @@ const statsRepo = require("../../repositories/stats");
 const daily = require("../../services/daily");
 const reports = require("../../services/reports");
 const { expireOverdueGames } = require("../../services/games");
+const { allModeRules, updateModeRules } = require("../../services/mode-rules");
 const { MODE_IDS } = require("../../services/modes");
 const { login, requireAdmin } = require("../../middleware/admin-auth");
 const { rateLimit } = require("../../middleware/rate-limit");
@@ -165,13 +166,28 @@ router.patch("/admin/reports/:id", (req, res) => {
   res.json(reports.setStatus(req.params.id, req.body?.status));
 });
 
+function currentSettings() {
+  return { repeatDelayDays: daily.getRepeatDelay(), modes: allModeRules() };
+}
+
+router.get("/admin/settings", (req, res) => {
+  res.json(currentSettings());
+});
+
+// { repeatDelayDays?, modes?: { hard: { maxTries: 10, ... } } }
 router.put("/admin/settings", (req, res) => {
-  const days = Number(req.body?.repeatDelayDays);
-  if (!Number.isInteger(days) || days < 0 || days > 60) {
-    throw new HttpError(400, "repeatDelayDays must be an integer between 0 and 60.");
+  const { repeatDelayDays, modes = {} } = req.body || {};
+  if (repeatDelayDays !== undefined) {
+    const days = Number(repeatDelayDays);
+    if (!Number.isInteger(days) || days < 0 || days > 60) {
+      throw new HttpError(400, "repeatDelayDays must be an integer between 0 and 60.");
+    }
+    daily.setRepeatDelay(days);
   }
-  daily.setRepeatDelay(days);
-  res.json({ repeatDelayDays: daily.getRepeatDelay() });
+  for (const [modeId, changes] of Object.entries(modes)) {
+    updateModeRules(modeId, changes || {});
+  }
+  res.json(currentSettings());
 });
 
 module.exports = router;

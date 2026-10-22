@@ -11,6 +11,8 @@ export class Suggestions {
     this.elements = [];
     this.synonyms = {};
     this.enabled = true;
+    this.minChars = 3;
+    this.showAllAllowed = true;
     this.selectedIndex = -1;
 
     input.addEventListener("input", () => this.filter());
@@ -32,9 +34,12 @@ export class Suggestions {
     if (synonyms) this.synonyms = synonyms;
   }
 
-  setEnabled(enabled) {
+  // Règles du mode : nombre de lettres avant suggestion, liste complète ou non
+  setRules({ enabled, minChars, showAll }) {
     this.enabled = enabled;
-    if (this.showAllButton) this.showAllButton.hidden = !enabled;
+    this.minChars = minChars;
+    this.showAllAllowed = showAll;
+    if (this.showAllButton) this.showAllButton.hidden = !(enabled && showAll);
     if (!enabled) this.hide();
   }
 
@@ -47,7 +52,7 @@ export class Suggestions {
   filter() {
     if (!this.enabled) return;
     const query = this.input.value.trim().toLowerCase();
-    if (query.length < 3) return this.hide();
+    if (query.length < this.minChars) return this.hide();
 
     const matches = new Map();
     const add = (name, priority, colors, isSynonym) => {
@@ -74,7 +79,7 @@ export class Suggestions {
   }
 
   showAll() {
-    if (!this.enabled) return;
+    if (!this.enabled || !this.showAllAllowed) return;
     const sorted = [...this.elements].sort((a, b) => a.nom.localeCompare(b.nom));
     this.render(sorted.map((e) => ({ name: e.nom, colors: e.couleur, isSynonym: false })));
   }

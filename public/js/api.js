@@ -62,6 +62,7 @@ export const api = {
   guess: (mode, guess) => request("POST", "/game/guess", { body: { mode, guess } }),
   hint: (mode, type) => request("POST", "/game/hint", { body: { mode, type } }),
   forfeit: (mode) => request("POST", "/game/forfeit", { body: { mode } }),
+  modes: () => request("GET", "/modes", { auth: false }),
   communityStats: (mode) => request("GET", `/stats/today?mode=${mode}`, { auth: false }),
 
   elements: () => request("GET", "/elements", { auth: false }),

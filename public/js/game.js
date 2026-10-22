@@ -8,6 +8,7 @@ import { renderHints, updateHintButtons } from "./hints.js";
 import { GameTimer } from "./game-timer.js";
 import { copyShareText } from "./share.js";
 import { showToast } from "./toast.js";
+import { fillRulesText } from "./rules-text.js";
 
 const SYNONYMS_USED_KEY = "celestedle_synonyms_used";
 
@@ -107,7 +108,12 @@ export class Game {
     renderHints(nodes.hints, state.hints);
     updateHintButtons(state);
     this.timer.update(state);
-    this.suggestions.setEnabled(state.rules.suggestions && playing);
+    this.suggestions.setRules({
+      enabled: playing,
+      minChars: state.rules.suggestionMinChars,
+      showAll: state.rules.showAllList
+    });
+    fillRulesText(state.mode, state.rules);
 
     nodes.form.hidden = !playing;
     nodes.hintBtn.hidden = !playing;

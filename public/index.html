@@ -22,9 +22,9 @@
         </p>
         <ul class="disclaimer-list">
           <li>
-            <strong>Hard mode</strong>: its own daily word, 1 hint, 8 tries,
-            5 minutes, no suggestions, and every guess must fit the clues you
-            already found.
+            <strong>Hard mode</strong>: its own daily word, limited hints,
+            tries and time, suggestions only after a few letters, and every
+            guess must fit the clues you already found.
           </li>
           <li>
             <strong>Profiles</strong>: pick a name, an avatar and a colour,
@@ -118,9 +118,7 @@
           <button type="button" data-mode="normal" aria-pressed="true">Normal</button>
           <button type="button" data-mode="hard" aria-pressed="false">Hard</button>
         </div>
-        <p id="hard-rules" class="hard-rules" hidden>
-          1 hint · 8 tries · 5:00 · no suggestions · guesses must fit your clues
-        </p>
+        <p id="hard-rules" class="hard-rules" data-rules-mode="hard" data-rules-text="summary" hidden></p>
 
         <div id="game-status">
           <p class="tries-badge">
@@ -298,8 +296,12 @@
           <h4>Hard mode</h4>
           <ul>
             <li>Its own secret word, different from the normal one.</li>
-            <li>1 hint, 8 tries and 5 minutes from your first guess (or your hint, if you take it first).</li>
-            <li>No suggestions: type the full name (official synonyms work).</li>
+            <li data-rules-mode="hard" data-rules-text="sentence">Limited hints, tries and time.</li>
+            <li>
+              Suggestions only appear after
+              <span data-rules-mode="hard" data-rules-text="suggestions">a few</span>
+              letters, and there is no full list (official synonyms work).
+            </li>
             <li>
               Every guess must fit the clues you already have: if your guess
               were the answer, all your previous guesses would have got the

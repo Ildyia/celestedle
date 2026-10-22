@@ -285,6 +285,43 @@ test("admin : connexion, tableau de bord, éditeur et réglages", async () => {
   assert.equal(settings.data.repeatDelayDays, 0);
 });
 
+test("admin : les règles du mode Hard sont réglables et appliquées", async () => {
+  const login = await api.request("POST", "/api/admin/login", { body: { password: "test-admin-password" } });
+  const headers = { Authorization: `Bearer ${login.data.token}` };
+
+  const invalid = await api.request("PUT", "/api/admin/settings", { headers, body: { modes: { hard: { maxHints: 9 } } } });
+  assert.equal(invalid.status, 400);
+  const notAdjustable = await api.request("PUT", "/api/admin/settings", { headers, body: { modes: { normal: { maxTries: 3 } } } });
+  assert.equal(notAdjustable.status, 400);
+
+  const saved = await api.request("PUT", "/api/admin/settings", {
+    headers,
+    body: { modes: { hard: { maxHints: 2, maxTries: 0, timeLimitSeconds: 600, suggestionMinChars: 5 } } }
+  });
+  assert.deepEqual(
+    [saved.data.modes.hard.maxHints, saved.data.modes.hard.maxTries, saved.data.modes.hard.timeLimitSeconds],
+    [2, null, 600]
+  );
+
+  const publicRules = await api.request("GET", "/api/modes");
+  assert.equal(publicRules.data.hard.suggestionMinChars, 5);
+
+  const { token } = await api.newPlayer();
+  const state = await api.request("GET", "/api/game?mode=hard", { token });
+  assert.equal(state.data.rules.maxHints, 2);
+  assert.equal(state.data.triesLeft, null);
+  const first = await api.request("POST", "/api/game/hint", { token, body: { mode: "hard", type: "opposite" } });
+  const second = await api.request("POST", "/api/game/hint", { token, body: { mode: "hard", type: "secret_info" } });
+  assert.equal(first.status, 200);
+  assert.equal(second.status, 200);
+
+  // Retour aux valeurs par défaut pour les autres tests
+  await api.request("PUT", "/api/admin/settings", {
+    headers,
+    body: { modes: { hard: { maxHints: 1, maxTries: 8, timeLimitSeconds: 300, suggestionMinChars: 4 } } }
+  });
+});
+
 test("sprites : image de l'élément, ou image par défaut", async () => {
   const sprite = await api.request("GET", "/sprite/summit%20gems");
   assert.equal(sprite.headers.get("content-type"), "image/png");

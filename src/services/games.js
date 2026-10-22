@@ -4,7 +4,8 @@ const db = require("../db");
 const { HttpError } = require("../utils/http-error");
 const { nowIso, secondsBetween } = require("../utils/dates");
 const { verdictFor, displayValues } = require("./compare");
-const { MODES, getMode, findInconsistency } = require("./modes");
+const { MODE_IDS, findInconsistency } = require("./modes");
+const { getModeRules } = require("./mode-rules");
 const { HINT_TYPES, buildHint } = require("./hints");
 const daily = require("./daily");
 
@@ -58,7 +59,8 @@ function buildState({ mode, secret, game, reset = false }) {
       maxHints: mode.maxHints,
       maxTries: mode.maxTries,
       timeLimitSeconds: mode.timeLimitSeconds,
-      suggestions: mode.suggestions,
+      suggestionMinChars: mode.suggestionMinChars,
+      showAllList: mode.showAllList,
       consistentGuesses: mode.consistentGuesses
     },
     guesses: history.map(({ element, verdict }) => ({
@@ -80,7 +82,7 @@ function buildState({ mode, secret, game, reset = false }) {
 }
 
 function getState(player, modeId) {
-  const mode = getMode(modeId);
+  const mode = getModeRules(modeId);
   const secret = daily.getTodaySecret(mode.id);
   const { game, reset } = loadGame(player?.id, mode, secret);
   return buildState({ mode, secret, game, reset });
@@ -93,7 +95,7 @@ function ensurePlaying(game) {
 }
 
 const guess = db.transaction((player, modeId, input) => {
-  const mode = getMode(modeId);
+  const mode = getModeRules(modeId);
   const secret = daily.getTodaySecret(mode.id);
   const element = elementsRepo.findByNameOrAlias(input);
   if (!element || !element.isActive) {
@@ -137,7 +139,7 @@ const guess = db.transaction((player, modeId, input) => {
 });
 
 const useHint = db.transaction((player, modeId, type) => {
-  const mode = getMode(modeId);
+  const mode = getModeRules(modeId);
   if (!HINT_TYPES.includes(type)) throw new HttpError(400, `Unknown hint type "${type}"`);
   const secret = daily.getTodaySecret(mode.id);
 
@@ -166,7 +168,8 @@ const useHint = db.transaction((player, modeId, type) => {
   const payload = buildHint(type, {
     secret: secret.element,
     elements: elementsRepo.listActive(),
-    verdicts: guessHistory(game, secret.element).map((h) => h.verdict),
+    guesses: guessHistory(game, secret.element),
+    previousHints: used,
     vocabulary: elementsRepo.vocabulary(),
     random: (offset) => daily.seededRandom(mode.id, offset)
   });
@@ -176,7 +179,7 @@ const useHint = db.transaction((player, modeId, type) => {
 });
 
 const forfeit = db.transaction((player, modeId) => {
-  const mode = getMode(modeId);
+  const mode = getModeRules(modeId);
   const secret = daily.getTodaySecret(mode.id);
 
   let { game } = loadGame(player.id, mode, secret);
@@ -197,7 +200,7 @@ const forfeit = db.transaction((player, modeId) => {
 });
 
 function expireOverdueGames() {
-  for (const mode of Object.values(MODES)) {
+  for (const mode of MODE_IDS.map(getModeRules)) {
     if (mode.timeLimitSeconds) gamesRepo.expireOverdue(mode.id, mode.timeLimitSeconds, nowIso());
   }
 }

@@ -57,5 +57,6 @@ export const admin = {
   exportDbJson: () => request("GET", "/export/db.json"),
   reports: () => request("GET", "/reports"),
   setReportStatus: (id, status) => request("PATCH", `/reports/${encodeURIComponent(id)}`, { status }),
+  settings: () => request("GET", "/settings"),
   saveSettings: (settings) => request("PUT", "/settings", settings)
 };

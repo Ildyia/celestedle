@@ -1,14 +1,16 @@
 const { HttpError } = require("../utils/http-error");
 const { CATEGORIES, CATEGORY_LABELS, compareValues, toList } = require("./compare");
 
-// Règles de chaque mode. Les limites du mode Hard se changent ici.
+// Règles par défaut de chaque mode. Les champs listés dans ADJUSTABLE se
+// règlent dans l'admin (voir mode-rules.js) ; null = pas de limite.
 const MODES = {
   normal: {
     id: "normal",
     maxHints: 3,
     maxTries: null,
     timeLimitSeconds: null,
-    suggestions: true,
+    suggestionMinChars: 3,
+    showAllList: true,
     consistentGuesses: false
   },
   hard: {
@@ -16,12 +18,37 @@ const MODES = {
     maxHints: 1,
     maxTries: 8,
     timeLimitSeconds: 5 * 60,
-    suggestions: false,
+    suggestionMinChars: 4,
+    showAllList: false,
     consistentGuesses: true
   }
 };
 
 const MODE_IDS = Object.keys(MODES);
+
+// Réglages modifiables et bornes acceptées. `unlimited` : 0 veut dire « pas de limite ».
+const ADJUSTABLE = {
+  hard: {
+    maxHints: { min: 0, max: 3 },
+    maxTries: { min: 1, max: 50, unlimited: true },
+    timeLimitSeconds: { min: 30, max: 3600, unlimited: true },
+    suggestionMinChars: { min: 1, max: 10 }
+  }
+};
+
+// Vérifie une valeur de réglage et la renvoie normalisée (null = illimité)
+function validateRule(modeId, field, value) {
+  const spec = ADJUSTABLE[modeId]?.[field];
+  if (!spec) throw new HttpError(400, `"${field}" can't be changed for mode "${modeId}"`);
+  const number = Number(value);
+  if (!Number.isInteger(number)) throw new HttpError(400, `${field} must be an integer`);
+  if (spec.unlimited && number === 0) return null;
+  if (number < spec.min || number > spec.max) {
+    const zero = spec.unlimited ? " (0 = no limit)" : "";
+    throw new HttpError(400, `${field} must be between ${spec.min} and ${spec.max}${zero}`);
+  }
+  return number;
+}
 
 function getMode(id = "normal") {
   const mode = MODES[id];
@@ -54,4 +81,4 @@ function findInconsistency(candidate, previous) {
   return null;
 }
 
-module.exports = { MODES, MODE_IDS, getMode, findInconsistency };
+module.exports = { MODES, MODE_IDS, ADJUSTABLE, getMode, validateRule, findInconsistency };

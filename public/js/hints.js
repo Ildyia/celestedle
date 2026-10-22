@@ -7,9 +7,13 @@ export const HINT_NAMES = {
   truth_and_lies: "1 Truth & 2 Lies"
 };
 
+// Type et forme n'ont qu'une valeur ; chapitres et couleurs peuvent en avoir plusieurs
 function statementText({ category, value }) {
-  return category === "shape" ? `Shape is "${value}"` : `${CATEGORY_LABELS[category]} includes "${value}"`;
+  const verb = category === "shape" || category === "type" ? "is" : "includes";
+  return `${CATEGORY_LABELS[category]} ${verb} "${value}"`;
 }
+
+const NOTHING_NEW = "You already know everything this hint could tell you.";
 
 function oppositeText(hint) {
   if (!hint.element) return "No opposite element found.";
@@ -26,6 +30,7 @@ function oppositeText(hint) {
 function hintBody(hint) {
   if (hint.type === "opposite") return [el("p", { text: oppositeText(hint) })];
   if (hint.type === "secret_info") {
+    if (!hint.category) return [el("p", { text: NOTHING_NEW })];
     const verb = hint.category === "lieu" ? "can be found in" : hint.partial ? "includes" : "is";
     return [
       el("p", {}, [
@@ -34,6 +39,7 @@ function hintBody(hint) {
       ])
     ];
   }
+  if (hint.statements.length === 0) return [el("p", { text: NOTHING_NEW })];
   return [el("ul", { className: "hint-statements" }, hint.statements.map((s) => el("li", { text: statementText(s) })))];
 }
 

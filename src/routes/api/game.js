@@ -2,6 +2,7 @@ const express = require("express");
 const games = require("../../services/games");
 const statsRepo = require("../../repositories/stats");
 const { getMode } = require("../../services/modes");
+const { allModeRules } = require("../../services/mode-rules");
 const { requirePlayer } = require("../../middleware/player");
 const { todayParis, msUntilNextDay } = require("../../utils/dates");
 
@@ -30,6 +31,11 @@ router.post("/game/hint", requirePlayer, (req, res) => {
 
 router.post("/game/forfeit", requirePlayer, (req, res) => {
   res.json(games.forfeit(req.player, req.body?.mode));
+});
+
+// Règles actuelles de chaque mode (pour la fenêtre des règles)
+router.get("/modes", (req, res) => {
+  res.json(allModeRules());
 });
 
 // Statistiques communautaires du jour
