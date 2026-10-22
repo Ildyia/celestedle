@@ -8,7 +8,8 @@ const stmts = {
   byTokenHash: db.prepare("SELECT * FROM players WHERE token_hash = ?"),
   byId: db.prepare("SELECT * FROM players WHERE id = ?"),
   update: db.prepare(`
-    UPDATE players SET name = @name, avatar = @avatar, color = @color, is_hidden = @isHidden
+    UPDATE players SET name = @name, avatar = @avatar, color = @color, is_hidden = @isHidden,
+      discord_tag = @discordTag
     WHERE id = @id
   `),
   touch: db.prepare("UPDATE players SET last_seen_at = ? WHERE id = ?"),
@@ -23,6 +24,8 @@ function toPlayer(row) {
     avatar: row.avatar,
     color: row.color,
     isHidden: row.is_hidden === 1,
+    // Renvoyé seulement au joueur lui-même et à l'admin
+    discordTag: row.discord_tag ?? null,
     createdAt: row.created_at
   };
 }
@@ -40,8 +43,8 @@ function findById(id) {
   return toPlayer(stmts.byId.get(id));
 }
 
-function update(id, { name, avatar, color, isHidden }) {
-  stmts.update.run({ id, name, avatar, color, isHidden: isHidden ? 1 : 0 });
+function update(id, { name, avatar, color, isHidden, discordTag }) {
+  stmts.update.run({ id, name, avatar, color, isHidden: isHidden ? 1 : 0, discordTag });
   return findById(id);
 }
 

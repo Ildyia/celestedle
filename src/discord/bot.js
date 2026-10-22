@@ -75,6 +75,15 @@ function createBot() {
     }
   }
 
+  // Report supprimé depuis l'admin : ses messages disparaissent aussi
+  async function reportDeleted(report) {
+    const { publicId, privateId } = channelIds();
+    const publicMsg = await fetchMessage(publicId, report.discordPublicId);
+    await publicMsg?.delete();
+    const privateMsg = await fetchMessage(privateId, report.discordPrivateId);
+    await privateMsg?.delete();
+  }
+
   async function handleSetup(interaction) {
     settingsRepo.set(PUBLIC_CHANNEL_KEY, interaction.options.getChannel("public").id);
     settingsRepo.set(PRIVATE_CHANNEL_KEY, interaction.options.getChannel("private").id);
@@ -131,7 +140,7 @@ function createBot() {
 
   client.on("error", (err) => console.error("[DISCORD] Erreur client :", err.message));
 
-  return { client, reportCreated, reportUpdated };
+  return { client, reportCreated, reportUpdated, reportDeleted };
 }
 
 // Démarre le bot si un token est configuré, et le branche sur les reports
@@ -141,7 +150,11 @@ function startBot() {
     return null;
   }
   const bot = createBot();
-  reports.setNotifier({ reportCreated: bot.reportCreated, reportUpdated: bot.reportUpdated });
+  reports.setNotifier({
+    reportCreated: bot.reportCreated,
+    reportUpdated: bot.reportUpdated,
+    reportDeleted: bot.reportDeleted
+  });
   bot.client.login(config.discord.token).catch((err) => {
     console.error("[DISCORD] Connexion impossible :", err.message);
   });

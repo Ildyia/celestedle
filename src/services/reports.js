@@ -17,7 +17,8 @@ const STOP_WORDS = new Set([
 // Le bot Discord s'enregistre ici au démarrage ; sans bot, rien n'est envoyé
 let notifier = {
   reportCreated: async () => {},
-  reportUpdated: async () => {}
+  reportUpdated: async () => {},
+  reportDeleted: async () => {}
 };
 
 function setNotifier(next) {
@@ -71,7 +72,8 @@ function findSimilar({ elementName, description }, voterId, limit = 5) {
     .map(({ report }) => report);
 }
 
-function create(input) {
+// `player` : auteur, si le joueur a un profil (visible seulement par l'admin)
+function create(input, player = null) {
   const description = String(input.description ?? "").trim();
   if (description.length < 1 || description.length > MAX_DESCRIPTION) {
     throw new HttpError(400, `Details must be between 1 and ${MAX_DESCRIPTION} characters.`);
@@ -85,7 +87,8 @@ function create(input) {
     elementName: element?.nom ?? null,
     bugType,
     description,
-    isSpoiler: Boolean(input.isSpoiler)
+    isSpoiler: Boolean(input.isSpoiler),
+    playerId: player?.id ?? null
   });
   notify("reportCreated", report);
   return report;
@@ -108,8 +111,29 @@ function setStatus(reportId, status, origin = "web") {
   return report;
 }
 
+// Supprime le report et ses votes ; les messages Discord sont retirés aussi
+function remove(reportId) {
+  const report = reportsRepo.findById(reportId);
+  if (!report) throw new HttpError(404, "Report not found.");
+  reportsRepo.remove(reportId);
+  notify("reportDeleted", report);
+  return report;
+}
+
+// Supprime tous les reports clos (corrigés, non reproductibles, erronés)
+function removeClosed() {
+  const closed = reportsRepo.listClosed();
+  for (const report of closed) {
+    reportsRepo.remove(report.id);
+    notify("reportDeleted", report);
+  }
+  return closed.length;
+}
+
 module.exports = {
   BUG_TYPES,
+  remove,
+  removeClosed,
   STATUSES,
   setNotifier,
   list,

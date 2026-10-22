@@ -57,6 +57,8 @@ export const admin = {
   exportDbJson: () => request("GET", "/export/db.json"),
   reports: () => request("GET", "/reports"),
   setReportStatus: (id, status) => request("PATCH", `/reports/${encodeURIComponent(id)}`, { status }),
+  deleteReport: (id) => request("DELETE", `/reports/${encodeURIComponent(id)}`),
+  purgeClosedReports: () => request("POST", "/reports/purge-closed"),
   settings: () => request("GET", "/settings"),
   saveSettings: (settings) => request("PUT", "/settings", settings)
 };

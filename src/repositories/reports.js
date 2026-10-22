@@ -2,6 +2,7 @@ const db = require("../db");
 
 // Statuts « ouverts » : affichés aux joueurs et proposés comme doublons
 const OPEN_STATUSES = ["new", "working"];
+const CLOSED_STATUSES = ["fixed", "cant_reproduce", "wrong"];
 
 const SELECT_REPORT = `
   SELECT r.*,
@@ -12,8 +13,8 @@ const SELECT_REPORT = `
 
 const stmts = {
   insert: db.prepare(`
-    INSERT INTO reports (id, element_id, element_name, bug_type, description, is_spoiler)
-    VALUES (@id, @elementId, @elementName, @bugType, @description, @isSpoiler)
+    INSERT INTO reports (id, element_id, element_name, bug_type, description, is_spoiler, player_id)
+    VALUES (@id, @elementId, @elementName, @bugType, @description, @isSpoiler, @playerId)
   `),
   byId: db.prepare(`${SELECT_REPORT} WHERE r.id = @id`),
   listOpen: db.prepare(`
@@ -21,7 +22,20 @@ const stmts = {
     WHERE r.status IN (${OPEN_STATUSES.map((s) => `'${s}'`).join(",")})
     ORDER BY score DESC, r.created_at DESC
   `),
-  listAll: db.prepare(`${SELECT_REPORT} ORDER BY r.created_at DESC`),
+  // Admin : avec l'auteur, pour pouvoir le recontacter
+  listAll: db.prepare(`
+    SELECT r.*,
+           COALESCE((SELECT SUM(value) FROM report_votes v WHERE v.report_id = r.id), 0) AS score,
+           0 AS user_vote,
+           p.name AS reporter_name, p.discord_tag AS reporter_discord
+    FROM reports r LEFT JOIN players p ON p.id = r.player_id
+    ORDER BY r.created_at DESC
+  `),
+  remove: db.prepare("DELETE FROM reports WHERE id = ?"),
+  closed: db.prepare(`
+    SELECT id, discord_public_id, discord_private_id FROM reports
+    WHERE status IN (${CLOSED_STATUSES.map((s) => `'${s}'`).join(",")})
+  `),
   vote: db.prepare(`
     INSERT INTO report_votes (report_id, voter_id, value) VALUES (?, ?, ?)
     ON CONFLICT(report_id, voter_id) DO UPDATE SET value = excluded.value
@@ -55,8 +69,17 @@ function toReport(row) {
   };
 }
 
+function toAdminReport(row) {
+  return {
+    ...toReport(row),
+    reporter: row.player_id
+      ? { id: row.player_id, name: row.reporter_name, discordTag: row.reporter_discord }
+      : null
+  };
+}
+
 function create(report) {
-  stmts.insert.run({ ...report, isSpoiler: report.isSpoiler ? 1 : 0 });
+  stmts.insert.run({ playerId: null, ...report, isSpoiler: report.isSpoiler ? 1 : 0 });
   return findById(report.id);
 }
 
@@ -73,7 +96,20 @@ function listOpen(voterId = null) {
 }
 
 function listAll() {
-  return stmts.listAll.all({ voterId: null }).map(toReport);
+  return stmts.listAll.all().map(toAdminReport);
+}
+
+// Les votes sont supprimés avec le report (ON DELETE CASCADE)
+function remove(id) {
+  return stmts.remove.run(id).changes === 1;
+}
+
+function listClosed() {
+  return stmts.closed.all().map((r) => ({
+    id: r.id,
+    discordPublicId: r.discord_public_id,
+    discordPrivateId: r.discord_private_id
+  }));
 }
 
 // Même vote deux fois = annulation ; vote inverse = changement
@@ -93,6 +129,9 @@ function setDiscordIds(id, publicId, privateId) {
 
 module.exports = {
   OPEN_STATUSES,
+  CLOSED_STATUSES,
+  remove,
+  listClosed,
   create,
   exists,
   findById,

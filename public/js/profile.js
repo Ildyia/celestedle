@@ -16,6 +16,7 @@ export class ProfilePanel {
     this.nodes = {
       form: byId("profile-form"),
       name: byId("profile-name-input"),
+      discord: byId("profile-discord-input"),
       avatars: byId("profile-avatars"),
       colors: byId("profile-colors"),
       hidden: byId("profile-hidden-checkbox"),
@@ -70,6 +71,7 @@ export class ProfilePanel {
     const profile = player.profile;
     this.selected = { avatar: profile.avatar, color: profile.color };
     this.nodes.name.value = profile.name;
+    this.nodes.discord.value = profile.discordTag ?? "";
     this.nodes.hidden.checked = profile.isHidden;
     this.nodes.code.textContent = "••••••••••••";
     this.nodes.code.dataset.visible = "false";
@@ -110,8 +112,10 @@ export class ProfilePanel {
         name: this.nodes.name.value,
         avatar: this.selected.avatar,
         color: this.selected.color,
+        discordTag: this.nodes.discord.value,
         isHidden: this.nodes.hidden.checked
       });
+      this.nodes.discord.value = player.profile.discordTag ?? "";
       showToast("Profile saved.");
     } catch (err) {
       showToast(err.message);

@@ -145,11 +145,24 @@
         </section>
 
         <section id="tab-reports" class="admin-panel" role="tabpanel" hidden>
+          <div class="admin-toolbar">
+            <select id="reports-status-filter" class="bug-input" aria-label="Filtrer par statut">
+              <option value="">Tous les statuts</option>
+              <option value="open">Ouverts (nouveaux et en cours)</option>
+              <option value="new">Nouveau</option>
+              <option value="working">En cours</option>
+              <option value="fixed">Corrigé</option>
+              <option value="cant_reproduce">Non reproductible</option>
+              <option value="wrong">Report erroné</option>
+            </select>
+            <button type="button" id="purge-closed-btn" class="btn-secondary">Supprimer les reports clos</button>
+          </div>
+          <p class="small-subtext">
+            Clic sur un en-tête pour trier. Supprimer un report retire aussi ses votes et ses messages Discord.
+          </p>
           <div class="admin-table-wrapper">
-            <table class="admin-table">
-              <thead>
-                <tr><th>ID</th><th>Élément</th><th>Type</th><th>Description</th><th>Score</th><th>Date</th><th>Statut</th></tr>
-              </thead>
+            <table class="admin-table sortable">
+              <thead id="reports-head"></thead>
               <tbody id="reports-body"></tbody>
             </table>
           </div>

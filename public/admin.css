@@ -352,3 +352,8 @@
   flex-direction: column;
   gap: 10px;
 }
+
+.btn-small {
+  padding: 4px 10px;
+  font-size: 0.8rem;
+}

@@ -322,6 +322,54 @@ test("admin : les règles du mode Hard sont réglables et appliquées", async ()
   });
 });
 
+test("profil : tag Discord facultatif, validé et privé", async () => {
+  const { token } = await api.newPlayer();
+  const bad = await api.request("PATCH", "/api/players/me", { token, body: { discordTag: "no spaces allowed" } });
+  assert.equal(bad.status, 400);
+
+  const ok = await api.request("PATCH", "/api/players/me", { token, body: { discordTag: "@Madeline_Climbs" } });
+  assert.equal(ok.data.player.discordTag, "madeline_climbs");
+  const legacy = await api.request("PATCH", "/api/players/me", { token, body: { discordTag: "Madeline#1234" } });
+  assert.equal(legacy.data.player.discordTag, "Madeline#1234");
+
+  const unchanged = await api.request("PATCH", "/api/players/me", { token, body: { name: "Tag Keeper" } });
+  assert.equal(unchanged.data.player.discordTag, "Madeline#1234");
+  const cleared = await api.request("PATCH", "/api/players/me", { token, body: { discordTag: "" } });
+  assert.equal(cleared.data.player.discordTag, null);
+});
+
+test("admin : auteur des reports, tri, suppression et purge des reports clos", async () => {
+  const login = await api.request("POST", "/api/admin/login", { body: { password: "test-admin-password" } });
+  const headers = { Authorization: `Bearer ${login.data.token}` };
+
+  const { token } = await api.newPlayer();
+  await api.request("PATCH", "/api/players/me", { token, body: { name: "Reporter", discordTag: "reporter_one" } });
+  const mine = await api.request("POST", "/api/reports", { token, body: { description: "Report with an author" } });
+  const anonymous = await api.request("POST", "/api/reports", { body: { description: "Report without author" } });
+
+  // L'auteur n'apparaît jamais côté joueurs
+  const publicList = await api.request("GET", "/api/reports");
+  const publicMine = publicList.data.reports.find((r) => r.id === mine.data.id);
+  assert.equal(publicMine.reporter, undefined);
+  assert.equal(JSON.stringify(publicList.data).includes("reporter_one"), false);
+
+  const adminList = await api.request("GET", "/api/admin/reports", { headers });
+  const adminMine = adminList.data.reports.find((r) => r.id === mine.data.id);
+  assert.deepEqual([adminMine.reporter.name, adminMine.reporter.discordTag], ["Reporter", "reporter_one"]);
+  assert.equal(adminList.data.reports.find((r) => r.id === anonymous.data.id).reporter, null);
+
+  const deleted = await api.request("DELETE", `/api/admin/reports/${anonymous.data.id}`, { headers });
+  assert.equal(deleted.status, 204);
+  const missing = await api.request("DELETE", `/api/admin/reports/${anonymous.data.id}`, { headers });
+  assert.equal(missing.status, 404);
+
+  await api.request("PATCH", `/api/admin/reports/${mine.data.id}`, { headers, body: { status: "fixed" } });
+  const purge = await api.request("POST", "/api/admin/reports/purge-closed", { headers });
+  assert.ok(purge.data.deleted >= 1);
+  const after = await api.request("GET", "/api/admin/reports", { headers });
+  assert.ok(after.data.reports.every((r) => ["new", "working"].includes(r.status)));
+});
+
 test("sprites : image de l'élément, ou image par défaut", async () => {
   const sprite = await api.request("GET", "/sprite/summit%20gems");
   assert.equal(sprite.headers.get("content-type"), "image/png");

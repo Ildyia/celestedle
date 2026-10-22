@@ -183,6 +183,8 @@ export class ReportsPanel {
       return;
     }
     try {
+      // Rattache le report au profil (l'admin peut ainsi recontacter l'auteur)
+      await player.ensure();
       const report = await api.sendReport({
         elementName: this.nodes.element.value || null,
         bugType: this.nodes.type.value,

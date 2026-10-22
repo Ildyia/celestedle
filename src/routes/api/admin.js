@@ -166,6 +166,16 @@ router.patch("/admin/reports/:id", (req, res) => {
   res.json(reports.setStatus(req.params.id, req.body?.status));
 });
 
+router.delete("/admin/reports/:id", (req, res) => {
+  reports.remove(req.params.id);
+  res.status(204).end();
+});
+
+// Supprime tous les reports clos (corrigés, non reproductibles, erronés)
+router.post("/admin/reports/purge-closed", (req, res) => {
+  res.json({ deleted: reports.removeClosed() });
+});
+
 function currentSettings() {
   return { repeatDelayDays: daily.getRepeatDelay(), modes: allModeRules() };
 }

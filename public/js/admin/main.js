@@ -5,7 +5,7 @@ import { renderOverview } from "./overview.js";
 import { renderHistory } from "./history.js";
 import { WordsTab } from "./words.js";
 import { ElementsTab } from "./elements.js";
-import { renderReports } from "./reports.js";
+import { ReportsTab } from "./reports.js";
 import { bindSettings } from "./settings.js";
 
 const message = byId("admin-message");
@@ -20,6 +20,7 @@ export function notify(text, isError = false) {
 
 const words = new WordsTab();
 const elements = new ElementsTab({ notify });
+const reports = new ReportsTab({ notify });
 
 const loadSettings = bindSettings({ notify });
 
@@ -28,7 +29,7 @@ const TABS = {
   history: () => renderHistory(),
   words: () => words.load(),
   elements: () => elements.load(),
-  reports: () => renderReports({ notify }),
+  reports: () => reports.load(),
   settings: () => loadSettings()
 };
 

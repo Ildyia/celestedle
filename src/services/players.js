@@ -29,6 +29,21 @@ const COLORS = ["#f472b6", "#a855f7", "#6366f1", "#38bdf8", "#10b981", "#facc15"
 
 const NAME_PATTERN = /^[\p{L}\p{N} _-]{3,20}$/u;
 
+// Nom d'utilisateur Discord actuel (2 à 32 caractères : a-z, 0-9, _ et .)
+// ou ancien format « Nom#1234 »
+const DISCORD_PATTERN = /^(?:[a-z0-9_.]{2,32}|[^#@:]{2,32}#\d{4})$/;
+
+// "" ou null efface le tag ; un @ au début est ignoré
+function normalizeDiscordTag(value) {
+  const tag = String(value ?? "").trim().replace(/^@/, "");
+  if (!tag) return null;
+  const normalized = tag.includes("#") ? tag : tag.toLowerCase();
+  if (!DISCORD_PATTERN.test(normalized)) {
+    throw new HttpError(400, "Discord username must be 2 to 32 letters, digits, _ or . (or the old name#1234 format).");
+  }
+  return normalized;
+}
+
 function hashToken(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
@@ -65,8 +80,10 @@ function updateProfile(player, input) {
   const color = input.color ?? player.color;
   if (!COLORS.includes(color)) throw new HttpError(400, "Unknown colour.");
   const isHidden = input.isHidden === undefined ? player.isHidden : Boolean(input.isHidden);
+  const discordTag =
+    input.discordTag === undefined ? player.discordTag : normalizeDiscordTag(input.discordTag);
 
-  return playersRepo.update(player.id, { name, avatar, color, isHidden });
+  return playersRepo.update(player.id, { name, avatar, color, isHidden, discordTag });
 }
 
 // Séries de jours consécutifs gagnés. La série en cours compte encore si le

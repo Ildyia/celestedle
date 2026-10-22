@@ -401,6 +401,14 @@
             <span class="form-label">Colour</span>
             <div id="profile-colors" class="color-grid"></div>
           </div>
+          <div class="form-group">
+            <label for="profile-discord-input">Discord username (optional)</label>
+            <input type="text" id="profile-discord-input" class="bug-input" maxlength="40" placeholder="e.g. madeline_climbs" autocomplete="off" />
+            <p class="small-subtext">
+              Only visible to the admin, to contact you about your bug reports.
+              Never shown in the rankings.
+            </p>
+          </div>
           <div class="form-group form-inline">
             <input type="checkbox" id="profile-hidden-checkbox" />
             <label for="profile-hidden-checkbox">Hide my profile from the leaderboards</label>
@@ -465,7 +473,8 @@
         <h2>Report a Bug</h2>
         <p class="small-subtext">
           Please tick the spoiler box if the report is about today's word, so
-          other players don't get spoiled.
+          other players don't get spoiled. Add your Discord username in your
+          profile if you're OK with being contacted about your report.
         </p>
         <form id="bug-form">
           <div class="form-group">
