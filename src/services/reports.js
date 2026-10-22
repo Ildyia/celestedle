@@ -1,6 +1,9 @@
 const crypto = require("crypto");
 const reportsRepo = require("../repositories/reports");
 const elementsRepo = require("../repositories/elements");
+const daily = require("./daily");
+const { MODE_IDS } = require("./modes");
+const { todayParis } = require("../utils/dates");
 const { HttpError } = require("../utils/http-error");
 
 const BUG_TYPES = ["Error in hints", "Wrong element data", "Typo / Grammar", "Technical Bug", "Other"];
@@ -50,26 +53,56 @@ function newReportId() {
   return id;
 }
 
+// created_at est en UTC (« AAAA-MM-JJ HH:MM:SS », ou ISO pour les anciens reports)
+function reportDay(createdAt) {
+  const iso = createdAt.includes("T") ? createdAt : `${createdAt.replace(" ", "T")}Z`;
+  return todayParis(new Date(iso));
+}
+
+// Un spoiler ne compte que tant qu'il concerne un mot du jour actuel : son
+// élément est la réponse d'un des modes aujourd'hui, ou, sans élément, il a été
+// posté aujourd'hui. Passé ce délai, le report s'affiche normalement.
+function spoilerContext() {
+  const secretIds = new Set(MODE_IDS.map((mode) => daily.getTodaySecret(mode).element_id));
+  const today = todayParis();
+  return (report) =>
+    report.isSpoiler &&
+    (report.elementId !== null ? secretIds.has(report.elementId) : reportDay(report.createdAt) === today);
+}
+
+// Vue publique : le nom de l'élément d'un spoiler actif n'est jamais envoyé
+function publicView(report, isActiveSpoiler) {
+  if (!isActiveSpoiler(report)) return { ...report, isSpoiler: false };
+  return { ...report, elementId: null, elementName: null };
+}
+
+function toPublic(report) {
+  return publicView(report, spoilerContext());
+}
+
 function list(voterId) {
-  return reportsRepo.listOpen(voterId);
+  const isActiveSpoiler = spoilerContext();
+  return reportsRepo.listOpen(voterId).map((report) => publicView(report, isActiveSpoiler));
 }
 
 // Reports ouverts proches : même élément, et/ou mots-clés en commun
 function findSimilar({ elementName, description }, voterId, limit = 5) {
   const element = elementName ? elementsRepo.findByName(elementName) : null;
   const words = keywords(description);
+  const isActiveSpoiler = spoilerContext();
 
   return reportsRepo
     .listOpen(voterId)
     .map((report) => {
       const shared = [...keywords(report.description)].filter((w) => words.has(w)).length;
-      const sameElement = element && report.elementId === element.id;
+      // Rapprocher par élément un spoiler actif révélerait la réponse du jour
+      const sameElement = element && report.elementId === element.id && !isActiveSpoiler(report);
       return { report, score: (sameElement ? 3 : 0) + shared };
     })
     .filter(({ score }) => score >= 2)
     .sort((a, b) => b.score - a.score || b.report.score - a.report.score)
     .slice(0, limit)
-    .map(({ report }) => report);
+    .map(({ report }) => publicView(report, isActiveSpoiler));
 }
 
 // `player` : auteur, si le joueur a un profil (visible seulement par l'admin)
@@ -137,6 +170,7 @@ module.exports = {
   STATUSES,
   setNotifier,
   list,
+  toPublic,
   listAll: reportsRepo.listAll,
   findById: reportsRepo.findById,
   findSimilar,

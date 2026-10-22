@@ -1,0 +1,20 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "celestedle",
+      "runtimeExecutable": "/tmp/claude-1000/-home-rmat-Documents-celestedle/a1159255-5eb4-4c94-bbe2-233f6b2de827/scratchpad/node24/current/bin/node",
+      "runtimeArgs": [
+        "src/server.js"
+      ],
+      "env": {
+        "PORT": "5500",
+        "DATA_DIR": "/tmp/claude-1000/-home-rmat-Documents-celestedle/a1159255-5eb4-4c94-bbe2-233f6b2de827/scratchpad/data-test",
+        "ADMIN_PASSWORD": "WNcTiMUMtACBK2s",
+        "JWT_SECRET": "9N0xSvHFGYbNBsuG1YtxkctG1oGWv8b"
+      },
+      "port": 5500,
+      "autoPort": false
+    }
+  ]
+}

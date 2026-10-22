@@ -147,7 +147,9 @@ export class ReportsPanel {
 
     return el("div", { className: `report-item${compact ? " compact" : ""}` }, [
       el("div", { className: "report-head" }, [
-        el("strong", { text: report.elementName ? capitalize(report.elementName) : "General" }),
+        el("strong", {
+          text: report.elementName ? capitalize(report.elementName) : report.isSpoiler ? "Hidden (today's word)" : "General"
+        }),
         el("span", { className: "report-type", text: report.bugType }),
         el("span", { className: "report-status", text: STATUS_LABELS[report.status] ?? report.status })
       ]),
