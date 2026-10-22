@@ -40,7 +40,9 @@ jobs:
           BACKUP_ROOT="$HOME/celestedle-backups"
           BACKUP_DIR="$BACKUP_ROOT/$(date -u +%Y-%m-%dT%H%M%SZ)"
           mkdir -p "$BACKUP_DIR"
+          HAD_CONTAINER=0
           if docker container inspect celestedle-api >/dev/null 2>&1; then
+            HAD_CONTAINER=1
             for f in /api/src/reports.json /api/stats-history.json \
                      /api/data/reports.json /api/data/stats-history.json; do
               docker cp "celestedle-api:$f" "$BACKUP_DIR/" 2>/dev/null || true
@@ -48,6 +50,7 @@ jobs:
           fi
           ls -la "$BACKUP_DIR"
           echo "BACKUP_DIR=$BACKUP_DIR" >> "$GITHUB_ENV"
+          echo "HAD_CONTAINER=$HAD_CONTAINER" >> "$GITHUB_ENV"
           # Garde les 30 dernières sauvegardes
           ls -1dt "$BACKUP_ROOT"/*/ | tail -n +31 | xargs -r rm -rf
 
@@ -60,6 +63,17 @@ jobs:
             -v celestedle-data:/data \
             -v "$BACKUP_DIR":/backup:ro \
             alpine sh -c 'for f in /backup/*.json; do [ -e "$f" ] && cp -n "$f" /data/; done; ls -la /data'
+
+      # Garde-fou : on ne remplace pas un conteneur existant si aucune donnée
+      # n'a pu être récupérée (la recréation supprimerait les seules copies)
+      - name: Check game data before replacing the container
+        run: |
+          FILES=$(docker run --rm -v celestedle-data:/data alpine sh -c 'ls /data/*.json /data/*.db 2>/dev/null | wc -l')
+          echo "Fichiers de données dans le volume : $FILES"
+          if [ "$HAD_CONTAINER" = "1" ] && [ "$FILES" = "0" ]; then
+            echo "::error::Aucune donnée récupérée depuis le conteneur actuel, déploiement annulé."
+            exit 1
+          fi
 
       - name: Deploy Production
         run: docker compose up -d --build --force-recreate
