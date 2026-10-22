@@ -24,22 +24,20 @@ body.theme-celeste .suggestions-box {
   background: rgba(20, 16, 35, 0.85);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.12);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
 body.theme-celeste #game-container {
   background: rgba(25, 18, 42, 0.6) !important;
-  border: 1px solid rgba(244, 114, 182, 0.2) !important;
+  border-color: rgba(244, 114, 182, 0.2) !important;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border-radius: 12px;
-  padding: 16px;
 }
 
 body.theme-celeste #element-input {
   background-color: rgba(30, 20, 50, 0.6) !important;
-  border: 1px solid rgba(244, 114, 182, 0.3) !important;
+  border-color: rgba(244, 114, 182, 0.3) !important;
   color: #ffffff;
 }
 
@@ -156,19 +154,6 @@ body.theme-celeste.colorblind td.wrong {
 /* ==========================================
    SWITCHES ET CHECKBOXES MODERNES (THEME CELESTE)
    ========================================== */
-body.theme-celeste .switch {
-  position: relative;
-  display: inline-block;
-  width: 48px;
-  height: 26px;
-}
-
-body.theme-celeste .switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
 body.theme-celeste .slider {
   position: absolute;
   inset: 0;
@@ -182,8 +167,8 @@ body.theme-celeste .slider {
 body.theme-celeste .slider::before {
   position: absolute;
   content: "";
-  height: 18px;
-  width: 18px;
+  height: 16px;
+  width: 16px;
   left: 3px;
   bottom: 2.5px;
   background: linear-gradient(135deg, #ffffff, #e2e8f0);
@@ -208,18 +193,18 @@ body.theme-celeste input:checked + .slider {
 }
 
 body.theme-celeste input:checked + .slider::before {
-  transform: translateX(21px);
+  transform: translateX(19px);
   background: #ffffff;
 }
 
 body.theme-celeste input[type="checkbox"]:not(.switch input) {
   appearance: none;
   -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   background: rgba(15, 23, 42, 0.6);
   border: 1.5px solid rgba(255, 255, 255, 0.2);
-  border-radius: 5px;
+  border-radius: 4px;
   position: relative;
   vertical-align: middle;
   transition: all 0.2s ease;

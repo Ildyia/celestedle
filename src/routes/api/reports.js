@@ -25,7 +25,7 @@ router.post("/reports", createLimit, (req, res) => {
 });
 
 router.post("/reports/:id/vote", requirePlayer, voteLimit, (req, res) => {
-  res.json(reports.vote(req.params.id, voterOf(req), Boolean(req.body?.isUp)));
+  res.json(reports.toPublic(reports.vote(req.params.id, voterOf(req), Boolean(req.body?.isUp))));
 });
 
 module.exports = router;

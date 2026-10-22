@@ -172,9 +172,15 @@ th,
   margin-bottom: 0px;
 }
 
+/* Bordure et marge identiques dans les deux thèmes : changer de thème ne
+   doit modifier que les couleurs, jamais la mise en page */
 #game-container {
   width: 100%;
   image-rendering: pixelated;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 16px;
+  box-sizing: border-box;
 }
 
 
@@ -794,6 +800,8 @@ th,
   text-transform: uppercase;
   letter-spacing: 1px;
   text-align: center;
+  /* même épaisseur que le soulignement du thème Celeste */
+  border-bottom: 2px solid transparent;
 }
 
 #guesses-table td {

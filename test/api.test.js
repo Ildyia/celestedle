@@ -258,6 +258,40 @@ test("reports : import v1, doublons, création et votes", async () => {
   assert.equal(down.data.score, -1);
 });
 
+test("reports spoiler : élément masqué tant qu'il est le mot du jour", async () => {
+  const { token } = await api.newPlayer();
+  const secret = daily.getTodaySecret("normal").element.nom;
+  const created = await api.request("POST", "/api/reports", {
+    token,
+    body: { elementName: secret, description: "Spoiler about the answer", isSpoiler: true }
+  });
+  const general = await api.request("POST", "/api/reports", {
+    body: { description: "General spoiler posted today", isSpoiler: true }
+  });
+
+  const find = async (id) => (await api.request("GET", "/api/reports", { token })).data.reports.find((r) => r.id === id);
+  const hidden = await find(created.data.id);
+  assert.equal(hidden.isSpoiler, true);
+  assert.equal(hidden.elementName, null);
+  assert.equal(hidden.elementId, null);
+  assert.equal((await find(general.data.id)).isSpoiler, true);
+
+  // La recherche de doublons ne doit pas trahir la réponse par l'élément
+  const similar = await api.request("POST", "/api/reports/similar", { body: { elementName: secret, description: "" } });
+  assert.ok(similar.data.every((r) => r.id !== created.data.id));
+
+  const vote = await api.request("POST", `/api/reports/${created.data.id}/vote`, { token, body: { isUp: true } });
+  assert.equal(vote.data.elementName, null);
+
+  // Le mot du jour change : le spoiler est levé
+  daily.setSecret("normal", elementsRepo.findByName(wrongGuessFor(secret)));
+  const hard = daily.getTodaySecret("hard").element.nom;
+  if (hard === secret) daily.setSecret("hard", elementsRepo.findByName(wrongGuessFor(secret, [secret])));
+  const revealed = await find(created.data.id);
+  assert.equal(revealed.isSpoiler, false);
+  assert.equal(revealed.elementName, secret);
+});
+
 test("admin : accès par le profil, propriétaire désigné une seule fois", async () => {
   const noToken = await api.request("GET", "/api/admin/overview");
   assert.equal(noToken.status, 401);
