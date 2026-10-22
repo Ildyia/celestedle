@@ -1,6 +1,9 @@
 // Limitation de débit en mémoire, par adresse IP et par règle. Suffisant pour
 // un seul processus ; les compteurs repartent à zéro au redémarrage.
 function rateLimit({ name, windowMs, max }) {
+  // Tests : DISABLE_RATE_LIMIT=1 (les tests enchaînent des dizaines d'appels)
+  if (process.env.DISABLE_RATE_LIMIT === "1") return (req, res, next) => next();
+
   const hits = new Map();
 
   const sweep = setInterval(() => {

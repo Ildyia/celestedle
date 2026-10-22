@@ -50,6 +50,7 @@
           <button type="button" role="tab" data-tab="elements" aria-selected="false">Éléments</button>
           <button type="button" role="tab" data-tab="reports" aria-selected="false">Reports</button>
           <button type="button" role="tab" data-tab="settings" aria-selected="false">Réglages</button>
+          <button type="button" role="tab" data-tab="players" aria-selected="false">Joueurs</button>
           <button type="button" role="tab" data-tab="team" aria-selected="false" data-owner-only hidden>Équipe</button>
         </nav>
 
@@ -217,6 +218,26 @@
 
             <button type="submit" class="btn-primary">Enregistrer</button>
           </form>
+        </section>
+
+        <section id="tab-players" class="admin-panel" role="tabpanel" hidden>
+          <form id="players-search-form" class="admin-toolbar">
+            <input type="search" id="players-search-input" class="bug-input" placeholder="Pseudo, identifiant ou tag Discord" aria-label="Rechercher un joueur" />
+            <button type="submit" class="btn-primary">Rechercher</button>
+          </form>
+          <p class="small-subtext">
+            Un joueur qui a perdu son profil peut recevoir un nouveau code avec la
+            commande /passcode du bot Discord, si son tag Discord est renseigné.
+            Seul le propriétaire peut supprimer un profil.
+          </p>
+          <div class="admin-table-wrapper">
+            <table class="admin-table">
+              <thead>
+                <tr><th>Nom</th><th>Identifiant</th><th>Discord</th><th>Rôle</th><th>Parties</th><th>Dernière visite</th><th></th></tr>
+              </thead>
+              <tbody id="players-body"></tbody>
+            </table>
+          </div>
         </section>
 
         <section id="tab-team" class="admin-panel" role="tabpanel" hidden>

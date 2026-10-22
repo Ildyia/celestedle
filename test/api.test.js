@@ -441,6 +441,56 @@ test("rôles : le propriétaire gère l'équipe, l'administrateur a un quota", a
   assert.equal((await api.request("GET", "/api/admin/overview", { headers: adminHeaders })).status, 403);
 });
 
+test("/passcode : nouveau code pour les profils au tag Discord de l'utilisateur", async () => {
+  const players = require("../src/services/players");
+  const lost = await api.newPlayer();
+  await api.request("PATCH", "/api/players/me", { token: lost.token, body: { discordTag: "lost_climber" } });
+
+  assert.deepEqual(players.findByDiscordUser({ username: "someone_else", discriminator: "0" }), []);
+  const [match] = players.findByDiscordUser({ username: "Lost_Climber", discriminator: "0" });
+  assert.equal(match.id, lost.player.id);
+
+  const newCode = players.resetToken(match.id);
+  assert.equal((await api.request("GET", "/api/players/me", { token: lost.token })).status, 401, "l'ancien code ne marche plus");
+  const restored = await api.request("GET", "/api/players/me", { token: newCode });
+  assert.equal(restored.data.player.id, lost.player.id);
+});
+
+test("suppression : par le joueur, ou par le propriétaire seulement", async () => {
+  const headers = await ownerHeaders();
+
+  // Le joueur supprime son profil : parties et votes partent, ses reports restent
+  const leaving = await api.newPlayer();
+  await api.request("POST", "/api/game/forfeit", { token: leaving.token, body: { mode: "normal" } });
+  const report = await api.request("POST", "/api/reports", { token: leaving.token, body: { description: "Report from a leaving player" } });
+  await api.request("POST", `/api/reports/${report.data.id}/vote`, { token: leaving.token, body: { isUp: true } });
+  assert.equal((await api.request("DELETE", "/api/players/me", { token: leaving.token })).status, 204);
+  assert.equal((await api.request("GET", "/api/players/me", { token: leaving.token })).status, 401);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM games WHERE player_id = ?").get(leaving.player.id).n, 0);
+  const kept = (await api.request("GET", "/api/admin/reports", { headers })).data.reports.find((r) => r.id === report.data.id);
+  assert.equal(kept.reporter, null);
+  assert.equal(kept.score, 0);
+
+  // Le propriétaire ne peut pas supprimer son propre profil
+  assert.equal((await api.request("DELETE", "/api/players/me", { headers })).status, 409);
+
+  // Recherche par tag Discord, puis suppression réservée au propriétaire
+  const target = await api.newPlayer();
+  await api.request("PATCH", "/api/players/me", { token: target.token, body: { discordTag: "to_delete" } });
+  const found = await api.request("GET", "/api/admin/players?q=to_delete", { headers });
+  assert.equal(found.data[0].id, target.player.id);
+
+  const helper = await api.newPlayer();
+  await api.request("POST", "/api/admin/team", { headers, body: { playerId: helper.player.id } });
+  const byAdmin = await api.request("DELETE", `/api/admin/players/${target.player.id}`, { headers: { "X-Player-Token": helper.token } });
+  assert.equal(byAdmin.status, 403);
+
+  assert.equal((await api.request("DELETE", `/api/admin/players/${target.player.id}`, { headers })).status, 204);
+  assert.equal((await api.request("GET", "/api/players/me", { token: target.token })).status, 401);
+  const audit = await api.request("GET", "/api/admin/audit", { headers });
+  assert.ok(audit.data.some((a) => a.action === "delete_player"));
+});
+
 test("sprites : image de l'élément, ou image par défaut", async () => {
   const sprite = await api.request("GET", "/sprite/summit%20gems");
   assert.equal(sprite.headers.get("content-type"), "image/png");

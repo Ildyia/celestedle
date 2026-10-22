@@ -28,6 +28,12 @@ router.patch("/players/me", requirePlayer, (req, res) => {
   res.json({ player: players.updateProfile(req.player, req.body || {}) });
 });
 
+// Le joueur supprime son profil, ses parties et ses votes
+router.delete("/players/me", requirePlayer, (req, res) => {
+  players.deletePlayer(req.player.id);
+  res.status(204).end();
+});
+
 router.get("/players/me/stats", requirePlayer, (req, res) => {
   expireOverdueGames();
   res.json(players.playerStats(req.player, req.query.mode));

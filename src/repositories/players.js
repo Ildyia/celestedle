@@ -13,6 +13,18 @@ const stmts = {
     WHERE id = @id
   `),
   touch: db.prepare("UPDATE players SET last_seen_at = ? WHERE id = ?"),
+  setTokenHash: db.prepare("UPDATE players SET token_hash = ? WHERE id = ?"),
+  byDiscordTag: db.prepare("SELECT * FROM players WHERE discord_tag = ? COLLATE NOCASE"),
+  search: db.prepare(`
+    SELECT p.*, (SELECT COUNT(*) FROM games g WHERE g.player_id = p.id) AS games
+    FROM players p
+    WHERE p.id = @q OR p.name LIKE @like ESCAPE '\\' OR p.discord_tag LIKE @like ESCAPE '\\'
+    ORDER BY p.last_seen_at DESC
+    LIMIT 50
+  `),
+  // Ses votes ne sont pas liés par une clé étrangère : on les retire à part
+  removeVotes: db.prepare("DELETE FROM report_votes WHERE voter_id = ?"),
+  remove: db.prepare("DELETE FROM players WHERE id = ?"),
   count: db.prepare("SELECT COUNT(*) AS n FROM players")
 };
 
@@ -49,6 +61,29 @@ function update(id, { name, avatar, color, isHidden, discordTag }) {
   return findById(id);
 }
 
+function setTokenHash(id, tokenHash) {
+  stmts.setTokenHash.run(tokenHash, id);
+}
+
+function findByDiscordTag(tag) {
+  return stmts.byDiscordTag.all(tag).map(toPlayer);
+}
+
+function search(query) {
+  const q = String(query ?? "").trim();
+  return stmts.search
+    // % et _ cherchés tels quels
+    .all({ q, like: `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%` })
+    .map((row) => ({ ...toPlayer(row), lastSeenAt: row.last_seen_at, games: row.games }));
+}
+
+// Parties, essais et journal admin suivent (ON DELETE CASCADE) ; ses
+// reports restent, sans auteur
+const remove = db.transaction((id) => {
+  stmts.removeVotes.run(`player:${id}`);
+  return stmts.remove.run(id).changes === 1;
+});
+
 function touch(id) {
   stmts.touch.run(new Date().toISOString(), id);
 }
@@ -57,4 +92,15 @@ function count() {
   return stmts.count.get().n;
 }
 
-module.exports = { create, findByTokenHash, findById, update, touch, count };
+module.exports = {
+  create,
+  findByTokenHash,
+  findById,
+  findByDiscordTag,
+  search,
+  update,
+  setTokenHash,
+  remove,
+  touch,
+  count
+};

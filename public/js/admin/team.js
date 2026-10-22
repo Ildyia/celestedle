@@ -13,7 +13,8 @@ const ACTION_LABELS = {
   report_status: "Change le statut d'un report",
   delete_report: "Supprime un report",
   purge_reports: "Supprime les reports clos",
-  settings: "Modifie les réglages"
+  settings: "Modifie les réglages",
+  delete_player: "Supprime un profil"
 };
 
 // Onglet Équipe, réservé au propriétaire : administrateurs, quota, journal

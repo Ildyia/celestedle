@@ -8,6 +8,7 @@ const { expireOverdueGames } = require("../../services/games");
 const { allModeRules, updateModeRules } = require("../../services/mode-rules");
 const { MODE_IDS } = require("../../services/modes");
 const staff = require("../../services/staff");
+const players = require("../../services/players");
 const { requireStaff, requireOwner, limitedAction } = require("../../middleware/admin-auth");
 const { requirePlayer } = require("../../middleware/player");
 const { rateLimit } = require("../../middleware/rate-limit");
@@ -229,6 +230,17 @@ router.post("/admin/team", requireOwner, (req, res) => {
 
 router.delete("/admin/team/:playerId", requireOwner, (req, res) => {
   res.json(staff.revokeAdministrator(req.player, req.params.playerId));
+});
+
+// Joueurs : recherche par identifiant, pseudo ou tag Discord
+router.get("/admin/players", (req, res) => {
+  res.json(players.search(req.query.q));
+});
+
+router.delete("/admin/players/:id", requireOwner, (req, res) => {
+  const removed = players.deletePlayer(req.params.id);
+  staff.recordAction(req.player, "delete_player", `${removed.name} (${removed.id})`);
+  res.status(204).end();
 });
 
 router.get("/admin/audit", requireOwner, (req, res) => {

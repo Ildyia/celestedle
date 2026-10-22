@@ -72,6 +72,7 @@ export const api = {
   me: (token) =>
     request("GET", "/players/me", token ? { auth: false, headers: { "X-Player-Token": token } } : {}),
   updateMe: (changes) => request("PATCH", "/players/me", { body: changes }),
+  deleteMe: () => request("DELETE", "/players/me"),
   myStats: (mode) => request("GET", `/players/me/stats?mode=${mode}`),
   profileOptions: () => request("GET", "/players/options", { auth: false }),
 

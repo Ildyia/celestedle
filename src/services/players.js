@@ -52,9 +52,13 @@ function randomItem(list) {
   return list[crypto.randomInt(list.length)];
 }
 
+function newToken() {
+  return crypto.randomBytes(24).toString("base64url");
+}
+
 // Le jeton n'est renvoyé qu'ici : il sert aussi de code de récupération
 function createPlayer() {
-  const token = crypto.randomBytes(24).toString("base64url");
+  const token = newToken();
   const player = playersRepo.create({
     id: crypto.randomBytes(8).toString("base64url"),
     tokenHash: hashToken(token),
@@ -63,6 +67,34 @@ function createPlayer() {
     color: randomItem(COLORS)
   });
   return { player, token };
+}
+
+// Nouveau code de récupération : l'ancien cesse de fonctionner partout
+function resetToken(playerId) {
+  const token = newToken();
+  playersRepo.setTokenHash(playerId, hashToken(token));
+  return token;
+}
+
+// Profils dont le tag Discord correspond à un utilisateur Discord. Les
+// anciens tags « Nom#1234 » ne correspondent qu'avec le discriminant.
+function findByDiscordUser({ username, discriminator }) {
+  const tags = [username.toLowerCase()];
+  if (discriminator && discriminator !== "0") tags.push(`${username}#${discriminator}`);
+  const seen = new Map();
+  for (const tag of tags) {
+    for (const player of playersRepo.findByDiscordTag(tag)) seen.set(player.id, player);
+  }
+  return [...seen.values()];
+}
+
+// Le propriétaire ne peut pas être supprimé (il resterait un site sans propriétaire)
+function deletePlayer(playerId) {
+  const player = playersRepo.findById(playerId);
+  if (!player) throw new HttpError(404, "No profile with this player ID.");
+  if (player.role === "owner") throw new HttpError(409, "The owner's profile can't be deleted.");
+  playersRepo.remove(player.id);
+  return player;
 }
 
 function findByToken(token) {
@@ -135,6 +167,10 @@ module.exports = {
   AVATARS,
   COLORS,
   createPlayer,
+  resetToken,
+  findByDiscordUser,
+  deletePlayer,
+  search: (query) => playersRepo.search(query),
   findByToken,
   updateProfile,
   playerStats,

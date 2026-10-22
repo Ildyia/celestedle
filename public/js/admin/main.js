@@ -8,6 +8,7 @@ import { WordsTab } from "./words.js";
 import { ElementsTab } from "./elements.js";
 import { ReportsTab } from "./reports.js";
 import { TeamTab } from "./team.js";
+import { PlayersTab } from "./players.js";
 import { bindSettings } from "./settings.js";
 
 const message = byId("admin-message");
@@ -26,6 +27,7 @@ const words = new WordsTab();
 const elements = new ElementsTab({ notify });
 const reports = new ReportsTab({ notify });
 const team = new TeamTab({ notify });
+const playersTab = new PlayersTab({ notify, getRole: () => currentRole });
 const loadSettings = bindSettings({ notify });
 
 const TABS = {
@@ -35,12 +37,14 @@ const TABS = {
   elements: () => elements.load(),
   reports: () => reports.load(),
   settings: () => loadSettings(),
-  team: () => team.load()
+  team: () => team.load(),
+  players: () => playersTab.load()
 };
 
 const ROLE_LABELS = { owner: "Propriétaire", administrator: "Administrateur" };
 
 let currentTab = "overview";
+let currentRole = null;
 
 async function showTab(tab) {
   currentTab = tab;
@@ -58,6 +62,7 @@ async function showTab(tab) {
 }
 
 function renderIdentity({ player, role, quota }) {
+  currentRole = role;
   const remaining =
     quota.limit === null
       ? "modifications illimitées"
