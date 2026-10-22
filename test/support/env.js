@@ -7,10 +7,10 @@ const path = require("path");
 const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "celestedle-test-"));
 process.env.DATA_DIR = dataDir;
 process.env.DB_PATH = ":memory:";
-process.env.JWT_SECRET = "test-jwt-secret";
 process.env.ADMIN_PASSWORD = "test-admin-password";
 process.env.DISCORD_BOT_TOKEN = "";
 process.env.RANDOM_SEED = "";
+process.env.DISABLE_RATE_LIMIT = "1";
 
 // Fichiers v1 à importer, écrits avant le premier require de la base
 function writeLegacyFiles({ reports, history }) {

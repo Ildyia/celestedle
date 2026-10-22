@@ -12,21 +12,35 @@
   </head>
   <body class="theme-celeste no-custom-cursor">
     <div class="admin-container">
-      <form id="admin-login-block" class="sidebar-block admin-login">
-        <h3>Connexion Admin</h3>
-        <div class="form-group">
-          <label for="admin-password-input">Mot de passe</label>
-          <input type="password" id="admin-password-input" class="bug-input" autocomplete="current-password" required />
-        </div>
-        <button type="submit" class="btn-primary btn-wide">Se connecter</button>
-        <p id="admin-login-error" class="form-error"></p>
-      </form>
+      <div id="admin-access" class="sidebar-block admin-login" hidden>
+        <h3>Accès admin</h3>
+        <p id="admin-access-status" class="small-subtext"></p>
+
+        <form id="admin-profile-form" class="admin-access-form">
+          <label for="admin-code-input">Code de récupération de ton profil</label>
+          <input type="text" id="admin-code-input" class="bug-input" autocomplete="off" required />
+          <p class="small-subtext">Dans le jeu : Profile → Recovery code → Copy.</p>
+          <button type="submit" class="btn-primary btn-wide">Utiliser ce profil</button>
+        </form>
+
+        <form id="admin-claim-form" class="admin-access-form" hidden>
+          <label for="admin-claim-input">Mot de passe admin du serveur</label>
+          <input type="password" id="admin-claim-input" class="bug-input" autocomplete="current-password" required />
+          <p class="small-subtext">
+            Le site n'a pas encore de propriétaire. Ce mot de passe fait de ce
+            profil le propriétaire, une seule fois.
+          </p>
+          <button type="submit" class="btn-primary btn-wide">Devenir propriétaire</button>
+        </form>
+
+        <p id="admin-access-error" class="form-error"></p>
+      </div>
 
       <div id="admin-dashboard" hidden>
         <header class="admin-header">
           <h1>Administration Celestedle</h1>
           <span id="admin-version" class="small-subtext"></span>
-          <button type="button" id="admin-logout-btn" class="btn-secondary">Se déconnecter</button>
+          <span id="admin-identity" class="admin-identity"></span>
         </header>
 
         <nav class="admin-tabs" role="tablist" aria-label="Sections">
@@ -36,6 +50,8 @@
           <button type="button" role="tab" data-tab="elements" aria-selected="false">Éléments</button>
           <button type="button" role="tab" data-tab="reports" aria-selected="false">Reports</button>
           <button type="button" role="tab" data-tab="settings" aria-selected="false">Réglages</button>
+          <button type="button" role="tab" data-tab="players" aria-selected="false">Joueurs</button>
+          <button type="button" role="tab" data-tab="team" aria-selected="false" data-owner-only hidden>Équipe</button>
         </nav>
 
         <p id="admin-message" class="admin-message" role="status"></p>
@@ -145,11 +161,24 @@
         </section>
 
         <section id="tab-reports" class="admin-panel" role="tabpanel" hidden>
+          <div class="admin-toolbar">
+            <select id="reports-status-filter" class="bug-input" aria-label="Filtrer par statut">
+              <option value="">Tous les statuts</option>
+              <option value="open">Ouverts (nouveaux et en cours)</option>
+              <option value="new">Nouveau</option>
+              <option value="working">En cours</option>
+              <option value="fixed">Corrigé</option>
+              <option value="cant_reproduce">Non reproductible</option>
+              <option value="wrong">Report erroné</option>
+            </select>
+            <button type="button" id="purge-closed-btn" class="btn-secondary">Supprimer les reports clos</button>
+          </div>
+          <p class="small-subtext">
+            Clic sur un en-tête pour trier. Supprimer un report retire aussi ses votes et ses messages Discord.
+          </p>
           <div class="admin-table-wrapper">
-            <table class="admin-table">
-              <thead>
-                <tr><th>ID</th><th>Élément</th><th>Type</th><th>Description</th><th>Score</th><th>Date</th><th>Statut</th></tr>
-              </thead>
+            <table class="admin-table sortable">
+              <thead id="reports-head"></thead>
               <tbody id="reports-body"></tbody>
             </table>
           </div>
@@ -189,6 +218,66 @@
 
             <button type="submit" class="btn-primary">Enregistrer</button>
           </form>
+        </section>
+
+        <section id="tab-players" class="admin-panel" role="tabpanel" hidden>
+          <form id="players-search-form" class="admin-toolbar">
+            <input type="search" id="players-search-input" class="bug-input" placeholder="Pseudo, identifiant ou tag Discord" aria-label="Rechercher un joueur" />
+            <button type="submit" class="btn-primary">Rechercher</button>
+          </form>
+          <p class="small-subtext">
+            Un joueur qui a perdu son profil peut recevoir un nouveau code avec la
+            commande /passcode du bot Discord, si son tag Discord est renseigné.
+            Seul le propriétaire peut supprimer un profil.
+          </p>
+          <div class="admin-table-wrapper">
+            <table class="admin-table">
+              <thead>
+                <tr><th>Nom</th><th>Identifiant</th><th>Discord</th><th>Rôle</th><th>Parties</th><th>Dernière visite</th><th></th></tr>
+              </thead>
+              <tbody id="players-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="tab-team" class="admin-panel" role="tabpanel" hidden>
+          <div class="admin-card team-card">
+            <h3>Administrateurs</h3>
+            <p class="small-subtext">
+              Un administrateur peut tout consulter et faire un nombre limité de
+              modifications par jour. Il ne peut pas gérer l'équipe. Le joueur
+              trouve son identifiant dans le jeu : Profile → Player ID.
+            </p>
+            <form id="team-add-form" class="admin-toolbar">
+              <input type="text" id="team-player-input" class="bug-input" placeholder="Identifiant du joueur" aria-label="Identifiant du joueur" required />
+              <button type="submit" class="btn-primary">Nommer administrateur</button>
+            </form>
+            <div class="admin-table-wrapper">
+              <table class="admin-table">
+                <thead>
+                  <tr><th>Nom</th><th>Rôle</th><th>Discord</th><th>Identifiant</th><th>Modifications aujourd'hui</th><th></th></tr>
+                </thead>
+                <tbody id="team-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <form id="team-limit-form" class="admin-card settings-form">
+            <div class="form-group">
+              <label for="team-limit-input">Modifications par jour pour chaque administrateur</label>
+              <input type="number" id="team-limit-input" class="bug-input" min="0" max="1000" step="1" required />
+              <p class="small-subtext">Le compteur repart à zéro à minuit (heure de Paris). Le propriétaire n'a pas de limite.</p>
+            </div>
+            <button type="submit" class="btn-primary">Enregistrer</button>
+          </form>
+
+          <div class="admin-table-wrapper">
+            <h3 class="admin-subtitle">Journal des modifications</h3>
+            <table class="admin-table">
+              <thead><tr><th>Date</th><th>Qui</th><th>Action</th><th>Cible</th></tr></thead>
+              <tbody id="audit-body"></tbody>
+            </table>
+          </div>
         </section>
       </div>
     </div>

@@ -1,62 +1,56 @@
 import { API_BASE_URL } from "../api.js";
+import { storage, KEYS } from "../storage.js";
 
-const TOKEN_KEY = "celestedle_admin_token";
+// L'admin utilise le même profil que le jeu : le jeton du joueur, dont le
+// rôle (propriétaire ou administrateur) donne les droits
+let onAccessLost = () => {};
 
-let onSessionExpired = () => {};
-
-export function setSessionExpiredHandler(handler) {
-  onSessionExpired = handler;
+export function setAccessLostHandler(handler) {
+  onAccessLost = handler;
 }
 
-export const session = {
-  get token() {
-    try {
-      return sessionStorage.getItem(TOKEN_KEY);
-    } catch {
-      return null;
-    }
-  },
-  set token(value) {
-    try {
-      if (value) sessionStorage.setItem(TOKEN_KEY, value);
-      else sessionStorage.removeItem(TOKEN_KEY);
-    } catch {
-      // session non conservée : il faudra se reconnecter au rechargement
-    }
-  }
-};
-
-async function request(method, path, body) {
-  const res = await fetch(`${API_BASE_URL}/api/admin${path}`, {
+async function request(method, path, body, token = storage.get(KEYS.playerToken)) {
+  const res = await fetch(`${API_BASE_URL}/api${path}`, {
     method,
     headers: {
       ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
-      ...(session.token ? { Authorization: `Bearer ${session.token}` } : {})
+      ...(token ? { "X-Player-Token": token } : {})
     },
     body: body !== undefined ? JSON.stringify(body) : undefined
   });
   const data = await res.json().catch(() => null);
-  if (res.status === 401 && path !== "/login") {
-    session.token = null;
-    onSessionExpired();
+  if ((res.status === 401 || res.status === 403) && path !== "/admin/me" && path !== "/admin/claim-owner") {
+    onAccessLost();
   }
-  if (!res.ok) throw new Error(data?.error || `Erreur HTTP ${res.status}`);
+  if (!res.ok) {
+    const error = new Error(data?.error || `Erreur HTTP ${res.status}`);
+    error.status = res.status;
+    throw error;
+  }
   return data;
 }
 
 export const admin = {
-  login: (password) => request("POST", "/login", { password }),
-  session: () => request("GET", "/session"),
-  overview: () => request("GET", "/overview"),
-  history: () => request("GET", "/history"),
-  words: () => request("GET", "/words"),
-  setSecret: (mode, action, elementName) => request("POST", "/secret", { mode, action, elementName }),
-  elements: () => request("GET", "/elements"),
-  createElement: (element) => request("POST", "/elements", element),
-  updateElement: (id, changes) => request("PATCH", `/elements/${id}`, changes),
-  exportDbJson: () => request("GET", "/export/db.json"),
-  reports: () => request("GET", "/reports"),
-  setReportStatus: (id, status) => request("PATCH", `/reports/${encodeURIComponent(id)}`, { status }),
-  settings: () => request("GET", "/settings"),
-  saveSettings: (settings) => request("PUT", "/settings", settings)
+  me: (token) => request("GET", "/admin/me", undefined, token),
+  claimOwner: (password) => request("POST", "/admin/claim-owner", { password }),
+  overview: () => request("GET", "/admin/overview"),
+  history: () => request("GET", "/admin/history"),
+  words: () => request("GET", "/admin/words"),
+  setSecret: (mode, action, elementName) => request("POST", "/admin/secret", { mode, action, elementName }),
+  elements: () => request("GET", "/admin/elements"),
+  createElement: (element) => request("POST", "/admin/elements", element),
+  updateElement: (id, changes) => request("PATCH", `/admin/elements/${id}`, changes),
+  exportDbJson: () => request("GET", "/admin/export/db.json"),
+  reports: () => request("GET", "/admin/reports"),
+  setReportStatus: (id, status) => request("PATCH", `/admin/reports/${encodeURIComponent(id)}`, { status }),
+  deleteReport: (id) => request("DELETE", `/admin/reports/${encodeURIComponent(id)}`),
+  purgeClosedReports: () => request("POST", "/admin/reports/purge-closed"),
+  settings: () => request("GET", "/admin/settings"),
+  saveSettings: (settings) => request("PUT", "/admin/settings", settings),
+  team: () => request("GET", "/admin/team"),
+  grantAdmin: (playerId) => request("POST", "/admin/team", { playerId }),
+  revokeAdmin: (playerId) => request("DELETE", `/admin/team/${encodeURIComponent(playerId)}`),
+  audit: () => request("GET", "/admin/audit"),
+  searchPlayers: (q) => request("GET", `/admin/players?q=${encodeURIComponent(q)}`),
+  deletePlayer: (id) => request("DELETE", `/admin/players/${encodeURIComponent(id)}`)
 };

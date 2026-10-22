@@ -21,7 +21,7 @@ router.post("/reports/similar", (req, res) => {
 });
 
 router.post("/reports", createLimit, (req, res) => {
-  res.status(201).json(reports.create(req.body || {}));
+  res.status(201).json(reports.create(req.body || {}, req.player));
 });
 
 router.post("/reports/:id/vote", requirePlayer, voteLimit, (req, res) => {

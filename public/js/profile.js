@@ -16,6 +16,7 @@ export class ProfilePanel {
     this.nodes = {
       form: byId("profile-form"),
       name: byId("profile-name-input"),
+      discord: byId("profile-discord-input"),
       avatars: byId("profile-avatars"),
       colors: byId("profile-colors"),
       hidden: byId("profile-hidden-checkbox"),
@@ -32,6 +33,7 @@ export class ProfilePanel {
       this.save();
     });
     byId("show-code-btn")?.addEventListener("click", () => this.toggleCode());
+    byId("delete-profile-btn")?.addEventListener("click", () => this.deleteProfile());
     byId("copy-code-btn")?.addEventListener("click", () => this.copyCode());
     byId("restore-form")?.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -70,6 +72,8 @@ export class ProfilePanel {
     const profile = player.profile;
     this.selected = { avatar: profile.avatar, color: profile.color };
     this.nodes.name.value = profile.name;
+    byId("player-id").textContent = profile.id;
+    this.nodes.discord.value = profile.discordTag ?? "";
     this.nodes.hidden.checked = profile.isHidden;
     this.nodes.code.textContent = "••••••••••••";
     this.nodes.code.dataset.visible = "false";
@@ -110,8 +114,10 @@ export class ProfilePanel {
         name: this.nodes.name.value,
         avatar: this.selected.avatar,
         color: this.selected.color,
+        discordTag: this.nodes.discord.value,
         isHidden: this.nodes.hidden.checked
       });
+      this.nodes.discord.value = player.profile.discordTag ?? "";
       showToast("Profile saved.");
     } catch (err) {
       showToast(err.message);
@@ -177,6 +183,29 @@ export class ProfilePanel {
     } catch {
       this.toggleCode();
       showToast("Copy failed: select the code and copy it manually.");
+    }
+  }
+
+  // Premier clic : confirmation ; second clic dans les 5 s : suppression
+  async deleteProfile() {
+    const button = byId("delete-profile-btn");
+    if (button.dataset.confirm !== "true") {
+      button.dataset.confirm = "true";
+      button.textContent = "Click again to delete everything";
+      button.className = "btn-danger";
+      setTimeout(() => {
+        button.dataset.confirm = "false";
+        button.textContent = "Delete my profile";
+        button.className = "btn-secondary";
+      }, 5000);
+      return;
+    }
+    try {
+      await player.remove();
+      showToast("Your profile has been deleted.");
+      setTimeout(() => location.reload(), 1200);
+    } catch (err) {
+      showToast(err.message);
     }
   }
 

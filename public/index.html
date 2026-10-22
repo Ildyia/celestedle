@@ -401,6 +401,14 @@
             <span class="form-label">Colour</span>
             <div id="profile-colors" class="color-grid"></div>
           </div>
+          <div class="form-group">
+            <label for="profile-discord-input">Discord username (optional)</label>
+            <input type="text" id="profile-discord-input" class="bug-input" maxlength="40" placeholder="e.g. madeline_climbs" autocomplete="off" />
+            <p class="small-subtext">
+              Only visible to the admin, to contact you about your bug reports.
+              Never shown in the rankings.
+            </p>
+          </div>
           <div class="form-group form-inline">
             <input type="checkbox" id="profile-hidden-checkbox" />
             <label for="profile-hidden-checkbox">Hide my profile from the leaderboards</label>
@@ -418,6 +426,15 @@
         </div>
 
         <div class="modal-section">
+          <h3>Player ID</h3>
+          <p class="small-subtext">
+            Public identifier of your profile. Give it to the site owner if you
+            are asked to help with the admin.
+          </p>
+          <code id="player-id" class="player-id"></code>
+        </div>
+
+        <div class="modal-section">
           <h3>Recovery code</h3>
           <p class="small-subtext">
             Paste this code on another device to play with the same profile.
@@ -432,6 +449,20 @@
             <input type="text" id="restore-code-input" class="bug-input" placeholder="Paste a recovery code" aria-label="Recovery code" autocomplete="off" />
             <button type="submit" class="btn-secondary">Use this code</button>
           </form>
+          <p class="small-subtext">
+            Lost your code? If your Discord username is in your profile, use the
+            <strong>/passcode</strong> command on the Celestedle Discord server:
+            the bot sends you a new code in a private message.
+          </p>
+        </div>
+
+        <div class="modal-section">
+          <h3>Delete my profile</h3>
+          <p class="small-subtext">
+            Deletes your profile, your games, your stats and your votes. Your
+            bug reports stay, without your name. This can't be undone.
+          </p>
+          <button type="button" id="delete-profile-btn" class="btn-secondary">Delete my profile</button>
         </div>
       </div>
     </div>
@@ -465,7 +496,8 @@
         <h2>Report a Bug</h2>
         <p class="small-subtext">
           Please tick the spoiler box if the report is about today's word, so
-          other players don't get spoiled.
+          other players don't get spoiled. Add your Discord username in your
+          profile if you're OK with being contacted about your report.
         </p>
         <form id="bug-form">
           <div class="form-group">

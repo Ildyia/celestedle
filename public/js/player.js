@@ -61,6 +61,14 @@ export const player = {
     return current;
   },
 
+  // Supprime le profil sur le serveur et oublie le jeton de ce navigateur
+  async remove() {
+    await api.deleteMe();
+    storage.remove(KEYS.playerToken);
+    current = null;
+    emit();
+  },
+
   // Code de récupération collé depuis un autre appareil
   async restore(token) {
     const trimmed = String(token || "").trim();

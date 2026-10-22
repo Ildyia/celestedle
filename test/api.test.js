@@ -31,6 +31,20 @@ test.before(async () => {
 });
 test.after(() => api.close());
 
+// Profil propriétaire, créé une fois avec le mot de passe admin de test
+let owner = null;
+async function ownerHeaders() {
+  if (!owner) {
+    owner = await api.newPlayer();
+    const claim = await api.request("POST", "/api/admin/claim-owner", {
+      token: owner.token,
+      body: { password: "test-admin-password" }
+    });
+    assert.equal(claim.status, 200, JSON.stringify(claim.data));
+  }
+  return { "X-Player-Token": owner.token };
+}
+
 function wrongGuessFor(secretName, exclude = []) {
   const all = db.prepare("SELECT name FROM elements WHERE is_active = 1 ORDER BY name").all();
   return all.map((r) => r.name).find((n) => n !== secretName && !exclude.includes(n));
@@ -244,14 +258,30 @@ test("reports : import v1, doublons, création et votes", async () => {
   assert.equal(down.data.score, -1);
 });
 
-test("admin : connexion, tableau de bord, éditeur et réglages", async () => {
-  const refused = await api.request("POST", "/api/admin/login", { body: { password: "nope" } });
-  assert.equal(refused.status, 401);
+test("admin : accès par le profil, propriétaire désigné une seule fois", async () => {
   const noToken = await api.request("GET", "/api/admin/overview");
   assert.equal(noToken.status, 401);
 
-  const login = await api.request("POST", "/api/admin/login", { body: { password: "test-admin-password" } });
-  const headers = { Authorization: `Bearer ${login.data.token}` };
+  const { token } = await api.newPlayer();
+  const noRights = await api.request("GET", "/api/admin/overview", { token });
+  assert.equal(noRights.status, 403);
+  const me = await api.request("GET", "/api/admin/me", { token });
+  assert.deepEqual([me.data.role, me.data.quota], ["player", null]);
+
+  const wrong = await api.request("POST", "/api/admin/claim-owner", { token, body: { password: "nope" } });
+  assert.equal(wrong.status, 401);
+
+  await ownerHeaders();
+  const second = await api.request("POST", "/api/admin/claim-owner", { token, body: { password: "test-admin-password" } });
+  assert.equal(second.status, 409);
+  const ownerMe = await api.request("GET", "/api/admin/me", { token: owner.token });
+  assert.equal(ownerMe.data.role, "owner");
+  assert.equal(ownerMe.data.quota.limit, null);
+  assert.equal(ownerMe.data.ownerClaimable, false);
+});
+
+test("admin : tableau de bord, éditeur et réglages", async () => {
+  const headers = await ownerHeaders();
 
   const overview = await api.request("GET", "/api/admin/overview", { headers });
   assert.ok(overview.data.modes.normal.secret.nom);
@@ -286,8 +316,7 @@ test("admin : connexion, tableau de bord, éditeur et réglages", async () => {
 });
 
 test("admin : les règles du mode Hard sont réglables et appliquées", async () => {
-  const login = await api.request("POST", "/api/admin/login", { body: { password: "test-admin-password" } });
-  const headers = { Authorization: `Bearer ${login.data.token}` };
+  const headers = await ownerHeaders();
 
   const invalid = await api.request("PUT", "/api/admin/settings", { headers, body: { modes: { hard: { maxHints: 9 } } } });
   assert.equal(invalid.status, 400);
@@ -320,6 +349,146 @@ test("admin : les règles du mode Hard sont réglables et appliquées", async ()
     headers,
     body: { modes: { hard: { maxHints: 1, maxTries: 8, timeLimitSeconds: 300, suggestionMinChars: 4 } } }
   });
+});
+
+test("profil : tag Discord facultatif, validé et privé", async () => {
+  const { token } = await api.newPlayer();
+  const bad = await api.request("PATCH", "/api/players/me", { token, body: { discordTag: "no spaces allowed" } });
+  assert.equal(bad.status, 400);
+
+  const ok = await api.request("PATCH", "/api/players/me", { token, body: { discordTag: "@Madeline_Climbs" } });
+  assert.equal(ok.data.player.discordTag, "madeline_climbs");
+  const legacy = await api.request("PATCH", "/api/players/me", { token, body: { discordTag: "Madeline#1234" } });
+  assert.equal(legacy.data.player.discordTag, "Madeline#1234");
+
+  const unchanged = await api.request("PATCH", "/api/players/me", { token, body: { name: "Tag Keeper" } });
+  assert.equal(unchanged.data.player.discordTag, "Madeline#1234");
+  const cleared = await api.request("PATCH", "/api/players/me", { token, body: { discordTag: "" } });
+  assert.equal(cleared.data.player.discordTag, null);
+});
+
+test("admin : auteur des reports, tri, suppression et purge des reports clos", async () => {
+  const headers = await ownerHeaders();
+
+  const { token } = await api.newPlayer();
+  await api.request("PATCH", "/api/players/me", { token, body: { name: "Reporter", discordTag: "reporter_one" } });
+  const mine = await api.request("POST", "/api/reports", { token, body: { description: "Report with an author" } });
+  const anonymous = await api.request("POST", "/api/reports", { body: { description: "Report without author" } });
+
+  // L'auteur n'apparaît jamais côté joueurs
+  const publicList = await api.request("GET", "/api/reports");
+  const publicMine = publicList.data.reports.find((r) => r.id === mine.data.id);
+  assert.equal(publicMine.reporter, undefined);
+  assert.equal(JSON.stringify(publicList.data).includes("reporter_one"), false);
+
+  const adminList = await api.request("GET", "/api/admin/reports", { headers });
+  const adminMine = adminList.data.reports.find((r) => r.id === mine.data.id);
+  assert.deepEqual([adminMine.reporter.name, adminMine.reporter.discordTag], ["Reporter", "reporter_one"]);
+  assert.equal(adminList.data.reports.find((r) => r.id === anonymous.data.id).reporter, null);
+
+  const deleted = await api.request("DELETE", `/api/admin/reports/${anonymous.data.id}`, { headers });
+  assert.equal(deleted.status, 204);
+  const missing = await api.request("DELETE", `/api/admin/reports/${anonymous.data.id}`, { headers });
+  assert.equal(missing.status, 404);
+
+  await api.request("PATCH", `/api/admin/reports/${mine.data.id}`, { headers, body: { status: "fixed" } });
+  const purge = await api.request("POST", "/api/admin/reports/purge-closed", { headers });
+  assert.ok(purge.data.deleted >= 1);
+  const after = await api.request("GET", "/api/admin/reports", { headers });
+  assert.ok(after.data.reports.every((r) => ["new", "working"].includes(r.status)));
+});
+
+test("rôles : le propriétaire gère l'équipe, l'administrateur a un quota", async () => {
+  const headers = await ownerHeaders();
+  const helper = await api.newPlayer();
+  const adminHeaders = { "X-Player-Token": helper.token };
+
+  const unknown = await api.request("POST", "/api/admin/team", { headers, body: { playerId: "nobody" } });
+  assert.equal(unknown.status, 404);
+  const granted = await api.request("POST", "/api/admin/team", { headers, body: { playerId: helper.player.id } });
+  assert.equal(granted.data.role, "administrator");
+
+  // L'administrateur consulte, mais ne gère pas l'équipe
+  assert.equal((await api.request("GET", "/api/admin/overview", { headers: adminHeaders })).status, 200);
+  assert.equal((await api.request("GET", "/api/admin/team", { headers: adminHeaders })).status, 403);
+  const selfGrant = await api.request("POST", "/api/admin/team", { headers: adminHeaders, body: { playerId: helper.player.id } });
+  assert.equal(selfGrant.status, 403);
+  const limitChange = await api.request("PUT", "/api/admin/settings", { headers: adminHeaders, body: { adminDailyLimit: 999 } });
+  assert.equal(limitChange.status, 403);
+
+  // Quota de 2 modifications : une requête refusée ne compte pas
+  await api.request("PUT", "/api/admin/settings", { headers, body: { adminDailyLimit: 2 } });
+  const report = await api.request("POST", "/api/reports", { body: { description: "Quota test report" } });
+  const statusOf = (status) =>
+    api.request("PATCH", `/api/admin/reports/${report.data.id}`, { headers: adminHeaders, body: { status } });
+  assert.equal((await statusOf("not-a-status")).status, 400);
+  assert.equal((await statusOf("working")).status, 200);
+  assert.equal((await statusOf("new")).status, 200);
+  const blocked = await statusOf("working");
+  assert.equal(blocked.status, 429);
+  const quota = await api.request("GET", "/api/admin/me", { headers: adminHeaders });
+  assert.deepEqual([quota.data.quota.used, quota.data.quota.remaining], [2, 0]);
+
+  // Le propriétaire n'a pas de limite
+  assert.equal((await api.request("PATCH", `/api/admin/reports/${report.data.id}`, { headers, body: { status: "fixed" } })).status, 200);
+
+  const audit = await api.request("GET", "/api/admin/audit", { headers });
+  const actions = audit.data.map((a) => a.action);
+  assert.ok(actions.includes("grant_admin") && actions.includes("report_status") && actions.includes("claim_owner"));
+
+  const revoked = await api.request("DELETE", `/api/admin/team/${helper.player.id}`, { headers });
+  assert.equal(revoked.data.role, "player");
+  assert.equal((await api.request("GET", "/api/admin/overview", { headers: adminHeaders })).status, 403);
+});
+
+test("/passcode : nouveau code pour les profils au tag Discord de l'utilisateur", async () => {
+  const players = require("../src/services/players");
+  const lost = await api.newPlayer();
+  await api.request("PATCH", "/api/players/me", { token: lost.token, body: { discordTag: "lost_climber" } });
+
+  assert.deepEqual(players.findByDiscordUser({ username: "someone_else", discriminator: "0" }), []);
+  const [match] = players.findByDiscordUser({ username: "Lost_Climber", discriminator: "0" });
+  assert.equal(match.id, lost.player.id);
+
+  const newCode = players.resetToken(match.id);
+  assert.equal((await api.request("GET", "/api/players/me", { token: lost.token })).status, 401, "l'ancien code ne marche plus");
+  const restored = await api.request("GET", "/api/players/me", { token: newCode });
+  assert.equal(restored.data.player.id, lost.player.id);
+});
+
+test("suppression : par le joueur, ou par le propriétaire seulement", async () => {
+  const headers = await ownerHeaders();
+
+  // Le joueur supprime son profil : parties et votes partent, ses reports restent
+  const leaving = await api.newPlayer();
+  await api.request("POST", "/api/game/forfeit", { token: leaving.token, body: { mode: "normal" } });
+  const report = await api.request("POST", "/api/reports", { token: leaving.token, body: { description: "Report from a leaving player" } });
+  await api.request("POST", `/api/reports/${report.data.id}/vote`, { token: leaving.token, body: { isUp: true } });
+  assert.equal((await api.request("DELETE", "/api/players/me", { token: leaving.token })).status, 204);
+  assert.equal((await api.request("GET", "/api/players/me", { token: leaving.token })).status, 401);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM games WHERE player_id = ?").get(leaving.player.id).n, 0);
+  const kept = (await api.request("GET", "/api/admin/reports", { headers })).data.reports.find((r) => r.id === report.data.id);
+  assert.equal(kept.reporter, null);
+  assert.equal(kept.score, 0);
+
+  // Le propriétaire ne peut pas supprimer son propre profil
+  assert.equal((await api.request("DELETE", "/api/players/me", { headers })).status, 409);
+
+  // Recherche par tag Discord, puis suppression réservée au propriétaire
+  const target = await api.newPlayer();
+  await api.request("PATCH", "/api/players/me", { token: target.token, body: { discordTag: "to_delete" } });
+  const found = await api.request("GET", "/api/admin/players?q=to_delete", { headers });
+  assert.equal(found.data[0].id, target.player.id);
+
+  const helper = await api.newPlayer();
+  await api.request("POST", "/api/admin/team", { headers, body: { playerId: helper.player.id } });
+  const byAdmin = await api.request("DELETE", `/api/admin/players/${target.player.id}`, { headers: { "X-Player-Token": helper.token } });
+  assert.equal(byAdmin.status, 403);
+
+  assert.equal((await api.request("DELETE", `/api/admin/players/${target.player.id}`, { headers })).status, 204);
+  assert.equal((await api.request("GET", "/api/players/me", { token: target.token })).status, 401);
+  const audit = await api.request("GET", "/api/admin/audit", { headers });
+  assert.ok(audit.data.some((a) => a.action === "delete_player"));
 });
 
 test("sprites : image de l'élément, ou image par défaut", async () => {

@@ -29,6 +29,21 @@ const COLORS = ["#f472b6", "#a855f7", "#6366f1", "#38bdf8", "#10b981", "#facc15"
 
 const NAME_PATTERN = /^[\p{L}\p{N} _-]{3,20}$/u;
 
+// Nom d'utilisateur Discord actuel (2 à 32 caractères : a-z, 0-9, _ et .)
+// ou ancien format « Nom#1234 »
+const DISCORD_PATTERN = /^(?:[a-z0-9_.]{2,32}|[^#@:]{2,32}#\d{4})$/;
+
+// "" ou null efface le tag ; un @ au début est ignoré
+function normalizeDiscordTag(value) {
+  const tag = String(value ?? "").trim().replace(/^@/, "");
+  if (!tag) return null;
+  const normalized = tag.includes("#") ? tag : tag.toLowerCase();
+  if (!DISCORD_PATTERN.test(normalized)) {
+    throw new HttpError(400, "Discord username must be 2 to 32 letters, digits, _ or . (or the old name#1234 format).");
+  }
+  return normalized;
+}
+
 function hashToken(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
@@ -37,9 +52,13 @@ function randomItem(list) {
   return list[crypto.randomInt(list.length)];
 }
 
+function newToken() {
+  return crypto.randomBytes(24).toString("base64url");
+}
+
 // Le jeton n'est renvoyé qu'ici : il sert aussi de code de récupération
 function createPlayer() {
-  const token = crypto.randomBytes(24).toString("base64url");
+  const token = newToken();
   const player = playersRepo.create({
     id: crypto.randomBytes(8).toString("base64url"),
     tokenHash: hashToken(token),
@@ -48,6 +67,34 @@ function createPlayer() {
     color: randomItem(COLORS)
   });
   return { player, token };
+}
+
+// Nouveau code de récupération : l'ancien cesse de fonctionner partout
+function resetToken(playerId) {
+  const token = newToken();
+  playersRepo.setTokenHash(playerId, hashToken(token));
+  return token;
+}
+
+// Profils dont le tag Discord correspond à un utilisateur Discord. Les
+// anciens tags « Nom#1234 » ne correspondent qu'avec le discriminant.
+function findByDiscordUser({ username, discriminator }) {
+  const tags = [username.toLowerCase()];
+  if (discriminator && discriminator !== "0") tags.push(`${username}#${discriminator}`);
+  const seen = new Map();
+  for (const tag of tags) {
+    for (const player of playersRepo.findByDiscordTag(tag)) seen.set(player.id, player);
+  }
+  return [...seen.values()];
+}
+
+// Le propriétaire ne peut pas être supprimé (il resterait un site sans propriétaire)
+function deletePlayer(playerId) {
+  const player = playersRepo.findById(playerId);
+  if (!player) throw new HttpError(404, "No profile with this player ID.");
+  if (player.role === "owner") throw new HttpError(409, "The owner's profile can't be deleted.");
+  playersRepo.remove(player.id);
+  return player;
 }
 
 function findByToken(token) {
@@ -65,8 +112,10 @@ function updateProfile(player, input) {
   const color = input.color ?? player.color;
   if (!COLORS.includes(color)) throw new HttpError(400, "Unknown colour.");
   const isHidden = input.isHidden === undefined ? player.isHidden : Boolean(input.isHidden);
+  const discordTag =
+    input.discordTag === undefined ? player.discordTag : normalizeDiscordTag(input.discordTag);
 
-  return playersRepo.update(player.id, { name, avatar, color, isHidden });
+  return playersRepo.update(player.id, { name, avatar, color, isHidden, discordTag });
 }
 
 // Séries de jours consécutifs gagnés. La série en cours compte encore si le
@@ -118,6 +167,10 @@ module.exports = {
   AVATARS,
   COLORS,
   createPlayer,
+  resetToken,
+  findByDiscordUser,
+  deletePlayer,
+  search: (query) => playersRepo.search(query),
   findByToken,
   updateProfile,
   playerStats,

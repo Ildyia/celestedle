@@ -31,10 +31,6 @@
   font-size: 1.6rem;
 }
 
-.admin-header .btn-secondary {
-  margin-left: auto;
-}
-
 .admin-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -351,4 +347,39 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.btn-small {
+  padding: 4px 10px;
+  font-size: 0.8rem;
+}
+
+.admin-access-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-identity {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.badge.owner {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--color-correct);
+}
+
+.team-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.team-card h3 {
+  margin: 0;
 }

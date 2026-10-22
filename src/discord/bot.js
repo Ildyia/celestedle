@@ -10,6 +10,7 @@ const {
 const config = require("../config");
 const settingsRepo = require("../repositories/settings");
 const reports = require("../services/reports");
+const players = require("../services/players");
 const embeds = require("./embeds");
 
 const PUBLIC_CHANNEL_KEY = "discord_public_channel_id";
@@ -25,8 +26,15 @@ const commands = [
     )
     .addChannelOption((opt) =>
       opt.setName("private").setDescription("Private channel for management").setRequired(true)
-    )
+    ),
+  new SlashCommandBuilder()
+    .setName("passcode")
+    .setDescription("Get a new Celestedle recovery code for the profile linked to your Discord")
 ].map((cmd) => cmd.toJSON());
+
+// /passcode : une demande toutes les 10 minutes par utilisateur Discord
+const PASSCODE_COOLDOWN_MS = 10 * 60 * 1000;
+const lastPasscode = new Map();
 
 function channelIds() {
   return {
@@ -75,6 +83,51 @@ function createBot() {
     }
   }
 
+  // Report supprimé depuis l'admin : ses messages disparaissent aussi
+  async function reportDeleted(report) {
+    const { publicId, privateId } = channelIds();
+    const publicMsg = await fetchMessage(publicId, report.discordPublicId);
+    await publicMsg?.delete();
+    const privateMsg = await fetchMessage(privateId, report.discordPrivateId);
+    await privateMsg?.delete();
+  }
+
+  // Discord garantit l'identité de l'utilisateur qui lance la commande : on
+  // cherche les profils dont le tag Discord est le sien et on lui envoie en
+  // message privé un nouveau code pour chacun
+  async function handlePasscode(interaction) {
+    const reply = (content) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
+    const { user } = interaction;
+
+    const last = lastPasscode.get(user.id) ?? 0;
+    if (Date.now() - last < PASSCODE_COOLDOWN_MS) {
+      return reply("You already asked for a code recently. Try again in a few minutes.");
+    }
+    const matches = players.findByDiscordUser({ username: user.username, discriminator: user.discriminator });
+    if (matches.length === 0) {
+      return reply(
+        `No Celestedle profile has the Discord username "${user.username}". ` +
+          "Add it in your profile (Profile → Discord username) while you still have access to it."
+      );
+    }
+    lastPasscode.set(user.id, Date.now());
+
+    const lines = matches.map((profile) => `• **${profile.name}** : \`${players.resetToken(profile.id)}\``);
+    const message =
+      "Here is a new Celestedle recovery code. On the game, open Profile → Recovery code → " +
+      "paste it in \"Use this code\". Your previous code no longer works.\n\n" +
+      lines.join("\n") +
+      "\n\nKeep it private: anyone with this code can use your profile.";
+
+    try {
+      await user.send(message);
+      await reply("I sent you a new recovery code in a private message.");
+    } catch {
+      // Messages privés fermés : la réponse éphémère n'est visible que par lui
+      await reply(message);
+    }
+  }
+
   async function handleSetup(interaction) {
     settingsRepo.set(PUBLIC_CHANNEL_KEY, interaction.options.getChannel("public").id);
     settingsRepo.set(PRIVATE_CHANNEL_KEY, interaction.options.getChannel("private").id);
@@ -115,6 +168,9 @@ function createBot() {
       if (interaction.isChatInputCommand() && interaction.commandName === "setup-reports") {
         return await handleSetup(interaction);
       }
+      if (interaction.isChatInputCommand() && interaction.commandName === "passcode") {
+        return await handlePasscode(interaction);
+      }
       if (!interaction.isButton()) return;
       const action = embeds.parseCustomId(interaction.customId);
       if (action?.kind === "vote") return await handleVote(interaction, action);
@@ -131,7 +187,7 @@ function createBot() {
 
   client.on("error", (err) => console.error("[DISCORD] Erreur client :", err.message));
 
-  return { client, reportCreated, reportUpdated };
+  return { client, reportCreated, reportUpdated, reportDeleted };
 }
 
 // Démarre le bot si un token est configuré, et le branche sur les reports
@@ -141,7 +197,11 @@ function startBot() {
     return null;
   }
   const bot = createBot();
-  reports.setNotifier({ reportCreated: bot.reportCreated, reportUpdated: bot.reportUpdated });
+  reports.setNotifier({
+    reportCreated: bot.reportCreated,
+    reportUpdated: bot.reportUpdated,
+    reportDeleted: bot.reportDeleted
+  });
   bot.client.login(config.discord.token).catch((err) => {
     console.error("[DISCORD] Connexion impossible :", err.message);
   });

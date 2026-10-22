@@ -8,10 +8,23 @@ const stmts = {
   byTokenHash: db.prepare("SELECT * FROM players WHERE token_hash = ?"),
   byId: db.prepare("SELECT * FROM players WHERE id = ?"),
   update: db.prepare(`
-    UPDATE players SET name = @name, avatar = @avatar, color = @color, is_hidden = @isHidden
+    UPDATE players SET name = @name, avatar = @avatar, color = @color, is_hidden = @isHidden,
+      discord_tag = @discordTag
     WHERE id = @id
   `),
   touch: db.prepare("UPDATE players SET last_seen_at = ? WHERE id = ?"),
+  setTokenHash: db.prepare("UPDATE players SET token_hash = ? WHERE id = ?"),
+  byDiscordTag: db.prepare("SELECT * FROM players WHERE discord_tag = ? COLLATE NOCASE"),
+  search: db.prepare(`
+    SELECT p.*, (SELECT COUNT(*) FROM games g WHERE g.player_id = p.id) AS games
+    FROM players p
+    WHERE p.id = @q OR p.name LIKE @like ESCAPE '\\' OR p.discord_tag LIKE @like ESCAPE '\\'
+    ORDER BY p.last_seen_at DESC
+    LIMIT 50
+  `),
+  // Ses votes ne sont pas liés par une clé étrangère : on les retire à part
+  removeVotes: db.prepare("DELETE FROM report_votes WHERE voter_id = ?"),
+  remove: db.prepare("DELETE FROM players WHERE id = ?"),
   count: db.prepare("SELECT COUNT(*) AS n FROM players")
 };
 
@@ -23,6 +36,9 @@ function toPlayer(row) {
     avatar: row.avatar,
     color: row.color,
     isHidden: row.is_hidden === 1,
+    role: row.role ?? "player",
+    // Renvoyé seulement au joueur lui-même et à l'admin
+    discordTag: row.discord_tag ?? null,
     createdAt: row.created_at
   };
 }
@@ -40,10 +56,33 @@ function findById(id) {
   return toPlayer(stmts.byId.get(id));
 }
 
-function update(id, { name, avatar, color, isHidden }) {
-  stmts.update.run({ id, name, avatar, color, isHidden: isHidden ? 1 : 0 });
+function update(id, { name, avatar, color, isHidden, discordTag }) {
+  stmts.update.run({ id, name, avatar, color, isHidden: isHidden ? 1 : 0, discordTag });
   return findById(id);
 }
+
+function setTokenHash(id, tokenHash) {
+  stmts.setTokenHash.run(tokenHash, id);
+}
+
+function findByDiscordTag(tag) {
+  return stmts.byDiscordTag.all(tag).map(toPlayer);
+}
+
+function search(query) {
+  const q = String(query ?? "").trim();
+  return stmts.search
+    // % et _ cherchés tels quels
+    .all({ q, like: `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%` })
+    .map((row) => ({ ...toPlayer(row), lastSeenAt: row.last_seen_at, games: row.games }));
+}
+
+// Parties, essais et journal admin suivent (ON DELETE CASCADE) ; ses
+// reports restent, sans auteur
+const remove = db.transaction((id) => {
+  stmts.removeVotes.run(`player:${id}`);
+  return stmts.remove.run(id).changes === 1;
+});
 
 function touch(id) {
   stmts.touch.run(new Date().toISOString(), id);
@@ -53,4 +92,15 @@ function count() {
   return stmts.count.get().n;
 }
 
-module.exports = { create, findByTokenHash, findById, update, touch, count };
+module.exports = {
+  create,
+  findByTokenHash,
+  findById,
+  findByDiscordTag,
+  search,
+  update,
+  setTokenHash,
+  remove,
+  touch,
+  count
+};

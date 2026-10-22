@@ -26,6 +26,11 @@ function msUntilNextDay(now = new Date()) {
   return parisMidnight - parisNow;
 }
 
+// Début de la journée de jeu en cours (minuit à Paris), en ISO UTC
+function parisDayStartIso(now = new Date()) {
+  return new Date(now.getTime() + msUntilNextDay(now) - 24 * 3600 * 1000).toISOString();
+}
+
 function nowIso() {
   return new Date().toISOString();
 }
@@ -34,4 +39,12 @@ function secondsBetween(startIso, endIso) {
   return Math.max(0, Math.round((Date.parse(endIso) - Date.parse(startIso)) / 1000));
 }
 
-module.exports = { todayParis, addDays, weekStart, msUntilNextDay, nowIso, secondsBetween };
+module.exports = {
+  todayParis,
+  addDays,
+  weekStart,
+  msUntilNextDay,
+  parisDayStartIso,
+  nowIso,
+  secondsBetween
+};
