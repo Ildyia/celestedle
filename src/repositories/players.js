@@ -9,7 +9,7 @@ const stmts = {
   byId: db.prepare("SELECT * FROM players WHERE id = ?"),
   update: db.prepare(`
     UPDATE players SET name = @name, avatar = @avatar, color = @color, is_hidden = @isHidden,
-      discord_tag = @discordTag
+      discord_tag = @discordTag, is_anonymous = 0
     WHERE id = @id
   `),
   touch: db.prepare("UPDATE players SET last_seen_at = ? WHERE id = ?"),
@@ -36,6 +36,8 @@ function toPlayer(row) {
     avatar: row.avatar,
     color: row.color,
     isHidden: row.is_hidden === 1,
+    // Profil jamais enregistré par le joueur : absent des classements
+    isAnonymous: row.is_anonymous === 1,
     role: row.role ?? "player",
     // Renvoyé seulement au joueur lui-même et à l'admin
     discordTag: row.discord_tag ?? null,

@@ -645,12 +645,14 @@ th,
 .input-container {
   position: relative;
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
 }
 
 #element-input {
   width: 100%;
+  min-width: 0;
   padding: 12px 45px 12px 16px;
   border-radius: 8px;
   border: 2px solid #334155;
@@ -667,6 +669,7 @@ th,
 }
 
 #guess-form #guess-btn[type="submit"] {
+  flex-shrink: 0;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
@@ -1870,6 +1873,11 @@ input[type="checkbox"]:not(.switch input):checked::after {
   background: var(--color-wrong);
 }
 
+#mode-switch button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed !important;
+}
+
 #mode-switch button:focus-visible,
 .segmented button:focus-visible {
   outline: 2px solid var(--color-partial);
@@ -2109,6 +2117,31 @@ body.hard-mode #game-status {
   image-rendering: pixelated;
 }
 
+/* Victoires au premier essai, hors classement */
+.one-shot-count {
+  margin-left: 6px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.one-shots {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px dashed rgba(16, 185, 129, 0.5);
+  border-radius: 10px;
+}
+
+.one-shots-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.one-shots-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
 /* Reports */
 .similar-reports {
   border: 1px solid var(--color-partial);
@@ -2258,6 +2291,20 @@ body.hard-mode #game-status {
 @media (max-width: 600px) {
   #main-content-column h1 {
     font-size: 2.4rem;
+  }
+
+  /* Sous 16 px, Safari et Chrome sur iPhone zooment sur le champ au focus :
+     la barre de saisie sortait alors de l'écran par la droite */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Rien ne doit élargir la page : pas de défilement horizontal */
+  html,
+  body {
+    overflow-x: clip;
   }
 
   .top-actions {

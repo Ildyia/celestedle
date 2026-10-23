@@ -75,6 +75,7 @@ export class ProfilePanel {
     byId("player-id").textContent = profile.id;
     this.nodes.discord.value = profile.discordTag ?? "";
     this.nodes.hidden.checked = profile.isHidden;
+    byId("profile-anonymous-note").hidden = !profile.isAnonymous;
     this.nodes.code.textContent = "••••••••••••";
     this.nodes.code.dataset.visible = "false";
     this.renderPickers();
@@ -118,6 +119,7 @@ export class ProfilePanel {
         isHidden: this.nodes.hidden.checked
       });
       this.nodes.discord.value = player.profile.discordTag ?? "";
+      byId("profile-anonymous-note").hidden = true;
       showToast("Profile saved.");
     } catch (err) {
       showToast(err.message);

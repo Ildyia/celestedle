@@ -7,13 +7,14 @@ const PERIODS = ["daily", "weekly", "global"];
 
 function toEntry(row, playerId) {
   return {
-    rank: row.rank,
+    rank: row.rank ?? null,
     player: { id: row.id, name: row.name, avatar: row.avatar, color: row.color },
     isMe: row.id === playerId,
     tries: row.tries ?? null,
     seconds: row.seconds ?? null,
     points: row.points ?? null,
     wins: row.wins ?? null,
+    oneShots: row.oneShots ?? null,
     avgTries: row.avgTries ?? null,
     totalSeconds: row.totalSeconds ?? null
   };
@@ -26,8 +27,10 @@ function getLeaderboard(period, modeId, playerId = null) {
 
   let rows;
   let range;
+  let oneShots = [];
   if (period === "daily") {
     rows = statsRepo.dailyLeaderboard(today, mode.id, playerId);
+    oneShots = statsRepo.dailyOneShots(today, mode.id).map((row) => toEntry(row, playerId));
     range = { from: today, to: today };
   } else {
     range =
@@ -43,7 +46,9 @@ function getLeaderboard(period, modeId, playerId = null) {
     mode: mode.id,
     range: period === "global" ? null : range,
     top: entries.filter((e) => e.rank <= 50),
-    me: entries.find((e) => e.isMe) ?? null
+    me: entries.find((e) => e.isMe) ?? null,
+    // Victoires au premier essai du jour, hors classement
+    oneShots
   };
 }
 

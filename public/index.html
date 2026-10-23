@@ -521,6 +521,10 @@
               were the answer, all your previous guesses would have got the same
               colours. Guesses that don't fit are refused and don't count.
             </li>
+            <li>
+              Once your Hard game has started, you can't switch back to Normal
+              until it's over (win, loss or give up).
+            </li>
           </ul>
 
           <h4>Rankings</h4>
@@ -528,6 +532,11 @@
             Daily: fewest tries, then fastest time. Weekly and all-time: a win
             is worth 11 points minus the number of tries (1 minimum). Time is
             used as a tiebreaker.
+          </p>
+          <p>
+            A win on the very first try is pure luck: it gets a 🍀 mention but
+            no rank and no points. Your profile appears in the rankings once
+            you've saved it at least once.
           </p>
         </div>
       </div>
@@ -720,6 +729,10 @@
               >Hide my profile from the leaderboards</label
             >
           </div>
+          <p id="profile-anonymous-note" class="small-subtext" hidden>
+            Your profile is anonymous: save it once to appear in the
+            leaderboards.
+          </p>
           <button type="submit" class="btn-primary btn-wide">
             Save profile
           </button>
@@ -829,7 +842,12 @@
             <tbody id="leaderboard-body"></tbody>
           </table>
         </div>
+        <div id="leaderboard-one-shots" class="one-shots" hidden></div>
         <p id="leaderboard-note" class="small-subtext"></p>
+        <p id="leaderboard-anonymous-note" class="small-subtext" hidden>
+          You're not listed: open <strong>Profile</strong> and save it to join
+          the leaderboards.
+        </p>
       </div>
     </div>
 

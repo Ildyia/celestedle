@@ -56,6 +56,13 @@ export class Game {
     document.querySelectorAll("[data-mode]").forEach((btn) =>
       btn.addEventListener("click", () => this.setMode(btn.dataset.mode))
     );
+    // Une partie Hard a pu commencer dans un autre onglet : on revérifie
+    // au retour sur la page, pour ne pas laisser le mode normal ouvert à côté
+    const recheck = () => {
+      if (this.mode !== "hard" && player.token && !document.hidden) this.load();
+    };
+    window.addEventListener("focus", recheck);
+    document.addEventListener("visibilitychange", recheck);
   }
 
   async setMode(mode) {
@@ -68,6 +75,12 @@ export class Game {
   async load() {
     try {
       const state = await api.game(this.mode);
+      if (state.lockedBy && state.lockedBy !== this.mode) {
+        showToast("Your Hard game is still running: finish it (or give up) before going back to Normal.", 4000);
+        this.mode = state.lockedBy;
+        storage.set(KEYS.mode, this.mode);
+        return this.load();
+      }
       this.render(state);
       if (state.reset) {
         showToast("The secret word has been changed by an admin! Your game has been reset.", 4000);
@@ -98,9 +111,13 @@ export class Game {
     const hard = state.mode === "hard";
 
     document.body.classList.toggle("hard-mode", hard);
-    document.querySelectorAll("[data-mode]").forEach((btn) =>
-      btn.setAttribute("aria-pressed", String(btn.dataset.mode === state.mode))
-    );
+    // Partie Hard commencée : pas de retour au mode normal avant la fin
+    const locked = hard && playing && Boolean(state.startedAt);
+    document.querySelectorAll("[data-mode]").forEach((btn) => {
+      btn.setAttribute("aria-pressed", String(btn.dataset.mode === state.mode));
+      btn.disabled = locked && btn.dataset.mode !== state.mode;
+      btn.title = btn.disabled ? "Finish your Hard game first" : "";
+    });
     nodes.hardRules.hidden = !hard;
 
     nodes.tries.textContent = state.rules.maxTries ? `${state.tries}/${state.rules.maxTries}` : state.tries;
@@ -180,7 +197,9 @@ export class Game {
       if (state.status !== "playing") this.finished(state);
     } catch (err) {
       this.shake();
-      if (err instanceof ApiError && err.status === 409 && /over/.test(err.message)) await this.load();
+      if (err instanceof ApiError && err.status === 409 && (/over/.test(err.message) || err.details?.lockedBy)) {
+        await this.load();
+      }
       showToast(err.message, err.status === 422 ? 4000 : 2400);
     } finally {
       this.busy = false;
@@ -193,6 +212,7 @@ export class Game {
       await player.ensure();
       this.render(await api.hint(this.mode, type));
     } catch (err) {
+      if (err instanceof ApiError && err.details?.lockedBy) await this.load();
       showToast(err.message);
     }
   }
