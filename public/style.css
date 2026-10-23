@@ -2124,13 +2124,7 @@ body.hard-mode #game-status {
   image-rendering: pixelated;
 }
 
-/* Victoires au premier essai, hors classement */
-.one-shot-count {
-  margin-left: 6px;
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
-
+/* Victoires au premier essai, à part dans le classement du jour */
 .one-shots {
   margin-top: 12px;
   padding: 10px 12px;

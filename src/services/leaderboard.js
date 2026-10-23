@@ -14,7 +14,6 @@ function toEntry(row, playerId) {
     seconds: row.seconds ?? null,
     points: row.points ?? null,
     wins: row.wins ?? null,
-    oneShots: row.oneShots ?? null,
     avgTries: row.avgTries ?? null,
     totalSeconds: row.totalSeconds ?? null
   };

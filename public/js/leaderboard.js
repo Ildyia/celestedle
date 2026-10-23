@@ -84,12 +84,9 @@ export class LeaderboardPanel {
   }
 
   row(entry, columns) {
-    const luck = entry.oneShots
-      ? el("span", { className: "one-shot-count", text: `🍀${entry.oneShots}`, attrs: { title: "First-try wins (not counted)" } })
-      : null;
     return el("tr", { className: entry.isMe ? "is-me" : "" }, [
       el("td", { className: "board-rank", text: `#${entry.rank}` }),
-      el("td", {}, luck ? [this.playerBadge(entry), luck] : [this.playerBadge(entry)]),
+      el("td", {}, [this.playerBadge(entry)]),
       ...columns.map((c) => el("td", { className: "board-num", text: String(c.value(entry) ?? "-") }))
     ]);
   }
@@ -110,8 +107,8 @@ export class LeaderboardPanel {
     const range = board.range ? ` (${board.range.from} → ${board.range.to})` : "";
     this.note.textContent =
       board.period === "daily"
-        ? "Fewest tries first, then fastest time. First-try wins are pure luck: they get a mention, not a rank."
-        : `Points: 11 minus the number of tries per win, 1 minimum${range}. First-try wins (🍀) are pure luck and score no points. Hidden profiles are not listed.`;
+        ? "Fewest tries first, then fastest time. First-try wins are pure luck: they're listed apart, without a rank (they still score points for the week)."
+        : `Points: 11 minus the number of tries per win, 1 minimum${range}. Hidden profiles are not listed.`;
   }
 
   // Victoires du jour au premier essai : mentionnées à part, sans rang

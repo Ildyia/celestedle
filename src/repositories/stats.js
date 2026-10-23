@@ -1,11 +1,12 @@
 const db = require("../db");
 
-// Victoire au premier essai : pure chance, mentionnée à part et sans points
+// Victoire au premier essai : pure chance, affichée à part dans le classement
+// du jour (elle compte normalement pour la semaine et le global)
 const ONE_SHOT_SQL = "(s.status = 'won' AND s.tries = 1)";
 const RANKED_WIN_SQL = "(s.status = 'won' AND s.tries > 1)";
 
-// Points d'une victoire classée : 11 - essais, minimum 1. Une défaite vaut 0.
-const POINTS_SQL = `CASE WHEN ${RANKED_WIN_SQL} THEN MAX(1, 11 - s.tries) ELSE 0 END`;
+// Points d'une victoire : 11 - essais, minimum 1. Une défaite vaut 0.
+const POINTS_SQL = "CASE WHEN s.status = 'won' THEN MAX(1, 11 - s.tries) ELSE 0 END";
 
 // Joueurs visibles dans les classements
 const LISTED_SQL = "p.is_hidden = 0 AND p.is_anonymous = 0";
@@ -45,10 +46,9 @@ const stmts = {
     WITH totals AS (
       SELECT p.id, p.name, p.avatar, p.color,
              SUM(${POINTS_SQL}) AS points,
-             SUM(${RANKED_WIN_SQL}) AS wins,
-             SUM(${ONE_SHOT_SQL}) AS oneShots,
-             ROUND(AVG(CASE WHEN ${RANKED_WIN_SQL} THEN s.tries END), 1) AS avgTries,
-             SUM(CASE WHEN ${RANKED_WIN_SQL} THEN s.seconds ELSE 0 END) AS totalSeconds
+             SUM(s.status = 'won') AS wins,
+             ROUND(AVG(CASE WHEN s.status = 'won' THEN s.tries END), 1) AS avgTries,
+             SUM(CASE WHEN s.status = 'won' THEN s.seconds ELSE 0 END) AS totalSeconds
       FROM game_summaries s JOIN players p ON p.id = s.player_id
       WHERE s.mode = @mode AND s.date BETWEEN @from AND @to
         AND s.status <> 'playing' AND ${LISTED_SQL}

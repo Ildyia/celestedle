@@ -245,7 +245,7 @@ test("classements : un profil jamais enregistré reste anonyme et absent", async
   assert.equal(board.data.me.player.id, player.id);
 });
 
-test("classements : une victoire au premier essai est mentionnée à part, sans points", async () => {
+test("classements : une victoire au premier essai est à part le jour même, mais rapporte ses points", async () => {
   const { token, player } = await api.newPlayer();
   await api.request("PATCH", "/api/players/me", { token, body: { name: "Lucky Theo" } });
   const secret = daily.getTodaySecret("normal").element.nom;
@@ -257,7 +257,8 @@ test("classements : une victoire au premier essai est mentionnée à part, sans 
   assert.ok(board.data.oneShots.some((e) => e.player.id === player.id && e.isMe));
 
   const weekly = await api.request("GET", "/api/leaderboard?period=weekly&mode=normal", { token });
-  assert.equal(weekly.data.me, null, "une victoire chanceuse seule ne rapporte aucun point");
+  assert.equal(weekly.data.me.points, 10);
+  assert.equal(weekly.data.me.wins, 1);
 });
 
 test("mode Hard : une partie en cours bloque le mode normal", async () => {
