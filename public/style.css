@@ -1228,6 +1228,13 @@ th,
     box-sizing: border-box;
   }
 
+  /* Le conteneur n'a plus de marge intérieure (le tableau garde toute la
+     largeur) : sans celle-ci, le champ collait au bord gauche du cadre et
+     la flèche dépassait à droite */
+  #guess-form {
+    padding: 10px 10px 0;
+  }
+
   #guesses-table {
     width: 100%;
     table-layout: auto;
