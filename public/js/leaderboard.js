@@ -2,6 +2,7 @@ import { api } from "./api.js";
 import { el, byId, clear, openModal } from "./dom.js";
 import { formatDuration, formatNumber } from "./format.js";
 import { avatarUrl } from "./profile.js";
+import { player } from "./player.js";
 
 const COLUMNS = {
   daily: [
@@ -34,6 +35,8 @@ export class LeaderboardPanel {
     this.table = byId("leaderboard-body");
     this.head = byId("leaderboard-head");
     this.note = byId("leaderboard-note");
+    this.oneShots = byId("leaderboard-one-shots");
+    this.anonymousNote = byId("leaderboard-anonymous-note");
 
     byId("leaderboard-btn")?.addEventListener("click", () => this.open());
     document.querySelectorAll("[data-board-period]").forEach((btn) =>
@@ -64,6 +67,8 @@ export class LeaderboardPanel {
       btn.setAttribute("aria-pressed", String(btn.dataset.boardMode === this.mode))
     );
     clear(this.table);
+    this.oneShots.hidden = true;
+    this.anonymousNote.hidden = !player.profile?.isAnonymous;
     try {
       this.render(await api.leaderboard(this.period, this.mode));
     } catch (err) {
@@ -71,15 +76,17 @@ export class LeaderboardPanel {
     }
   }
 
+  playerBadge(entry) {
+    return el("span", { className: "board-player", attrs: { style: `--player-color: ${entry.player.color}` } }, [
+      el("img", { attrs: { src: avatarUrl(entry.player.avatar), alt: "" } }),
+      el("span", { text: entry.player.name })
+    ]);
+  }
+
   row(entry, columns) {
     return el("tr", { className: entry.isMe ? "is-me" : "" }, [
       el("td", { className: "board-rank", text: `#${entry.rank}` }),
-      el("td", {}, [
-        el("span", { className: "board-player", attrs: { style: `--player-color: ${entry.player.color}` } }, [
-          el("img", { attrs: { src: avatarUrl(entry.player.avatar), alt: "" } }),
-          el("span", { text: entry.player.name })
-        ])
-      ]),
+      el("td", {}, [this.playerBadge(entry)]),
       ...columns.map((c) => el("td", { className: "board-num", text: String(c.value(entry) ?? "-") }))
     ]);
   }
@@ -90,15 +97,28 @@ export class LeaderboardPanel {
       el("tr", {}, [el("th", { text: "#" }), el("th", { text: "Player" }), ...columns.map((c) => el("th", { text: c.label }))])
     );
     if (board.top.length === 0) {
-      this.table.append(el("tr", {}, [el("td", { text: EMPTY_TEXT[board.period], attrs: { colspan: 2 + columns.length } })]));
+      const text = board.oneShots?.length ? "No ranked win yet today (first-try wins are listed below)." : EMPTY_TEXT[board.period];
+      this.table.append(el("tr", {}, [el("td", { text, attrs: { colspan: 2 + columns.length } })]));
     } else {
       this.table.append(...board.top.map((entry) => this.row(entry, columns)));
       if (board.me && board.me.rank > 50) this.table.append(this.row(board.me, columns));
     }
+    this.renderOneShots(board.oneShots ?? []);
     const range = board.range ? ` (${board.range.from} → ${board.range.to})` : "";
     this.note.textContent =
       board.period === "daily"
-        ? "Fewest tries first, then fastest time."
+        ? "Fewest tries first, then fastest time. First-try wins are pure luck: they're listed apart, without a rank (they still score points for the week)."
         : `Points: 11 minus the number of tries per win, 1 minimum${range}. Hidden profiles are not listed.`;
+  }
+
+  // Victoires du jour au premier essai : mentionnées à part, sans rang
+  renderOneShots(entries) {
+    clear(this.oneShots);
+    this.oneShots.hidden = entries.length === 0;
+    if (!entries.length) return;
+    this.oneShots.append(
+      el("p", { className: "one-shots-title", text: "🍀 Lucky one-shots" }),
+      el("div", { className: "one-shots-list" }, entries.map((entry) => this.playerBadge(entry)))
+    );
   }
 }

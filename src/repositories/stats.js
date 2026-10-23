@@ -1,7 +1,15 @@
 const db = require("../db");
 
+// Victoire au premier essai : pure chance, affichée à part dans le classement
+// du jour (elle compte normalement pour la semaine et le global)
+const ONE_SHOT_SQL = "(s.status = 'won' AND s.tries = 1)";
+const RANKED_WIN_SQL = "(s.status = 'won' AND s.tries > 1)";
+
 // Points d'une victoire : 11 - essais, minimum 1. Une défaite vaut 0.
 const POINTS_SQL = "CASE WHEN s.status = 'won' THEN MAX(1, 11 - s.tries) ELSE 0 END";
+
+// Joueurs visibles dans les classements
+const LISTED_SQL = "p.is_hidden = 0 AND p.is_anonymous = 0";
 
 const LEADERBOARD_LIMIT = 50;
 
@@ -20,9 +28,17 @@ const stmts = {
       SELECT p.id, p.name, p.avatar, p.color, s.tries, s.seconds,
              ROW_NUMBER() OVER (ORDER BY s.tries, s.seconds, s.finished_at) AS rank
       FROM game_summaries s JOIN players p ON p.id = s.player_id
-      WHERE s.date = @date AND s.mode = @mode AND s.status = 'won' AND p.is_hidden = 0
+      WHERE s.date = @date AND s.mode = @mode AND ${RANKED_WIN_SQL} AND ${LISTED_SQL}
     )
     SELECT * FROM ranked WHERE rank <= @limit OR id = @playerId ORDER BY rank
+  `),
+
+  dailyOneShots: db.prepare(`
+    SELECT p.id, p.name, p.avatar, p.color, s.tries, s.seconds
+    FROM game_summaries s JOIN players p ON p.id = s.player_id
+    WHERE s.date = @date AND s.mode = @mode AND ${ONE_SHOT_SQL} AND ${LISTED_SQL}
+    ORDER BY s.finished_at
+    LIMIT @limit
   `),
 
   // Semaine (dates bornées) ou global (bornes extrêmes)
@@ -35,7 +51,7 @@ const stmts = {
              SUM(CASE WHEN s.status = 'won' THEN s.seconds ELSE 0 END) AS totalSeconds
       FROM game_summaries s JOIN players p ON p.id = s.player_id
       WHERE s.mode = @mode AND s.date BETWEEN @from AND @to
-        AND s.status <> 'playing' AND p.is_hidden = 0
+        AND s.status <> 'playing' AND ${LISTED_SQL}
       GROUP BY p.id
       HAVING points > 0
     ), ranked AS (
@@ -116,6 +132,10 @@ function dailyLeaderboard(date, mode, playerId) {
   return stmts.daily.all({ date, mode, playerId, limit: LEADERBOARD_LIMIT });
 }
 
+function dailyOneShots(date, mode) {
+  return stmts.dailyOneShots.all({ date, mode, limit: LEADERBOARD_LIMIT });
+}
+
 function aggregatedLeaderboard(mode, from, to, playerId) {
   return stmts.aggregated.all({ mode, from, to, playerId, limit: LEADERBOARD_LIMIT });
 }
@@ -139,6 +159,7 @@ function wordStats() {
 module.exports = {
   communityStats,
   dailyLeaderboard,
+  dailyOneShots,
   aggregatedLeaderboard,
   playerGames,
   dayOverview,

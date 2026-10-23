@@ -81,11 +81,28 @@ function buildState({ mode, secret, game, reset = false }) {
   };
 }
 
+// Une partie Hard en cours bloque le mode normal : sinon on pourrait
+// chercher le mot Hard avec la liste et les suggestions du mode normal
+function lockingMode(playerId, modeId) {
+  if (!playerId || modeId === "hard") return null;
+  const hard = getModeRules("hard");
+  const secret = daily.getTodaySecret(hard.id);
+  const game = expireIfNeeded(gamesRepo.find(secret.date, hard.id, playerId), hard);
+  return game?.status === "playing" && game.secret_version === secret.version ? hard.id : null;
+}
+
+function ensureNotLocked(playerId, modeId) {
+  const lockedBy = lockingMode(playerId, modeId);
+  if (lockedBy) {
+    throw new HttpError(409, "Finish your Hard game first (or give up) to play Normal.", { lockedBy });
+  }
+}
+
 function getState(player, modeId) {
   const mode = getModeRules(modeId);
   const secret = daily.getTodaySecret(mode.id);
   const { game, reset } = loadGame(player?.id, mode, secret);
-  return buildState({ mode, secret, game, reset });
+  return { ...buildState({ mode, secret, game, reset }), lockedBy: lockingMode(player?.id, mode.id) };
 }
 
 function ensurePlaying(game) {
@@ -101,6 +118,7 @@ const guess = db.transaction((player, modeId, input) => {
   if (!element || !element.isActive) {
     throw new HttpError(400, "Unknown element. Check the spelling.");
   }
+  ensureNotLocked(player.id, mode.id);
 
   const loaded = loadGame(player.id, mode, secret);
   let { game } = loaded;
@@ -141,6 +159,7 @@ const guess = db.transaction((player, modeId, input) => {
 const useHint = db.transaction((player, modeId, type) => {
   const mode = getModeRules(modeId);
   if (!HINT_TYPES.includes(type)) throw new HttpError(400, `Unknown hint type "${type}"`);
+  ensureNotLocked(player.id, mode.id);
   const secret = daily.getTodaySecret(mode.id);
 
   let { game } = loadGame(player.id, mode, secret);

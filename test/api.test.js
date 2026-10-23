@@ -208,6 +208,7 @@ test("profil : modification, validation et masquage du classement", async () => 
   assert.equal(ok.data.player.name, "Madeline Main");
 
   const secret = daily.getTodaySecret("normal").element.nom;
+  await api.request("POST", "/api/game/guess", { token, body: { mode: "normal", guess: wrongGuessFor(secret) } });
   await api.request("POST", "/api/game/guess", { token, body: { mode: "normal", guess: secret } });
 
   let board = await api.request("GET", "/api/leaderboard?period=daily&mode=normal", { token });
@@ -215,7 +216,7 @@ test("profil : modification, validation et masquage du classement", async () => 
   assert.equal(board.data.me.isMe, true);
 
   const weekly = await api.request("GET", "/api/leaderboard?period=weekly&mode=normal", { token });
-  assert.equal(weekly.data.me.points, 10);
+  assert.equal(weekly.data.me.points, 9);
 
   await api.request("PATCH", "/api/players/me", { token, body: { isHidden: true } });
   board = await api.request("GET", "/api/leaderboard?period=daily&mode=normal", { token });
@@ -224,7 +225,61 @@ test("profil : modification, validation et masquage du classement", async () => 
   const stats = await api.request("GET", "/api/players/me/stats?mode=normal", { token });
   assert.equal(stats.data.wins, 1);
   assert.equal(stats.data.streak.current, 1);
-  assert.equal(stats.data.distribution[0].count, 1);
+  assert.equal(stats.data.distribution[1].count, 1);
+});
+
+test("classements : un profil jamais enregistré reste anonyme et absent", async () => {
+  const { token, player } = await api.newPlayer();
+  assert.equal(player.isAnonymous, true);
+  const secret = daily.getTodaySecret("hard").element.nom;
+  await api.request("POST", "/api/game/guess", { token, body: { mode: "hard", guess: wrongGuessFor(secret) } });
+  await api.request("POST", "/api/game/guess", { token, body: { mode: "hard", guess: secret } });
+
+  let board = await api.request("GET", "/api/leaderboard?period=daily&mode=hard", { token });
+  assert.equal(board.data.me, null);
+  assert.ok(!board.data.top.some((e) => e.player.id === player.id));
+
+  const saved = await api.request("PATCH", "/api/players/me", { token, body: { avatar: "theo" } });
+  assert.equal(saved.data.player.isAnonymous, false);
+  board = await api.request("GET", "/api/leaderboard?period=daily&mode=hard", { token });
+  assert.equal(board.data.me.player.id, player.id);
+});
+
+test("classements : une victoire au premier essai est à part le jour même, mais rapporte ses points", async () => {
+  const { token, player } = await api.newPlayer();
+  await api.request("PATCH", "/api/players/me", { token, body: { name: "Lucky Theo" } });
+  const secret = daily.getTodaySecret("normal").element.nom;
+  const win = await api.request("POST", "/api/game/guess", { token, body: { mode: "normal", guess: secret } });
+  assert.equal(win.data.state.status, "won");
+
+  const board = await api.request("GET", "/api/leaderboard?period=daily&mode=normal", { token });
+  assert.ok(!board.data.top.some((e) => e.player.id === player.id));
+  assert.ok(board.data.oneShots.some((e) => e.player.id === player.id && e.isMe));
+
+  const weekly = await api.request("GET", "/api/leaderboard?period=weekly&mode=normal", { token });
+  assert.equal(weekly.data.me.points, 10);
+  assert.equal(weekly.data.me.wins, 1);
+});
+
+test("mode Hard : une partie en cours bloque le mode normal", async () => {
+  const { token } = await api.newPlayer();
+  const hardSecret = daily.getTodaySecret("hard").element.nom;
+  const normalSecret = daily.getTodaySecret("normal").element.nom;
+  await api.request("POST", "/api/game/guess", { token, body: { mode: "hard", guess: wrongGuessFor(hardSecret) } });
+
+  const state = await api.request("GET", "/api/game?mode=normal", { token });
+  assert.equal(state.data.lockedBy, "hard");
+  const guess = await api.request("POST", "/api/game/guess", { token, body: { mode: "normal", guess: wrongGuessFor(normalSecret) } });
+  assert.equal(guess.status, 409);
+  assert.equal(guess.data.details.lockedBy, "hard");
+  const hint = await api.request("POST", "/api/game/hint", { token, body: { mode: "normal", type: "opposite" } });
+  assert.equal(hint.status, 409);
+
+  await api.request("POST", "/api/game/forfeit", { token, body: { mode: "hard" } });
+  const after = await api.request("GET", "/api/game?mode=normal", { token });
+  assert.equal(after.data.lockedBy, null);
+  const ok = await api.request("POST", "/api/game/guess", { token, body: { mode: "normal", guess: wrongGuessFor(normalSecret) } });
+  assert.equal(ok.status, 200);
 });
 
 test("reports : import v1, doublons, création et votes", async () => {
