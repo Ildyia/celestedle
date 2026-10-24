@@ -116,7 +116,7 @@ test("indices : un de chaque type en normal, un seul en Hard", async () => {
   assert.match(hard2.data.error, /No hints left/);
 });
 
-test("mode Hard : un essai incohérent est refusé et ne compte pas", async () => {
+test("mode Hard : un essai incohérent est refusé, sans verdict, mais coûte un essai", async () => {
   const { token } = await api.newPlayer();
   const secret = daily.getTodaySecret("hard").element;
   const first = elementsRepo.findByName(wrongGuessFor(secret.nom));
@@ -128,11 +128,15 @@ test("mode Hard : un essai incohérent est refusé et ne compte pas", async () =
     .listActive()
     .find((el) => el.id !== first.id && findInconsistency(el, history));
   const res = await api.request("POST", "/api/game/guess", { token, body: { mode: "hard", guess: inconsistent.nom } });
-  assert.equal(res.status, 422);
-  assert.ok(res.data.error.length > 0);
+  assert.equal(res.status, 200);
+  assert.ok(res.data.rejected.message.length > 0);
+  assert.equal(res.data.guess, null);
 
   const state = await api.request("GET", "/api/game?mode=hard", { token });
-  assert.equal(state.data.tries, 1);
+  assert.equal(state.data.tries, 2);
+  assert.equal(state.data.wastedTries, 1);
+  assert.equal(state.data.guesses.length, 1, "l'essai refusé n'apparaît pas au tableau");
+  assert.equal(state.data.triesLeft, MODES.hard.maxTries - 2);
 });
 
 test("mode Hard : la partie est perdue au 8e essai faux", async () => {

@@ -13,7 +13,7 @@ const stmts = {
   clearHints: db.prepare("DELETE FROM game_hints WHERE game_id = ?"),
   restart: db.prepare(`
     UPDATE games SET status = 'playing', secret_version = @secretVersion,
-      started_at = @startedAt, finished_at = NULL
+      started_at = @startedAt, finished_at = NULL, wasted_tries = 0
     WHERE id = @id
   `),
   guesses: db.prepare(`
@@ -23,6 +23,7 @@ const stmts = {
     INSERT INTO guesses (game_id, position, element_id, created_at)
     VALUES (?, (SELECT COUNT(*) FROM guesses WHERE game_id = ?), ?, ?)
   `),
+  addWastedTry: db.prepare("UPDATE games SET wasted_tries = wasted_tries + 1 WHERE id = ?"),
   hints: db.prepare("SELECT type, payload FROM game_hints WHERE game_id = ? ORDER BY created_at"),
   addHint: db.prepare(`
     INSERT INTO game_hints (game_id, type, payload, created_at) VALUES (?, ?, ?, ?)
@@ -69,6 +70,10 @@ function addGuess(gameId, elementId, at) {
   stmts.addGuess.run(gameId, gameId, elementId, at);
 }
 
+function addWastedTry(gameId) {
+  stmts.addWastedTry.run(gameId);
+}
+
 function hints(gameId) {
   return stmts.hints.all(gameId).map((r) => ({ type: r.type, ...JSON.parse(r.payload) }));
 }
@@ -96,6 +101,7 @@ module.exports = {
   restart,
   guessedElementIds,
   addGuess,
+  addWastedTry,
   hints,
   addHint,
   finish

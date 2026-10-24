@@ -189,10 +189,16 @@ export class Game {
     const { guess, synonymOf } = this.synonyms.resolve(rawInput);
     try {
       await player.ensure();
-      const { state, guess: result } = await api.guess(this.mode, guess);
-      if (synonymOf) this.rememberSynonym(result.nom, synonymOf);
-      this.nodes.input.value = "";
+      const { state, guess: result, rejected } = await api.guess(this.mode, guess);
       this.suggestions.hide();
+      if (rejected) {
+        // Hard : essai incohérent, refusé mais compté
+        this.shake();
+        showToast(`${rejected.message} (-1 try)`, 4000);
+      } else {
+        if (synonymOf) this.rememberSynonym(result.nom, synonymOf);
+        this.nodes.input.value = "";
+      }
       this.render(state);
       if (state.status !== "playing") this.finished(state);
     } catch (err) {

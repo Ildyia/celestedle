@@ -46,6 +46,7 @@ function guessHistory(game, secretElement) {
 // État renvoyé au client. La réponse n'est incluse que si la partie est finie.
 function buildState({ mode, secret, game, reset = false }) {
   const history = guessHistory(game, secret.element);
+  const tries = history.length + (game?.wasted_tries ?? 0);
   const status = game?.status ?? "playing";
   const finished = status !== "playing";
   const now = finished && game.finished_at ? game.finished_at : nowIso();
@@ -69,8 +70,9 @@ function buildState({ mode, secret, game, reset = false }) {
       verdict
     })),
     hints: game ? gamesRepo.hints(game.id) : [],
-    tries: history.length,
-    triesLeft: mode.maxTries ? Math.max(0, mode.maxTries - history.length) : null,
+    tries,
+    wastedTries: game?.wasted_tries ?? 0,
+    triesLeft: mode.maxTries ? Math.max(0, mode.maxTries - tries) : null,
     startedAt: game?.started_at ?? null,
     finishedAt: game?.finished_at ?? null,
     deadline: deadlineOf(game, mode),
@@ -128,10 +130,7 @@ const guess = db.transaction((player, modeId, input) => {
   if (history.some((h) => h.element.id === element.id)) {
     throw new HttpError(409, "You already tried this one!");
   }
-  if (mode.consistentGuesses) {
-    const problem = findInconsistency(element, history);
-    if (problem) throw new HttpError(422, problem.message, { category: problem.category });
-  }
+  const problem = mode.consistentGuesses ? findInconsistency(element, history) : null;
 
   const at = nowIso();
   if (!game) {
@@ -143,12 +142,24 @@ const guess = db.transaction((player, modeId, input) => {
       startedAt: at
     });
   }
+  const triesBefore = history.length + game.wasted_tries;
+  const lastTry = mode.maxTries && triesBefore + 1 >= mode.maxTries;
+
+  // Essai incohérent : refusé sans verdict (il donnerait des indices) mais
+  // il consomme un essai
+  if (problem) {
+    gamesRepo.addWastedTry(game.id);
+    if (lastTry) gamesRepo.finish(game.id, "lost", at);
+    const state = buildState({ mode, secret, game: gamesRepo.findById(game.id), reset: loaded.reset });
+    return { state, guess: null, rejected: { message: problem.message, category: problem.category } };
+  }
+
   gamesRepo.addGuess(game.id, element.id, at);
 
   const verdict = verdictFor(element, secret.element);
   if (verdict.isCorrect) {
     gamesRepo.finish(game.id, "won", at);
-  } else if (mode.maxTries && history.length + 1 >= mode.maxTries) {
+  } else if (lastTry) {
     gamesRepo.finish(game.id, "lost", at);
   }
 

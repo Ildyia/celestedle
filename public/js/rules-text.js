@@ -18,7 +18,7 @@ export function rulesSummary(rules) {
   const { hints, tries } = limits(rules);
   const time = rules.timeLimitSeconds ? formatDuration(rules.timeLimitSeconds) : "no time limit";
   const parts = [hints, tries, time, `suggestions from ${rules.suggestionMinChars} letters`];
-  if (rules.consistentGuesses) parts.push("guesses must fit your clues");
+  if (rules.consistentGuesses) parts.push("guesses must fit your clues (or cost a try)");
   return parts.join(" · ");
 }
 
