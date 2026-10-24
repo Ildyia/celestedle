@@ -49,6 +49,7 @@
           <button type="button" role="tab" data-tab="words" aria-selected="false">Mots</button>
           <button type="button" role="tab" data-tab="elements" aria-selected="false">Éléments</button>
           <button type="button" role="tab" data-tab="reports" aria-selected="false">Reports</button>
+          <button type="button" role="tab" data-tab="connections" aria-selected="false">Connections</button>
           <button type="button" role="tab" data-tab="settings" aria-selected="false">Réglages</button>
           <button type="button" role="tab" data-tab="players" aria-selected="false">Joueurs</button>
           <button type="button" role="tab" data-tab="team" aria-selected="false" data-owner-only hidden>Équipe</button>
@@ -154,6 +155,59 @@
               </div>
               <div class="modal-actions">
                 <button type="button" id="element-cancel-btn" class="btn-secondary">Annuler</button>
+                <button type="submit" class="btn-primary">Enregistrer</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section id="tab-connections" class="admin-panel" role="tabpanel" hidden>
+          <div class="admin-toolbar">
+            <a class="btn-secondary" href="connections.html" target="_blank" rel="noopener">Ouvrir la page de jeu</a>
+            <button type="button" id="new-tag-btn" class="btn-primary">Nouveau tag</button>
+          </div>
+          <p class="small-subtext">
+            Phase de test : la page et l'API Connections ne répondent qu'à l'équipe admin.
+          </p>
+
+          <h3 class="admin-subtitle">Grilles des 7 prochains jours</h3>
+          <div id="cx-puzzles" class="cx-admin-puzzles"></div>
+
+          <h3 class="admin-subtitle">Tags</h3>
+          <p class="small-subtext">
+            Un tag n'entre dans les grilles qu'une fois complet : chaque élément
+            doit avoir été classé (coché = il a le tag, non coché = il ne l'a pas).
+            Un élément ajouté après le dernier enregistrement du tag le rend
+            incomplet jusqu'à ce que tu le classes. Il faut au moins 4 éléments
+            cochés, et 40 au plus.
+          </p>
+          <div class="elements-layout">
+            <div class="admin-table-wrapper">
+              <table class="admin-table">
+                <thead>
+                  <tr><th>Tag</th><th>Éléments</th><th>État</th></tr>
+                </thead>
+                <tbody id="cx-tags-body"></tbody>
+              </table>
+            </div>
+            <form id="cx-tag-form" class="admin-card element-form" hidden>
+              <h3 id="cx-tag-form-title">Nouveau tag</h3>
+              <div class="form-group">
+                <label for="cx-tag-label">Nom affiché dans la grille</label>
+                <input type="text" id="cx-tag-label" class="bug-input" maxlength="60" placeholder="ex. Gives liftboost" required />
+              </div>
+              <div class="form-group">
+                <label for="cx-tag-description">Définition (pour l'équipe)</label>
+                <textarea id="cx-tag-description" class="bug-input" maxlength="300" rows="2" placeholder="Ce qui compte exactement, pour trancher les cas limites"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="cx-tag-search">Éléments concernés <span id="cx-tag-count" class="small-subtext"></span></label>
+                <input type="search" id="cx-tag-search" class="bug-input" placeholder="Filtrer la liste" />
+              </div>
+              <div id="cx-tag-elements" class="cx-tag-elements"></div>
+              <div class="modal-actions">
+                <button type="button" id="cx-tag-delete-btn" class="btn-danger" hidden>Supprimer</button>
+                <button type="button" id="cx-tag-cancel-btn" class="btn-secondary">Annuler</button>
                 <button type="submit" class="btn-primary">Enregistrer</button>
               </div>
             </form>

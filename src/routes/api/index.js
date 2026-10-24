@@ -11,6 +11,7 @@ router.use(require("./elements"));
 router.use(require("./players"));
 router.use(require("./leaderboard"));
 router.use(require("./reports"));
+router.use(require("./connections"));
 router.use(require("./admin"));
 router.use(notFound);
 

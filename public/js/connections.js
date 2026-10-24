@@ -1,0 +1,207 @@
+import { api, ApiError, spriteUrl } from "./api.js";
+import { el, byId, clear } from "./dom.js";
+import { capitalize, formatDuration } from "./format.js";
+import { player } from "./player.js";
+import { initOptions } from "./options.js";
+import { showToast } from "./toast.js";
+import { avatarUrl } from "./profile.js";
+
+// Connections : 16 éléments à ranger en 4 groupes de 4. Le serveur garde la
+// grille et ne révèle un groupe qu'une fois trouvé.
+const SHARE_EMOJI = ["🟨", "🟩", "🟦", "🟪"];
+const KIND_LABELS = { type: "Type", colour: "Colour", shape: "Shape", chapter: "Chapter", tag: "Tag" };
+const SITE_URL = "https://celestedle.vercel.app/connections.html";
+
+class ConnectionsGame {
+  constructor() {
+    this.state = null;
+    this.order = []; // ordre d'affichage des cases restantes (mélange local)
+    this.selected = new Set();
+    this.busy = false;
+
+    byId("cx-shuffle-btn").addEventListener("click", () => this.shuffle());
+    byId("cx-clear-btn").addEventListener("click", () => {
+      this.selected.clear();
+      this.renderGrid();
+    });
+    byId("cx-submit-btn").addEventListener("click", () => this.submit());
+    byId("cx-share-btn").addEventListener("click", () => this.share());
+  }
+
+  async load() {
+    try {
+      this.render(await api.connections());
+      byId("cx-game").hidden = false;
+      this.loadBoard();
+    } catch (err) {
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+        byId("cx-locked").hidden = false;
+        return;
+      }
+      showToast(err.message);
+    }
+  }
+
+  render(state) {
+    this.state = state;
+    const names = state.tiles.map((t) => t.nom);
+    // On garde l'ordre choisi par le joueur pour les cases encore en jeu
+    this.order = [...this.order.filter((n) => names.includes(n)), ...names.filter((n) => !this.order.includes(n))];
+    for (const name of this.selected) if (!names.includes(name)) this.selected.delete(name);
+
+    this.renderGroups(byId("cx-found"), state.found);
+    this.renderGrid();
+    this.renderMistakes();
+    this.renderEnd();
+  }
+
+  renderGroups(container, groups) {
+    clear(container);
+    container.append(
+      ...groups.map((group) =>
+        el("div", { className: `cx-group level-${group.level}` }, [
+          el("p", { className: "cx-group-label" }, [
+            el("strong", { text: group.label }),
+            el("span", { className: "cx-group-kind", text: KIND_LABELS[group.kind] ?? "" })
+          ]),
+          el("p", { className: "cx-group-members", text: group.members.map((m) => capitalize(m.nom)).join(", ") })
+        ])
+      )
+    );
+  }
+
+  renderGrid() {
+    const grid = byId("cx-grid");
+    const playing = this.state.status === "playing";
+    clear(grid);
+    grid.hidden = !playing;
+    grid.append(
+      ...this.order.map((name) =>
+        el(
+          "button",
+          {
+            className: "cx-tile",
+            attrs: { type: "button", "aria-pressed": String(this.selected.has(name)) },
+            on: { click: () => this.toggle(name) }
+          },
+          [
+            el("img", { className: "pixelated", attrs: { src: spriteUrl(name), alt: "" } }),
+            el("span", { text: capitalize(name) })
+          ]
+        )
+      )
+    );
+    byId("cx-controls").hidden = !playing;
+    byId("cx-submit-btn").disabled = this.selected.size !== 4 || this.busy;
+  }
+
+  renderMistakes() {
+    const { mistakes, maxMistakes, status } = this.state;
+    const left = Math.max(0, maxMistakes - mistakes);
+    byId("cx-mistake-dots").replaceChildren(
+      ...Array.from({ length: maxMistakes }, (_, i) => el("span", { className: `cx-dot${i < left ? "" : " used"}` })),
+      el("span", { className: "visually-hidden", text: `${left} of ${maxMistakes}` })
+    );
+    byId("cx-mistake-dots").parentElement.hidden = status !== "playing";
+  }
+
+  renderEnd() {
+    const { status, solution, mistakes, elapsedSeconds } = this.state;
+    byId("cx-end").hidden = status === "playing";
+    if (status === "playing") return;
+    byId("cx-end-title").textContent = status === "won" ? "Well done! 🍓" : "Out of mistakes! ❌";
+    byId("cx-end-text").textContent =
+      status === "won"
+        ? `All 4 groups found with ${mistakes} mistake${mistakes === 1 ? "" : "s"}, in ${formatDuration(elapsedSeconds)}.`
+        : "Here were today's groups. A new grid comes at midnight (Paris time).";
+    this.renderGroups(byId("cx-solution"), status === "won" ? [] : solution);
+  }
+
+  toggle(name) {
+    if (this.selected.has(name)) this.selected.delete(name);
+    else if (this.selected.size < 4) this.selected.add(name);
+    this.renderGrid();
+  }
+
+  shuffle() {
+    const order = [...this.order];
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    this.order = order;
+    this.renderGrid();
+  }
+
+  async submit() {
+    if (this.selected.size !== 4 || this.busy) return;
+    this.busy = true;
+    try {
+      await player.ensure();
+      const { result, state } = await api.connectionsGuess([...this.selected]);
+      if (result === "correct") this.selected.clear();
+      if (result === "one_away") showToast("One away…");
+      if (result === "wrong") showToast("Not a group.");
+      if (result !== "correct") byId("cx-grid").classList.add("shake");
+      setTimeout(() => byId("cx-grid").classList.remove("shake"), 400);
+      this.busy = false;
+      this.render(state);
+      if (state.status !== "playing") this.loadBoard();
+    } catch (err) {
+      this.busy = false;
+      showToast(err.message);
+      this.renderGrid();
+    }
+  }
+
+  async loadBoard() {
+    try {
+      const { top } = await api.connectionsBoard();
+      const body = byId("cx-board");
+      clear(body);
+      if (top.length === 0) {
+        body.append(el("tr", {}, [el("td", { text: "Nobody has solved today's grid yet.", attrs: { colspan: 4 } })]));
+        return;
+      }
+      body.append(
+        ...top.map((entry) =>
+          el("tr", { className: entry.isMe ? "is-me" : "" }, [
+            el("td", { className: "board-rank", text: `#${entry.rank}` }),
+            el("td", {}, [
+              el("span", { className: "board-player", attrs: { style: `--player-color: ${entry.player.color}` } }, [
+                el("img", { attrs: { src: avatarUrl(entry.player.avatar), alt: "" } }),
+                el("span", { text: entry.player.name })
+              ])
+            ]),
+            el("td", { className: "board-num", text: String(entry.mistakes) }),
+            el("td", { className: "board-num", text: formatDuration(entry.seconds) })
+          ])
+        )
+      );
+    } catch {
+      // classement secondaire
+    }
+  }
+
+  async share() {
+    const { status, attempts, mistakes, date } = this.state;
+    const outcome = status === "won" ? `solved with ${mistakes} mistake${mistakes === 1 ? "" : "s"}` : "not solved";
+    const grid = attempts.map((levels) => levels.map((level) => SHARE_EMOJI[level]).join("")).join("\n");
+    const text = `Celestedle Connections ${date}: ${outcome}\n\n${grid}\n\n${SITE_URL}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      byId("cx-share-btn").textContent = "Copied!";
+    } catch {
+      byId("cx-share-btn").textContent = "Copy failed";
+    }
+    setTimeout(() => (byId("cx-share-btn").textContent = "Share"), 2000);
+  }
+}
+
+async function init() {
+  initOptions();
+  await player.load();
+  await new ConnectionsGame().load();
+}
+
+document.addEventListener("DOMContentLoaded", init);

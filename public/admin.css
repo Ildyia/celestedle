@@ -383,3 +383,92 @@
 .team-card h3 {
   margin: 0;
 }
+
+/* Connections */
+.cx-admin-puzzles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.cx-admin-puzzle {
+  display: grid;
+  gap: 6px;
+}
+
+.cx-admin-puzzle-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cx-admin-puzzle-head button {
+  margin-left: auto;
+}
+
+.cx-admin-group {
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: #11162b;
+  font-size: 0.85rem;
+}
+
+.cx-admin-group.level-0 { background: #f5c542; }
+.cx-admin-group.level-1 { background: #5fbf72; }
+.cx-admin-group.level-2 { background: #5b9bf0; }
+.cx-admin-group.level-3 { background: #b07ce8; }
+
+.cx-admin-kind {
+  margin-left: 6px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.cx-tag-elements {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 6px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.cx-tag-element {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 4px 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--bg-input);
+  color: var(--text-main);
+  font-size: 0.75rem;
+  text-align: left;
+}
+
+.cx-tag-element img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
+.cx-tag-element span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.cx-tag-element[aria-pressed="true"] {
+  background: var(--color-indigo);
+  border-color: #c7d2fe;
+}
+
+.cx-tag-element.unreviewed {
+  border-color: var(--color-partial);
+  border-style: dashed;
+}

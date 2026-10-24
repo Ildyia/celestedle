@@ -78,6 +78,10 @@ export const api = {
 
   leaderboard: (period, mode) => request("GET", `/leaderboard?period=${period}&mode=${mode}`),
 
+  connections: () => request("GET", "/connections"),
+  connectionsGuess: (names) => request("POST", "/connections/guess", { body: { names } }),
+  connectionsBoard: () => request("GET", "/connections/leaderboard"),
+
   reports: () => request("GET", "/reports"),
   similarReports: (elementName, description) =>
     request("POST", "/reports/similar", { body: { elementName, description } }),

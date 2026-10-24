@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Celestedle Connections</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="theme-celeste.css" />
+    <link rel="stylesheet" href="connections.css" />
+    <link rel="icon" href="assets/berrywinged.png" type="image/png" />
+  </head>
+  <body>
+    <main id="cx-page">
+      <header class="cx-header">
+        <h1>Connections</h1>
+        <p class="cx-subtitle">
+          Find 4 groups of 4 Celeste elements that share something.
+          <a href="./">Back to Celestedle</a>
+        </p>
+        <p class="cx-badge">Admin preview: not visible to players yet</p>
+      </header>
+
+      <section id="cx-locked" class="cx-panel" hidden>
+        <h2>Coming soon</h2>
+        <p id="cx-locked-text">
+          Connections is being tested by the admin team. Come back later!
+        </p>
+      </section>
+
+      <section id="cx-game" hidden>
+        <div id="cx-found" class="cx-groups"></div>
+        <div id="cx-grid" class="cx-grid" role="group" aria-label="Tiles"></div>
+
+        <div class="cx-mistakes">
+          <span>Mistakes left:</span>
+          <span id="cx-mistake-dots" aria-live="polite"></span>
+        </div>
+
+        <div id="cx-controls" class="cx-controls">
+          <button type="button" id="cx-shuffle-btn" class="action-btn">Shuffle</button>
+          <button type="button" id="cx-clear-btn" class="action-btn">Deselect all</button>
+          <button type="button" id="cx-submit-btn" class="btn-primary" disabled>Submit</button>
+        </div>
+
+        <div id="cx-end" class="cx-panel" hidden>
+          <h2 id="cx-end-title"></h2>
+          <p id="cx-end-text"></p>
+          <div id="cx-solution" class="cx-groups"></div>
+          <button type="button" id="cx-share-btn" class="btn-primary">Share</button>
+        </div>
+
+        <section class="cx-panel">
+          <h2>Today's ranking</h2>
+          <p class="small-subtext">Fewest mistakes first, then fastest time.</p>
+          <table class="leaderboard-table">
+            <thead>
+              <tr><th>#</th><th>Player</th><th>Mistakes</th><th>Time</th></tr>
+            </thead>
+            <tbody id="cx-board"></tbody>
+          </table>
+        </section>
+      </section>
+    </main>
+    <script type="module" src="js/connections.js"></script>
+  </body>
+</html>

@@ -1,0 +1,233 @@
+/* Connections : page à part, mêmes couleurs et polices que le jeu principal */
+:root {
+  --cx-level-0: #f5c542;
+  --cx-level-1: #5fbf72;
+  --cx-level-2: #5b9bf0;
+  --cx-level-3: #b07ce8;
+}
+
+#cx-page {
+  width: 100%;
+  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cx-header {
+  text-align: center;
+  display: grid;
+  gap: 6px;
+}
+
+.cx-header h1 {
+  font-size: 3rem;
+}
+
+.cx-subtitle {
+  color: var(--text-muted);
+}
+
+.cx-subtitle a {
+  color: var(--color-indigo);
+  margin-left: 6px;
+}
+
+.cx-badge {
+  justify-self: center;
+  font-size: 0.8rem;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-partial);
+  color: var(--color-partial);
+}
+
+.cx-panel {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+#cx-game {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cx-groups {
+  display: grid;
+  gap: 8px;
+}
+
+.cx-groups:empty {
+  display: none;
+}
+
+.cx-group {
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #11162b;
+  text-align: center;
+  animation: popIn 0.35s ease-out;
+}
+
+.cx-group.level-0 { background: var(--cx-level-0); }
+.cx-group.level-1 { background: var(--cx-level-1); }
+.cx-group.level-2 { background: var(--cx-level-2); }
+.cx-group.level-3 { background: var(--cx-level-3); }
+
+.cx-group-label {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 1.05rem;
+}
+
+.cx-group-kind {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+}
+
+.cx-group-members {
+  font-size: 0.9rem;
+  margin-top: 2px;
+}
+
+.cx-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.cx-tile {
+  min-width: 0;
+  aspect-ratio: 1 / 0.9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-input);
+  color: var(--text-main);
+  font-family: "Renogare", sans-serif;
+  font-size: 0.78rem;
+  line-height: 1.15;
+  text-align: center;
+  overflow-wrap: anywhere;
+  transition:
+    transform 0.12s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.cx-tile img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.cx-tile:hover {
+  border-color: var(--color-indigo);
+}
+
+.cx-tile[aria-pressed="true"] {
+  background: var(--color-indigo);
+  border-color: #c7d2fe;
+  transform: translateY(-2px);
+}
+
+.cx-tile:focus-visible {
+  outline: 2px solid var(--color-partial);
+  outline-offset: 2px;
+}
+
+.cx-mistakes {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-self: center;
+  gap: 10px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(15, 22, 38, 0.6);
+  color: var(--text-main);
+}
+
+#cx-mistake-dots {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.cx-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-wrong);
+}
+
+.cx-dot.used {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.cx-controls {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cx-controls .action-btn,
+.cx-controls .btn-primary {
+  height: 46px;
+  padding: 0 20px;
+}
+
+.cx-controls .btn-primary:disabled {
+  opacity: 0.45;
+}
+
+#cx-end h2 {
+  text-align: center;
+}
+
+#cx-end p {
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .cx-header h1 {
+    font-size: 2.2rem;
+  }
+
+  .cx-grid {
+    gap: 5px;
+  }
+
+  .cx-tile {
+    font-size: 0.6rem;
+    padding: 4px 2px;
+  }
+
+  .cx-tile img {
+    width: 34px;
+    height: 34px;
+  }
+}

@@ -7,6 +7,7 @@ import { renderHistory } from "./history.js";
 import { WordsTab } from "./words.js";
 import { ElementsTab } from "./elements.js";
 import { ReportsTab } from "./reports.js";
+import { ConnectionsTab } from "./connections.js";
 import { TeamTab } from "./team.js";
 import { PlayersTab } from "./players.js";
 import { bindSettings } from "./settings.js";
@@ -26,6 +27,7 @@ export function notify(text, isError = false) {
 const words = new WordsTab();
 const elements = new ElementsTab({ notify });
 const reports = new ReportsTab({ notify });
+const connectionsTab = new ConnectionsTab({ notify });
 const team = new TeamTab({ notify });
 const playersTab = new PlayersTab({ notify, getRole: () => currentRole });
 const loadSettings = bindSettings({ notify });
@@ -36,6 +38,7 @@ const TABS = {
   words: () => words.load(),
   elements: () => elements.load(),
   reports: () => reports.load(),
+  connections: () => connectionsTab.load(),
   settings: () => loadSettings(),
   team: () => team.load(),
   players: () => playersTab.load()
