@@ -14,13 +14,15 @@ const LISTED_SQL = "p.is_hidden = 0 AND p.is_anonymous = 0";
 const LEADERBOARD_LIMIT = 50;
 
 const stmts = {
+  // Moyennes sur les victoires ; taux de victoire sur les parties terminées
   community: db.prepare(`
-    SELECT COUNT(*) AS wins,
-           ROUND(AVG(tries), 1) AS avgTries,
-           ROUND(AVG(hints), 1) AS avgHints,
-           CAST(ROUND(AVG(seconds)) AS INTEGER) AS avgSeconds
+    SELECT COALESCE(SUM(status = 'won'), 0) AS wins,
+           COUNT(*) AS finished,
+           ROUND(AVG(CASE WHEN status = 'won' THEN tries END), 1) AS avgTries,
+           ROUND(AVG(CASE WHEN status = 'won' THEN hints END), 1) AS avgHints,
+           CAST(ROUND(AVG(CASE WHEN status = 'won' THEN seconds END)) AS INTEGER) AS avgSeconds
     FROM game_summaries s
-    WHERE date = ? AND mode = ? AND status = 'won'
+    WHERE date = ? AND mode = ? AND status <> 'playing'
   `),
 
   daily: db.prepare(`
@@ -125,7 +127,8 @@ const stmts = {
 };
 
 function communityStats(date, mode) {
-  return stmts.community.get(date, mode);
+  const { finished, ...stats } = stmts.community.get(date, mode);
+  return { ...stats, winRate: finished ? Math.round((stats.wins / finished) * 100) : null };
 }
 
 function dailyLeaderboard(date, mode, playerId) {

@@ -41,6 +41,8 @@ router.get("/modes", (req, res) => {
 // Statistiques communautaires du jour
 router.get("/stats/today", (req, res) => {
   const mode = getMode(req.query.mode);
+  // Parties Hard dont le temps est écoulé : comptées comme perdues dans le taux
+  games.expireOverdueGames();
   res.json({ mode: mode.id, ...statsRepo.communityStats(todayParis(), mode.id) });
 });
 

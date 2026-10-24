@@ -23,6 +23,10 @@ async function refreshCommunityStats(mode) {
     byId("success-count").textContent = stats.wins ?? 0;
     byId("avg-tries-count").textContent = formatNumber(stats.avgTries);
     byId("avg-hints-count").textContent = stats.wins ? Number(stats.avgHints ?? 0).toFixed(1) : "-";
+    // Hard : pas (ou très peu) d'indices, le taux de victoire est plus parlant
+    byId("avg-hints-row").hidden = mode === "hard";
+    byId("win-rate-row").hidden = mode !== "hard";
+    byId("win-rate-count").textContent = stats.winRate === null ? "-" : `${stats.winRate}%`;
     byId("avg-time-count").textContent = stats.wins ? formatDuration(stats.avgSeconds) : "-";
   } catch {
     // Les stats sont secondaires : la partie reste jouable

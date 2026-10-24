@@ -89,6 +89,7 @@ test("une partie normale : essai, doublon, victoire, puis partie terminée", asy
   const stats = await api.request("GET", "/api/stats/today?mode=normal");
   assert.equal(stats.data.wins, 1);
   assert.equal(stats.data.avgTries, 2);
+  assert.equal(stats.data.winRate, 100);
 });
 
 test("les synonymes officiels sont acceptés", async () => {
@@ -276,6 +277,8 @@ test("mode Hard : une partie en cours bloque le mode normal", async () => {
   assert.equal(hint.status, 409);
 
   await api.request("POST", "/api/game/forfeit", { token, body: { mode: "hard" } });
+  const hardStats = await api.request("GET", "/api/stats/today?mode=hard");
+  assert.ok(hardStats.data.winRate < 100, "un abandon fait baisser le taux de victoire");
   const after = await api.request("GET", "/api/game?mode=normal", { token });
   assert.equal(after.data.lockedBy, null);
   const ok = await api.request("POST", "/api/game/guess", { token, body: { mode: "normal", guess: wrongGuessFor(normalSecret) } });
