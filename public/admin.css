@@ -472,3 +472,28 @@
   border-color: var(--color-partial);
   border-style: dashed;
 }
+
+/* Sprite d'un élément : aperçu et envoi d'image */
+.sprite-picker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.sprite-preview {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  border-radius: 8px;
+  background: var(--bg-input);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+
+.sprite-picker-fields {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}

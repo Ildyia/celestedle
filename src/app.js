@@ -4,6 +4,7 @@ const path = require("path");
 const corsMiddleware = require("./middleware/cors");
 const { errorHandler } = require("./middleware/errors");
 const elementsRepo = require("./repositories/elements");
+const sprites = require("./services/sprites");
 
 const PUBLIC_DIR = path.join(__dirname, "..", "public");
 const PLACEHOLDER_SPRITE = path.join(PUBLIC_DIR, "assets/placeholder.svg");
@@ -32,9 +33,11 @@ function createApp() {
   // Image d'un élément, ou une image par défaut
   app.get("/sprite/:name", (req, res) => {
     const sprite = elementsRepo.findByName(req.params.name)?.sprite;
-    const file = sprite ? path.join(PUBLIC_DIR, sprite) : null;
-    const inPublic = file && file.startsWith(PUBLIC_DIR + path.sep);
-    res.sendFile(inPublic && fs.existsSync(file) ? file : PLACEHOLDER_SPRITE);
+    // Sprite envoyé depuis l'admin (dossier de données) ou fichier de public/
+    const uploaded = sprites.uploadFile(sprite);
+    const file = uploaded ?? (sprite ? path.join(PUBLIC_DIR, sprite) : null);
+    const allowed = uploaded || (file && file.startsWith(PUBLIC_DIR + path.sep));
+    res.sendFile(allowed && fs.existsSync(file) ? file : PLACEHOLDER_SPRITE);
   });
 
   app.use("/api", require("./routes/api"));

@@ -15,6 +15,7 @@ export class ElementsTab {
     byId("new-element-btn").addEventListener("click", () => this.edit(null));
     byId("element-cancel-btn").addEventListener("click", () => this.closeForm());
     byId("export-db-btn").addEventListener("click", () => this.exportDb());
+    byId("element-sprite-file").addEventListener("change", () => this.previewFile());
     this.form.addEventListener("submit", (e) => {
       e.preventDefault();
       this.save();
@@ -89,10 +90,33 @@ export class ElementsTab {
     this.checkboxes(byId("element-colors"), "couleur", v.colors, element?.couleur ?? []);
     this.checkboxes(byId("element-locations"), "lieu", v.locations, element?.lieu ?? []);
     byId("element-sprite").value = element?.sprite ?? "";
+    byId("element-sprite-file").value = "";
+    this.showPreview(element ? `${spriteUrl(element.nom)}?v=${encodeURIComponent(element.sprite ?? "")}` : null);
     byId("element-active").checked = element?.isActive ?? true;
     this.form.hidden = false;
     this.renderList();
     byId("element-name").focus();
+  }
+
+  showPreview(src) {
+    const preview = byId("element-sprite-preview");
+    URL.revokeObjectURL(this.previewUrl ?? "");
+    preview.hidden = !src;
+    if (src) preview.src = src;
+  }
+
+  // Image choisie : aperçu local avant l'envoi
+  previewFile() {
+    const file = byId("element-sprite-file").files[0];
+    if (!file) return;
+    if (file.size > 1024 * 1024) {
+      this.notify("L'image doit faire 1 Mo au plus.", true);
+      byId("element-sprite-file").value = "";
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    this.showPreview(url);
+    this.previewUrl = url;
   }
 
   closeForm() {
@@ -116,9 +140,12 @@ export class ElementsTab {
       isActive: byId("element-active").checked
     };
     try {
-      const saved = this.editing
+      let saved = this.editing
         ? await admin.updateElement(this.editing.id, payload)
         : await admin.createElement(payload);
+      // L'image part après l'élément : il faut son identifiant
+      const file = byId("element-sprite-file").files[0];
+      if (file) saved = await admin.uploadSprite(saved.id, file);
       this.notify(`« ${saved.nom} » enregistré.`);
       await this.load();
       this.edit(this.elements.find((e) => e.id === saved.id));

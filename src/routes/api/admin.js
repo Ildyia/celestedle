@@ -9,6 +9,7 @@ const { allModeRules, updateModeRules } = require("../../services/mode-rules");
 const { MODE_IDS } = require("../../services/modes");
 const staff = require("../../services/staff");
 const players = require("../../services/players");
+const sprites = require("../../services/sprites");
 const { requireStaff, requireOwner, limitedAction } = require("../../middleware/admin-auth");
 const { requirePlayer } = require("../../middleware/player");
 const { rateLimit } = require("../../middleware/rate-limit");
@@ -131,8 +132,8 @@ function validateElementInput(input, { partial }) {
 
   if (input.sprite !== undefined) {
     const sprite = input.sprite ? String(input.sprite).trim() : null;
-    if (sprite && !/^assets\/[\w./-]+$/.test(sprite)) {
-      throw new HttpError(400, 'Sprite must be a path like "assets/entities/name.png".');
+    if (sprite && !/^assets\/[\w./-]+$/.test(sprite) && !/^uploads\/[\w.-]+$/.test(sprite)) {
+      throw new HttpError(400, 'Sprite must be a path like "assets/entities/name.png", or an uploaded image.');
     }
     out.sprite = sprite;
   }
@@ -158,10 +159,28 @@ router.post("/admin/elements", limitedAction("create_element", (req) => req.body
 
 router.patch("/admin/elements/:id", limitedAction("edit_element", (req) => req.params.id), (req, res) => {
   const input = validateElementInput(req.body || {}, { partial: true });
+  const before = elementsRepo.findById(Number(req.params.id));
   const element = saveElement(() => elementsRepo.update(Number(req.params.id), input));
   if (!element) throw new HttpError(404, "Élément introuvable");
+  // Image envoyée remplacée par un autre chemin : le fichier ne sert plus
+  if (before.sprite !== element.sprite) sprites.removeUpload(before.sprite);
   res.json(element);
 });
+
+// Image envoyée depuis l'admin : corps brut (image/png…), 1 Mo au plus
+router.post(
+  "/admin/elements/:id/sprite",
+  limitedAction("upload_sprite", (req) => req.params.id),
+  express.raw({ type: () => true, limit: sprites.MAX_BYTES }),
+  (req, res) => {
+    const element = elementsRepo.findById(Number(req.params.id));
+    if (!element) throw new HttpError(404, "Élément introuvable");
+    const sprite = sprites.saveUpload(element, req.body);
+    const updated = elementsRepo.update(element.id, { sprite });
+    sprites.removeUpload(element.sprite);
+    res.json(updated);
+  }
+);
 
 // Base actuelle au format db.json, à recopier dans le dépôt
 router.get("/admin/export/db.json", (req, res) => {

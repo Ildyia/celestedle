@@ -601,3 +601,48 @@ test("CORS : domaines Celestedle acceptés, autres refusés", async () => {
   const ko = await api.request("GET", "/api/version", { headers: { Origin: "https://evil.vercel.app" } });
   assert.equal(ko.headers.get("access-control-allow-origin"), null);
 });
+
+test("sprites : image envoyée depuis l'admin, servie puis remplacée", async () => {
+  const headers = await ownerHeaders();
+  const fs = require("fs");
+  const sprites = require("../src/services/sprites");
+  const created = await api.request("POST", "/api/admin/elements", {
+    headers,
+    body: { name: "upload test", type: "mechanics", shape: "square", lieu: ["core"], couleur: ["red"] }
+  });
+  assert.equal(created.status, 201, JSON.stringify(created.data));
+
+  const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.from("fake image data")]);
+  const send = (body, extra = headers) =>
+    fetch(`${api.base}/api/admin/elements/${created.data.id}/sprite`, {
+      method: "POST",
+      headers: { ...extra, "Content-Type": "image/png" },
+      body
+    });
+
+  const notImage = await send(Buffer.from("<svg onload=alert(1)>"));
+  assert.equal(notImage.status, 400, "seuls PNG, GIF, JPEG et WebP sont acceptés, d'après leur contenu");
+
+  const { token } = await api.newPlayer();
+  assert.equal((await send(png, { "X-Player-Token": token })).status, 403);
+
+  const uploaded = await send(png);
+  assert.equal(uploaded.status, 200);
+  const element = await uploaded.json();
+  assert.match(element.sprite, /^uploads\/upload-test-[0-9a-f]{8}\.png$/);
+
+  const served = await fetch(`${api.base}/sprite/upload%20test`);
+  assert.deepEqual(Buffer.from(await served.arrayBuffer()), png);
+
+  // Le chemin uploads/ reste accepté quand on réenregistre le formulaire
+  const resaved = await api.request("PATCH", `/api/admin/elements/${created.data.id}`, { headers, body: { sprite: element.sprite } });
+  assert.equal(resaved.status, 200);
+
+  // Remplacée par un fichier du dépôt : l'ancienne image est supprimée
+  const file = sprites.uploadFile(element.sprite);
+  assert.ok(fs.existsSync(file));
+  await api.request("PATCH", `/api/admin/elements/${created.data.id}`, { headers, body: { sprite: "assets/entities/spring.png" } });
+  assert.ok(!fs.existsSync(file));
+
+  assert.equal(sprites.uploadFile("uploads/../../etc/passwd"), null);
+});

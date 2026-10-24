@@ -146,7 +146,15 @@
                 <div id="element-locations"></div>
               </fieldset>
               <div class="form-group">
-                <label for="element-sprite">Sprite</label>
+                <label for="element-sprite-file">Sprite</label>
+                <div class="sprite-picker">
+                  <img id="element-sprite-preview" class="sprite-preview" alt="Aperçu du sprite" />
+                  <div class="sprite-picker-fields">
+                    <input type="file" id="element-sprite-file" accept="image/png,image/gif,image/jpeg,image/webp" />
+                    <p class="small-subtext">PNG, GIF, JPEG ou WebP, 1 Mo au plus. L'image est envoyée à l'enregistrement.</p>
+                  </div>
+                </div>
+                <label for="element-sprite" class="small-subtext">Ou chemin d'un fichier du dépôt</label>
                 <input type="text" id="element-sprite" class="bug-input" placeholder="assets/entities/nom.png" />
               </div>
               <div class="form-group form-inline">

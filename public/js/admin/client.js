@@ -30,6 +30,18 @@ async function request(method, path, body, token = storage.get(KEYS.playerToken)
   return data;
 }
 
+// Image brute (pas de JSON) : le type du fichier sert de Content-Type
+async function upload(path, file) {
+  const res = await fetch(`${API_BASE_URL}/api${path}`, {
+    method: "POST",
+    headers: { "Content-Type": file.type || "application/octet-stream", "X-Player-Token": storage.get(KEYS.playerToken) ?? "" },
+    body: file
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(data?.error || `Erreur HTTP ${res.status}`);
+  return data;
+}
+
 export const admin = {
   me: (token) => request("GET", "/admin/me", undefined, token),
   claimOwner: (password) => request("POST", "/admin/claim-owner", { password }),
@@ -40,6 +52,7 @@ export const admin = {
   elements: () => request("GET", "/admin/elements"),
   createElement: (element) => request("POST", "/admin/elements", element),
   updateElement: (id, changes) => request("PATCH", `/admin/elements/${id}`, changes),
+  uploadSprite: (id, file) => upload(`/admin/elements/${id}/sprite`, file),
   exportDbJson: () => request("GET", "/admin/export/db.json"),
   connectionTags: () => request("GET", "/admin/connections/tags"),
   createConnectionTag: (tag) => request("POST", "/admin/connections/tags", tag),
