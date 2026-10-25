@@ -949,6 +949,51 @@ th,
   margin-bottom: 6px;
 }
 
+.memorial-message {
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 8px;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(91, 206, 250, 0.16), rgba(245, 169, 184, 0.16));
+  border: 2px solid #f5a9b8;
+  display: grid;
+  gap: 10px;
+}
+
+/* Couleurs du drapeau trans ; le thème Celeste met un dégradé sur les h3 */
+.memorial-message h3,
+body.theme-celeste .memorial-message h3 {
+  background: none;
+  color: #5bcefa;
+  -webkit-text-fill-color: #5bcefa;
+  font-size: 1.2rem;
+}
+
+.memorial-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.memorial-links a {
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: "Renogare", sans-serif;
+  color: #11162b;
+  background: #f5a9b8;
+  transition: background 0.2s ease;
+}
+
+.memorial-links a:first-child {
+  background: #5bcefa;
+}
+
+.memorial-links a:hover {
+  background: #ffffff;
+}
+
 .lose-message {
   background: linear-gradient(135deg, #7f1d1d, #450a0a);
   border: 2px solid var(--color-wrong);

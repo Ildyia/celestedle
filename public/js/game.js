@@ -12,6 +12,30 @@ import { fillRulesText } from "./rules-text.js";
 
 const SYNONYMS_USED_KEY = "celestedle_synonyms_used";
 
+// Le mémorial du jeu rend hommage à celles et ceux qui ne sont pas revenus de
+// la montagne : quand c'est le mot du jour, la fin de partie rappelle le
+// Transgender Day of Remembrance (20 novembre)
+const MEMORIAL_NAMES = ["memorial"];
+const TDOR_URL = "https://tdor.tgeu.org/";
+const DONATE_URL = "https://tgeu.org/support-our-work/";
+
+function memorialMessage() {
+  const link = (href, text) =>
+    el("a", { text, attrs: { href, target: "_blank", rel: "noopener" } });
+  return el("div", { className: "memorial-message" }, [
+    el("h3", { text: "In memory" }),
+    el("p", {
+      text:
+        "Celeste's memorial honours those who perished on the climb. Every 20 November, the Transgender Day of " +
+        "Remembrance honours the trans people lost to transphobic violence."
+    }),
+    el("div", { className: "memorial-links" }, [
+      link(TDOR_URL, "Transgender Day of Remembrance"),
+      link(DONATE_URL, "Support TGEU (Transgender Europe)")
+    ])
+  ]);
+}
+
 // Partie du jour : l'état vient du serveur, la page ne fait que l'afficher
 export class Game {
   constructor({ synonyms, suggestions, onFinished }) {
@@ -176,6 +200,7 @@ export class Game {
         el("div", {}, content.body)
       ])
     );
+    if (MEMORIAL_NAMES.includes(state.solution?.nom?.toLowerCase())) this.nodes.message.append(memorialMessage());
   }
 
   shake() {
