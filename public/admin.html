@@ -175,12 +175,20 @@
             <button type="button" id="new-tag-btn" class="btn-primary">Nouveau tag</button>
           </div>
           <p class="small-subtext">
-            Phase de test : la page et l'API Connections ne répondent qu'à l'équipe admin.
+            Phase de test : seuls l'équipe admin et les playtesters peuvent jouer à Connections.
           </p>
 
           <h3 class="admin-subtitle">Grilles des 7 prochains jours</h3>
           <p class="small-subtext">Normal : aucun faux groupe. Hard : faux groupes permis, seule l'unicité de la solution est garantie.</p>
           <div id="cx-puzzles" class="cx-admin-puzzles"></div>
+
+          <h3 class="admin-subtitle">Tags suggérés par les joueurs</h3>
+          <p class="small-subtext">
+            « Créer ce tag » ouvre le formulaire prérempli (les éléments cités
+            dont le nom est reconnu sont déjà cochés) ; la suggestion disparaît
+            une fois le tag enregistré.
+          </p>
+          <div id="cx-suggestions" class="cx-admin-suggestions"></div>
 
           <h3 class="admin-subtitle">Tags</h3>
           <p class="small-subtext">

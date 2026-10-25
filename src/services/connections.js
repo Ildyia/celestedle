@@ -210,6 +210,19 @@ function deleteTag(id) {
   if (!repo.deleteTag(id)) throw new HttpError(404, "Unknown tag.");
 }
 
+// Idée de tag envoyée depuis la page de jeu, relue dans l'admin
+function suggestTag(player, input = {}) {
+  const label = String(input.label ?? "").trim();
+  if (label.length < 2 || label.length > 60) throw new HttpError(400, "The tag name must be 2 to 60 characters.");
+  const elements = String(input.elements ?? "").trim().slice(0, 1000);
+  const note = String(input.note ?? "").trim().slice(0, 500);
+  return { id: repo.addSuggestion({ playerId: player.id, label, elements, note }) };
+}
+
+function deleteSuggestion(id) {
+  if (!repo.deleteSuggestion(id)) throw new HttpError(404, "Unknown suggestion.");
+}
+
 // Grille d'un jour avec ses réponses, pour la relecture dans l'admin
 function puzzlePreview(date, mode = "normal") {
   const puzzle = getPuzzle(date, mode);
@@ -240,5 +253,8 @@ module.exports = {
   listTags: () => repo.listTags(),
   saveTag,
   deleteTag,
+  suggestTag,
+  listSuggestions: () => repo.listSuggestions(),
+  deleteSuggestion,
   puzzlePreview
 };

@@ -405,3 +405,30 @@ test("générateur : avec beaucoup de tags liés aux types, le mode normal reste
     assert.equal(countSolutions(puzzle.tiles, categories), 1);
   }
 });
+
+test("suggestions de tags : envoyées par un playtester, relues et retirées par l'équipe admin", async () => {
+  const { token, player } = await api.newPlayer();
+  assert.equal((await api.request("POST", "/api/connections/tag-suggestions", { token, body: { label: "Has wings" } })).status, 403);
+  await api.request("PUT", `/api/admin/players/${player.id}/playtester`, { token: await owner(), body: { enabled: true } });
+
+  assert.equal((await api.request("POST", "/api/connections/tag-suggestions", { token, body: { label: "x" } })).status, 400);
+  const sent = await api.request("POST", "/api/connections/tag-suggestions", {
+    token,
+    body: { label: "  Has wings ", elements: "Winged strawberry, Theo", note: "Visible wings on the sprite" }
+  });
+  assert.equal(sent.status, 201, JSON.stringify(sent.data));
+
+  // Ni le playtester ni personne hors de l'équipe ne voit la liste
+  assert.equal((await api.request("GET", "/api/admin/connections/suggestions", { token })).status, 403);
+  const list = await api.request("GET", "/api/admin/connections/suggestions", { token: await owner() });
+  const suggestion = list.data.find((s) => s.id === sent.data.id);
+  assert.equal(suggestion.label, "Has wings");
+  assert.equal(suggestion.elements, "Winged strawberry, Theo");
+  assert.equal(suggestion.note, "Visible wings on the sprite");
+  assert.ok(suggestion.playerName);
+
+  const removed = await api.request("DELETE", `/api/admin/connections/suggestions/${suggestion.id}`, { token: await owner() });
+  assert.equal(removed.status, 204);
+  const again = await api.request("DELETE", `/api/admin/connections/suggestions/${suggestion.id}`, { token: await owner() });
+  assert.equal(again.status, 404);
+});

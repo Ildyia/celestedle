@@ -23,6 +23,10 @@
             <img src="assets/illustration/journal.png" alt="" />
             <span>Rules</span>
           </button>
+          <button type="button" id="cx-suggest-btn" class="action-btn" hidden>
+            <img src="assets/illustration/strawberry.png" alt="" />
+            <span>Suggest a new tag</span>
+          </button>
         </nav>
       </header>
 
@@ -156,6 +160,42 @@
             ranking.
           </p>
         </div>
+      </div>
+    </div>
+    <div id="cx-suggest-modal" class="rules-modal hidden">
+      <div class="rules-content bug-modal-content modal-narrow">
+        <button
+          type="button"
+          class="close-modal-btn"
+          data-close-modal="cx-suggest-modal"
+          aria-label="Close"
+        >
+          &times;
+        </button>
+        <form id="cx-suggest-form" class="rules-content-static">
+          <h2>Suggest a new tag</h2>
+          <p>
+            A tag is a fact some Celeste elements share, used to make groups.
+            For example "gives liftboost" or "part of a major speedrun skip".
+            The team will review your idea.
+          </p>
+          <div class="form-group">
+            <label for="cx-suggest-label">Tag</label>
+            <input type="text" id="cx-suggest-label" class="bug-input" minlength="2" maxlength="60" placeholder="e.g. Gives liftboost" required />
+          </div>
+          <div class="form-group">
+            <label for="cx-suggest-elements">Which elements have it? (optional)</label>
+            <textarea id="cx-suggest-elements" class="bug-input" maxlength="1000" rows="3" placeholder="e.g. Zip mover, Kevin, Moving block"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="cx-suggest-note">How to tell if an element has it? (optional)</label>
+            <textarea id="cx-suggest-note" class="bug-input" maxlength="500" rows="2"></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" data-close-modal="cx-suggest-modal">Cancel</button>
+            <button type="submit" id="cx-suggest-submit" class="btn-primary">Send</button>
+          </div>
+        </form>
       </div>
     </div>
     <script type="module" src="js/connections.js"></script>

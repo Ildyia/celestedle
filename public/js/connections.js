@@ -1,5 +1,5 @@
 import { api, ApiError, spriteUrl } from "./api.js";
-import { el, byId, clear, bindModalClosing, openModal } from "./dom.js";
+import { el, byId, clear, bindModalClosing, openModal, closeModal } from "./dom.js";
 import { capitalize, formatDuration } from "./format.js";
 import { player } from "./player.js";
 import { initOptions } from "./options.js";
@@ -116,6 +116,7 @@ class ConnectionsGame {
     try {
       this.render(await api.connections(this.mode, this.practice));
       byId("cx-game").hidden = false;
+      byId("cx-suggest-btn").hidden = false;
       this.loadBoard();
     } catch (err) {
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
@@ -318,9 +319,35 @@ class ConnectionsGame {
   }
 }
 
+// Idée de tag envoyée à l'équipe admin
+async function sendSuggestion(e) {
+  e.preventDefault();
+  const button = byId("cx-suggest-submit");
+  button.disabled = true;
+  try {
+    await api.connectionsSuggestTag({
+      label: byId("cx-suggest-label").value.trim(),
+      elements: byId("cx-suggest-elements").value.trim(),
+      note: byId("cx-suggest-note").value.trim()
+    });
+    byId("cx-suggest-form").reset();
+    closeModal("cx-suggest-modal");
+    showToast("Thanks! The team will look at your idea.", FEEDBACK_MS);
+  } catch (err) {
+    showToast(err.message, FEEDBACK_MS);
+  } finally {
+    button.disabled = false;
+  }
+}
+
 async function init() {
   bindModalClosing();
   byId("cx-rules-btn").addEventListener("click", () => openModal("cx-rules-modal"));
+  byId("cx-suggest-btn").addEventListener("click", () => {
+    openModal("cx-suggest-modal");
+    byId("cx-suggest-label").focus();
+  });
+  byId("cx-suggest-form").addEventListener("submit", sendSuggestion);
   initOptions();
   await player.load();
   await new ConnectionsGame().load();

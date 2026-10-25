@@ -392,9 +392,30 @@
   margin-bottom: 20px;
 }
 
-.cx-admin-puzzle {
+.cx-admin-puzzle,
+.cx-admin-suggestion {
   display: grid;
   gap: 6px;
+}
+
+.cx-admin-suggestions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.cx-admin-suggestion p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Éléments cochés d'un tag, sous son nom dans la liste */
+.cx-tag-members {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
 }
 
 .cx-admin-puzzle-head {

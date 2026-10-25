@@ -18,6 +18,16 @@ const stmts = {
     WHERE id = @id
   `),
   clearMembers: db.prepare("DELETE FROM connection_tag_elements WHERE tag_id = ?"),
+  insertSuggestion: db.prepare(`
+    INSERT INTO connection_tag_suggestions (player_id, label, elements, note)
+    VALUES (@playerId, @label, @elements, @note)
+  `),
+  suggestions: db.prepare(`
+    SELECT s.*, p.name AS player_name
+    FROM connection_tag_suggestions s LEFT JOIN players p ON p.id = s.player_id
+    ORDER BY s.created_at DESC, s.id DESC
+  `),
+  deleteSuggestion: db.prepare("DELETE FROM connection_tag_suggestions WHERE id = ?"),
   addMember: db.prepare("INSERT INTO connection_tag_elements (tag_id, element_id) VALUES (?, ?)"),
   deleteTag: db.prepare("DELETE FROM connection_tags WHERE id = ?"),
 
@@ -119,6 +129,25 @@ function deleteTag(id) {
   return stmts.deleteTag.run(id).changes === 1;
 }
 
+function addSuggestion({ playerId, label, elements, note }) {
+  return Number(stmts.insertSuggestion.run({ playerId, label, elements, note }).lastInsertRowid);
+}
+
+function listSuggestions() {
+  return stmts.suggestions.all().map((row) => ({
+    id: row.id,
+    label: row.label,
+    elements: row.elements,
+    note: row.note,
+    playerName: row.player_name,
+    createdAt: row.created_at
+  }));
+}
+
+function deleteSuggestion(id) {
+  return stmts.deleteSuggestion.run(id).changes === 1;
+}
+
 function toPuzzle(row) {
   if (!row) return null;
   return { ...row, groups: JSON.parse(row.groups), tiles: JSON.parse(row.tiles) };
@@ -184,6 +213,9 @@ module.exports = {
   findTag,
   saveTag,
   deleteTag,
+  addSuggestion,
+  listSuggestions,
+  deleteSuggestion,
   findPuzzle,
   createPuzzleIfMissing,
   replacePuzzle,

@@ -11,6 +11,7 @@ export class ConnectionsTab {
     this.tags = [];
     this.elements = [];
     this.editing = null; // null = création
+    this.fromSuggestion = null; // suggestion à retirer une fois le tag créé
     this.checked = new Set();
     this.confirmDelete = false;
 
@@ -28,10 +29,11 @@ export class ConnectionsTab {
   // Chaque bloc se charge à part : une erreur sur les grilles n'empêche pas
   // d'afficher les tags, et dit d'où elle vient
   async load() {
-    const [tags, elements, puzzles] = await Promise.allSettled([
+    const [tags, elements, puzzles, suggestions] = await Promise.allSettled([
       admin.connectionTags(),
       admin.elements(),
-      admin.connectionPuzzles()
+      admin.connectionPuzzles(),
+      admin.connectionSuggestions()
     ]);
     const errors = [];
     if (elements.status === "fulfilled") this.elements = elements.value.elements.filter((e) => e.isActive);
@@ -42,6 +44,8 @@ export class ConnectionsTab {
     } else errors.push(`tags : ${tags.reason.message}`);
     if (puzzles.status === "fulfilled") this.renderPuzzles(puzzles.value);
     else errors.push(`grilles : ${puzzles.reason.message}`);
+    if (suggestions.status === "fulfilled") this.renderSuggestions(suggestions.value);
+    else errors.push(`suggestions : ${suggestions.reason.message}`);
     if (errors.length) this.notify(`Erreur en chargeant ${errors.join(" ; ")}`, true);
   }
 
@@ -106,6 +110,71 @@ export class ConnectionsTab {
     }
   }
 
+  renderSuggestions(suggestions) {
+    const container = byId("cx-suggestions");
+    clear(container);
+    if (suggestions.length === 0) {
+      container.append(el("p", { className: "small-subtext", text: "Aucune suggestion pour l'instant." }));
+      return;
+    }
+    container.append(
+      ...suggestions.map((suggestion) =>
+        el("div", { className: "admin-card cx-admin-suggestion" }, [
+          el("div", { className: "cx-admin-puzzle-head" }, [
+            el("strong", { text: suggestion.label }),
+            el("span", {
+              className: "small-subtext",
+              text: `${suggestion.playerName ?? "Profil supprimé"}, ${suggestion.createdAt.slice(0, 10)}`
+            })
+          ]),
+          suggestion.elements ? el("p", { text: `Éléments : ${suggestion.elements}` }) : null,
+          suggestion.note ? el("p", { className: "small-subtext", text: `Comment trancher : ${suggestion.note}` }) : null,
+          el("div", { className: "modal-actions" }, [
+            el("button", {
+              className: "btn-secondary btn-small",
+              text: "Écarter",
+              attrs: { type: "button" },
+              on: { click: () => this.dismissSuggestion(suggestion) }
+            }),
+            el("button", {
+              className: "btn-primary btn-small",
+              text: "Créer ce tag",
+              attrs: { type: "button" },
+              on: { click: () => this.editFromSuggestion(suggestion) }
+            })
+          ])
+        ])
+      )
+    );
+  }
+
+  // Formulaire prérempli : les noms cités qui correspondent à un élément sont cochés
+  editFromSuggestion(suggestion) {
+    this.edit(null);
+    this.fromSuggestion = suggestion;
+    const cited = new Set(
+      suggestion.elements
+        .split(/[,;\n]+/)
+        .map((name) => name.trim().toLowerCase())
+        .filter(Boolean)
+    );
+    this.checked = new Set(this.elements.filter((e) => cited.has(e.nom.toLowerCase())).map((e) => e.id));
+    byId("cx-tag-label").value = suggestion.label;
+    byId("cx-tag-description").value = suggestion.note;
+    this.renderElements();
+    this.form.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  async dismissSuggestion(suggestion) {
+    try {
+      await admin.deleteConnectionSuggestion(suggestion.id);
+      this.notify(`Suggestion « ${suggestion.label} » écartée.`);
+      this.renderSuggestions(await admin.connectionSuggestions());
+    } catch (err) {
+      this.notify(err.message, true);
+    }
+  }
+
   renderTags() {
     const body = byId("cx-tags-body");
     clear(body);
@@ -129,7 +198,18 @@ export class ConnectionsTab {
           "tr",
           { className: `clickable${this.editing?.id === tag.id ? " selected" : ""}`, on: { click: () => this.edit(tag) } },
           [
-            el("td", {}, [el("strong", { text: tag.label }), el("div", { className: "small-subtext", text: tag.description })]),
+            el("td", {}, [
+              el("strong", { text: tag.label }),
+              el("div", { className: "small-subtext", text: tag.description }),
+              el("div", {
+                className: "cx-tag-members",
+                text: this.elements
+                  .filter((e) => tag.elementIds.includes(e.id))
+                  .map((e) => e.nom)
+                  .sort((a, b) => a.localeCompare(b))
+                  .join(", ")
+              })
+            ]),
             el("td", { text: String(count) }),
             el("td", {}, [el("span", state)])
           ]
@@ -140,6 +220,7 @@ export class ConnectionsTab {
 
   edit(tag) {
     this.editing = tag;
+    this.fromSuggestion = null;
     this.checked = new Set(tag?.elementIds ?? []);
     this.confirmDelete = false;
     byId("cx-tag-form-title").textContent = tag ? `Modifier « ${tag.label} »` : "Nouveau tag";
@@ -207,6 +288,7 @@ export class ConnectionsTab {
         ? await admin.updateConnectionTag(this.editing.id, payload)
         : await admin.createConnectionTag(payload);
       this.notify(`Tag « ${saved.label} » enregistré.`);
+      if (this.fromSuggestion) await admin.deleteConnectionSuggestion(this.fromSuggestion.id).catch(() => {});
       await this.load();
       this.edit(this.tags.find((t) => t.id === saved.id));
     } catch (err) {

@@ -34,6 +34,21 @@ router.get("/connections/leaderboard", (req, res) => {
   res.json({ top: connections.leaderboard(req.player.id, req.query.mode ?? "normal") });
 });
 
+const suggestLimit = rateLimit({ name: "connections-suggest", windowMs: 10 * 60 * 1000, max: 5 });
+router.post("/connections/tag-suggestions", suggestLimit, (req, res) => {
+  res.status(201).json(connections.suggestTag(req.player, req.body || {}));
+});
+
+router.get("/admin/connections/suggestions", (req, res) => {
+  res.json(connections.listSuggestions());
+});
+
+// Suggestion traitée (tag créé) ou écartée
+router.delete("/admin/connections/suggestions/:id", (req, res) => {
+  connections.deleteSuggestion(Number(req.params.id));
+  res.status(204).end();
+});
+
 // Tags : les éléments cochés l'ont, les autres non
 router.get("/admin/connections/tags", (req, res) => {
   res.json(connections.listTags());
