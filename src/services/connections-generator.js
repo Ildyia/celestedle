@@ -3,12 +3,17 @@
 
 const GROUP_SIZE = 4;
 const GROUP_COUNT = 4;
-const MAX_ATTEMPTS = 4000;
+const MAX_ATTEMPTS = 20000;
 const MAX_SAME_KIND = 2;
 
 // Difficulté d'une sorte de catégorie : sert à ranger les groupes du plus
 // facile (0) au plus dur, comme les 4 couleurs du jeu original
 const KIND_LEVELS = { type: 0, colour: 1, shape: 1, chapter: 2, tag: 3 };
+
+// Faux groupe trop visible : 4 cases d'un même type (ou d'un même tag) qui
+// ne forment pas un des groupes. Pour les couleurs et les chapitres, c'est
+// inévitable avec 99 éléments : ils restent des fausses pistes.
+const OBVIOUS_DECOY_KINDS = ["type", "tag"];
 
 // Au-delà, une catégorie chevauche presque toutes les autres et la grille
 // n'a jamais une seule solution (Farewell : 55 éléments sur 99)
@@ -121,7 +126,18 @@ function tryGroups(chosen, categories, random) {
     tiles.push(...members);
     groups.push({ category, elementIds: members });
   }
+  if (hasObviousDecoy(tiles, chosen, categories)) return null;
   return countSolutions(tiles, categories) === 1 ? { groups, tiles } : null;
+}
+
+function hasObviousDecoy(tiles, chosen, categories) {
+  return categories.some(
+    (c) =>
+      OBVIOUS_DECOY_KINDS.includes(c.kind) &&
+      c.usable &&
+      !chosen.includes(c) &&
+      tiles.filter((id) => c.members.has(id)).length >= GROUP_SIZE
+  );
 }
 
 // Grille { groups: [{ key, kind, label, level, elementIds }], tiles: [16 ids] }.
@@ -163,6 +179,7 @@ function generatePuzzle(elements, tags, random = Math.random) {
 
 module.exports = {
   GROUP_SIZE,
+  hasObviousDecoy,
   GROUP_COUNT,
   buildCategories,
   countSolutions,

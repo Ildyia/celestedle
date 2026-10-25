@@ -88,12 +88,15 @@ export class ConnectionsTab {
     body.append(
       ...this.tags.map((tag) => {
         const count = tag.elementIds.length;
+        const types = new Set(this.elements.filter((e) => tag.elementIds.includes(e.id)).map((e) => e.type));
         const state =
           tag.unreviewedIds.length > 0
             ? { text: `${tag.unreviewedIds.length} élément(s) à classer`, className: "badge" }
             : count < 4 || count > 40
               ? { text: "Hors limites (4 à 40)", className: "badge" }
-              : { text: "Utilisé dans les grilles", className: "badge admin" };
+              : types.size === 1
+                ? { text: "Un seul type : ne sortira jamais", className: "badge" }
+                : { text: "Utilisé dans les grilles", className: "badge admin" };
         return el(
           "tr",
           { className: `clickable${this.editing?.id === tag.id ? " selected" : ""}`, on: { click: () => this.edit(tag) } },

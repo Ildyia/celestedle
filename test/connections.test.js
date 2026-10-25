@@ -8,6 +8,7 @@ const connections = require("../src/services/connections");
 const {
   buildCategories,
   countSolutions,
+  hasObviousDecoy,
   generatePuzzle,
   seededRandom
 } = require("../src/services/connections-generator");
@@ -42,7 +43,7 @@ async function newAdministrator() {
   return token;
 }
 
-test("générateur : 4 groupes de 4, une seule solution, au plus 2 groupes d'une même sorte", () => {
+test("générateur : 4 groupes de 4, une seule solution, pas de faux groupe de type, au plus 2 groupes d'une même sorte", () => {
   const elements = elementsRepo.listActive();
   const categories = buildCategories(elements, []);
   for (let seed = 1; seed <= 15; seed++) {
@@ -52,6 +53,8 @@ test("générateur : 4 groupes de 4, une seule solution, au plus 2 groupes d'une
     assert.deepEqual(puzzle.groups.map((g) => g.level), [0, 1, 2, 3]);
     for (const group of puzzle.groups) assert.equal(group.elementIds.length, 4);
     assert.equal(countSolutions(puzzle.tiles, categories), 1);
+    const chosen = categories.filter((c) => puzzle.groups.some((g) => g.key === c.key));
+    assert.ok(!hasObviousDecoy(puzzle.tiles, chosen, categories), "pas 4 cases d'un même type hors des groupes");
     const kinds = puzzle.groups.map((g) => g.kind);
     for (const kind of kinds) assert.ok(kinds.filter((k) => k === kind).length <= 2);
   }
@@ -61,7 +64,9 @@ test("générateur : 4 groupes de 4, une seule solution, au plus 2 groupes d'une
 
 test("générateur : un tag incomplet ne sert pas de groupe, un tag complet est imposé", () => {
   const elements = elementsRepo.listActive();
-  const members = elements.filter((e) => e.type === "collectibles").slice(0, 6).map((e) => e.id);
+  // Un élément de chaque type : un tag d'un seul type ferait doublon avec ce type
+  const types = [...new Set(elements.map((e) => e.type))];
+  const members = types.map((type) => elements.find((e) => e.type === type).id);
   const tag = { id: 1, label: "Shiny", elementIds: members, unreviewedIds: [] };
 
   const draft = buildCategories(elements, [{ ...tag, unreviewedIds: [elements[0].id] }]).find((c) => c.key === "tag:1");
