@@ -45,6 +45,7 @@ export class ConnectionsTab {
         el("div", { className: "admin-card cx-admin-puzzle" }, [
           el("div", { className: "cx-admin-puzzle-head" }, [
             el("strong", { text: puzzle.date }),
+            el("span", { className: `badge cx-mode-${puzzle.mode}`, text: puzzle.mode === "hard" ? "Hard" : "Normal" }),
             el("span", {
               className: `badge${puzzle.source === "admin" ? " admin" : ""}`,
               text: puzzle.source === "admin" ? `régénérée (v${puzzle.version})` : "auto"
@@ -53,7 +54,7 @@ export class ConnectionsTab {
               className: "btn-secondary btn-small",
               text: "Régénérer",
               attrs: { type: "button", title: "Tire une autre grille ; les parties du jour repartent de zéro" },
-              on: { click: () => this.regenerate(puzzle.date) }
+              on: { click: () => this.regenerate(puzzle.date, puzzle.mode) }
             })
           ]),
           ...puzzle.groups.map((group) =>
@@ -68,10 +69,10 @@ export class ConnectionsTab {
     );
   }
 
-  async regenerate(date) {
+  async regenerate(date, mode) {
     try {
-      await admin.regenerateConnectionPuzzle(date);
-      this.notify(`Nouvelle grille pour le ${date}.`);
+      await admin.regenerateConnectionPuzzle(date, mode);
+      this.notify(`Nouvelle grille ${mode === "hard" ? "Hard" : "normale"} pour le ${date}.`);
       this.renderPuzzles(await admin.connectionPuzzles());
     } catch (err) {
       this.notify(err.message, true);

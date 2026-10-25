@@ -11,25 +11,27 @@ const router = express.Router();
 router.use("/connections", requirePlaytester);
 router.use("/admin/connections", requireStaff);
 
-// ?practice=1 : grille d'entraînement du joueur au lieu de la grille du jour
+// ?mode=normal|hard ; ?practice=1 : grille d'entraînement du joueur au lieu
+// de la grille du jour
 router.get("/connections", (req, res) => {
-  const practice = req.query.practice === "1";
-  res.json({ ...connections.getState(req.player, { practice }), nextGridInMs: msUntilNextDay() });
+  const options = { mode: req.query.mode ?? "normal", practice: req.query.practice === "1" };
+  res.json({ ...connections.getState(req.player, options), nextGridInMs: msUntilNextDay() });
 });
 
 router.post("/connections/guess", (req, res) => {
-  res.json(connections.guess(req.player, req.body?.names, { practice: req.body?.practice === true }));
+  const { names, mode = "normal", practice } = req.body || {};
+  res.json(connections.guess(req.player, names, { mode, practice: practice === true }));
 });
 
 // Playtest : nouvelle grille d'entraînement, autant que voulu (la génération
 // prend quelques millisecondes ; la limite évite seulement les abus)
 const practiceLimit = rateLimit({ name: "connections-practice", windowMs: 60 * 1000, max: 30 });
 router.post("/connections/practice", practiceLimit, (req, res) => {
-  res.json(connections.newPracticePuzzle(req.player));
+  res.json(connections.newPracticePuzzle(req.player, req.body?.mode ?? "normal"));
 });
 
 router.get("/connections/leaderboard", (req, res) => {
-  res.json({ top: connections.leaderboard(req.player.id) });
+  res.json({ top: connections.leaderboard(req.player.id, req.query.mode ?? "normal") });
 });
 
 // Tags : les éléments cochés l'ont, les autres non
@@ -50,23 +52,26 @@ router.delete("/admin/connections/tags/:id", limitedAction("delete_tag", (req) =
   res.status(204).end();
 });
 
-// Grilles d'aujourd'hui et des 6 jours suivants, avec leurs réponses
+// Grilles d'aujourd'hui et des 6 jours suivants, avec leurs réponses, pour
+// chaque mode
 router.get("/admin/connections/puzzles", (req, res) => {
   const today = todayParis();
-  res.json(Array.from({ length: 7 }, (_, i) => connections.puzzlePreview(addDays(today, i))));
+  const days = Array.from({ length: 7 }, (_, i) => addDays(today, i));
+  res.json(days.flatMap((date) => connections.MODES.map((mode) => connections.puzzlePreview(date, mode))));
 });
 
 router.post(
   "/admin/connections/puzzles/:date/regenerate",
-  limitedAction("regenerate_grid", (req) => req.params.date),
+  limitedAction("regenerate_grid", (req) => `${req.params.date} ${req.body?.mode ?? "normal"}`),
   (req, res) => {
     const { date } = req.params;
     const today = todayParis();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today || date > addDays(today, 6)) {
       throw new HttpError(400, "Only today's grid and the next 6 days can be regenerated.");
     }
-    connections.regeneratePuzzle(date);
-    res.json(connections.puzzlePreview(date));
+    const mode = req.body?.mode ?? "normal";
+    connections.regeneratePuzzle(date, mode);
+    res.json(connections.puzzlePreview(date, mode));
   }
 );
 

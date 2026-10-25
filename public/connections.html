@@ -29,18 +29,36 @@
 
       <section id="cx-game" hidden>
         <div class="cx-modes">
+          <div class="segmented" role="group" aria-label="Mode">
+            <button type="button" data-cx-mode="normal" aria-pressed="true">Normal</button>
+            <button type="button" data-cx-mode="hard" aria-pressed="false">Hard</button>
+          </div>
           <div class="segmented" role="group" aria-label="Grid">
             <button type="button" data-cx-grid="daily" aria-pressed="true">Today's grid</button>
             <button type="button" data-cx-grid="practice" aria-pressed="false">Practice</button>
           </div>
           <button type="button" id="cx-new-btn" class="action-btn" hidden>🎲 New grid</button>
         </div>
+        <p id="cx-mode-note" class="small-subtext cx-note"></p>
         <p id="cx-practice-note" class="small-subtext cx-note" hidden>
           Practice grids are yours only: draw as many as you like, they don't
           count in the ranking and don't change today's grid.
         </p>
         <div id="cx-found" class="cx-groups"></div>
         <div id="cx-grid" class="cx-grid" role="group" aria-label="Tiles"></div>
+
+        <div id="cx-paint" class="cx-paint" hidden>
+          <span>Mark tiles:</span>
+          <button type="button" class="cx-swatch mark-0" data-cx-mark="0" aria-pressed="false" aria-label="Red marker"></button>
+          <button type="button" class="cx-swatch mark-1" data-cx-mark="1" aria-pressed="false" aria-label="Orange marker"></button>
+          <button type="button" class="cx-swatch mark-2" data-cx-mark="2" aria-pressed="false" aria-label="Teal marker"></button>
+          <button type="button" class="cx-swatch mark-3" data-cx-mark="3" aria-pressed="false" aria-label="Pink marker"></button>
+          <button type="button" id="cx-unmark-btn" class="btn-secondary btn-small">Clear marks</button>
+        </div>
+        <p id="cx-paint-help" class="small-subtext cx-note" hidden>
+          Pick a colour, then tap tiles to mark them without submitting. Tap the
+          colour again to go back to selecting tiles.
+        </p>
 
         <div class="cx-mistakes">
           <span>Mistakes left:</span>

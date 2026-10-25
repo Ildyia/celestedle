@@ -3,6 +3,7 @@ import { el, byId, clear } from "./dom.js";
 import { capitalize, formatDuration } from "./format.js";
 import { player } from "./player.js";
 import { initOptions } from "./options.js";
+import { storage } from "./storage.js";
 import { showToast } from "./toast.js";
 import { avatarUrl } from "./profile.js";
 
@@ -11,6 +12,15 @@ import { avatarUrl } from "./profile.js";
 const SHARE_EMOJI = ["🟨", "🟩", "🟦", "🟪"];
 const KIND_LABELS = { type: "Type", colour: "Colour", shape: "Shape", chapter: "Chapter", tag: "Tag" };
 const SITE_URL = "https://celestedle.vercel.app/connections.html";
+const SHARE_LEGEND = "One row per guess, one square per tile: 🟨 easiest group → 🟪 hardest";
+const MODE_KEY = "celestedle_cx_mode";
+// Marques de couleur du mode Hard : { [gridId]: { [nom]: 0..3 } }, dans ce navigateur seulement
+const MARKS_KEY = "celestedle_cx_marks";
+const MARK_COUNT = 4;
+const MODE_NOTES = {
+  normal: "Normal: every group is clear-cut, no decoy groups.",
+  hard: "Hard: decoy groups are allowed (4 tiles can look like a group and not be one). Mark tiles with colours to plan ahead."
+};
 
 class ConnectionsGame {
   constructor() {
@@ -19,7 +29,25 @@ class ConnectionsGame {
     this.selected = new Set();
     this.busy = false;
     this.practice = false;
+    this.mode = storage.get(MODE_KEY) === "hard" ? "hard" : "normal";
+    this.paint = null; // couleur de marque active (mode Hard), null = sélection
+    this.marks = {};
 
+    document.querySelectorAll("[data-cx-mode]").forEach((btn) =>
+      btn.addEventListener("click", () => this.setMode(btn.dataset.cxMode))
+    );
+    document.querySelectorAll("[data-cx-mark]").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        const mark = Number(btn.dataset.cxMark);
+        this.paint = this.paint === mark ? null : mark;
+        this.renderGrid();
+      })
+    );
+    byId("cx-unmark-btn").addEventListener("click", () => {
+      this.marks = {};
+      this.saveMarks();
+      this.renderGrid();
+    });
     document.querySelectorAll("[data-cx-grid]").forEach((btn) =>
       btn.addEventListener("click", () => this.setPractice(btn.dataset.cxGrid === "practice"))
     );
@@ -33,12 +61,39 @@ class ConnectionsGame {
     byId("cx-share-btn").addEventListener("click", () => this.share());
   }
 
+  async setMode(mode) {
+    if (mode === this.mode || this.busy) return;
+    this.mode = mode;
+    storage.set(MODE_KEY, mode);
+    this.resetLocal();
+    await this.load();
+  }
+
   async setPractice(practice) {
     if (practice === this.practice || this.busy) return;
     this.practice = practice;
+    this.resetLocal();
+    await this.load();
+  }
+
+  // Ordre, sélection et pinceau propres à la grille affichée
+  resetLocal() {
     this.order = [];
     this.selected.clear();
-    await this.load();
+    this.paint = null;
+  }
+
+  loadMarks() {
+    this.marks = storage.getJson(MARKS_KEY, {})[this.state.gridId] ?? {};
+  }
+
+  // Une seule grille par mode et par type gardée : les anciennes marques partent
+  saveMarks() {
+    const all = storage.getJson(MARKS_KEY, {});
+    const prefix = this.state.gridId.split("#")[0];
+    const kept = Object.fromEntries(Object.entries(all).filter(([id]) => id.split("#")[0] !== prefix));
+    if (Object.keys(this.marks).length) kept[this.state.gridId] = this.marks;
+    storage.setJson(MARKS_KEY, kept);
   }
 
   // Grille d'entraînement : nouvelle grille, la partie repart de zéro
@@ -46,9 +101,8 @@ class ConnectionsGame {
     if (this.busy) return;
     this.busy = true;
     try {
-      const state = await api.connectionsNewPractice();
-      this.order = [];
-      this.selected.clear();
+      const state = await api.connectionsNewPractice(this.mode);
+      this.resetLocal();
       this.busy = false;
       this.render(state);
     } catch (err) {
@@ -59,7 +113,7 @@ class ConnectionsGame {
 
   async load() {
     try {
-      this.render(await api.connections(this.practice));
+      this.render(await api.connections(this.mode, this.practice));
       byId("cx-game").hidden = false;
       this.loadBoard();
     } catch (err) {
@@ -73,6 +127,11 @@ class ConnectionsGame {
 
   render(state) {
     this.state = state;
+    this.loadMarks();
+    document.querySelectorAll("[data-cx-mode]").forEach((btn) =>
+      btn.setAttribute("aria-pressed", String(btn.dataset.cxMode === this.mode))
+    );
+    byId("cx-mode-note").textContent = MODE_NOTES[this.mode];
     document.querySelectorAll("[data-cx-grid]").forEach((btn) =>
       btn.setAttribute("aria-pressed", String((btn.dataset.cxGrid === "practice") === this.practice))
     );
@@ -108,16 +167,19 @@ class ConnectionsGame {
   renderGrid() {
     const grid = byId("cx-grid");
     const playing = this.state.status === "playing";
+    const canPaint = playing && this.mode === "hard";
+    if (!canPaint) this.paint = null;
     clear(grid);
     grid.hidden = !playing;
+    grid.classList.toggle("painting", this.paint !== null);
     grid.append(
       ...this.order.map((name) =>
         el(
           "button",
           {
-            className: "cx-tile",
+            className: `cx-tile${this.marks[name] !== undefined ? ` mark-${this.marks[name]}` : ""}`,
             attrs: { type: "button", "aria-pressed": String(this.selected.has(name)) },
-            on: { click: () => this.toggle(name) }
+            on: { click: () => (this.paint === null ? this.toggle(name) : this.mark(name)) }
           },
           [
             el("img", { className: "pixelated", attrs: { src: spriteUrl(name), alt: "" } }),
@@ -128,6 +190,23 @@ class ConnectionsGame {
     );
     byId("cx-controls").hidden = !playing;
     byId("cx-submit-btn").disabled = this.selected.size !== 4 || this.busy;
+
+    byId("cx-paint").hidden = !canPaint;
+    byId("cx-paint-help").hidden = !canPaint;
+    const counts = Array.from({ length: MARK_COUNT }, (_, i) => this.order.filter((n) => this.marks[n] === i).length);
+    document.querySelectorAll("[data-cx-mark]").forEach((btn) => {
+      const mark = Number(btn.dataset.cxMark);
+      btn.setAttribute("aria-pressed", String(this.paint === mark));
+      btn.textContent = counts[mark] ? String(counts[mark]) : "";
+    });
+  }
+
+  // Mode Hard : la marque ne part pas au serveur, elle aide seulement à prévoir
+  mark(name) {
+    if (this.marks[name] === this.paint) delete this.marks[name];
+    else this.marks[name] = this.paint;
+    this.saveMarks();
+    this.renderGrid();
   }
 
   renderMistakes() {
@@ -175,7 +254,7 @@ class ConnectionsGame {
     this.busy = true;
     try {
       await player.ensure();
-      const { result, state } = await api.connectionsGuess([...this.selected], this.practice);
+      const { result, state } = await api.connectionsGuess([...this.selected], this.mode, this.practice);
       if (result === "correct") this.selected.clear();
       if (result === "one_away") showToast("One away…");
       if (result === "wrong") showToast("Not a group.");
@@ -193,7 +272,7 @@ class ConnectionsGame {
 
   async loadBoard() {
     try {
-      const { top } = await api.connectionsBoard();
+      const { top } = await api.connectionsBoard(this.mode);
       const body = byId("cx-board");
       clear(body);
       if (top.length === 0) {
@@ -224,8 +303,9 @@ class ConnectionsGame {
     const { status, attempts, mistakes, date } = this.state;
     const outcome = status === "won" ? `solved with ${mistakes} mistake${mistakes === 1 ? "" : "s"}` : "not solved";
     const grid = attempts.map((levels) => levels.map((level) => SHARE_EMOJI[level]).join("")).join("\n");
-    const title = this.state.practice ? "Celestedle Connections (practice)" : `Celestedle Connections ${date}`;
-    const text = `${title}: ${outcome}\n\n${grid}\n\n${SITE_URL}`;
+    const name = `Celestedle Connections${this.mode === "hard" ? " Hard" : ""}`;
+    const title = this.state.practice ? `${name} (practice)` : `${name} ${date}`;
+    const text = `${title}: ${outcome}\n\n${grid}\n${SHARE_LEGEND}\n\n${SITE_URL}`;
     try {
       await navigator.clipboard.writeText(text);
       byId("cx-share-btn").textContent = "Copied!";

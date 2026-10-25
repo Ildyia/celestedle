@@ -248,3 +248,58 @@
 .cx-note {
   text-align: center;
 }
+
+/* Mode Hard : marques de couleur posées par le joueur avant de valider.
+   Couleurs différentes de celles des groupes (qui donnent la difficulté). */
+:root {
+  --cx-mark-0: #ef4444;
+  --cx-mark-1: #f97316;
+  --cx-mark-2: #14b8a6;
+  --cx-mark-3: #ec4899;
+}
+
+.cx-tile.mark-0 { box-shadow: inset 0 -6px 0 var(--cx-mark-0); border-color: var(--cx-mark-0); }
+.cx-tile.mark-1 { box-shadow: inset 0 -6px 0 var(--cx-mark-1); border-color: var(--cx-mark-1); }
+.cx-tile.mark-2 { box-shadow: inset 0 -6px 0 var(--cx-mark-2); border-color: var(--cx-mark-2); }
+.cx-tile.mark-3 { box-shadow: inset 0 -6px 0 var(--cx-mark-3); border-color: var(--cx-mark-3); }
+
+.cx-grid.painting .cx-tile {
+  cursor: copy !important;
+}
+
+.cx-paint {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-self: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(15, 22, 38, 0.6);
+}
+
+.cx-swatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  color: #ffffff;
+  font-family: "Renogare", sans-serif;
+  font-size: 0.85rem;
+}
+
+.cx-swatch.mark-0 { background: var(--cx-mark-0); }
+.cx-swatch.mark-1 { background: var(--cx-mark-1); }
+.cx-swatch.mark-2 { background: var(--cx-mark-2); }
+.cx-swatch.mark-3 { background: var(--cx-mark-3); }
+
+.cx-swatch[aria-pressed="true"] {
+  border-color: #ffffff;
+  transform: scale(1.15);
+}
+
+.cx-swatch:focus-visible {
+  outline: 2px solid var(--color-partial);
+  outline-offset: 2px;
+}

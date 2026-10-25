@@ -118,16 +118,16 @@ function countSolutions(tileIds, categories) {
 // souvent à faire disparaître un faux groupe
 const SAMPLES_PER_CHOICE = 10;
 
-function tryGroups(chosen, categories, random, strict) {
+function tryGroups(chosen, categories, random, rule) {
   for (let sample = 0; sample < SAMPLES_PER_CHOICE; sample++) {
-    const found = sampleGroups(chosen, categories, random, strict);
+    const found = sampleGroups(chosen, categories, random, rule);
     if (found !== undefined) return found;
   }
   return null;
 }
 
 // null : ces catégories ne peuvent pas marcher ; undefined : réessayer d'autres cases
-function sampleGroups(chosen, categories, random, strict) {
+function sampleGroups(chosen, categories, random, rule) {
   const tiles = [];
   const groups = [];
   for (const category of chosen) {
@@ -141,12 +141,15 @@ function sampleGroups(chosen, categories, random, strict) {
     tiles.push(...members);
     groups.push({ category, elementIds: members });
   }
-  if (hasObviousDecoy(tiles, chosen, categories, strict)) return undefined;
+  if (hasObviousDecoy(tiles, chosen, categories, rule)) return undefined;
   return countSolutions(tiles, categories) === 1 ? { groups, tiles } : undefined;
 }
 
 // tiles : les 16 cases rangées groupe par groupe (4 par 4, dans l'ordre de chosen)
-function hasObviousDecoy(tiles, chosen, categories, strict = true) {
+// rule : "strict" (mode normal), "relaxed" (repli du mode normal : type et
+// tag seulement) ou "none" (mode Hard : faux groupes permis)
+function hasObviousDecoy(tiles, chosen, categories, rule = "strict") {
+  if (rule === "none") return false;
   const groupKeys = chosen.map((_, i) => [...tiles.slice(i * GROUP_SIZE, (i + 1) * GROUP_SIZE)].sort().join());
   return categories.some((c) => {
     if (chosen.includes(c)) return false;
@@ -155,23 +158,26 @@ function hasObviousDecoy(tiles, chosen, categories, strict = true) {
     if (OBVIOUS_DECOY_KINDS.includes(c.kind) && c.usable && inside.length >= GROUP_SIZE) return true;
     // Toute catégorie : exactement 4 cases qui ne sont pas un des groupes
     // ressemblent en tout point à un vrai groupe
-    return strict && inside.length === GROUP_SIZE && !groupKeys.includes([...inside].sort().join());
+    return rule === "strict" && inside.length === GROUP_SIZE && !groupKeys.includes([...inside].sort().join());
   });
 }
 
 // Grille { groups: [{ key, kind, label, level, elementIds }], tiles: [16 ids] }.
 // Un groupe tag est imposé quand un tag complet le permet.
-// Si aucune grille sans « faux groupe parfait » n'est trouvée (rare), on
-// accepte ce faux groupe plutôt que de ne pas avoir de grille du tout
-function generatePuzzle(elements, tags, random = Math.random) {
-  return tryGenerate(elements, tags, random, true) ?? tryGenerate(elements, tags, random, false) ?? noPuzzle();
+// Mode normal : pas de faux groupe ; si aucune grille stricte n'est trouvée
+// (rare), on accepte un « faux groupe parfait » plutôt que de ne pas avoir de
+// grille. Mode Hard (allowDecoys) : faux groupes permis, seule l'unicité de
+// la solution compte.
+function generatePuzzle(elements, tags, random = Math.random, { allowDecoys = false } = {}) {
+  if (allowDecoys) return tryGenerate(elements, tags, random, "none") ?? noPuzzle();
+  return tryGenerate(elements, tags, random, "strict") ?? tryGenerate(elements, tags, random, "relaxed") ?? noPuzzle();
 }
 
 function noPuzzle() {
   throw new Error("No Connections puzzle with a single solution could be generated.");
 }
 
-function tryGenerate(elements, tags, random, strict) {
+function tryGenerate(elements, tags, random, rule) {
   const categories = buildCategories(elements, tags);
   const usable = categories.filter((c) => c.usable);
   const usableTags = usable.filter((c) => c.kind === "tag");
@@ -188,7 +194,7 @@ function tryGenerate(elements, tags, random, strict) {
     }
     if (chosen.length < GROUP_COUNT) break;
 
-    const found = tryGroups(chosen, categories, random, strict);
+    const found = tryGroups(chosen, categories, random, rule);
     if (!found) continue;
 
     const groups = found.groups

@@ -78,10 +78,12 @@ export const api = {
 
   leaderboard: (period, mode) => request("GET", `/leaderboard?period=${period}&mode=${mode}`),
 
-  connections: (practice = false) => request("GET", `/connections${practice ? "?practice=1" : ""}`),
-  connectionsGuess: (names, practice = false) => request("POST", "/connections/guess", { body: { names, practice } }),
-  connectionsNewPractice: () => request("POST", "/connections/practice"),
-  connectionsBoard: () => request("GET", "/connections/leaderboard"),
+  connections: (mode = "normal", practice = false) =>
+    request("GET", `/connections?mode=${mode}${practice ? "&practice=1" : ""}`),
+  connectionsGuess: (names, mode = "normal", practice = false) =>
+    request("POST", "/connections/guess", { body: { names, mode, practice } }),
+  connectionsNewPractice: (mode = "normal") => request("POST", "/connections/practice", { body: { mode } }),
+  connectionsBoard: (mode = "normal") => request("GET", `/connections/leaderboard?mode=${mode}`),
 
   reports: () => request("GET", "/reports"),
   similarReports: (elementName, description) =>

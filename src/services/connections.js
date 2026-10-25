@@ -8,44 +8,61 @@ const { todayParis, nowIso, secondsBetween } = require("../utils/dates");
 const { GROUP_SIZE, GROUP_COUNT, generatePuzzle, seededRandom } = require("./connections-generator");
 
 const MAX_MISTAKES = 4;
+const MODES = ["normal", "hard"];
+
+// Normal : grilles sans faux groupe. Hard : faux groupes permis (seule
+// l'unicité de la solution compte), les cases peuvent être pré-coloriées.
+function checkMode(mode = "normal") {
+  if (!MODES.includes(mode)) throw new HttpError(400, `Unknown mode "${mode}".`);
+  return mode;
+}
+
+// Clé d'une grille dans connection_puzzles.date (et connection_games.date) :
+// la date pour la grille du jour en normal (comme avant le mode Hard),
+// « hard:date » en Hard, « practice:id » / « practice-hard:id » pour
+// l'entraînement d'un joueur
+function dailyKey(mode, date) {
+  return mode === "hard" ? `hard:${date}` : date;
+}
+
+function practiceKey(mode, playerId) {
+  return mode === "hard" ? `practice-hard:${playerId}` : `practice:${playerId}`;
+}
 
 // Même grille pour tout le monde un jour donné (et pour une même graine)
-function seedFor(date) {
-  return crypto.createHash("sha256").update(`connections|${date}|${config.randomSeed ?? ""}`).digest().readUInt32LE(0);
+function seedFor(key) {
+  return crypto.createHash("sha256").update(`connections|${key}|${config.randomSeed ?? ""}`).digest().readUInt32LE(0);
 }
 
-function generate(random) {
-  return generatePuzzle(elementsRepo.listActive(), repo.listTags(), random);
+function generate(mode, random) {
+  return generatePuzzle(elementsRepo.listActive(), repo.listTags(), random, { allowDecoys: mode === "hard" });
 }
 
-function getPuzzle(date = todayParis()) {
-  return repo.findPuzzle(date) ?? repo.createPuzzleIfMissing(date, generate(seededRandom(seedFor(date))), nowIso());
+function getPuzzle(date = todayParis(), mode = "normal") {
+  const key = dailyKey(checkMode(mode), date);
+  return repo.findPuzzle(key) ?? repo.createPuzzleIfMissing(key, generate(mode, seededRandom(seedFor(key))), nowIso());
 }
 
 // Nouvelle grille tirée par l'admin : les parties du jour repartent de zéro
-function regeneratePuzzle(date) {
-  return repo.replacePuzzle(date, generate(Math.random), nowIso());
+function regeneratePuzzle(date, mode = "normal") {
+  return repo.replacePuzzle(dailyKey(checkMode(mode), date), generate(mode, Math.random), nowIso());
 }
 
 // Grille d'entraînement d'un joueur (playtest) : rangée avec les grilles du
 // jour sous une clé à part, hors classement, retirée à volonté sans toucher
 // la grille commune
-function practiceKey(playerId) {
-  return `practice:${playerId}`;
+function getPracticePuzzle(playerId, mode) {
+  const key = practiceKey(mode, playerId);
+  return repo.findPuzzle(key) ?? repo.createPuzzleIfMissing(key, generate(mode, Math.random), nowIso());
 }
 
-function getPracticePuzzle(playerId) {
-  const key = practiceKey(playerId);
-  return repo.findPuzzle(key) ?? repo.createPuzzleIfMissing(key, generate(Math.random), nowIso());
+function newPracticePuzzle(player, mode = "normal") {
+  repo.replacePuzzle(practiceKey(checkMode(mode), player.id), generate(mode, Math.random), nowIso());
+  return getState(player, { mode, practice: true });
 }
 
-function newPracticePuzzle(player) {
-  repo.replacePuzzle(practiceKey(player.id), generate(Math.random), nowIso());
-  return getState(player, { practice: true });
-}
-
-function puzzleFor(player, practice) {
-  return practice ? getPracticePuzzle(player.id) : getPuzzle();
+function puzzleFor(player, mode, practice) {
+  return practice && player ? getPracticePuzzle(player.id, mode) : getPuzzle(todayParis(), mode);
 }
 
 function loadGame(playerId, puzzle) {
@@ -73,7 +90,7 @@ function groupView(group, elementsById) {
 
 // État renvoyé au joueur : les groupes ne sont révélés qu'une fois trouvés,
 // ou tous à la fin de la partie
-function buildState(puzzle, game, reset = false) {
+function buildState(puzzle, game, { mode, practice, reset = false }) {
   const elementsById = new Map(puzzle.tiles.map((id) => [id, elementsRepo.findById(id)]));
   const attempts = game ? repo.attempts(game.id) : [];
   const foundIndexes = attempts.filter((a) => a.groupIndex !== null).map((a) => a.groupIndex);
@@ -82,10 +99,13 @@ function buildState(puzzle, game, reset = false) {
   const finished = status !== "playing";
   const now = finished && game.finished_at ? game.finished_at : nowIso();
 
-  const practice = puzzle.date.startsWith("practice:");
   return {
-    date: practice ? todayParis() : puzzle.date,
+    date: todayParis(),
+    mode,
     practice,
+    // Identifie la grille et sa version : les marques de couleur du joueur
+    // (gardées dans son navigateur) repartent de zéro quand elle change
+    gridId: `${puzzle.date}#${puzzle.version}`,
     status,
     reset,
     maxMistakes: MAX_MISTAKES,
@@ -100,18 +120,20 @@ function buildState(puzzle, game, reset = false) {
   };
 }
 
-function getState(player, { practice = false } = {}) {
-  const puzzle = practice && player ? getPracticePuzzle(player.id) : getPuzzle();
+function getState(player, { mode = "normal", practice = false } = {}) {
+  checkMode(mode);
+  const puzzle = puzzleFor(player, mode, practice);
   const { game, reset } = loadGame(player?.id, puzzle);
-  return buildState(puzzle, game, reset);
+  return buildState(puzzle, game, { mode, practice: practice && Boolean(player), reset });
 }
 
 // Proposition de 4 cases : bonne, « à une case près » ou fausse
-const guess = db.transaction((player, names, { practice = false } = {}) => {
+const guess = db.transaction((player, names, { mode = "normal", practice = false } = {}) => {
+  checkMode(mode);
   if (!Array.isArray(names) || names.length !== GROUP_SIZE) {
     throw new HttpError(400, `Select exactly ${GROUP_SIZE} tiles.`);
   }
-  const puzzle = puzzleFor(player, practice);
+  const puzzle = puzzleFor(player, mode, practice);
   const loaded = loadGame(player.id, puzzle);
   let { game } = loaded;
   if (game && game.status !== "playing") {
@@ -148,11 +170,11 @@ const guess = db.transaction((player, names, { practice = false } = {}) => {
   else if (mistakes >= MAX_MISTAKES) repo.finishGame(game.id, "lost", at);
 
   const result = groupIndex !== -1 ? "correct" : oneAway ? "one_away" : "wrong";
-  return { result, state: buildState(puzzle, repo.findGameById(game.id), loaded.reset) };
+  return { result, state: buildState(puzzle, repo.findGameById(game.id), { mode, practice, reset: loaded.reset }) };
 });
 
-function leaderboard(playerId) {
-  return repo.dailyBoard(todayParis()).map((row) => ({
+function leaderboard(playerId, mode = "normal") {
+  return repo.dailyBoard(dailyKey(checkMode(mode), todayParis())).map((row) => ({
     rank: row.rank,
     player: { id: row.id, name: row.name, avatar: row.avatar, color: row.color },
     isMe: row.id === playerId,
@@ -189,10 +211,11 @@ function deleteTag(id) {
 }
 
 // Grille d'un jour avec ses réponses, pour la relecture dans l'admin
-function puzzlePreview(date) {
-  const puzzle = getPuzzle(date);
+function puzzlePreview(date, mode = "normal") {
+  const puzzle = getPuzzle(date, mode);
   return {
-    date: puzzle.date,
+    date,
+    mode,
     source: puzzle.source,
     version: puzzle.version,
     groups: puzzle.groups.map((g) => ({
@@ -206,6 +229,7 @@ function puzzlePreview(date) {
 
 module.exports = {
   MAX_MISTAKES,
+  MODES,
   getPuzzle,
   regeneratePuzzle,
   getState,

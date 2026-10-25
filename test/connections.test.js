@@ -185,7 +185,8 @@ test("admin : tags, éléments à classer, aperçu et régénération des grille
   assert.equal(saved.data.elementIds.length, 4);
 
   const puzzles = await api.request("GET", "/api/admin/connections/puzzles", { token });
-  assert.equal(puzzles.data.length, 7);
+  assert.equal(puzzles.data.length, 14, "7 jours, normal et Hard");
+  assert.deepEqual(puzzles.data.slice(0, 2).map((p) => p.mode), ["normal", "hard"]);
   assert.equal(puzzles.data[0].groups.length, 4);
 
   const today = puzzles.data[0].date;
@@ -295,5 +296,63 @@ test("générateur : 4 cases grises qui ne forment pas un groupe sont un faux gr
   const tiles = [decoy[0], ...others.slice(0, 3), decoy[1], ...others.slice(3, 6), decoy[2], ...others.slice(6, 9), decoy[3], ...others.slice(9, 12)];
   const chosen = categories.filter((c) => c.kind === "chapter").slice(0, 4);
   assert.equal(hasObviousDecoy(tiles, chosen, categories), true);
-  assert.equal(hasObviousDecoy(tiles, chosen, categories, false), false, "en repli, seule la règle type/tag s'applique");
+  assert.equal(hasObviousDecoy(tiles, chosen, categories, "relaxed"), false, "en repli, seule la règle type/tag s'applique");
+  assert.equal(hasObviousDecoy(tiles, chosen, categories, "none"), false, "mode Hard : faux groupes permis");
+});
+
+test("générateur Hard : faux groupes permis, une seule solution", () => {
+  const elements = elementsRepo.listActive();
+  const categories = buildCategories(elements, []);
+  let withDecoy = 0;
+  for (let seed = 1; seed <= 10; seed++) {
+    const puzzle = generatePuzzle(elements, [], seededRandom(seed), { allowDecoys: true });
+    assert.equal(countSolutions(puzzle.tiles, categories), 1);
+    const chosen = puzzle.groups.map((g) => categories.find((c) => c.key === g.key));
+    if (hasObviousDecoy(puzzle.groups.flatMap((g) => g.elementIds), chosen, categories)) withDecoy++;
+  }
+  assert.ok(withDecoy > 0, "les grilles Hard ont des faux groupes");
+});
+
+test("mode Hard : sa propre grille, sa partie, son classement et son entraînement", async () => {
+  const token = await newAdministrator();
+  await api.request("PATCH", "/api/players/me", { token, body: { name: "Hard Climber" } });
+  const normal = connections.getPuzzle();
+  const hard = connections.getPuzzle(undefined, "hard");
+  assert.notEqual(normal.date, hard.date, "deux grilles distinctes le même jour");
+
+  const state = await api.request("GET", "/api/connections?mode=hard", { token });
+  assert.equal(state.data.mode, "hard");
+  assert.match(state.data.gridId, /^hard:/);
+
+  const names = hard.groups.map((g) => g.elementIds.map((id) => elementsRepo.findById(id).nom));
+  let result;
+  for (const group of names) {
+    ({ data: result } = await api.request("POST", "/api/connections/guess", { token, body: { names: group, mode: "hard" } }));
+  }
+  assert.equal(result.state.status, "won");
+  assert.equal(result.state.mode, "hard");
+
+  // La partie normale de ce joueur n'a pas bougé
+  const normalState = await api.request("GET", "/api/connections", { token });
+  assert.equal(normalState.data.status, "playing");
+  assert.equal(normalState.data.found.length, 0);
+
+  const hardBoard = await api.request("GET", "/api/connections/leaderboard?mode=hard", { token });
+  assert.ok(hardBoard.data.top.some((e) => e.isMe));
+  const normalBoard = await api.request("GET", "/api/connections/leaderboard", { token });
+  assert.ok(!normalBoard.data.top.some((e) => e.isMe));
+
+  const practice = await api.request("POST", "/api/connections/practice", { token, body: { mode: "hard" } });
+  assert.equal(practice.data.mode, "hard");
+  assert.equal(practice.data.practice, true);
+  assert.match(practice.data.gridId, /^practice-hard:/);
+
+  assert.equal((await api.request("GET", "/api/connections?mode=expert", { token })).status, 400);
+
+  const regenerated = await api.request("POST", `/api/admin/connections/puzzles/${state.data.date}/regenerate`, {
+    token: await owner(),
+    body: { mode: "hard" }
+  });
+  assert.equal(regenerated.data.mode, "hard");
+  assert.equal(connections.getPuzzle().version, normal.version, "régénérer le Hard ne touche pas le normal");
 });

@@ -504,3 +504,8 @@
   gap: 6px;
   flex-wrap: wrap;
 }
+
+.badge.cx-mode-hard {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
