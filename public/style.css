@@ -2434,3 +2434,18 @@ body.hard-mode #game-status {
   font-size: 0.85rem;
   user-select: all;
 }
+
+/* Lien vers les modes en test, visible des playtesters seulement */
+.playtest-link {
+  align-self: center;
+  font-size: 0.85rem;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-partial);
+  color: var(--color-partial);
+  text-decoration: none;
+}
+
+.playtest-link:hover {
+  background: rgba(245, 158, 11, 0.12);
+}

@@ -18,6 +18,19 @@ function isStaff(player) {
   return STAFF_ROLES.includes(player?.role);
 }
 
+// Modes en test : ouverts aux playtesters et à l'équipe admin
+function canPlaytest(player) {
+  return isStaff(player) || player?.isPlaytester === true;
+}
+
+// Enregistré au journal par la route (modification comptée dans le quota)
+function setPlaytester(playerId, enabled) {
+  const target = playersRepo.findById(String(playerId ?? "").trim());
+  if (!target) throw new HttpError(404, "No profile with this player ID.");
+  playersRepo.setPlaytester(target.id, Boolean(enabled));
+  return playersRepo.findById(target.id);
+}
+
 function dailyLimit() {
   return settingsRepo.getNumber(DAILY_LIMIT_KEY, DEFAULT_DAILY_LIMIT);
 }
@@ -106,6 +119,8 @@ function team() {
 module.exports = {
   DEFAULT_DAILY_LIMIT,
   isStaff,
+  canPlaytest,
+  setPlaytester,
   dailyLimit,
   setDailyLimit,
   quota,

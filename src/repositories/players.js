@@ -14,6 +14,7 @@ const stmts = {
   `),
   touch: db.prepare("UPDATE players SET last_seen_at = ? WHERE id = ?"),
   setTokenHash: db.prepare("UPDATE players SET token_hash = ? WHERE id = ?"),
+  setPlaytester: db.prepare("UPDATE players SET is_playtester = ? WHERE id = ?"),
   byDiscordTag: db.prepare("SELECT * FROM players WHERE discord_tag = ? COLLATE NOCASE"),
   search: db.prepare(`
     SELECT p.*, (SELECT COUNT(*) FROM games g WHERE g.player_id = p.id) AS games
@@ -39,6 +40,8 @@ function toPlayer(row) {
     // Profil jamais enregistré par le joueur : absent des classements
     isAnonymous: row.is_anonymous === 1,
     role: row.role ?? "player",
+    // Accès aux modes en test, indépendant du rôle admin
+    isPlaytester: row.is_playtester === 1,
     // Renvoyé seulement au joueur lui-même et à l'admin
     discordTag: row.discord_tag ?? null,
     createdAt: row.created_at
@@ -65,6 +68,10 @@ function update(id, { name, avatar, color, isHidden, discordTag }) {
 
 function setTokenHash(id, tokenHash) {
   stmts.setTokenHash.run(tokenHash, id);
+}
+
+function setPlaytester(id, enabled) {
+  return stmts.setPlaytester.run(enabled ? 1 : 0, id).changes === 1;
 }
 
 function findByDiscordTag(tag) {
@@ -102,6 +109,7 @@ module.exports = {
   search,
   update,
   setTokenHash,
+  setPlaytester,
   remove,
   touch,
   count

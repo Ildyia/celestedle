@@ -22,6 +22,32 @@ export class PlayersTab {
     this.render();
   }
 
+  // Accès aux modes en test (Connections) ; l'équipe admin l'a déjà
+  playtesterButton(player) {
+    if (player.role !== "player") return null;
+    return el("button", {
+      className: "btn-secondary btn-small",
+      text: player.isPlaytester ? "Retirer playtester" : "Rendre playtester",
+      attrs: { type: "button" },
+      on: {
+        click: async () => {
+          try {
+            const updated = await admin.setPlaytester(player.id, !player.isPlaytester);
+            Object.assign(player, { isPlaytester: updated.isPlaytester });
+            this.notify(
+              updated.isPlaytester
+                ? `« ${player.name} » est playtester : il a accès à Connections.`
+                : `« ${player.name} » n'est plus playtester.`
+            );
+            this.render();
+          } catch (err) {
+            this.notify(err.message, true);
+          }
+        }
+      }
+    });
+  }
+
   deleteButton(player) {
     if (this.getRole() !== "owner" || player.role === "owner") return null;
     const confirming = this.pendingDelete === player.id;
@@ -63,10 +89,13 @@ export class PlayersTab {
           el("td", { text: player.name }),
           el("td", {}, [el("code", { text: player.id })]),
           el("td", { text: player.discordTag ?? "-" }),
-          el("td", { text: ROLE_LABELS[player.role] ?? player.role }),
+          el("td", { className: "row-actions" }, [
+            ROLE_LABELS[player.role] ?? player.role,
+            player.isPlaytester ? el("span", { className: "badge admin", text: "Playtester" }) : null
+          ]),
           el("td", { className: "num", text: String(player.games) }),
           el("td", { text: player.lastSeenAt?.replace("T", " ").slice(0, 16) ?? "-" }),
-          el("td", {}, [this.deleteButton(player)])
+          el("td", { className: "row-actions" }, [this.playtesterButton(player), this.deleteButton(player)])
         ])
       )
     );

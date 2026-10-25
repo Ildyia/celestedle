@@ -100,6 +100,12 @@ async function init() {
     player.load()
   ]);
   elements = loadedElements;
+  // Modes en test : lien visible des playtesters et de l'équipe admin
+  const showPlaytest = (profile) => {
+    byId("playtest-link").hidden = !(profile?.isPlaytester || ["owner", "administrator"].includes(profile?.role));
+  };
+  showPlaytest(player.profile);
+  player.onChange(showPlaytest);
   suggestions.setData({ elements });
   synonyms.setOfficial(aliases);
 

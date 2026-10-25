@@ -204,3 +204,32 @@ test("admin : tags, éléments à classer, aperçu et régénération des grille
   tags = await api.request("GET", "/api/admin/connections/tags", { token });
   assert.equal(tags.data.length, 0);
 });
+
+test("playtester : joue à Connections sans accès à l'admin, accès retirable", async () => {
+  const { token, player } = await api.newPlayer();
+  assert.equal((await api.request("GET", "/api/connections", { token })).status, 403);
+
+  // Un administrateur peut aussi donner l'accès (compté dans son quota)
+  const adminToken = await newAdministrator();
+  const granted = await api.request("PUT", `/api/admin/players/${player.id}/playtester`, { token: adminToken, body: { enabled: true } });
+  assert.equal(granted.status, 200, JSON.stringify(granted.data));
+  assert.equal(granted.data.isPlaytester, true);
+  assert.equal(granted.data.role, "player");
+
+  const me = await api.request("GET", "/api/players/me", { token });
+  assert.equal(me.data.player.isPlaytester, true);
+  assert.equal((await api.request("GET", "/api/connections", { token })).status, 200);
+  assert.equal((await api.request("GET", "/api/connections/leaderboard", { token })).status, 200);
+
+  // Aucun droit admin : ni tags, ni grilles, ni tableau de bord
+  assert.equal((await api.request("GET", "/api/admin/connections/tags", { token })).status, 403);
+  assert.equal((await api.request("GET", "/api/admin/overview", { token })).status, 403);
+  assert.equal((await api.request("PUT", `/api/admin/players/${player.id}/playtester`, { token, body: { enabled: true } })).status, 403);
+
+  const revoked = await api.request("PUT", `/api/admin/players/${player.id}/playtester`, { token: await owner(), body: { enabled: false } });
+  assert.equal(revoked.data.isPlaytester, false);
+  assert.equal((await api.request("GET", "/api/connections", { token })).status, 403);
+
+  const audit = await api.request("GET", "/api/admin/audit", { token: await owner() });
+  assert.ok(audit.data.some((a) => a.action === "playtester" && a.target === `${player.id} ajouté`));
+});

@@ -9,6 +9,13 @@ function requireStaff(req, res, next) {
   next();
 }
 
+// Modes en test : playtesters et équipe admin
+function requirePlaytester(req, res, next) {
+  if (!req.player) return next(new HttpError(401, "Sign in with your player profile first."));
+  if (!staff.canPlaytest(req.player)) return next(new HttpError(403, "This mode is only open to playtesters for now."));
+  next();
+}
+
 function requireOwner(req, res, next) {
   if (req.player?.role !== "owner") return next(new HttpError(403, "Only the owner can do this."));
   next();
@@ -30,4 +37,4 @@ function limitedAction(action, target = () => null) {
   };
 }
 
-module.exports = { requireStaff, requireOwner, limitedAction };
+module.exports = { requireStaff, requirePlaytester, requireOwner, limitedAction };

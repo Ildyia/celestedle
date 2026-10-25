@@ -1,13 +1,13 @@
 const express = require("express");
 const connections = require("../../services/connections");
-const { requireStaff, limitedAction } = require("../../middleware/admin-auth");
+const { requireStaff, requirePlaytester, limitedAction } = require("../../middleware/admin-auth");
 const { HttpError } = require("../../utils/http-error");
 const { todayParis, addDays, msUntilNextDay } = require("../../utils/dates");
 
 const router = express.Router();
 
-// Phase de test : tout Connections est réservé à l'équipe admin
-router.use("/connections", requireStaff);
+// Phase de test : le jeu est ouvert aux playtesters, la gestion à l'équipe admin
+router.use("/connections", requirePlaytester);
 router.use("/admin/connections", requireStaff);
 
 router.get("/connections", (req, res) => {

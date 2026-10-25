@@ -256,6 +256,15 @@ router.get("/admin/players", (req, res) => {
   res.json(players.search(req.query.q));
 });
 
+// Donne ou retire l'accès aux modes en test
+router.put(
+  "/admin/players/:id/playtester",
+  limitedAction("playtester", (req) => `${req.params.id} ${req.body?.enabled === true ? "ajouté" : "retiré"}`),
+  (req, res) => {
+    res.json(staff.setPlaytester(req.params.id, req.body?.enabled === true));
+  }
+);
+
 router.delete("/admin/players/:id", requireOwner, (req, res) => {
   const removed = players.deletePlayer(req.params.id);
   staff.recordAction(req.player, "delete_player", `${removed.name} (${removed.id})`);

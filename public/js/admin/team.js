@@ -14,7 +14,13 @@ const ACTION_LABELS = {
   delete_report: "Supprime un report",
   purge_reports: "Supprime les reports clos",
   settings: "Modifie les réglages",
-  delete_player: "Supprime un profil"
+  delete_player: "Supprime un profil",
+  upload_sprite: "Envoie un sprite",
+  create_tag: "Crée un tag Connections",
+  edit_tag: "Modifie un tag Connections",
+  delete_tag: "Supprime un tag Connections",
+  regenerate_grid: "Régénère une grille Connections",
+  playtester: "Change l'accès playtester"
 };
 
 // Onglet Équipe, réservé au propriétaire : administrateurs, quota, journal
