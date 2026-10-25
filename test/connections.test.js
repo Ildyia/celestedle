@@ -370,3 +370,13 @@ test("erreur serveur : l'équipe admin reçoit le message, les joueurs non", asy
     connections.puzzlePreview = original;
   }
 });
+
+test("générateur : un tag qui couvre presque tout le catalogue ne bloque plus la génération", () => {
+  const elements = elementsRepo.listActive();
+  const huge = { id: 9, label: "Almost everything", elementIds: elements.slice(0, 90).map((e) => e.id), unreviewedIds: [] };
+  for (const allowDecoys of [false, true]) {
+    const puzzle = generatePuzzle(elements, [huge], seededRandom(1), { allowDecoys });
+    assert.equal(puzzle.groups.length, 4);
+    assert.ok(!puzzle.groups.some((g) => g.kind === "tag"), "un tag hors limites ne sert pas de groupe");
+  }
+});

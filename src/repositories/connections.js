@@ -23,13 +23,13 @@ const stmts = {
 
   puzzle: db.prepare("SELECT * FROM connection_puzzles WHERE date = ?"),
   insertPuzzle: db.prepare(`
-    INSERT OR IGNORE INTO connection_puzzles (date, groups, tiles, source, created_at, updated_at)
-    VALUES (@date, @groups, @tiles, 'auto', @now, @now)
+    INSERT OR IGNORE INTO connection_puzzles (date, groups, tiles, rule, source, created_at, updated_at)
+    VALUES (@date, @groups, @tiles, @rule, 'auto', @now, @now)
   `),
   replacePuzzle: db.prepare(`
-    INSERT INTO connection_puzzles (date, groups, tiles, source, created_at, updated_at)
-    VALUES (@date, @groups, @tiles, 'admin', @now, @now)
-    ON CONFLICT(date) DO UPDATE SET groups = excluded.groups, tiles = excluded.tiles,
+    INSERT INTO connection_puzzles (date, groups, tiles, rule, source, created_at, updated_at)
+    VALUES (@date, @groups, @tiles, @rule, 'admin', @now, @now)
+    ON CONFLICT(date) DO UPDATE SET groups = excluded.groups, tiles = excluded.tiles, rule = excluded.rule,
       source = 'admin', version = version + 1, updated_at = excluded.updated_at
   `),
 
@@ -129,13 +129,13 @@ function findPuzzle(date) {
 }
 
 // INSERT OR IGNORE : deux requêtes simultanées lisent la même grille
-function createPuzzleIfMissing(date, { groups, tiles }, now) {
-  stmts.insertPuzzle.run({ date, groups: JSON.stringify(groups), tiles: JSON.stringify(tiles), now });
+function createPuzzleIfMissing(date, { groups, tiles, rule = null }, now) {
+  stmts.insertPuzzle.run({ date, groups: JSON.stringify(groups), tiles: JSON.stringify(tiles), rule, now });
   return findPuzzle(date);
 }
 
-function replacePuzzle(date, { groups, tiles }, now) {
-  stmts.replacePuzzle.run({ date, groups: JSON.stringify(groups), tiles: JSON.stringify(tiles), now });
+function replacePuzzle(date, { groups, tiles, rule = null }, now) {
+  stmts.replacePuzzle.run({ date, groups: JSON.stringify(groups), tiles: JSON.stringify(tiles), rule, now });
   return findPuzzle(date);
 }
 

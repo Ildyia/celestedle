@@ -218,6 +218,7 @@ function puzzlePreview(date, mode = "normal") {
     mode,
     source: puzzle.source,
     version: puzzle.version,
+    rule: puzzle.rule,
     groups: puzzle.groups.map((g) => ({
       label: g.label,
       kind: g.kind,

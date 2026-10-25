@@ -65,6 +65,14 @@ export class ConnectionsTab {
           el("div", { className: "cx-admin-puzzle-head" }, [
             el("strong", { text: puzzle.date }),
             el("span", { className: `badge cx-mode-${puzzle.mode}`, text: puzzle.mode === "hard" ? "Hard" : "Normal" }),
+            // Mode normal tiré avec une règle assouplie : faux groupes possibles
+            puzzle.mode === "normal" && ["relaxed", "none"].includes(puzzle.rule)
+              ? el("span", {
+                  className: "badge",
+                  text: "faux groupes possibles",
+                  attrs: { title: "Aucune grille sans faux groupe n'a été trouvée : régénère-la ou revois les tags" }
+                })
+              : null,
             el("span", {
               className: `badge${puzzle.source === "admin" ? " admin" : ""}`,
               text: puzzle.source === "admin" ? `régénérée (v${puzzle.version})` : "auto"
@@ -177,7 +185,9 @@ export class ConnectionsTab {
           )
         )
     );
-    byId("cx-tag-count").textContent = `(${this.checked.size} coché(s) sur ${this.elements.length})`;
+    const size = this.checked.size;
+    const warning = size > 40 ? " : plus de 40, ce tag ne sortira jamais" : size > 0 && size < 4 ? " : il en faut au moins 4" : "";
+    byId("cx-tag-count").textContent = `(${size} coché(s) sur ${this.elements.length}${warning})`;
   }
 
   toggle(id) {

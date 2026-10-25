@@ -114,16 +114,17 @@ function countSolutions(tileIds, categories) {
 // souvent à faire disparaître un faux groupe
 const SAMPLES_PER_CHOICE = 10;
 
-function tryGroups(chosen, categories, random, rule) {
+// stats compte les raisons d'échec, pour expliquer une génération impossible
+function tryGroups(chosen, categories, random, rule, stats) {
   for (let sample = 0; sample < SAMPLES_PER_CHOICE; sample++) {
-    const found = sampleGroups(chosen, categories, random, rule);
+    const found = sampleGroups(chosen, categories, random, rule, stats);
     if (found !== undefined) return found;
   }
   return null;
 }
 
 // null : ces catégories ne peuvent pas marcher ; undefined : réessayer d'autres cases
-function sampleGroups(chosen, categories, random, rule) {
+function sampleGroups(chosen, categories, random, rule, stats) {
   const tiles = [];
   const groups = [];
   for (const category of chosen) {
@@ -132,13 +133,23 @@ function sampleGroups(chosen, categories, random, rule) {
     const pool = [...category.members].filter(
       (id) => !tiles.includes(id) && !others.some((o) => o.members.has(id))
     );
-    if (pool.length < GROUP_SIZE) return null;
+    if (pool.length < GROUP_SIZE) {
+      stats.incompatible++;
+      return null;
+    }
     const members = shuffle(pool, random).slice(0, GROUP_SIZE);
     tiles.push(...members);
     groups.push({ category, elementIds: members });
   }
-  if (hasObviousDecoy(tiles, chosen, categories, rule)) return undefined;
-  return countSolutions(tiles, categories) === 1 ? { groups, tiles } : undefined;
+  if (hasObviousDecoy(tiles, chosen, categories, rule)) {
+    stats.decoy++;
+    return undefined;
+  }
+  if (countSolutions(tiles, categories) !== 1) {
+    stats.multiple++;
+    return undefined;
+  }
+  return { groups, tiles };
 }
 
 // tiles : les 16 cases rangées groupe par groupe (4 par 4, dans l'ordre de chosen)
@@ -166,17 +177,38 @@ function hasObviousDecoy(tiles, chosen, categories, rule = "strict") {
 // (rare), on accepte un « faux groupe parfait » plutôt que de ne pas avoir de
 // grille. Mode Hard (allowDecoys) : faux groupes permis, seule l'unicité de
 // la solution compte.
+// En dernier recours, le mode normal accepte aussi une grille à faux groupes
+// (rule "none") : mieux vaut une grille imparfaite que pas de grille. La règle
+// utilisée est renvoyée (rule) pour que l'admin le voie.
 function generatePuzzle(elements, tags, random = Math.random, { allowDecoys = false } = {}) {
-  if (allowDecoys) return tryGenerate(elements, tags, random, "none") ?? noPuzzle();
-  return tryGenerate(elements, tags, random, "strict") ?? tryGenerate(elements, tags, random, "relaxed") ?? noPuzzle();
+  const rules = allowDecoys ? ["none"] : ["strict", "relaxed", "none"];
+  const stats = { incompatible: 0, decoy: 0, multiple: 0 };
+  for (const rule of rules) {
+    const puzzle = tryGenerate(elements, tags, random, rule, stats);
+    if (puzzle) return { ...puzzle, rule };
+  }
+  throw noPuzzleError(elements, tags, stats);
 }
 
-function noPuzzle() {
-  throw new Error("No Connections puzzle with a single solution could be generated.");
+// Message détaillé : l'équipe admin le voit dans l'onglet Connections
+function noPuzzleError(elements, tags, stats) {
+  const usable = buildCategories(elements, tags).filter((c) => c.usable);
+  const byKind = {};
+  for (const c of usable) byKind[c.kind] = (byKind[c.kind] ?? 0) + 1;
+  const kinds = Object.entries(byKind).map(([kind, n]) => `${n} ${kind}`).join(", ");
+  return new Error(
+    `No Connections puzzle with a single solution could be generated ` +
+      `(${elements.length} active elements; usable groups: ${kinds || "none"}; ${tags.length} tag(s); ` +
+      `failed draws: ${stats.incompatible} incompatible groups, ${stats.decoy} decoy groups, ${stats.multiple} several solutions).`
+  );
 }
 
-function tryGenerate(elements, tags, random, rule) {
-  const categories = buildCategories(elements, tags);
+function tryGenerate(elements, tags, random, rule, stats) {
+  // Un tag qui ne peut pas servir de groupe (hors limites ou incomplet) ne
+  // compte pas non plus dans la vérification : un tag qui couvre presque tout
+  // le catalogue rendait toutes les combinaisons de 4 cases valides, et plus
+  // aucune grille n'avait une seule solution
+  const categories = buildCategories(elements, tags).filter((c) => c.kind !== "tag" || c.usable);
   const usable = categories.filter((c) => c.usable);
   const usableTags = usable.filter((c) => c.kind === "tag");
 
@@ -192,7 +224,7 @@ function tryGenerate(elements, tags, random, rule) {
     }
     if (chosen.length < GROUP_COUNT) break;
 
-    const found = tryGroups(chosen, categories, random, rule);
+    const found = tryGroups(chosen, categories, random, rule, stats);
     if (!found) continue;
 
     const groups = shuffle(found.groups, random).map((g, level) => ({
