@@ -34,11 +34,6 @@ router.get("/connections/leaderboard", (req, res) => {
   res.json({ top: connections.leaderboard(req.player.id, req.query.mode ?? "normal") });
 });
 
-// Tags utilisables dans les grilles et leurs éléments, pour les joueurs
-router.get("/connections/tags", (req, res) => {
-  res.json(connections.publicTags());
-});
-
 // Tags : les éléments cochés l'ont, les autres non
 router.get("/admin/connections/tags", (req, res) => {
   res.json(connections.listTags());

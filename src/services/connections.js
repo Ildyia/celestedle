@@ -5,7 +5,7 @@ const elementsRepo = require("../repositories/elements");
 const repo = require("../repositories/connections");
 const { HttpError } = require("../utils/http-error");
 const { todayParis, nowIso, secondsBetween } = require("../utils/dates");
-const { GROUP_SIZE, GROUP_COUNT, buildCategories, generatePuzzle, seededRandom } = require("./connections-generator");
+const { GROUP_SIZE, GROUP_COUNT, generatePuzzle, seededRandom } = require("./connections-generator");
 
 const MAX_MISTAKES = 4;
 const MODES = ["normal", "hard"];
@@ -183,22 +183,6 @@ function leaderboard(playerId, mode = "normal") {
   }));
 }
 
-// Tags qui peuvent sortir dans les grilles (complets, 4 à 40 éléments), avec
-// leurs éléments : les joueurs peuvent les consulter
-function publicTags() {
-  const elements = elementsRepo.listActive();
-  const names = new Map(elements.map((e) => [e.id, e.nom]));
-  const tags = repo.listTags();
-  const usable = new Set(buildCategories(elements, tags).filter((c) => c.kind === "tag" && c.usable).map((c) => c.key));
-  return tags
-    .filter((tag) => usable.has(`tag:${tag.id}`))
-    .map((tag) => ({
-      label: tag.label,
-      description: tag.description,
-      members: tag.elementIds.filter((id) => names.has(id)).map((id) => names.get(id)).sort((a, b) => a.localeCompare(b))
-    }));
-}
-
 // Admin : tags et aperçu des grilles
 
 function validateTag(input) {
@@ -254,7 +238,6 @@ module.exports = {
   newPracticePuzzle,
   leaderboard,
   listTags: () => repo.listTags(),
-  publicTags,
   saveTag,
   deleteTag,
   puzzlePreview

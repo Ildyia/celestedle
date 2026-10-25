@@ -116,7 +116,6 @@ class ConnectionsGame {
     try {
       this.render(await api.connections(this.mode, this.practice));
       byId("cx-game").hidden = false;
-      byId("cx-tags-btn").hidden = false;
       this.loadBoard();
     } catch (err) {
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
@@ -319,56 +318,9 @@ class ConnectionsGame {
   }
 }
 
-// Liste des tags et de leurs éléments, chargée à la première ouverture
-let tagList = null;
-
-function renderTags() {
-  const query = byId("cx-tags-search").value.trim().toLowerCase();
-  const matches = (text) => text.toLowerCase().includes(query);
-  const tags = tagList.filter((tag) => matches(tag.label) || tag.members.some(matches));
-  const list = byId("cx-tags-list");
-  clear(list);
-  if (tags.length === 0) {
-    list.append(el("p", { className: "small-subtext", text: tagList.length ? "No tag matches." : "No tags yet." }));
-    return;
-  }
-  list.append(
-    ...tags.map((tag) =>
-      el("section", { className: "cx-tag-card" }, [
-        el("h4", { text: `${tag.label} (${tag.members.length})` }),
-        tag.description ? el("p", { className: "small-subtext", text: tag.description }) : null,
-        el(
-          "ul",
-          { className: "cx-tag-members" },
-          tag.members.map((name) =>
-            el("li", { className: query && matches(name) ? "match" : "" }, [
-              el("img", { className: "pixelated", attrs: { src: spriteUrl(name), alt: "", loading: "lazy" } }),
-              el("span", { text: capitalize(name) })
-            ])
-          )
-        )
-      ])
-    )
-  );
-}
-
-async function openTags() {
-  openModal("cx-tags-modal");
-  if (tagList) return;
-  try {
-    tagList = await api.connectionsTags();
-    renderTags();
-  } catch (err) {
-    clear(byId("cx-tags-list"));
-    byId("cx-tags-list").append(el("p", { className: "text-wrong", text: err.message }));
-  }
-}
-
 async function init() {
   bindModalClosing();
   byId("cx-rules-btn").addEventListener("click", () => openModal("cx-rules-modal"));
-  byId("cx-tags-btn").addEventListener("click", openTags);
-  byId("cx-tags-search").addEventListener("input", () => tagList && renderTags());
   initOptions();
   await player.load();
   await new ConnectionsGame().load();
