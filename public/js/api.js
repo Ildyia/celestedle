@@ -78,8 +78,9 @@ export const api = {
 
   leaderboard: (period, mode) => request("GET", `/leaderboard?period=${period}&mode=${mode}`),
 
-  connections: () => request("GET", "/connections"),
-  connectionsGuess: (names) => request("POST", "/connections/guess", { body: { names } }),
+  connections: (practice = false) => request("GET", `/connections${practice ? "?practice=1" : ""}`),
+  connectionsGuess: (names, practice = false) => request("POST", "/connections/guess", { body: { names, practice } }),
+  connectionsNewPractice: () => request("POST", "/connections/practice"),
   connectionsBoard: () => request("GET", "/connections/leaderboard"),
 
   reports: () => request("GET", "/reports"),

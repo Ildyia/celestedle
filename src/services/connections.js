@@ -27,6 +27,27 @@ function regeneratePuzzle(date) {
   return repo.replacePuzzle(date, generate(Math.random), nowIso());
 }
 
+// Grille d'entraînement d'un joueur (playtest) : rangée avec les grilles du
+// jour sous une clé à part, hors classement, retirée à volonté sans toucher
+// la grille commune
+function practiceKey(playerId) {
+  return `practice:${playerId}`;
+}
+
+function getPracticePuzzle(playerId) {
+  const key = practiceKey(playerId);
+  return repo.findPuzzle(key) ?? repo.createPuzzleIfMissing(key, generate(Math.random), nowIso());
+}
+
+function newPracticePuzzle(player) {
+  repo.replacePuzzle(practiceKey(player.id), generate(Math.random), nowIso());
+  return getState(player, { practice: true });
+}
+
+function puzzleFor(player, practice) {
+  return practice ? getPracticePuzzle(player.id) : getPuzzle();
+}
+
 function loadGame(playerId, puzzle) {
   let game = playerId ? repo.findGame(puzzle.date, playerId) : null;
   let reset = false;
@@ -61,8 +82,10 @@ function buildState(puzzle, game, reset = false) {
   const finished = status !== "playing";
   const now = finished && game.finished_at ? game.finished_at : nowIso();
 
+  const practice = puzzle.date.startsWith("practice:");
   return {
-    date: puzzle.date,
+    date: practice ? todayParis() : puzzle.date,
+    practice,
     status,
     reset,
     maxMistakes: MAX_MISTAKES,
@@ -77,21 +100,23 @@ function buildState(puzzle, game, reset = false) {
   };
 }
 
-function getState(player) {
-  const puzzle = getPuzzle();
+function getState(player, { practice = false } = {}) {
+  const puzzle = practice && player ? getPracticePuzzle(player.id) : getPuzzle();
   const { game, reset } = loadGame(player?.id, puzzle);
   return buildState(puzzle, game, reset);
 }
 
 // Proposition de 4 cases : bonne, « à une case près » ou fausse
-const guess = db.transaction((player, names) => {
+const guess = db.transaction((player, names, { practice = false } = {}) => {
   if (!Array.isArray(names) || names.length !== GROUP_SIZE) {
     throw new HttpError(400, `Select exactly ${GROUP_SIZE} tiles.`);
   }
-  const puzzle = getPuzzle();
+  const puzzle = puzzleFor(player, practice);
   const loaded = loadGame(player.id, puzzle);
   let { game } = loaded;
-  if (game && game.status !== "playing") throw new HttpError(409, "Today's grid is already over.");
+  if (game && game.status !== "playing") {
+    throw new HttpError(409, practice ? "This grid is over: draw a new one." : "Today's grid is already over.");
+  }
 
   const attempts = game ? repo.attempts(game.id) : [];
   const found = new Set(attempts.filter((a) => a.groupIndex !== null).map((a) => a.groupIndex));
@@ -185,6 +210,7 @@ module.exports = {
   regeneratePuzzle,
   getState,
   guess,
+  newPracticePuzzle,
   leaderboard,
   listTags: () => repo.listTags(),
   saveTag,

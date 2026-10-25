@@ -1,6 +1,7 @@
 const express = require("express");
 const connections = require("../../services/connections");
 const { requireStaff, requirePlaytester, limitedAction } = require("../../middleware/admin-auth");
+const { rateLimit } = require("../../middleware/rate-limit");
 const { HttpError } = require("../../utils/http-error");
 const { todayParis, addDays, msUntilNextDay } = require("../../utils/dates");
 
@@ -10,12 +11,21 @@ const router = express.Router();
 router.use("/connections", requirePlaytester);
 router.use("/admin/connections", requireStaff);
 
+// ?practice=1 : grille d'entraînement du joueur au lieu de la grille du jour
 router.get("/connections", (req, res) => {
-  res.json({ ...connections.getState(req.player), nextGridInMs: msUntilNextDay() });
+  const practice = req.query.practice === "1";
+  res.json({ ...connections.getState(req.player, { practice }), nextGridInMs: msUntilNextDay() });
 });
 
 router.post("/connections/guess", (req, res) => {
-  res.json(connections.guess(req.player, req.body?.names));
+  res.json(connections.guess(req.player, req.body?.names, { practice: req.body?.practice === true }));
+});
+
+// Playtest : nouvelle grille d'entraînement, autant que voulu (la génération
+// prend quelques millisecondes ; la limite évite seulement les abus)
+const practiceLimit = rateLimit({ name: "connections-practice", windowMs: 60 * 1000, max: 30 });
+router.post("/connections/practice", practiceLimit, (req, res) => {
+  res.json(connections.newPracticePuzzle(req.player));
 });
 
 router.get("/connections/leaderboard", (req, res) => {

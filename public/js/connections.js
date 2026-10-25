@@ -18,7 +18,12 @@ class ConnectionsGame {
     this.order = []; // ordre d'affichage des cases restantes (mélange local)
     this.selected = new Set();
     this.busy = false;
+    this.practice = false;
 
+    document.querySelectorAll("[data-cx-grid]").forEach((btn) =>
+      btn.addEventListener("click", () => this.setPractice(btn.dataset.cxGrid === "practice"))
+    );
+    byId("cx-new-btn").addEventListener("click", () => this.newPractice());
     byId("cx-shuffle-btn").addEventListener("click", () => this.shuffle());
     byId("cx-clear-btn").addEventListener("click", () => {
       this.selected.clear();
@@ -28,9 +33,33 @@ class ConnectionsGame {
     byId("cx-share-btn").addEventListener("click", () => this.share());
   }
 
+  async setPractice(practice) {
+    if (practice === this.practice || this.busy) return;
+    this.practice = practice;
+    this.order = [];
+    this.selected.clear();
+    await this.load();
+  }
+
+  // Grille d'entraînement : nouvelle grille, la partie repart de zéro
+  async newPractice() {
+    if (this.busy) return;
+    this.busy = true;
+    try {
+      const state = await api.connectionsNewPractice();
+      this.order = [];
+      this.selected.clear();
+      this.busy = false;
+      this.render(state);
+    } catch (err) {
+      this.busy = false;
+      showToast(err.message);
+    }
+  }
+
   async load() {
     try {
-      this.render(await api.connections());
+      this.render(await api.connections(this.practice));
       byId("cx-game").hidden = false;
       this.loadBoard();
     } catch (err) {
@@ -44,6 +73,12 @@ class ConnectionsGame {
 
   render(state) {
     this.state = state;
+    document.querySelectorAll("[data-cx-grid]").forEach((btn) =>
+      btn.setAttribute("aria-pressed", String((btn.dataset.cxGrid === "practice") === this.practice))
+    );
+    byId("cx-new-btn").hidden = !this.practice;
+    byId("cx-practice-note").hidden = !this.practice;
+    byId("cx-board-panel").hidden = this.practice;
     const names = state.tiles.map((t) => t.nom);
     // On garde l'ordre choisi par le joueur pour les cases encore en jeu
     this.order = [...this.order.filter((n) => names.includes(n)), ...names.filter((n) => !this.order.includes(n))];
@@ -113,7 +148,9 @@ class ConnectionsGame {
     byId("cx-end-text").textContent =
       status === "won"
         ? `All 4 groups found with ${mistakes} mistake${mistakes === 1 ? "" : "s"}, in ${formatDuration(elapsedSeconds)}.`
-        : "Here were today's groups. A new grid comes at midnight (Paris time).";
+        : this.practice
+          ? "Here were the groups. Draw a new grid to try again."
+          : "Here were today's groups. A new grid comes at midnight (Paris time).";
     this.renderGroups(byId("cx-solution"), status === "won" ? [] : solution);
   }
 
@@ -138,7 +175,7 @@ class ConnectionsGame {
     this.busy = true;
     try {
       await player.ensure();
-      const { result, state } = await api.connectionsGuess([...this.selected]);
+      const { result, state } = await api.connectionsGuess([...this.selected], this.practice);
       if (result === "correct") this.selected.clear();
       if (result === "one_away") showToast("One away…");
       if (result === "wrong") showToast("Not a group.");
@@ -146,7 +183,7 @@ class ConnectionsGame {
       setTimeout(() => byId("cx-grid").classList.remove("shake"), 400);
       this.busy = false;
       this.render(state);
-      if (state.status !== "playing") this.loadBoard();
+      if (state.status !== "playing" && !this.practice) this.loadBoard();
     } catch (err) {
       this.busy = false;
       showToast(err.message);
@@ -187,7 +224,8 @@ class ConnectionsGame {
     const { status, attempts, mistakes, date } = this.state;
     const outcome = status === "won" ? `solved with ${mistakes} mistake${mistakes === 1 ? "" : "s"}` : "not solved";
     const grid = attempts.map((levels) => levels.map((level) => SHARE_EMOJI[level]).join("")).join("\n");
-    const text = `Celestedle Connections ${date}: ${outcome}\n\n${grid}\n\n${SITE_URL}`;
+    const title = this.state.practice ? "Celestedle Connections (practice)" : `Celestedle Connections ${date}`;
+    const text = `${title}: ${outcome}\n\n${grid}\n\n${SITE_URL}`;
     try {
       await navigator.clipboard.writeText(text);
       byId("cx-share-btn").textContent = "Copied!";

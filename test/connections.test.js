@@ -233,3 +233,42 @@ test("playtester : joue à Connections sans accès à l'admin, accès retirable"
   const audit = await api.request("GET", "/api/admin/audit", { token: await owner() });
   assert.ok(audit.data.some((a) => a.action === "playtester" && a.target === `${player.id} ajouté`));
 });
+
+test("entraînement : grille perso tirée à volonté, sans toucher la grille du jour ni le classement", async () => {
+  const token = await newAdministrator();
+  await api.request("PATCH", "/api/players/me", { token, body: { name: "Practice Pro" } });
+  const daily = (await api.request("GET", "/api/connections", { token })).data;
+
+  const first = await api.request("GET", "/api/connections?practice=1", { token });
+  assert.equal(first.data.practice, true);
+  assert.equal(first.data.tiles.length, 16);
+
+  // Les cases de la grille d'entraînement viennent de sa propre solution
+  const db = require("../src/db");
+  const me = (await api.request("GET", "/api/players/me", { token })).data.player;
+  const row = db.prepare("SELECT groups FROM connection_puzzles WHERE date = ?").get(`practice:${me.id}`);
+  const groups = JSON.parse(row.groups).map((g) => g.elementIds.map((id) => elementsRepo.findById(id).nom));
+
+  let state;
+  for (const names of groups) {
+    ({ data: { state } } = await api.request("POST", "/api/connections/guess", { token, body: { names, practice: true } }));
+  }
+  assert.equal(state.status, "won");
+  assert.equal(state.practice, true);
+
+  const after = await api.request("GET", "/api/connections", { token });
+  assert.equal(after.data.status, daily.status, "la grille du jour n'a pas bougé");
+  assert.deepEqual(after.data.tiles.map((t) => t.nom).sort(), daily.tiles.map((t) => t.nom).sort());
+
+  const board = await api.request("GET", "/api/connections/leaderboard", { token });
+  assert.ok(!board.data.top.some((e) => e.isMe), "une grille d'entraînement ne compte pas au classement");
+
+  const fresh = await api.request("POST", "/api/connections/practice", { token });
+  assert.equal(fresh.status, 200);
+  assert.equal(fresh.data.status, "playing");
+  assert.equal(fresh.data.found.length, 0);
+  assert.equal(fresh.data.mistakes, 0);
+
+  const { token: playerToken } = await api.newPlayer();
+  assert.equal((await api.request("POST", "/api/connections/practice", { token: playerToken })).status, 403);
+});

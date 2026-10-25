@@ -28,6 +28,17 @@
       </section>
 
       <section id="cx-game" hidden>
+        <div class="cx-modes">
+          <div class="segmented" role="group" aria-label="Grid">
+            <button type="button" data-cx-grid="daily" aria-pressed="true">Today's grid</button>
+            <button type="button" data-cx-grid="practice" aria-pressed="false">Practice</button>
+          </div>
+          <button type="button" id="cx-new-btn" class="action-btn" hidden>🎲 New grid</button>
+        </div>
+        <p id="cx-practice-note" class="small-subtext cx-note" hidden>
+          Practice grids are yours only: draw as many as you like, they don't
+          count in the ranking and don't change today's grid.
+        </p>
         <div id="cx-found" class="cx-groups"></div>
         <div id="cx-grid" class="cx-grid" role="group" aria-label="Tiles"></div>
 
@@ -49,7 +60,7 @@
           <button type="button" id="cx-share-btn" class="btn-primary">Share</button>
         </div>
 
-        <section class="cx-panel">
+        <section id="cx-board-panel" class="cx-panel">
           <h2>Today's ranking</h2>
           <p class="small-subtext">Fewest mistakes first, then fastest time.</p>
           <table class="leaderboard-table">
