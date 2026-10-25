@@ -23,7 +23,8 @@ async function request(method, path, body, token = storage.get(KEYS.playerToken)
     onAccessLost();
   }
   if (!res.ok) {
-    const error = new Error(data?.error || `Erreur HTTP ${res.status}`);
+    // debug : message de l'erreur serveur, envoyé à l'équipe admin seulement
+    const error = new Error(data?.debug ? `${data.error} (${data.debug})` : data?.error || `Erreur HTTP ${res.status}`);
     error.status = res.status;
     throw error;
   }

@@ -25,16 +25,24 @@ export class ConnectionsTab {
     });
   }
 
+  // Chaque bloc se charge à part : une erreur sur les grilles n'empêche pas
+  // d'afficher les tags, et dit d'où elle vient
   async load() {
-    const [tags, { elements }, puzzles] = await Promise.all([
+    const [tags, elements, puzzles] = await Promise.allSettled([
       admin.connectionTags(),
       admin.elements(),
       admin.connectionPuzzles()
     ]);
-    this.tags = tags;
-    this.elements = elements.filter((e) => e.isActive);
-    this.renderTags();
-    this.renderPuzzles(puzzles);
+    const errors = [];
+    if (elements.status === "fulfilled") this.elements = elements.value.elements.filter((e) => e.isActive);
+    else errors.push(`éléments : ${elements.reason.message}`);
+    if (tags.status === "fulfilled") {
+      this.tags = tags.value;
+      this.renderTags();
+    } else errors.push(`tags : ${tags.reason.message}`);
+    if (puzzles.status === "fulfilled") this.renderPuzzles(puzzles.value);
+    else errors.push(`grilles : ${puzzles.reason.message}`);
+    if (errors.length) this.notify(`Erreur en chargeant ${errors.join(" ; ")}`, true);
   }
 
   renderPuzzles(puzzles) {
@@ -42,7 +50,18 @@ export class ConnectionsTab {
     clear(container);
     container.append(
       ...puzzles.map((puzzle) =>
-        el("div", { className: "admin-card cx-admin-puzzle" }, [
+        puzzle.error
+          ? el("div", { className: "admin-card cx-admin-puzzle" }, [
+              el("strong", { text: `${puzzle.date} ${puzzle.mode === "hard" ? "Hard" : "Normal"}` }),
+              el("p", { className: "text-wrong", text: `Impossible d'afficher cette grille : ${puzzle.error}` }),
+              el("button", {
+                className: "btn-secondary btn-small",
+                text: "Régénérer",
+                attrs: { type: "button" },
+                on: { click: () => this.regenerate(puzzle.date, puzzle.mode) }
+              })
+            ])
+          : el("div", { className: "admin-card cx-admin-puzzle" }, [
           el("div", { className: "cx-admin-puzzle-head" }, [
             el("strong", { text: puzzle.date }),
             el("span", { className: `badge cx-mode-${puzzle.mode}`, text: puzzle.mode === "hard" ? "Hard" : "Normal" }),

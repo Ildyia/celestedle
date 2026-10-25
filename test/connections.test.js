@@ -356,3 +356,17 @@ test("mode Hard : sa propre grille, sa partie, son classement et son entraîneme
   assert.equal(regenerated.data.mode, "hard");
   assert.equal(connections.getPuzzle().version, normal.version, "régénérer le Hard ne touche pas le normal");
 });
+
+test("erreur serveur : l'équipe admin reçoit le message, les joueurs non", async () => {
+  const original = connections.puzzlePreview;
+  connections.puzzlePreview = () => {
+    throw new TypeError("boom");
+  };
+  try {
+    const res = await api.request("GET", "/api/admin/connections/puzzles", { token: await owner() });
+    assert.equal(res.status, 200, "une grille en échec n'empêche pas les autres");
+    assert.equal(res.data[0].error, "TypeError: boom");
+  } finally {
+    connections.puzzlePreview = original;
+  }
+});

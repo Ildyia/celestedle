@@ -17,7 +17,10 @@ function errorHandler(err, req, res, next) {
     return res.status(413).json({ error: "Request body too large" });
   }
   console.error(`[ERROR] ${req.method} ${req.originalUrl}`, err);
-  res.status(500).json({ error: "Internal server error" });
+  // L'équipe admin n'a pas accès aux logs du serveur : elle reçoit le
+  // message de l'erreur (sans la pile) pour pouvoir la signaler
+  const debug = ["owner", "administrator"].includes(req.player?.role) ? `${err.name}: ${err.message}` : undefined;
+  res.status(500).json({ error: "Internal server error", debug });
 }
 
 module.exports = { notFound, errorHandler };
