@@ -1,5 +1,5 @@
 import { api, ApiError, spriteUrl } from "./api.js";
-import { el, byId, clear } from "./dom.js";
+import { el, byId, clear, bindModalClosing, openModal } from "./dom.js";
 import { capitalize, formatDuration } from "./format.js";
 import { player } from "./player.js";
 import { initOptions } from "./options.js";
@@ -319,6 +319,8 @@ class ConnectionsGame {
 }
 
 async function init() {
+  bindModalClosing();
+  byId("cx-rules-btn").addEventListener("click", () => openModal("cx-rules-modal"));
   initOptions();
   await player.load();
   await new ConnectionsGame().load();

@@ -380,3 +380,28 @@ test("générateur : un tag qui couvre presque tout le catalogue ne bloque plus 
     assert.ok(!puzzle.groups.some((g) => g.kind === "tag"), "un tag hors limites ne sert pas de groupe");
   }
 });
+
+test("générateur : avec beaucoup de tags liés aux types, le mode normal reste sans faux groupe", () => {
+  const elements = elementsRepo.listActive();
+  const types = [...new Set(elements.map((e) => e.type))];
+  const random = seededRandom(5);
+  // 13 tags dont la plupart des membres viennent de 2 types, comme en prod
+  const tags = [14, 13, 8, 28, 11, 9, 14, 10, 10, 12, 10, 19, 10].map((size, i) => {
+    const favourite = [types[i % types.length], types[(i + 2) % types.length]];
+    const shuffled = (list) => list.map((e) => [random(), e]).sort((a, b) => a[0] - b[0]).map(([, e]) => e);
+    const inFavourite = shuffled(elements.filter((e) => favourite.includes(e.type)));
+    const rest = shuffled(elements.filter((e) => !favourite.includes(e.type)));
+    const k = Math.min(inFavourite.length, Math.round(size * 0.7));
+    const members = [...inFavourite.slice(0, k), ...rest.slice(0, size - k)];
+    return { id: i + 1, label: `Tag ${i}`, elementIds: members.map((e) => e.id), unreviewedIds: [] };
+  });
+  const categories = buildCategories(elements, tags);
+  for (let seed = 1; seed <= 10; seed++) {
+    const puzzle = generatePuzzle(elements, tags, seededRandom(seed));
+    assert.equal(puzzle.rule, "strict", `grille ${seed}`);
+    const chosen = puzzle.groups.map((g) => categories.find((c) => c.key === g.key));
+    const ordered = puzzle.groups.flatMap((g) => g.elementIds);
+    assert.equal(hasObviousDecoy(ordered, chosen, categories), false);
+    assert.equal(countSolutions(puzzle.tiles, categories), 1);
+  }
+});

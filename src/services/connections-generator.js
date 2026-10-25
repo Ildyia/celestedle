@@ -127,6 +127,9 @@ function tryGroups(chosen, categories, random, rule, stats) {
 function sampleGroups(chosen, categories, random, rule, stats) {
   const tiles = [];
   const groups = [];
+  // Types et tags à surveiller pendant la pioche (voir hasObviousDecoy)
+  const guards =
+    rule === "none" ? [] : categories.filter((c) => !chosen.includes(c) && OBVIOUS_DECOY_KINDS.includes(c.kind) && c.usable);
   for (const category of chosen) {
     const others = chosen.filter((c) => c !== category);
     // Chaque élément ne va que dans un seul des 4 groupes choisis
@@ -137,7 +140,22 @@ function sampleGroups(chosen, categories, random, rule, stats) {
       stats.incompatible++;
       return null;
     }
-    const members = shuffle(pool, random).slice(0, GROUP_SIZE);
+    // Pioche case par case : on saute une case qui ferait 4 cases d'un même
+    // type ou tag hors des groupes, plutôt que de jeter toute la grille à la
+    // vérification. Bien plus de grilles strictes, et plus vite.
+    const members = [];
+    for (const id of shuffle(pool, random)) {
+      if (members.length === GROUP_SIZE) break;
+      const placed = [...tiles, ...members];
+      const makesDecoy = guards.some(
+        (c) => c.members.has(id) && placed.filter((x) => c.members.has(x)).length >= GROUP_SIZE - 1
+      );
+      if (!makesDecoy) members.push(id);
+    }
+    if (members.length < GROUP_SIZE) {
+      stats.decoy++;
+      return undefined;
+    }
     tiles.push(...members);
     groups.push({ category, elementIds: members });
   }

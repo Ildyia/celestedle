@@ -33,6 +33,15 @@
   margin-left: 6px;
 }
 
+.cx-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.cx-actions .action-btn {
+  min-width: 140px;
+}
+
 .cx-badge {
   justify-self: center;
   font-size: 0.8rem;
