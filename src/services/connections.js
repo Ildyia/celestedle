@@ -112,7 +112,7 @@ function buildState(puzzle, game, { mode, practice, reset = false }) {
     mistakes: attempts.filter((a) => a.groupIndex === null).length,
     tiles: puzzle.tiles.filter((id) => !foundIds.has(id)).map((id) => tileOf(elementsById.get(id))),
     found: foundIndexes.map((i) => groupView(puzzle.groups[i], elementsById)),
-    // Pour le partage : niveau du groupe touché par chaque proposition
+    // Pour le partage : couleur du groupe de chaque case proposée
     attempts: attempts.map((a) => a.elementIds.map((id) => puzzle.groups.find((g) => g.elementIds.includes(id)).level)),
     startedAt: game?.started_at ?? null,
     elapsedSeconds: game ? secondsBetween(game.started_at, now) : 0,

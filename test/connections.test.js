@@ -50,7 +50,7 @@ test("générateur : 4 groupes de 4, une seule solution, pas de faux groupe trom
     const puzzle = generatePuzzle(elements, [], seededRandom(seed));
     assert.equal(puzzle.groups.length, 4);
     assert.equal(new Set(puzzle.tiles).size, 16);
-    assert.deepEqual(puzzle.groups.map((g) => g.level), [0, 1, 2, 3]);
+    assert.deepEqual(puzzle.groups.map((g) => g.level).sort(), [0, 1, 2, 3], "une couleur par groupe");
     for (const group of puzzle.groups) assert.equal(group.elementIds.length, 4);
     assert.equal(countSolutions(puzzle.tiles, categories), 1);
     // Cases rangées groupe par groupe, dans l'ordre des catégories

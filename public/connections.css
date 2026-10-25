@@ -250,7 +250,7 @@
 }
 
 /* Mode Hard : marques de couleur posées par le joueur avant de valider.
-   Couleurs différentes de celles des groupes (qui donnent la difficulté). */
+   Couleurs différentes de celles des groupes, pour ne pas les confondre. */
 :root {
   --cx-mark-0: #ef4444;
   --cx-mark-1: #f97316;

@@ -6,10 +6,6 @@ const GROUP_COUNT = 4;
 const MAX_ATTEMPTS = 5000;
 const MAX_SAME_KIND = 2;
 
-// Difficulté d'une sorte de catégorie : sert à ranger les groupes du plus
-// facile (0) au plus dur, comme les 4 couleurs du jeu original
-const KIND_LEVELS = { type: 0, colour: 1, shape: 1, chapter: 2, tag: 3 };
-
 // Faux groupes refusés : 4 cases ou plus d'un même type (ou tag) hors des
 // groupes, et pour toute catégorie exactement 4 cases hors des groupes (un
 // « faux groupe parfait », impossible à distinguer d'un vrai). 5 cases ou plus
@@ -163,6 +159,8 @@ function hasObviousDecoy(tiles, chosen, categories, rule = "strict") {
 }
 
 // Grille { groups: [{ key, kind, label, level, elementIds }], tiles: [16 ids] }.
+// level (0 à 3) donne seulement la couleur du groupe, tirée au hasard : elle
+// ne dit rien de sa difficulté.
 // Un groupe tag est imposé quand un tag complet le permet.
 // Mode normal : pas de faux groupe ; si aucune grille stricte n'est trouvée
 // (rare), on accepte un « faux groupe parfait » plutôt que de ne pas avoir de
@@ -197,16 +195,13 @@ function tryGenerate(elements, tags, random, rule) {
     const found = tryGroups(chosen, categories, random, rule);
     if (!found) continue;
 
-    const groups = found.groups
-      .map((g) => ({ ...g, order: KIND_LEVELS[g.category.kind] + random() / 2 }))
-      .sort((a, b) => a.order - b.order)
-      .map((g, level) => ({
-        key: g.category.key,
-        kind: g.category.kind,
-        label: g.category.label,
-        level,
-        elementIds: g.elementIds
-      }));
+    const groups = shuffle(found.groups, random).map((g, level) => ({
+      key: g.category.key,
+      kind: g.category.kind,
+      label: g.category.label,
+      level,
+      elementIds: g.elementIds
+    }));
     return { groups, tiles: shuffle(found.tiles, random) };
   }
   return null;

@@ -12,7 +12,7 @@ import { avatarUrl } from "./profile.js";
 const SHARE_EMOJI = ["🟨", "🟩", "🟦", "🟪"];
 const KIND_LABELS = { type: "Type", colour: "Colour", shape: "Shape", chapter: "Chapter", tag: "Tag" };
 const SITE_URL = "https://celestedle.vercel.app/connections.html";
-const SHARE_LEGEND = "One row per guess, one square per tile: 🟨 easiest group → 🟪 hardest";
+const SHARE_LEGEND = "One row per guess, one colour per group";
 const MODE_KEY = "celestedle_cx_mode";
 // Marques de couleur du mode Hard : { [gridId]: { [nom]: 0..3 } }, dans ce navigateur seulement
 const MARKS_KEY = "celestedle_cx_marks";
