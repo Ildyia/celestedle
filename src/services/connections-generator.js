@@ -3,16 +3,18 @@
 
 const GROUP_SIZE = 4;
 const GROUP_COUNT = 4;
-const MAX_ATTEMPTS = 20000;
+const MAX_ATTEMPTS = 5000;
 const MAX_SAME_KIND = 2;
 
 // Difficulté d'une sorte de catégorie : sert à ranger les groupes du plus
 // facile (0) au plus dur, comme les 4 couleurs du jeu original
 const KIND_LEVELS = { type: 0, colour: 1, shape: 1, chapter: 2, tag: 3 };
 
-// Faux groupe trop visible : 4 cases d'un même type (ou d'un même tag) qui
-// ne forment pas un des groupes. Pour les couleurs et les chapitres, c'est
-// inévitable avec 99 éléments : ils restent des fausses pistes.
+// Faux groupes refusés : 4 cases ou plus d'un même type (ou tag) hors des
+// groupes, et pour toute catégorie exactement 4 cases hors des groupes (un
+// « faux groupe parfait », impossible à distinguer d'un vrai). 5 cases ou plus
+// d'une même couleur ou d'un même chapitre restent des fausses pistes
+// permises : le joueur voit qu'il faut en écarter.
 const OBVIOUS_DECOY_KINDS = ["type", "tag"];
 
 // Au-delà, une catégorie chevauche presque toutes les autres et la grille
@@ -112,7 +114,20 @@ function countSolutions(tileIds, categories) {
   return count;
 }
 
-function tryGroups(chosen, categories, random) {
+// Pour 4 catégories, plusieurs tirages de cases : changer les cases suffit
+// souvent à faire disparaître un faux groupe
+const SAMPLES_PER_CHOICE = 10;
+
+function tryGroups(chosen, categories, random, strict) {
+  for (let sample = 0; sample < SAMPLES_PER_CHOICE; sample++) {
+    const found = sampleGroups(chosen, categories, random, strict);
+    if (found !== undefined) return found;
+  }
+  return null;
+}
+
+// null : ces catégories ne peuvent pas marcher ; undefined : réessayer d'autres cases
+function sampleGroups(chosen, categories, random, strict) {
   const tiles = [];
   const groups = [];
   for (const category of chosen) {
@@ -126,23 +141,37 @@ function tryGroups(chosen, categories, random) {
     tiles.push(...members);
     groups.push({ category, elementIds: members });
   }
-  if (hasObviousDecoy(tiles, chosen, categories)) return null;
-  return countSolutions(tiles, categories) === 1 ? { groups, tiles } : null;
+  if (hasObviousDecoy(tiles, chosen, categories, strict)) return undefined;
+  return countSolutions(tiles, categories) === 1 ? { groups, tiles } : undefined;
 }
 
-function hasObviousDecoy(tiles, chosen, categories) {
-  return categories.some(
-    (c) =>
-      OBVIOUS_DECOY_KINDS.includes(c.kind) &&
-      c.usable &&
-      !chosen.includes(c) &&
-      tiles.filter((id) => c.members.has(id)).length >= GROUP_SIZE
-  );
+// tiles : les 16 cases rangées groupe par groupe (4 par 4, dans l'ordre de chosen)
+function hasObviousDecoy(tiles, chosen, categories, strict = true) {
+  const groupKeys = chosen.map((_, i) => [...tiles.slice(i * GROUP_SIZE, (i + 1) * GROUP_SIZE)].sort().join());
+  return categories.some((c) => {
+    if (chosen.includes(c)) return false;
+    const inside = tiles.filter((id) => c.members.has(id));
+    // Type ou tag : visibles d'un coup d'œil, aucun faux groupe accepté
+    if (OBVIOUS_DECOY_KINDS.includes(c.kind) && c.usable && inside.length >= GROUP_SIZE) return true;
+    // Toute catégorie : exactement 4 cases qui ne sont pas un des groupes
+    // ressemblent en tout point à un vrai groupe
+    return strict && inside.length === GROUP_SIZE && !groupKeys.includes([...inside].sort().join());
+  });
 }
 
 // Grille { groups: [{ key, kind, label, level, elementIds }], tiles: [16 ids] }.
 // Un groupe tag est imposé quand un tag complet le permet.
+// Si aucune grille sans « faux groupe parfait » n'est trouvée (rare), on
+// accepte ce faux groupe plutôt que de ne pas avoir de grille du tout
 function generatePuzzle(elements, tags, random = Math.random) {
+  return tryGenerate(elements, tags, random, true) ?? tryGenerate(elements, tags, random, false) ?? noPuzzle();
+}
+
+function noPuzzle() {
+  throw new Error("No Connections puzzle with a single solution could be generated.");
+}
+
+function tryGenerate(elements, tags, random, strict) {
   const categories = buildCategories(elements, tags);
   const usable = categories.filter((c) => c.usable);
   const usableTags = usable.filter((c) => c.kind === "tag");
@@ -159,7 +188,7 @@ function generatePuzzle(elements, tags, random = Math.random) {
     }
     if (chosen.length < GROUP_COUNT) break;
 
-    const found = tryGroups(chosen, categories, random);
+    const found = tryGroups(chosen, categories, random, strict);
     if (!found) continue;
 
     const groups = found.groups
@@ -174,7 +203,7 @@ function generatePuzzle(elements, tags, random = Math.random) {
       }));
     return { groups, tiles: shuffle(found.tiles, random) };
   }
-  throw new Error("No Connections puzzle with a single solution could be generated.");
+  return null;
 }
 
 module.exports = {

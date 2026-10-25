@@ -43,7 +43,7 @@ async function newAdministrator() {
   return token;
 }
 
-test("générateur : 4 groupes de 4, une seule solution, pas de faux groupe de type, au plus 2 groupes d'une même sorte", () => {
+test("générateur : 4 groupes de 4, une seule solution, pas de faux groupe trompeur, au plus 2 groupes d'une même sorte", () => {
   const elements = elementsRepo.listActive();
   const categories = buildCategories(elements, []);
   for (let seed = 1; seed <= 15; seed++) {
@@ -53,8 +53,10 @@ test("générateur : 4 groupes de 4, une seule solution, pas de faux groupe de t
     assert.deepEqual(puzzle.groups.map((g) => g.level), [0, 1, 2, 3]);
     for (const group of puzzle.groups) assert.equal(group.elementIds.length, 4);
     assert.equal(countSolutions(puzzle.tiles, categories), 1);
-    const chosen = categories.filter((c) => puzzle.groups.some((g) => g.key === c.key));
-    assert.ok(!hasObviousDecoy(puzzle.tiles, chosen, categories), "pas 4 cases d'un même type hors des groupes");
+    // Cases rangées groupe par groupe, dans l'ordre des catégories
+    const chosen = puzzle.groups.map((g) => categories.find((c) => c.key === g.key));
+    const ordered = puzzle.groups.flatMap((g) => g.elementIds);
+    assert.ok(!hasObviousDecoy(ordered, chosen, categories), "ni faux groupe de type, ni 4 cases d'une catégorie hors des groupes");
     const kinds = puzzle.groups.map((g) => g.kind);
     for (const kind of kinds) assert.ok(kinds.filter((k) => k === kind).length <= 2);
   }
@@ -271,4 +273,27 @@ test("entraînement : grille perso tirée à volonté, sans toucher la grille du
 
   const { token: playerToken } = await api.newPlayer();
   assert.equal((await api.request("POST", "/api/connections/practice", { token: playerToken })).status, 403);
+});
+
+test("générateur : 4 cases grises qui ne forment pas un groupe sont un faux groupe", () => {
+  const elements = elementsRepo.listActive();
+  const categories = buildCategories(elements, []);
+  const byName = (n) => elementsRepo.findByName(n).id;
+  // Retour des playtests : moon block, breakable tiles, zip movers, fake heart (tous gris)
+  const grey = categories.find((c) => c.key === "colour:grey");
+  const decoy = ["moon block", "breakable tiles", "zip movers", "fake heart"].map(byName);
+  assert.ok(decoy.every((id) => grey.members.has(id)));
+  // 16 cases dont ces 4 gris répartis dans des groupes différents, et aucun autre gris
+  // Au plus 3 cases par type, pour que seul le faux groupe gris soit en cause
+  const perType = { environment: 2, "movement & propulsion": 1, collectibles: 1 };
+  const others = [];
+  for (const e of elements) {
+    if (others.length === 12 || e.couleur.includes("grey") || (perType[e.type] ?? 0) >= 3) continue;
+    perType[e.type] = (perType[e.type] ?? 0) + 1;
+    others.push(e.id);
+  }
+  const tiles = [decoy[0], ...others.slice(0, 3), decoy[1], ...others.slice(3, 6), decoy[2], ...others.slice(6, 9), decoy[3], ...others.slice(9, 12)];
+  const chosen = categories.filter((c) => c.kind === "chapter").slice(0, 4);
+  assert.equal(hasObviousDecoy(tiles, chosen, categories), true);
+  assert.equal(hasObviousDecoy(tiles, chosen, categories, false), false, "en repli, seule la règle type/tag s'applique");
 });
