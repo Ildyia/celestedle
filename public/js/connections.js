@@ -17,6 +17,7 @@ const MODE_KEY = "celestedle_cx_mode";
 // Marques de couleur du mode Hard : { [gridId]: { [nom]: 0..3 } }, dans ce navigateur seulement
 const MARKS_KEY = "celestedle_cx_marks";
 const MARK_COUNT = 4;
+const FEEDBACK_MS = 4000;
 const MODE_NOTES = {
   normal: "Normal: every group is clear-cut, no decoy groups.",
   hard: "Hard: decoy groups are allowed (4 tiles can look like a group and not be one). Mark tiles with colours to plan ahead."
@@ -256,8 +257,9 @@ class ConnectionsGame {
       await player.ensure();
       const { result, state } = await api.connectionsGuess([...this.selected], this.mode, this.practice);
       if (result === "correct") this.selected.clear();
-      if (result === "one_away") showToast("One away…");
-      if (result === "wrong") showToast("Not a group.");
+      // Plus long que les messages par défaut (2,4 s) : on a le temps de le lire
+      if (result === "one_away") showToast("One away…", FEEDBACK_MS);
+      if (result === "wrong") showToast("Not a group.", FEEDBACK_MS);
       if (result !== "correct") byId("cx-grid").classList.add("shake");
       setTimeout(() => byId("cx-grid").classList.remove("shake"), 400);
       this.busy = false;
