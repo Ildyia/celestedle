@@ -23,6 +23,10 @@
             <img src="assets/illustration/journal.png" alt="" />
             <span>Rules</span>
           </button>
+          <button type="button" id="cx-tags-btn" class="action-btn" hidden>
+            <img src="assets/illustration/strawberry.png" alt="" />
+            <span>Tags</span>
+          </button>
         </nav>
       </header>
 
@@ -122,7 +126,8 @@
             <li>Found in the same chapter</li>
             <li>
               A fact only used in Connections, such as "gives liftboost": the
-              group's name is revealed once you find it
+              group's name is revealed once you find it. The Tags button lists
+              them all with their elements.
             </li>
           </ul>
           <p>
@@ -155,6 +160,27 @@
             are yours only: draw as many as you like, they don't count in the
             ranking.
           </p>
+        </div>
+      </div>
+    </div>
+    <div id="cx-tags-modal" class="rules-modal hidden">
+      <div class="rules-content bug-modal-content">
+        <button
+          type="button"
+          class="close-modal-btn"
+          data-close-modal="cx-tags-modal"
+          aria-label="Close"
+        >
+          &times;
+        </button>
+        <div class="rules-content-static">
+          <h2>Tags</h2>
+          <p>
+            Facts only used in Connections, with every element that has them.
+            An element that isn't listed doesn't have the tag.
+          </p>
+          <input id="cx-tags-search" type="search" class="bug-input cx-tags-search" placeholder="Search a tag or an element" aria-label="Search tags" />
+          <div id="cx-tags-list" class="cx-tags-list"></div>
         </div>
       </div>
     </div>

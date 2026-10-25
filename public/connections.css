@@ -36,10 +36,53 @@
 .cx-actions {
   display: flex;
   justify-content: center;
+  gap: 10px;
 }
 
 .cx-actions .action-btn {
   min-width: 140px;
+}
+
+.cx-tags-search {
+  margin: 8px 0 12px;
+}
+
+.cx-tags-list {
+  display: grid;
+  gap: 14px;
+}
+
+.cx-tag-card h4 {
+  margin: 0 0 4px;
+}
+
+.cx-tag-members {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cx-tag-members li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 4px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.85rem;
+}
+
+.cx-tag-members li.match {
+  outline: 2px solid var(--color-indigo);
+}
+
+.cx-tag-members img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
 }
 
 .cx-badge {

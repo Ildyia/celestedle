@@ -405,3 +405,29 @@ test("générateur : avec beaucoup de tags liés aux types, le mode normal reste
     assert.equal(countSolutions(puzzle.tiles, categories), 1);
   }
 });
+
+test("tags : les joueurs voient seulement les tags qui peuvent sortir, avec leurs éléments", async () => {
+  const token = await owner();
+  const elements = elementsRepo.listActive();
+  const ok = await api.request("POST", "/api/admin/connections/tags", {
+    token,
+    body: { label: "Zz visible", description: "Shown to players", elementIds: elements.slice(0, 5).map((e) => e.id) }
+  });
+  assert.equal(ok.status, 201, JSON.stringify(ok.data));
+  const tooSmall = await api.request("POST", "/api/admin/connections/tags", {
+    token,
+    body: { label: "Zz too small", elementIds: elements.slice(0, 2).map((e) => e.id) }
+  });
+  assert.equal(tooSmall.status, 201);
+
+  const { status, data } = await api.request("GET", "/api/connections/tags", { token });
+  assert.equal(status, 200);
+  const visible = data.find((t) => t.label === "Zz visible");
+  assert.deepEqual(visible, {
+    label: "Zz visible",
+    description: "Shown to players",
+    members: elements.slice(0, 5).map((e) => e.nom).sort((a, b) => a.localeCompare(b))
+  });
+  assert.ok(!data.some((t) => t.label === "Zz too small"));
+  assert.equal((await api.request("GET", "/api/connections/tags")).status, 401);
+});
