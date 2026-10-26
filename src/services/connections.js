@@ -5,7 +5,7 @@ const elementsRepo = require("../repositories/elements");
 const repo = require("../repositories/connections");
 const { HttpError } = require("../utils/http-error");
 const { todayParis, nowIso, secondsBetween } = require("../utils/dates");
-const { GROUP_SIZE, GROUP_COUNT, generatePuzzle, seededRandom } = require("./connections-generator");
+const { GROUP_SIZE, GROUP_COUNT, buildCategories, generatePuzzle, seededRandom } = require("./connections-generator");
 
 const MAX_MISTAKES = 4;
 const MODES = ["normal", "hard"];
@@ -177,7 +177,12 @@ const guess = db.transaction((player, names, { mode = "normal", practice = false
   if (groupIndex !== -1 && found.size + 1 === GROUP_COUNT) repo.finishGame(game.id, "won", at);
   else if (mistakes >= MAX_MISTAKES) repo.finishGame(game.id, "lost", at);
 
-  const result = groupIndex !== -1 ? "correct" : oneAway ? "one_away" : "wrong";
+  // Faux groupe : les 4 cases partagent bien quelque chose, mais ce n'est pas
+  // un des groupes de la grille (une erreur quand même)
+  const decoy =
+    groupIndex === -1 &&
+    buildCategories(elementsRepo.listActive(), repo.listTags()).some((c) => ids.every((id) => c.members.has(id)));
+  const result = groupIndex !== -1 ? "correct" : oneAway ? "one_away" : decoy ? "decoy" : "wrong";
   return { result, state: buildState(puzzle, repo.findGameById(game.id), { mode, practice, reset: loaded.reset }) };
 });
 

@@ -452,3 +452,29 @@ test("grille remplacée pendant la partie : le joueur est prévenu au lieu d'une
   });
   assert.equal(ok.status, 200, JSON.stringify(ok.data));
 });
+
+test("faux groupe : 4 cases qui partagent une catégorie sans être un groupe sont signalées", async () => {
+  const token = await newAdministrator();
+  const me = (await api.request("GET", "/api/players/me", { token })).data.player;
+  const categories = buildCategories(elementsRepo.listActive(), []);
+  // Grilles Hard d'entraînement tirées jusqu'à en avoir une avec un faux groupe
+  for (let draw = 0; draw < 50; draw++) {
+    await api.request("POST", "/api/connections/practice", { token, body: { mode: "hard" } });
+    const row = db.prepare("SELECT groups, tiles FROM connection_puzzles WHERE date = ?").get(`practice-hard:${me.id}`);
+    const groups = JSON.parse(row.groups);
+    const tiles = JSON.parse(row.tiles);
+    const keys = groups.map((g) => g.key);
+    const four = categories
+      .filter((c) => !keys.includes(c.key))
+      .map((c) => tiles.filter((id) => c.members.has(id)).slice(0, 4))
+      .find((ids) => ids.length === 4 && !groups.some((g) => ids.filter((id) => g.elementIds.includes(id)).length >= 3));
+    if (!four) continue;
+    const names = four.map((id) => elementsRepo.findById(id).nom);
+    const res = await api.request("POST", "/api/connections/guess", { token, body: { names, mode: "hard", practice: true } });
+    assert.equal(res.status, 200, JSON.stringify(res.data));
+    assert.equal(res.data.result, "decoy");
+    assert.equal(res.data.state.mistakes, 1, "un faux groupe compte comme une erreur");
+    return;
+  }
+  assert.fail("aucune grille Hard avec un faux groupe en 50 tirages");
+});

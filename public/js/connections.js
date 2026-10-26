@@ -260,6 +260,7 @@ class ConnectionsGame {
       if (result === "correct") this.selected.clear();
       // Plus long que les messages par défaut (2,4 s) : on a le temps de le lire
       if (result === "one_away") showToast("One away…", FEEDBACK_MS);
+      if (result === "decoy") showToast("They share something, but it's not one of the groups.", FEEDBACK_MS);
       if (result === "wrong") showToast("Not a group.", FEEDBACK_MS);
       if (result !== "correct") byId("cx-grid").classList.add("shake");
       setTimeout(() => byId("cx-grid").classList.remove("shake"), 400);
