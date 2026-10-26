@@ -16,8 +16,9 @@ const SYNONYMS_USED_KEY = "celestedle_synonyms_used";
 // la montagne : quand c'est le mot du jour, la fin de partie rappelle le
 // Transgender Day of Remembrance (20 novembre)
 const MEMORIAL_NAMES = ["memorial"];
-const TDOR_URL = "https://tdor.tgeu.org/";
-const DONATE_URL = "https://tgeu.org/support-our-work/";
+const TDOR_URL = "https://tdor.translivesmatter.info/";
+const DONATE_URL =
+  "https://www.helloasso.com/associations/acceptess-t/formulaires/2/";
 
 function memorialMessage() {
   const link = (href, text) =>
@@ -26,12 +27,17 @@ function memorialMessage() {
     el("h3", { text: "In memory" }),
     el("p", {
       text:
-        "Celeste's memorial honours those who perished on the climb. Every 20 November, the Transgender Day of " +
-        "Remembrance honours the trans people lost to transphobic violence."
+        "This memorial dedicated to ours siblings who perished on the climb. " +
+        "Never forget all trans people who left us on the way. " +
+        "Every 20 november, we commemorate the Trans Day Of Remembrance. " +
+        "Please, take a moment to think of our siblings. You can see the reports of this year on the first link."
     }),
     el("div", { className: "memorial-links" }, [
-      link(TDOR_URL, "Transgender Day of Remembrance"),
-      link(DONATE_URL, "Support TGEU (Transgender Europe)")
+      link(TDOR_URL, "Transgender Day of Remembrance reports"),
+      link(
+        DONATE_URL,
+        "Support FAST (Trans Social Action Fund, french organization)"
+      )
     ])
   ]);
 }
@@ -71,15 +77,21 @@ export class Game {
       this.submitGuess(this.nodes.input.value);
     });
     hintBtn.addEventListener("click", () => openModal("hint-modal"));
-    document.querySelectorAll("[data-hint-type]").forEach((btn) =>
-      btn.addEventListener("click", () => this.useHint(btn.dataset.hintType))
-    );
+    document
+      .querySelectorAll("[data-hint-type]")
+      .forEach((btn) =>
+        btn.addEventListener("click", () => this.useHint(btn.dataset.hintType))
+      );
     giveupBtn.addEventListener("click", () => openModal("forfeit-modal"));
-    byId("confirm-forfeit-btn")?.addEventListener("click", () => this.forfeit());
-    shareBtn.addEventListener("click", () => this.share());
-    document.querySelectorAll("[data-mode]").forEach((btn) =>
-      btn.addEventListener("click", () => this.setMode(btn.dataset.mode))
+    byId("confirm-forfeit-btn")?.addEventListener("click", () =>
+      this.forfeit()
     );
+    shareBtn.addEventListener("click", () => this.share());
+    document
+      .querySelectorAll("[data-mode]")
+      .forEach((btn) =>
+        btn.addEventListener("click", () => this.setMode(btn.dataset.mode))
+      );
     // Une partie Hard a pu commencer dans un autre onglet : on revérifie
     // au retour sur la page, pour ne pas laisser le mode normal ouvert à côté
     const recheck = () => {
@@ -100,14 +112,20 @@ export class Game {
     try {
       const state = await api.game(this.mode);
       if (state.lockedBy && state.lockedBy !== this.mode) {
-        showToast("Your Hard game is still running: finish it (or give up) before going back to Normal.", 4000);
+        showToast(
+          "Your Hard game is still running: finish it (or give up) before going back to Normal.",
+          4000
+        );
         this.mode = state.lockedBy;
         storage.set(KEYS.mode, this.mode);
         return this.load();
       }
       this.render(state);
       if (state.reset) {
-        showToast("The secret word has been changed by an admin! Your game has been reset.", 4000);
+        showToast(
+          "The secret word has been changed by an admin! Your game has been reset.",
+          4000
+        );
       }
     } catch (err) {
       showToast(err.message);
@@ -123,7 +141,9 @@ export class Game {
   rememberSynonym(name, typed) {
     const key = `${this.state.date}:${this.mode}`;
     const all = storage.getJson(SYNONYMS_USED_KEY, {});
-    const kept = Object.fromEntries(Object.entries(all).filter(([k]) => k.startsWith(this.state.date)));
+    const kept = Object.fromEntries(
+      Object.entries(all).filter(([k]) => k.startsWith(this.state.date))
+    );
     kept[key] = { ...(kept[key] || {}), [name]: typed };
     storage.setJson(SYNONYMS_USED_KEY, kept);
   }
@@ -144,7 +164,9 @@ export class Game {
     });
     nodes.hardRules.hidden = !hard;
 
-    nodes.tries.textContent = state.rules.maxTries ? `${state.tries}/${state.rules.maxTries}` : state.tries;
+    nodes.tries.textContent = state.rules.maxTries
+      ? `${state.tries}/${state.rules.maxTries}`
+      : state.tries;
     renderBoard(nodes.board, state, this.synonymsUsed());
     renderHints(nodes.hints, state.hints);
     updateHintButtons(state);
@@ -185,12 +207,23 @@ export class Game {
       forfeit: {
         className: "lose-message",
         title: "Nice try... Aba(n)ddon! ❌",
-        body: ["You didn't find today's Celestedle! The answer was ", answer, ` (time: ${time}, ${hints}).`]
+        body: [
+          "You didn't find today's Celestedle! The answer was ",
+          answer,
+          ` (time: ${time}, ${hints}).`
+        ]
       },
       lost: {
         className: "lose-message",
-        title: state.tries >= (state.rules.maxTries ?? Infinity) ? "Out of tries! ❌" : "Time's up! ⏳",
-        body: ["The answer was ", answer, `. Come back tomorrow for a new Hard word.`]
+        title:
+          state.tries >= (state.rules.maxTries ?? Infinity)
+            ? "Out of tries! ❌"
+            : "Time's up! ⏳",
+        body: [
+          "The answer was ",
+          answer,
+          `. Come back tomorrow for a new Hard word.`
+        ]
       }
     }[state.status];
 
@@ -200,7 +233,8 @@ export class Game {
         el("div", {}, content.body)
       ])
     );
-    if (MEMORIAL_NAMES.includes(state.solution?.nom?.toLowerCase())) this.nodes.message.append(memorialMessage());
+    if (MEMORIAL_NAMES.includes(state.solution?.nom?.toLowerCase()))
+      this.nodes.message.append(memorialMessage());
   }
 
   shake() {
