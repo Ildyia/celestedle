@@ -1,6 +1,6 @@
 {
   "name": "celestedle",
-  "version": "2.1.0",
+  "version": "2.3.0",
   "description": "Daily Wordle-like guessing game based on Celeste",
   "main": "src/server.js",
   "scripts": {
