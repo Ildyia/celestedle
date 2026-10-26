@@ -74,6 +74,8 @@ class ConnectionsGame {
     if (practice === this.practice || this.busy) return;
     this.practice = practice;
     this.resetLocal();
+    // Grille perso : il faut un profil (accès ouvert à tous sans profil)
+    if (practice) await player.ensure();
     await this.load();
   }
 
@@ -347,6 +349,16 @@ async function sendSuggestion(e) {
   }
 }
 
+// Badge de test masqué une fois Connections ouvert à tous
+async function showAccess() {
+  try {
+    const { access } = await api.connectionsAccess();
+    byId("cx-test-badge").hidden = access === "public";
+  } catch {
+    // Badge laissé tel quel si l'API ne répond pas
+  }
+}
+
 async function init() {
   bindModalClosing();
   byId("cx-rules-btn").addEventListener("click", () => openModal("cx-rules-modal"));
@@ -357,6 +369,7 @@ async function init() {
   byId("cx-suggest-form").addEventListener("submit", sendSuggestion);
   initOptions();
   await player.load();
+  showAccess();
   await new ConnectionsGame().load();
 }
 

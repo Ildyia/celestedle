@@ -530,3 +530,8 @@
   background: rgba(239, 68, 68, 0.2);
   color: #fca5a5;
 }
+
+.cx-access {
+  max-width: 420px;
+  margin: 8px 0 4px;
+}

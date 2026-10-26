@@ -20,7 +20,8 @@ const ACTION_LABELS = {
   edit_tag: "Modifie un tag Connections",
   delete_tag: "Supprime un tag Connections",
   regenerate_grid: "Régénère une grille Connections",
-  playtester: "Change l'accès playtester"
+  playtester: "Change l'accès playtester",
+  connections_access: "Change qui peut jouer à Connections"
 };
 
 // Onglet Équipe, réservé au propriétaire : administrateurs, quota, journal

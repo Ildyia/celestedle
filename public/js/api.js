@@ -59,9 +59,9 @@ export const api = {
   version: () => request("GET", "/version", { auth: false }),
 
   game: (mode) => request("GET", `/game?mode=${mode}`),
-  guess: (mode, guess) => request("POST", "/game/guess", { body: { mode, guess } }),
-  hint: (mode, type) => request("POST", "/game/hint", { body: { mode, type } }),
-  forfeit: (mode) => request("POST", "/game/forfeit", { body: { mode } }),
+  guess: (mode, guess, wordId) => request("POST", "/game/guess", { body: { mode, guess, wordId } }),
+  hint: (mode, type, wordId) => request("POST", "/game/hint", { body: { mode, type, wordId } }),
+  forfeit: (mode, wordId) => request("POST", "/game/forfeit", { body: { mode, wordId } }),
   modes: () => request("GET", "/modes", { auth: false }),
   communityStats: (mode) => request("GET", `/stats/today?mode=${mode}`, { auth: false }),
 
@@ -83,6 +83,7 @@ export const api = {
   connectionsGuess: (names, mode = "normal", practice = false, gridId) =>
     request("POST", "/connections/guess", { body: { names, mode, practice, gridId } }),
   connectionsNewPractice: (mode = "normal") => request("POST", "/connections/practice", { body: { mode } }),
+  connectionsAccess: () => request("GET", "/connections-access"),
   connectionsSuggestTag: (suggestion) => request("POST", "/connections/tag-suggestions", { body: suggestion }),
   connectionsBoard: (mode = "normal") => request("GET", `/connections/leaderboard?mode=${mode}`),
 

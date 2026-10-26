@@ -100,11 +100,18 @@ async function init() {
     player.load()
   ]);
   elements = loadedElements;
-  // Modes en test : lien visible des playtesters et de l'équipe admin
-  const showPlaytest = (profile) => {
-    byId("playtest-link").hidden = !(profile?.isPlaytester || ["owner", "administrator"].includes(profile?.role));
+  // Connections : lien visible de qui peut y jouer (réglage d'accès de l'admin)
+  const showPlaytest = async () => {
+    const link = byId("playtest-link");
+    try {
+      const { access, canPlay } = await api.connectionsAccess();
+      link.hidden = !canPlay;
+      link.textContent = access === "public" ? "✨ New: Connections" : "🧪 Playtest: Connections";
+    } catch {
+      link.hidden = true;
+    }
   };
-  showPlaytest(player.profile);
+  showPlaytest();
   player.onChange(showPlaytest);
   suggestions.setData({ elements });
   synonyms.setOfficial(aliases);

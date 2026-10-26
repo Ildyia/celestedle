@@ -214,7 +214,7 @@ export class Game {
     const { guess, synonymOf } = this.synonyms.resolve(rawInput);
     try {
       await player.ensure();
-      const { state, guess: result, rejected } = await api.guess(this.mode, guess);
+      const { state, guess: result, rejected } = await api.guess(this.mode, guess, this.state?.wordId);
       this.suggestions.hide();
       if (rejected) {
         // Hard : essai incohérent, refusé mais compté
@@ -228,7 +228,11 @@ export class Game {
       if (state.status !== "playing") this.finished(state);
     } catch (err) {
       this.shake();
-      if (err instanceof ApiError && err.status === 409 && (/over/.test(err.message) || err.details?.lockedBy)) {
+      if (
+        err instanceof ApiError &&
+        err.status === 409 &&
+        (/over/.test(err.message) || err.details?.lockedBy || err.details?.wordChanged)
+      ) {
         await this.load();
       }
       showToast(err.message, err.status === 422 ? 4000 : 2400);
@@ -241,9 +245,9 @@ export class Game {
     closeModal("hint-modal");
     try {
       await player.ensure();
-      this.render(await api.hint(this.mode, type));
+      this.render(await api.hint(this.mode, type, this.state?.wordId));
     } catch (err) {
-      if (err instanceof ApiError && err.details?.lockedBy) await this.load();
+      if (err instanceof ApiError && (err.details?.lockedBy || err.details?.wordChanged)) await this.load();
       showToast(err.message);
     }
   }
@@ -252,10 +256,11 @@ export class Game {
     closeModal("forfeit-modal");
     try {
       await player.ensure();
-      const state = await api.forfeit(this.mode);
+      const state = await api.forfeit(this.mode, this.state?.wordId);
       this.render(state);
       this.finished(state);
     } catch (err) {
+      if (err instanceof ApiError && err.details?.wordChanged) await this.load();
       showToast(err.message);
     }
   }

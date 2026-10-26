@@ -478,3 +478,31 @@ test("faux groupe : 4 cases qui partagent une catégorie sans être un groupe so
   }
   assert.fail("aucune grille Hard avec un faux groupe en 50 tirages");
 });
+
+test("accès à Connections : équipe seulement, playtest ou ouvert à tous", async () => {
+  const { token: playtesterToken, player } = await api.newPlayer();
+  await api.request("PUT", `/api/admin/players/${player.id}/playtester`, { token: await owner(), body: { enabled: true } });
+  const { token: playerToken } = await api.newPlayer();
+  const status = async (token) => (await api.request("GET", "/api/connections", { token })).status;
+  const setAccess = (access, token) => api.request("PUT", "/api/admin/connections/access", { token, body: { access } });
+
+  assert.equal((await api.request("GET", "/api/connections-access")).data.access, "playtest");
+  assert.equal(await status(playtesterToken), 200);
+  assert.equal(await status(playerToken), 403);
+
+  assert.equal((await setAccess("public", playtesterToken)).status, 403, "réglage réservé à l'équipe");
+  assert.equal((await setAccess("open", await owner())).status, 400);
+
+  assert.equal((await setAccess("public", await owner())).status, 200);
+  assert.equal(await status(playerToken), 200);
+  assert.equal(await status(undefined), 200, "ouvert à tous : jouable avant d'avoir un profil");
+  assert.equal((await api.request("POST", "/api/connections/guess", { body: { names: [] } })).status, 401);
+  assert.equal((await api.request("GET", "/api/connections-access", { token: playerToken })).data.canPlay, true);
+
+  assert.equal((await setAccess("staff", await owner())).status, 200);
+  assert.equal(await status(playtesterToken), 403, "playtest en pause");
+  assert.equal(await status(await owner()), 200);
+
+  assert.equal((await setAccess("playtest", await owner())).status, 200);
+  assert.equal(await status(playtesterToken), 200);
+});

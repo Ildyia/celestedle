@@ -17,7 +17,7 @@
           Find 4 groups of 4 Celeste elements that share something.
           <a href="./">Back to Celestedle</a>
         </p>
-        <p class="cx-badge">Playtest: not open to everyone yet</p>
+        <p id="cx-test-badge" class="cx-badge">Playtest: not open to everyone yet</p>
         <nav class="cx-actions" aria-label="Menu">
           <button type="button" id="cx-rules-btn" class="action-btn">
             <img src="assets/illustration/journal.png" alt="" />
@@ -111,56 +111,63 @@
         >
           &times;
         </button>
-        <div class="rules-content-static">
+        <div class="rules-content-static cx-rules">
           <h2>Rules of Connections</h2>
-          <p>
-            Sort the 16 Celeste elements into 4 groups of 4 that share
-            something. Select 4 tiles, then press Submit. Each element belongs
-            to exactly one group, and there is only one way to sort them all.
+          <p class="cx-rules-lead">
+            Sort 16 Celeste elements into 4 groups of 4 that share something.
+            Each element belongs to exactly one group, and there is only one
+            way to sort them all.
           </p>
 
+          <ol class="cx-rules-steps">
+            <li><span class="cx-rules-num">1</span><span>Select 4 tiles you think go together.</span></li>
+            <li><span class="cx-rules-num">2</span><span>Press <strong>Submit</strong>. A right group is revealed with its name.</span></li>
+            <li><span class="cx-rules-num">3</span><span>Find all 4 groups before your 4th mistake.</span></li>
+          </ol>
+
           <h4>What makes a group</h4>
-          <ul>
-            <li>The same type (for example 4 characters)</li>
-            <li>A shared colour, or the same shape</li>
-            <li>Found in the same chapter</li>
-            <li>
-              A fact only used in Connections, such as "gives liftboost": the
-              group's name is revealed once you find it
-            </li>
-          </ul>
-          <p>
+          <div class="cx-rules-kinds">
+            <div class="cx-rules-kind level-0"><strong>Type</strong><span>4 characters, 4 hazards…</span></div>
+            <div class="cx-rules-kind level-1"><strong>Colour or shape</strong><span>4 blue things, 4 round things…</span></div>
+            <div class="cx-rules-kind level-2"><strong>Chapter</strong><span>4 elements found in Golden Ridge…</span></div>
+            <div class="cx-rules-kind level-3"><strong>Tag</strong><span>A fact only used here, like "gives liftboost"</span></div>
+          </div>
+          <p class="small-subtext">
             Each group gets its own colour. The colour tells nothing about how
             hard the group is.
           </p>
 
-          <h4>Mistakes</h4>
-          <p>
-            You can make 4 mistakes: the 4th one ends the game and shows the
-            solution. "One away" means 3 of your 4 tiles belong together. In
-            Hard, 4 tiles can share something without being a group: the other
-            tiles can't all be sorted then. You are told so, and it still
-            counts as a mistake.
-            Submitting the same 4 tiles twice doesn't count as a mistake.
+          <h4>When it's not a group</h4>
+          <ul class="cx-rules-feedback">
+            <li><span class="cx-rules-toast">One away…</span>3 of your 4 tiles belong together.</li>
+            <li>
+              <span class="cx-rules-toast">These 4 do share something…</span>Real link, but with
+              it the other tiles can't all be sorted. Mostly in Hard.
+            </li>
+            <li><span class="cx-rules-toast">Not a group.</span>Nothing links these 4.</li>
+          </ul>
+          <p class="small-subtext">
+            Each of these costs a mistake. Submitting the same 4 tiles twice
+            doesn't.
           </p>
 
-          <h4>Normal and Hard</h4>
-          <p>
-            Normal: every group is clear-cut. No 4 tiles outside a group share
-            a type or a fact, so nothing looks like a group without being one.
-          </p>
-          <p>
-            Hard: decoy groups are allowed. 4 tiles can share something and
-            still not be a group. Mark tiles with colours to plan ahead: marks
-            stay in your browser and don't submit anything.
-          </p>
+          <h4>Normal or Hard</h4>
+          <div class="cx-rules-modes">
+            <div class="cx-rules-mode">
+              <strong>Normal</strong>
+              <p>Every group is clear-cut: nothing looks like a group without being one.</p>
+            </div>
+            <div class="cx-rules-mode hard">
+              <strong>Hard</strong>
+              <p>Decoy groups are allowed. Mark tiles with colours to plan ahead: marks stay in your browser.</p>
+            </div>
+          </div>
 
           <h4>Today's grid and practice</h4>
           <p>
-            Each mode has one grid a day, the same for everyone. Today's
-            ranking: fewest mistakes first, then fastest time. Practice grids
-            are yours only: draw as many as you like, they don't count in the
-            ranking.
+            Each mode has one grid a day, the same for everyone, ranked by
+            fewest mistakes, then fastest time. Practice grids are yours only:
+            draw as many as you like, they don't count in the ranking.
           </p>
         </div>
       </div>

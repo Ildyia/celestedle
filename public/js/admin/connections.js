@@ -17,6 +17,7 @@ export class ConnectionsTab {
 
     this.form = byId("cx-tag-form");
     byId("new-tag-btn").addEventListener("click", () => this.edit(null));
+    byId("cx-access").addEventListener("change", (e) => this.setAccess(e.target));
     byId("cx-tag-cancel-btn").addEventListener("click", () => this.closeForm());
     byId("cx-tag-search").addEventListener("input", () => this.renderElements());
     byId("cx-tag-delete-btn").addEventListener("click", () => this.remove());
@@ -29,6 +30,10 @@ export class ConnectionsTab {
   // Chaque bloc se charge à part : une erreur sur les grilles n'empêche pas
   // d'afficher les tags, et dit d'où elle vient
   async load() {
+    admin
+      .connectionsAccess()
+      .then(({ access }) => (byId("cx-access").value = access))
+      .catch((err) => this.notify(`Erreur en chargeant l'accès : ${err.message}`, true));
     const [tags, elements, puzzles, suggestions] = await Promise.allSettled([
       admin.connectionTags(),
       admin.elements(),
@@ -47,6 +52,18 @@ export class ConnectionsTab {
     if (suggestions.status === "fulfilled") this.renderSuggestions(suggestions.value);
     else errors.push(`suggestions : ${suggestions.reason.message}`);
     if (errors.length) this.notify(`Erreur en chargeant ${errors.join(" ; ")}`, true);
+  }
+
+  async setAccess(select) {
+    const labels = { staff: "réservé à l'équipe admin", playtest: "ouvert aux playtesters", public: "ouvert à tous" };
+    try {
+      const { access } = await admin.setConnectionsAccess(select.value);
+      this.notify(`Connections est maintenant ${labels[access]}.`);
+    } catch (err) {
+      this.notify(err.message, true);
+      const { access } = await admin.connectionsAccess();
+      select.value = access;
+    }
   }
 
   renderPuzzles(puzzles) {

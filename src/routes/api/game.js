@@ -16,21 +16,24 @@ router.get("/game", (req, res) => {
   });
 });
 
+// Mot affiché chez le joueur (facultatif pour les anciens clients)
+const wordIdOf = (req) => (typeof req.body?.wordId === "string" ? req.body.wordId : undefined);
+
 router.post("/game/guess", requirePlayer, (req, res) => {
   const { mode, guess } = req.body || {};
   if (typeof guess !== "string" || !guess.trim()) {
     return res.status(400).json({ error: "Missing guess." });
   }
-  res.json(games.guess(req.player, mode, guess));
+  res.json(games.guess(req.player, mode, guess, wordIdOf(req)));
 });
 
 router.post("/game/hint", requirePlayer, (req, res) => {
   const { mode, type } = req.body || {};
-  res.json(games.useHint(req.player, mode, type));
+  res.json(games.useHint(req.player, mode, type, wordIdOf(req)));
 });
 
 router.post("/game/forfeit", requirePlayer, (req, res) => {
-  res.json(games.forfeit(req.player, req.body?.mode));
+  res.json(games.forfeit(req.player, req.body?.mode, wordIdOf(req)));
 });
 
 // Règles actuelles de chaque mode (pour la fenêtre des règles)

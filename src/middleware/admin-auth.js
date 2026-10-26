@@ -10,10 +10,11 @@ function requireStaff(req, res, next) {
 }
 
 // Modes en test : playtesters et équipe admin
+// Ouvert à tous : même sans profil (il est créé au premier essai)
 function requirePlaytester(req, res, next) {
+  if (staff.canPlaytest(req.player)) return next();
   if (!req.player) return next(new HttpError(401, "Sign in with your player profile first."));
-  if (!staff.canPlaytest(req.player)) return next(new HttpError(403, "This mode is only open to playtesters for now."));
-  next();
+  next(new HttpError(403, "This mode is only open to playtesters for now."));
 }
 
 function requireOwner(req, res, next) {

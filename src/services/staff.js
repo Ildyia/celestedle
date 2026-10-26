@@ -18,9 +18,29 @@ function isStaff(player) {
   return STAFF_ROLES.includes(player?.role);
 }
 
-// Modes en test : ouverts aux playtesters et à l'équipe admin
+// Accès à Connections, réglé depuis l'admin : équipe seulement, playtest
+// (playtesters et équipe) ou ouvert à tous
+const CONNECTIONS_ACCESS_KEY = "connections_access";
+const CONNECTIONS_ACCESS = ["staff", "playtest", "public"];
+
+function connectionsAccess() {
+  const value = settingsRepo.get(CONNECTIONS_ACCESS_KEY, "playtest");
+  return CONNECTIONS_ACCESS.includes(value) ? value : "playtest";
+}
+
+function setConnectionsAccess(access) {
+  if (!CONNECTIONS_ACCESS.includes(access)) {
+    throw new HttpError(400, `access must be one of ${CONNECTIONS_ACCESS.join(", ")}.`);
+  }
+  settingsRepo.set(CONNECTIONS_ACCESS_KEY, access);
+  return access;
+}
+
+// Modes en test : sans profil, on ne joue qu'en accès ouvert à tous
 function canPlaytest(player) {
-  return isStaff(player) || player?.isPlaytester === true;
+  const access = connectionsAccess();
+  if (access === "public" || isStaff(player)) return true;
+  return access === "playtest" && player?.isPlaytester === true;
 }
 
 // Enregistré au journal par la route (modification comptée dans le quota)
@@ -120,6 +140,8 @@ module.exports = {
   DEFAULT_DAILY_LIMIT,
   isStaff,
   canPlaytest,
+  connectionsAccess,
+  setConnectionsAccess,
   setPlaytester,
   dailyLimit,
   setDailyLimit,

@@ -54,6 +54,7 @@ function buildState({ mode, secret, game, reset = false }) {
   return {
     mode: mode.id,
     date: secret.date,
+    wordId: `${secret.date}#${secret.version}`,
     status,
     reset,
     rules: {
@@ -107,15 +108,24 @@ function getState(player, modeId) {
   return { ...buildState({ mode, secret, game, reset }), lockedBy: lockingMode(player?.id, mode.id) };
 }
 
+// wordId : le mot affiché chez le joueur. Passé minuit ou mot changé par
+// l'admin, on le prévient au lieu d'appliquer son action au nouveau mot
+function ensureSameWord(secret, wordId) {
+  if (wordId !== undefined && wordId !== `${secret.date}#${secret.version}`) {
+    throw new HttpError(409, "A new word is out! Here is the new game.", { wordChanged: true });
+  }
+}
+
 function ensurePlaying(game) {
   if (game && game.status !== "playing") {
     throw new HttpError(409, "Today's game is already over for this mode.");
   }
 }
 
-const guess = db.transaction((player, modeId, input) => {
+const guess = db.transaction((player, modeId, input, wordId) => {
   const mode = getModeRules(modeId);
   const secret = daily.getTodaySecret(mode.id);
+  ensureSameWord(secret, wordId);
   const element = elementsRepo.findByNameOrAlias(input);
   if (!element || !element.isActive) {
     throw new HttpError(400, "Unknown element. Check the spelling.");
@@ -167,11 +177,12 @@ const guess = db.transaction((player, modeId, input) => {
   return { state, guess: { nom: element.nom, valeurs: displayValues(element), verdict } };
 });
 
-const useHint = db.transaction((player, modeId, type) => {
+const useHint = db.transaction((player, modeId, type, wordId) => {
   const mode = getModeRules(modeId);
   if (!HINT_TYPES.includes(type)) throw new HttpError(400, `Unknown hint type "${type}"`);
   ensureNotLocked(player.id, mode.id);
   const secret = daily.getTodaySecret(mode.id);
+  ensureSameWord(secret, wordId);
 
   let { game } = loadGame(player.id, mode, secret);
   ensurePlaying(game);
@@ -208,9 +219,10 @@ const useHint = db.transaction((player, modeId, type) => {
   return buildState({ mode, secret, game: gamesRepo.findById(game.id) });
 });
 
-const forfeit = db.transaction((player, modeId) => {
+const forfeit = db.transaction((player, modeId, wordId) => {
   const mode = getModeRules(modeId);
   const secret = daily.getTodaySecret(mode.id);
+  ensureSameWord(secret, wordId);
 
   let { game } = loadGame(player.id, mode, secret);
   ensurePlaying(game);

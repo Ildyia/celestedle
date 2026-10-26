@@ -2,12 +2,19 @@ const express = require("express");
 const connections = require("../../services/connections");
 const { requireStaff, requirePlaytester, limitedAction } = require("../../middleware/admin-auth");
 const { rateLimit } = require("../../middleware/rate-limit");
+const { requirePlayer } = require("../../middleware/player");
+const staff = require("../../services/staff");
 const { HttpError } = require("../../utils/http-error");
 const { todayParis, addDays, msUntilNextDay } = require("../../utils/dates");
 
 const router = express.Router();
 
-// Phase de test : le jeu est ouvert aux playtesters, la gestion à l'équipe admin
+// Qui peut jouer, pour afficher ou non le lien et le badge de test
+router.get("/connections-access", (req, res) => {
+  res.json({ access: staff.connectionsAccess(), canPlay: staff.canPlaytest(req.player) });
+});
+
+// Le jeu est ouvert selon le réglage d'accès, la gestion à l'équipe admin
 router.use("/connections", requirePlaytester);
 router.use("/admin/connections", requireStaff);
 
@@ -18,7 +25,7 @@ router.get("/connections", (req, res) => {
   res.json({ ...connections.getState(req.player, options), nextGridInMs: msUntilNextDay() });
 });
 
-router.post("/connections/guess", (req, res) => {
+router.post("/connections/guess", requirePlayer, (req, res) => {
   const { names, mode = "normal", practice, gridId } = req.body || {};
   const options = { mode, practice: practice === true, gridId: typeof gridId === "string" ? gridId : undefined };
   res.json(connections.guess(req.player, names, options));
@@ -27,16 +34,16 @@ router.post("/connections/guess", (req, res) => {
 // Playtest : nouvelle grille d'entraînement, autant que voulu (la génération
 // prend quelques millisecondes ; la limite évite seulement les abus)
 const practiceLimit = rateLimit({ name: "connections-practice", windowMs: 60 * 1000, max: 30 });
-router.post("/connections/practice", practiceLimit, (req, res) => {
+router.post("/connections/practice", requirePlayer, practiceLimit, (req, res) => {
   res.json(connections.newPracticePuzzle(req.player, req.body?.mode ?? "normal"));
 });
 
 router.get("/connections/leaderboard", (req, res) => {
-  res.json({ top: connections.leaderboard(req.player.id, req.query.mode ?? "normal") });
+  res.json({ top: connections.leaderboard(req.player?.id, req.query.mode ?? "normal") });
 });
 
 const suggestLimit = rateLimit({ name: "connections-suggest", windowMs: 10 * 60 * 1000, max: 5 });
-router.post("/connections/tag-suggestions", suggestLimit, (req, res) => {
+router.post("/connections/tag-suggestions", requirePlayer, suggestLimit, (req, res) => {
   res.status(201).json(connections.suggestTag(req.player, req.body || {}));
 });
 
@@ -48,6 +55,10 @@ router.get("/admin/connections/suggestions", (req, res) => {
 router.delete("/admin/connections/suggestions/:id", (req, res) => {
   connections.deleteSuggestion(Number(req.params.id));
   res.status(204).end();
+});
+
+router.put("/admin/connections/access", limitedAction("connections_access", (req) => req.body?.access), (req, res) => {
+  res.json({ access: staff.setConnectionsAccess(req.body?.access) });
 });
 
 // Tags : les éléments cochés l'ont, les autres non

@@ -646,3 +646,29 @@ test("sprites : image envoyée depuis l'admin, servie puis remplacée", async ()
 
   assert.equal(sprites.uploadFile("uploads/../../etc/passwd"), null);
 });
+
+test("mot changé pendant la partie : essai, indice et abandon refusés avec le nouveau mot à charger", async () => {
+  const headers = await ownerHeaders();
+  const { token } = await api.newPlayer();
+  const before = (await api.request("GET", "/api/game?mode=normal", { token })).data;
+  assert.ok(before.wordId);
+
+  const changed = await api.request("POST", "/api/admin/secret", { headers, body: { mode: "normal", action: "set", elementName: "kevin" } });
+  assert.equal(changed.status, 200, JSON.stringify(changed.data));
+
+  const wordId = before.wordId;
+  for (const [path, body] of [
+    ["/api/game/guess", { mode: "normal", guess: "theo", wordId }],
+    ["/api/game/hint", { mode: "normal", type: "opposite", wordId }],
+    ["/api/game/forfeit", { mode: "normal", wordId }]
+  ]) {
+    const res = await api.request("POST", path, { token, body });
+    assert.equal(res.status, 409, path);
+    assert.equal(res.data.details.wordChanged, true, path);
+  }
+  const after = (await api.request("GET", "/api/game?mode=normal", { token })).data;
+  assert.equal(after.status, "playing", "aucune action n'a touché le nouveau mot");
+  assert.equal(after.tries, 0);
+  const ok = await api.request("POST", "/api/game/guess", { token, body: { mode: "normal", guess: "theo", wordId: after.wordId } });
+  assert.equal(ok.status, 200, JSON.stringify(ok.data));
+});

@@ -174,9 +174,14 @@
             <a class="btn-secondary" href="connections.html" target="_blank" rel="noopener">Ouvrir la page de jeu</a>
             <button type="button" id="new-tag-btn" class="btn-primary">Nouveau tag</button>
           </div>
-          <p class="small-subtext">
-            Phase de test : seuls l'équipe admin et les playtesters peuvent jouer à Connections.
-          </p>
+          <div class="form-group cx-access">
+            <label for="cx-access">Qui peut jouer à Connections</label>
+            <select id="cx-access" class="bug-input">
+              <option value="staff">Équipe admin seulement (playtest en pause)</option>
+              <option value="playtest">Playtest : playtesters et équipe admin</option>
+              <option value="public">Ouvert à tous</option>
+            </select>
+          </div>
 
           <h3 class="admin-subtitle">Grilles des 7 prochains jours</h3>
           <p class="small-subtext">Normal : aucun faux groupe. Hard : faux groupes permis, seule l'unicité de la solution est garantie.</p>
