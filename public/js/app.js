@@ -113,6 +113,12 @@ async function init() {
   };
   showPlaytest();
   player.onChange(showPlaytest);
+  // Accès direct à l'admin pour l'équipe
+  const showAdmin = (profile) => {
+    byId("admin-link").hidden = !["owner", "administrator"].includes(profile?.role);
+  };
+  showAdmin(player.profile);
+  player.onChange(showAdmin);
   suggestions.setData({ elements });
   synonyms.setOfficial(aliases);
 
