@@ -80,8 +80,8 @@ export const api = {
 
   connections: (mode = "normal", practice = false) =>
     request("GET", `/connections?mode=${mode}${practice ? "&practice=1" : ""}`),
-  connectionsGuess: (names, mode = "normal", practice = false) =>
-    request("POST", "/connections/guess", { body: { names, mode, practice } }),
+  connectionsGuess: (names, mode = "normal", practice = false, gridId) =>
+    request("POST", "/connections/guess", { body: { names, mode, practice, gridId } }),
   connectionsNewPractice: (mode = "normal") => request("POST", "/connections/practice", { body: { mode } }),
   connectionsSuggestTag: (suggestion) => request("POST", "/connections/tag-suggestions", { body: suggestion }),
   connectionsBoard: (mode = "normal") => request("GET", `/connections/leaderboard?mode=${mode}`),

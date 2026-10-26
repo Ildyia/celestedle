@@ -256,7 +256,7 @@ class ConnectionsGame {
     this.busy = true;
     try {
       await player.ensure();
-      const { result, state } = await api.connectionsGuess([...this.selected], this.mode, this.practice);
+      const { result, state } = await api.connectionsGuess([...this.selected], this.mode, this.practice, this.state.gridId);
       if (result === "correct") this.selected.clear();
       // Plus long que les messages par défaut (2,4 s) : on a le temps de le lire
       if (result === "one_away") showToast("One away…", FEEDBACK_MS);
@@ -268,7 +268,13 @@ class ConnectionsGame {
       if (state.status !== "playing" && !this.practice) this.loadBoard();
     } catch (err) {
       this.busy = false;
-      showToast(err.message);
+      showToast(err.message, FEEDBACK_MS);
+      // Nouvelle grille (minuit passé, grille régénérée) : on l'affiche
+      if (err instanceof ApiError && err.details?.gridChanged) {
+        this.resetLocal();
+        await this.load();
+        return;
+      }
       this.renderGrid();
     }
   }

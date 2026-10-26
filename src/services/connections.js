@@ -128,12 +128,20 @@ function getState(player, { mode = "normal", practice = false } = {}) {
 }
 
 // Proposition de 4 cases : bonne, « à une case près » ou fausse
-const guess = db.transaction((player, names, { mode = "normal", practice = false } = {}) => {
+// gridId : la grille affichée chez le joueur. Si elle a changé entre-temps
+// (minuit passé, grille régénérée), on le dit au lieu de chercher ses cases
+// dans la nouvelle grille.
+const guess = db.transaction((player, names, { mode = "normal", practice = false, gridId } = {}) => {
   checkMode(mode);
   if (!Array.isArray(names) || names.length !== GROUP_SIZE) {
     throw new HttpError(400, `Select exactly ${GROUP_SIZE} tiles.`);
   }
   const puzzle = puzzleFor(player, mode, practice);
+  if (gridId !== undefined && gridId !== `${puzzle.date}#${puzzle.version}`) {
+    throw new HttpError(409, practice ? "This grid was replaced: here is the new one." : "A new grid is out: here it is!", {
+      gridChanged: true
+    });
+  }
   const loaded = loadGame(player.id, puzzle);
   let { game } = loaded;
   if (game && game.status !== "playing") {

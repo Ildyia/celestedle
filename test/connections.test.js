@@ -432,3 +432,23 @@ test("suggestions de tags : envoyées par un playtester, relues et retirées par
   const again = await api.request("DELETE", `/api/admin/connections/suggestions/${suggestion.id}`, { token: await owner() });
   assert.equal(again.status, 404);
 });
+
+test("grille remplacée pendant la partie : le joueur est prévenu au lieu d'une erreur de case", async () => {
+  const token = await newAdministrator();
+  const before = (await api.request("GET", "/api/connections?practice=1", { token })).data;
+  await api.request("POST", "/api/connections/practice", { token });
+  const names = before.tiles.slice(0, 4).map((t) => t.nom);
+  const stale = await api.request("POST", "/api/connections/guess", {
+    token,
+    body: { names, practice: true, gridId: before.gridId }
+  });
+  assert.equal(stale.status, 409);
+  assert.equal(stale.data.details.gridChanged, true);
+
+  const now = (await api.request("GET", "/api/connections?practice=1", { token })).data;
+  const ok = await api.request("POST", "/api/connections/guess", {
+    token,
+    body: { names: now.tiles.slice(0, 4).map((t) => t.nom), practice: true, gridId: now.gridId }
+  });
+  assert.equal(ok.status, 200, JSON.stringify(ok.data));
+});

@@ -19,8 +19,9 @@ router.get("/connections", (req, res) => {
 });
 
 router.post("/connections/guess", (req, res) => {
-  const { names, mode = "normal", practice } = req.body || {};
-  res.json(connections.guess(req.player, names, { mode, practice: practice === true }));
+  const { names, mode = "normal", practice, gridId } = req.body || {};
+  const options = { mode, practice: practice === true, gridId: typeof gridId === "string" ? gridId : undefined };
+  res.json(connections.guess(req.player, names, options));
 });
 
 // Playtest : nouvelle grille d'entraînement, autant que voulu (la génération
