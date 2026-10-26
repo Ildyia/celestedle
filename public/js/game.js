@@ -27,9 +27,9 @@ function memorialMessage() {
     el("h3", { text: "In memory" }),
     el("p", {
       text:
-        "This memorial dedicated to ours siblings who perished on the climb. " +
-        "Never forget all trans people who left us on the way. " +
-        "Every 20 november, we commemorate the Trans Day Of Remembrance. " +
+        "This memorial dedicated to our siblings who perished on the climb. " +
+        "Never forget all trans people who left us along the way. " +
+        "Every 20 November, we commemorate the Trans Day Of Remembrance. " +
         "Please, take a moment to think of our siblings. You can see the reports of this year on the first link."
     }),
     el("div", { className: "memorial-links" }, [
