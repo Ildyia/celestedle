@@ -11,13 +11,19 @@ const daily = require("./daily");
 
 function deadlineOf(game, mode) {
   if (!mode.timeLimitSeconds || !game) return null;
-  return new Date(Date.parse(game.started_at) + mode.timeLimitSeconds * 1000).toISOString();
+  return new Date(
+    Date.parse(game.started_at) + mode.timeLimitSeconds * 1000
+  ).toISOString();
 }
 
 // Mode Hard : une partie dont le temps est écoulé est perdue, à l'heure limite
 function expireIfNeeded(game, mode) {
   const deadline = deadlineOf(game, mode);
-  if (game?.status === "playing" && deadline && Date.now() > Date.parse(deadline)) {
+  if (
+    game?.status === "playing" &&
+    deadline &&
+    Date.now() > Date.parse(deadline)
+  ) {
     gamesRepo.finish(game.id, "lost", deadline);
     return gamesRepo.findById(game.id);
   }
@@ -90,14 +96,23 @@ function lockingMode(playerId, modeId) {
   if (!playerId || modeId === "hard") return null;
   const hard = getModeRules("hard");
   const secret = daily.getTodaySecret(hard.id);
-  const game = expireIfNeeded(gamesRepo.find(secret.date, hard.id, playerId), hard);
-  return game?.status === "playing" && game.secret_version === secret.version ? hard.id : null;
+  const game = expireIfNeeded(
+    gamesRepo.find(secret.date, hard.id, playerId),
+    hard
+  );
+  return game?.status === "playing" && game.secret_version === secret.version
+    ? hard.id
+    : null;
 }
 
 function ensureNotLocked(playerId, modeId) {
   const lockedBy = lockingMode(playerId, modeId);
   if (lockedBy) {
-    throw new HttpError(409, "Finish your Hard game first (or give up) to play Normal.", { lockedBy });
+    throw new HttpError(
+      409,
+      "Finish your Hard game first (or give up) to play Normal.",
+      { lockedBy }
+    );
   }
 }
 
@@ -105,14 +120,19 @@ function getState(player, modeId) {
   const mode = getModeRules(modeId);
   const secret = daily.getTodaySecret(mode.id);
   const { game, reset } = loadGame(player?.id, mode, secret);
-  return { ...buildState({ mode, secret, game, reset }), lockedBy: lockingMode(player?.id, mode.id) };
+  return {
+    ...buildState({ mode, secret, game, reset }),
+    lockedBy: lockingMode(player?.id, mode.id)
+  };
 }
 
 // wordId : le mot affiché chez le joueur. Passé minuit ou mot changé par
 // l'admin, on le prévient au lieu d'appliquer son action au nouveau mot
 function ensureSameWord(secret, wordId) {
   if (wordId !== undefined && wordId !== `${secret.date}#${secret.version}`) {
-    throw new HttpError(409, "A new word is out! Here is the new game.", { wordChanged: true });
+    throw new HttpError(409, "A new word is out! Here is the new game.", {
+      wordChanged: true
+    });
   }
 }
 
@@ -140,7 +160,9 @@ const guess = db.transaction((player, modeId, input, wordId) => {
   if (history.some((h) => h.element.id === element.id)) {
     throw new HttpError(409, "You already tried this one!");
   }
-  const problem = mode.consistentGuesses ? findInconsistency(element, history) : null;
+  const problem = mode.consistentGuesses
+    ? findInconsistency(element, history)
+    : null;
 
   const at = nowIso();
   if (!game) {
@@ -160,8 +182,17 @@ const guess = db.transaction((player, modeId, input, wordId) => {
   if (problem) {
     gamesRepo.addWastedTry(game.id);
     if (lastTry) gamesRepo.finish(game.id, "lost", at);
-    const state = buildState({ mode, secret, game: gamesRepo.findById(game.id), reset: loaded.reset });
-    return { state, guess: null, rejected: { message: problem.message, category: problem.category } };
+    const state = buildState({
+      mode,
+      secret,
+      game: gamesRepo.findById(game.id),
+      reset: loaded.reset
+    });
+    return {
+      state,
+      guess: null,
+      rejected: { message: problem.message, category: problem.category }
+    };
   }
 
   gamesRepo.addGuess(game.id, element.id, at);
@@ -173,13 +204,22 @@ const guess = db.transaction((player, modeId, input, wordId) => {
     gamesRepo.finish(game.id, "lost", at);
   }
 
-  const state = buildState({ mode, secret, game: gamesRepo.findById(game.id), reset: loaded.reset });
-  return { state, guess: { nom: element.nom, valeurs: displayValues(element), verdict } };
+  const state = buildState({
+    mode,
+    secret,
+    game: gamesRepo.findById(game.id),
+    reset: loaded.reset
+  });
+  return {
+    state,
+    guess: { nom: element.nom, valeurs: displayValues(element), verdict }
+  };
 });
 
-const useHint = db.transaction((player, modeId, type, wordId) => {
+const useHint = db.transaction((player, modeId, type, wordId, choice) => {
   const mode = getModeRules(modeId);
-  if (!HINT_TYPES.includes(type)) throw new HttpError(400, `Unknown hint type "${type}"`);
+  if (!HINT_TYPES.includes(type))
+    throw new HttpError(400, `Unknown hint type "${type}"`);
   ensureNotLocked(player.id, mode.id);
   const secret = daily.getTodaySecret(mode.id);
   ensureSameWord(secret, wordId);
@@ -192,7 +232,10 @@ const useHint = db.transaction((player, modeId, type, wordId) => {
     throw new HttpError(409, "You already used this hint today.");
   }
   if (used.length >= mode.maxHints) {
-    throw new HttpError(409, `No hints left (${mode.maxHints} max in this mode).`);
+    throw new HttpError(
+      409,
+      `No hints left (${mode.maxHints} max in this mode).`
+    );
   }
 
   // Un indice avant le premier essai démarre la partie (et le chrono)
@@ -212,7 +255,8 @@ const useHint = db.transaction((player, modeId, type, wordId) => {
     guesses: guessHistory(game, secret.element),
     previousHints: used,
     vocabulary: elementsRepo.vocabulary(),
-    random: (offset) => daily.seededRandom(mode.id, offset)
+    random: (offset) => daily.seededRandom(mode.id, offset),
+    choice
   });
   gamesRepo.addHint(game.id, type, payload, nowIso());
 
@@ -243,7 +287,8 @@ const forfeit = db.transaction((player, modeId, wordId) => {
 
 function expireOverdueGames() {
   for (const mode of MODE_IDS.map(getModeRules)) {
-    if (mode.timeLimitSeconds) gamesRepo.expireOverdue(mode.id, mode.timeLimitSeconds, nowIso());
+    if (mode.timeLimitSeconds)
+      gamesRepo.expireOverdue(mode.id, mode.timeLimitSeconds, nowIso());
   }
 }
 

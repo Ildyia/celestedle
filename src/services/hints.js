@@ -1,10 +1,15 @@
 const { HttpError } = require("../utils/http-error");
 const { CATEGORIES, toList } = require("./compare");
 
-const HINT_TYPES = ["opposite", "secret_info", "truth_and_lies"];
+const HINT_TYPES = ["opposite", "secret_info", "truth_and_lies", "info"];
 
 // Vocabulaire de chaque catégorie, sous les noms de elementsRepo.vocabulary()
-const VOCAB_KEYS = { type: "types", lieu: "locations", couleur: "colors", shape: "shapes" };
+const VOCAB_KEYS = {
+  type: "types",
+  lieu: "locations",
+  couleur: "colors",
+  shape: "shapes"
+};
 
 // Statements de « 1 Truth & 2 Lies » : forme et couleur d'abord, puis aussi
 // type et chapitres s'il ne reste plus rien à dire sur les premières
@@ -37,7 +42,8 @@ function knowledge(guesses, previousHints) {
     }
   }
   for (const hint of previousHints) {
-    if (hint.type === "secret_info" && hint.category) present[hint.category].add(hint.value);
+    if (hint.type === "secret_info" && hint.category)
+      present[hint.category].add(hint.value);
   }
   return { present, absent, complete };
 }
@@ -57,7 +63,10 @@ function opposite({ secret, elements, guesses, random }) {
   const guessed = new Set(guesses.map((g) => g.element.id));
   const scored = elements
     .filter((el) => el.id !== secret.id && !guessed.has(el.id))
-    .map((el) => ({ el, different: CATEGORIES.filter((c) => noOverlap(el[c], secret[c])) }));
+    .map((el) => ({
+      el,
+      different: CATEGORIES.filter((c) => noOverlap(el[c], secret[c]))
+    }));
   if (scored.length === 0) return { element: null, categories: [] };
 
   const max = Math.max(...scored.map((s) => s.different.length));
@@ -68,12 +77,23 @@ function opposite({ secret, elements, guesses, random }) {
 
 // Une valeur du mot secret que le joueur ne connaît pas encore
 function secretInfo({ secret, known, random }) {
-  const candidates = CATEGORIES.filter((c) => !known.complete.has(c)).flatMap((category) =>
-    toList(secret[category])
-      .filter((value) => !known.present[category].has(value))
-      .map((value) => ({ category, value, partial: toList(secret[category]).length > 1 }))
+  const candidates = CATEGORIES.filter((c) => !known.complete.has(c)).flatMap(
+    (category) =>
+      toList(secret[category])
+        .filter((value) => !known.present[category].has(value))
+        .map((value) => ({
+          category,
+          value,
+          partial: toList(secret[category]).length > 1
+        }))
   );
-  return pick(candidates, random, 2) ?? { category: null, value: null, partial: false };
+  return (
+    pick(candidates, random, 2) ?? {
+      category: null,
+      value: null,
+      partial: false
+    }
+  );
 }
 
 // Une vérité inconnue du joueur et deux mensonges qu'il ne peut pas déjà
@@ -93,7 +113,10 @@ function truthAndLies({ secret, vocabulary, known, random }) {
       .flatMap((category) => {
         const inSecret = toList(secret[category]);
         return (vocabulary[VOCAB_KEYS[category]] || [])
-          .filter((value) => !inSecret.includes(value) && !known.absent[category].has(value))
+          .filter(
+            (value) =>
+              !inSecret.includes(value) && !known.absent[category].has(value)
+          )
           .map((value) => ({ category, value }));
       });
 
@@ -109,7 +132,11 @@ function truthAndLies({ secret, vocabulary, known, random }) {
   const firstLie = pick(lies, random, 11);
   const others = lies.filter((l) => l !== firstLie);
   const otherCategory = others.filter((l) => l.category !== firstLie.category);
-  const secondLie = pick(otherCategory.length > 0 ? otherCategory : others, random, 13);
+  const secondLie = pick(
+    otherCategory.length > 0 ? otherCategory : others,
+    random,
+    13
+  );
 
   const statements = [truth, firstLie, secondLie];
   const order = random(6) % 3;
@@ -118,7 +145,33 @@ function truthAndLies({ secret, vocabulary, known, random }) {
   return { statements };
 }
 
-const BUILDERS = { opposite, secret_info: secretInfo, truth_and_lies: truthAndLies };
+function info({ elements, choice }) {
+  //choice is the word the player want info about
+  //vocabulary is the list of words ingame
+  //step 1: find the object in vocabulary
+  const element = elements.find(
+    (e) =>
+      e.nom.toLowerCase() ===
+      String(choice ?? "")
+        .trim()
+        .toLowerCase()
+  ); //on prend le mot choisi par le joueur et on le met en minuscule pour comparer
+  if (!element) throw new HttpError(401, `Unknown element "${choice}"`); //si l'élément n'existe pas, on renvoie une erreur
+  return {
+    element: element.nom,
+    type: element.type,
+    place: element.lieu,
+    color: element.couleur,
+    shape: element.shape
+  };
+}
+
+const BUILDERS = {
+  opposite,
+  secret_info: secretInfo,
+  truth_and_lies: truthAndLies,
+  info: info
+};
 
 // Construit le contenu d'un indice. Le texte est mis en forme par le client.
 // context : { secret, elements, guesses: [{ element, verdict }],

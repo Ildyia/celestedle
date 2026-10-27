@@ -1,5 +1,10 @@
 const { HttpError } = require("../utils/http-error");
-const { CATEGORIES, CATEGORY_LABELS, compareValues, toList } = require("./compare");
+const {
+  CATEGORIES,
+  CATEGORY_LABELS,
+  compareValues,
+  toList
+} = require("./compare");
 
 // Règles par défaut de chaque mode. Les champs listés dans ADJUSTABLE se
 // règlent dans l'admin (voir mode-rules.js) ; null = pas de limite.
@@ -11,7 +16,8 @@ const MODES = {
     timeLimitSeconds: null,
     suggestionMinChars: 3,
     showAllList: true,
-    consistentGuesses: false
+    consistentGuesses: false,
+    bonusHint: []
   },
   hard: {
     id: "hard",
@@ -20,7 +26,8 @@ const MODES = {
     timeLimitSeconds: 5 * 60,
     suggestionMinChars: 4,
     showAllList: false,
-    consistentGuesses: true
+    consistentGuesses: true,
+    bonusHint: ["info"]
   }
 };
 
@@ -39,13 +46,21 @@ const ADJUSTABLE = {
 // Vérifie une valeur de réglage et la renvoie normalisée (null = illimité)
 function validateRule(modeId, field, value) {
   const spec = ADJUSTABLE[modeId]?.[field];
-  if (!spec) throw new HttpError(400, `"${field}" can't be changed for mode "${modeId}"`);
+  if (!spec)
+    throw new HttpError(
+      400,
+      `"${field}" can't be changed for mode "${modeId}"`
+    );
   const number = Number(value);
-  if (!Number.isInteger(number)) throw new HttpError(400, `${field} must be an integer`);
+  if (!Number.isInteger(number))
+    throw new HttpError(400, `${field} must be an integer`);
   if (spec.unlimited && number === 0) return null;
   if (number < spec.min || number > spec.max) {
     const zero = spec.unlimited ? " (0 = no limit)" : "";
-    throw new HttpError(400, `${field} must be between ${spec.min} and ${spec.max}${zero}`);
+    throw new HttpError(
+      400,
+      `${field} must be between ${spec.min} and ${spec.max}${zero}`
+    );
   }
   return number;
 }
@@ -63,7 +78,8 @@ function findInconsistency(candidate, previous) {
   for (const { element, verdict } of previous) {
     for (const category of CATEGORIES) {
       const expected = verdict[category];
-      if (compareValues(element[category], candidate[category]) === expected) continue;
+      if (compareValues(element[category], candidate[category]) === expected)
+        continue;
 
       const label = CATEGORY_LABELS[category];
       const values = toList(element[category]).join(", ");
@@ -81,4 +97,11 @@ function findInconsistency(candidate, previous) {
   return null;
 }
 
-module.exports = { MODES, MODE_IDS, ADJUSTABLE, getMode, validateRule, findInconsistency };
+module.exports = {
+  MODES,
+  MODE_IDS,
+  ADJUSTABLE,
+  getMode,
+  validateRule,
+  findInconsistency
+};
