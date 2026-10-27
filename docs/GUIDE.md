@@ -133,6 +133,15 @@ git checkout main && git pull && git merge beta && git push         # 4. puis la
 
 Le numéro de version se trouve dans `package.json` et s'affiche sur le site.
 
+### La beta, copie de la prod
+
+Au démarrage, la beta (`src/services/beta-sync.js`) :
+
+- recrée le profil propriétaire dont le code de récupération est `PERMANENT_OWNER_TOKEN`. On s'y connecte en collant ce code dans « Recovery code », puis « Use this code », depuis le profil ;
+- copie depuis `SYNC_SOURCE_URL` les éléments modifiés dans l'admin et tous les tags Connections. La prod ne les partage qu'avec le bon `SYNC_TOKEN`.
+
+> **Attention :** la beta devient une copie de la prod. Un tag créé seulement sur la beta disparaît au prochain démarrage.
+
 ## 7. Commandes du quotidien
 
 Le projet demande **Node.js 22 ou plus**. Avec une version plus ancienne, `npm test` ne trouve pas les fichiers de test. Avec [nvm](https://github.com/nvm-sh/nvm) : `nvm install 22 && nvm use 22`, puis `npm rebuild`.

@@ -37,6 +37,10 @@ Useful environment variables (`.env`):
 | `ADMIN_PASSWORD` or `ADMIN_PASSWORD_HASH` | Used once to make a player profile the site owner (in clear or as a bcrypt hash) |
 | `DISCORD_BOT_TOKEN` | Enables the Discord bot for bug reports |
 | `CORS_ORIGINS` | Extra allowed origins, comma separated |
+| `SYNC_TOKEN` | Shared secret: on prod, lets the beta read `/api/sync/export`; on the beta, sent with that request |
+| `SYNC_SOURCE_URL` | Beta only: prod URL to copy admin-edited elements and Connections tags from at startup |
+| `PERMANENT_OWNER_TOKEN` | Beta only: recovery code of a profile recreated as owner at startup (16+ characters) |
+| `PERMANENT_OWNER_NAME` | Name of that profile (default `Amélia`) |
 
 Elements live in `db.json` (attributes), `public/assets/entities/mapping.json` (sprites) and `aliases.json` (official synonyms). They are copied into the database at startup, except elements edited from the admin page.
 
