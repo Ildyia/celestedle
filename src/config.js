@@ -18,12 +18,6 @@ module.exports = {
   // sur Vercel (voir middleware/cors.js)
   corsOrigins: list(process.env.CORS_ORIGINS),
 
-  // Bêta : la prod partage ses éléments et ses tags avec SYNC_TOKEN, la bêta
-  // les récupère au démarrage depuis SYNC_SOURCE_URL (voir services/beta-sync.js)
-  sync: {
-    token: process.env.SYNC_TOKEN || "",
-    sourceUrl: process.env.SYNC_SOURCE_URL || ""
-  },
   // Bêta : profil propriétaire recréé à chaque démarrage, connecté avec ce
   // code de récupération
   permanentOwner: {

@@ -31,7 +31,6 @@ jobs:
           echo "DISCORD_BOT_TOKEN=${{ secrets.DISCORD_BOT_TOKEN }}" >> .env
           echo "RANDOM_SEED=${{ secrets.RANDOM_SEED }}" >> .env
           echo "JWT_SECRET=${{secrets.JWT_SECRET}}">>.env
-          echo "SYNC_TOKEN=${{ secrets.SYNC_TOKEN }}" >> .env
 
       # Copie les reports et stats du conteneur en place avant de le recréer.
       # Les anciens chemins (/api/src, /api) sont lus d'abord pour que

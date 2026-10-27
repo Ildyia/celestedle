@@ -13,7 +13,6 @@ router.use(require("./leaderboard"));
 router.use(require("./reports"));
 router.use(require("./connections"));
 router.use(require("./admin"));
-router.use(require("./sync"));
 router.use(notFound);
 
 module.exports = router;

@@ -2,7 +2,7 @@ const config = require("./config");
 const { createApp } = require("./app");
 const { startBot } = require("./discord/bot");
 const daily = require("./services/daily");
-const betaSync = require("./services/beta-sync");
+const { ensurePermanentOwner } = require("./services/permanent-owner");
 
 process.on("unhandledRejection", (err) => {
   console.error("[ERROR] Promesse rejetée non gérée :", err);
@@ -16,7 +16,12 @@ console.log(
     `Hard : ${daily.getTodaySecret("hard").element.nom}`
 );
 
-betaSync.runAtStartup();
+// Une erreur ici ne doit pas empêcher le site de démarrer
+try {
+  ensurePermanentOwner();
+} catch (err) {
+  console.error("[BETA] Profil permanent :", err);
+}
 
 app.listen(config.port, () => {
   console.log(`Server successfully started running on port ${config.port}`);

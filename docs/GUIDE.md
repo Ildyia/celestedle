@@ -133,14 +133,9 @@ git checkout main && git pull && git merge beta && git push         # 4. puis la
 
 Le numéro de version se trouve dans `package.json` et s'affiche sur le site.
 
-### La beta, copie de la prod
+### Le compte propriétaire de la beta
 
-Au démarrage, la beta (`src/services/beta-sync.js`) :
-
-- recrée le profil propriétaire dont le code de récupération est `PERMANENT_OWNER_TOKEN`. On s'y connecte en collant ce code dans « Recovery code », puis « Use this code », depuis le profil ;
-- copie depuis `SYNC_SOURCE_URL` les éléments modifiés dans l'admin et tous les tags Connections. La prod ne les partage qu'avec le bon `SYNC_TOKEN`.
-
-> **Attention :** la beta devient une copie de la prod. Un tag créé seulement sur la beta disparaît au prochain démarrage.
+Le disque de la beta est effacé à chaque redémarrage, base comprise. Au démarrage, `src/services/permanent-owner.js` recrée le profil dont le code de récupération est la variable Render `PERMANENT_OWNER_TOKEN`, et lui donne le rôle de propriétaire. Pour s'y connecter : profil, « Recovery code », coller le code, « Use this code ».
 
 ## 7. Commandes du quotidien
 
