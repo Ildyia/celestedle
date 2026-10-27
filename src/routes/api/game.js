@@ -17,7 +17,8 @@ router.get("/game", (req, res) => {
 });
 
 // Mot affiché chez le joueur (facultatif pour les anciens clients)
-const wordIdOf = (req) => (typeof req.body?.wordId === "string" ? req.body.wordId : undefined);
+const wordIdOf = (req) =>
+  typeof req.body?.wordId === "string" ? req.body.wordId : undefined;
 
 router.post("/game/guess", requirePlayer, (req, res) => {
   const { mode, guess } = req.body || {};
@@ -28,8 +29,8 @@ router.post("/game/guess", requirePlayer, (req, res) => {
 });
 
 router.post("/game/hint", requirePlayer, (req, res) => {
-  const { mode, type } = req.body || {};
-  res.json(games.useHint(req.player, mode, type, wordIdOf(req)));
+  const { mode, type, choice } = req.body || {};
+  res.json(games.useHint(req.player, mode, type, wordIdOf(req), choice));
 });
 
 router.post("/game/forfeit", requirePlayer, (req, res) => {
@@ -46,7 +47,10 @@ router.get("/stats/today", (req, res) => {
   const mode = getMode(req.query.mode);
   // Parties Hard dont le temps est écoulé : comptées comme perdues dans le taux
   games.expireOverdueGames();
-  res.json({ mode: mode.id, ...statsRepo.communityStats(todayParis(), mode.id) });
+  res.json({
+    mode: mode.id,
+    ...statsRepo.communityStats(todayParis(), mode.id)
+  });
 });
 
 module.exports = router;
