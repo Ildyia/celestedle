@@ -60,7 +60,8 @@ export const api = {
 
   game: (mode) => request("GET", `/game?mode=${mode}`),
   guess: (mode, guess, wordId) => request("POST", "/game/guess", { body: { mode, guess, wordId } }),
-  hint: (mode, type, wordId) => request("POST", "/game/hint", { body: { mode, type, wordId } }),
+  // choice : élément choisi par le joueur, pour les indices qui en demandent un
+  hint: (mode, type, wordId, choice) => request("POST", "/game/hint", { body: { mode, type, wordId, choice } }),
   forfeit: (mode, wordId) => request("POST", "/game/forfeit", { body: { mode, wordId } }),
   modes: () => request("GET", "/modes", { auth: false }),
   communityStats: (mode) => request("GET", `/stats/today?mode=${mode}`, { auth: false }),

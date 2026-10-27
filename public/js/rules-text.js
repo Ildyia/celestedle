@@ -1,4 +1,5 @@
 import { formatDuration, plural } from "./format.js";
+import { HINT_NAMES } from "./hints.js";
 
 // Textes des règles d'un mode, à partir des réglages envoyés par le serveur
 
@@ -6,9 +7,16 @@ function minutesText(seconds) {
   return seconds % 60 === 0 ? plural(seconds / 60, "minute") : `${formatDuration(seconds)} min`;
 }
 
+// Les indices bonus ne comptent pas dans la limite : « 1 hint + Element Info »
+function hintsText(rules) {
+  const base = rules.maxHints === 0 ? "no hints" : plural(rules.maxHints, "hint");
+  const bonus = (rules.bonusHints ?? []).map((type) => HINT_NAMES[type]);
+  return bonus.length ? `${base} + ${bonus.join(" + ")}` : base;
+}
+
 function limits(rules) {
   return {
-    hints: rules.maxHints === 0 ? "no hints" : plural(rules.maxHints, "hint"),
+    hints: hintsText(rules),
     tries: !rules.maxTries ? "unlimited tries" : rules.maxTries === 1 ? "1 try" : `${rules.maxTries} tries`
   };
 }

@@ -69,7 +69,8 @@ function buildState({ mode, secret, game, reset = false }) {
       timeLimitSeconds: mode.timeLimitSeconds,
       suggestionMinChars: mode.suggestionMinChars,
       showAllList: mode.showAllList,
-      consistentGuesses: mode.consistentGuesses
+      consistentGuesses: mode.consistentGuesses,
+      bonusHints: mode.bonusHints
     },
     guesses: history.map(({ element, verdict }) => ({
       nom: element.nom,
@@ -231,7 +232,9 @@ const useHint = db.transaction((player, modeId, type, wordId, choice) => {
   if (used.some((h) => h.type === type)) {
     throw new HttpError(409, "You already used this hint today.");
   }
-  if (used.length >= mode.maxHints) {
+  const isBonus = mode.bonusHints.includes(type);
+  const counted = used.filter((h) => !mode.bonusHints.includes(h.type));
+  if (!isBonus && counted.length >= mode.maxHints) {
     throw new HttpError(
       409,
       `No hints left (${mode.maxHints} max in this mode).`

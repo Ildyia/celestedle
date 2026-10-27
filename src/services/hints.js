@@ -1,5 +1,5 @@
 const { HttpError } = require("../utils/http-error");
-const { CATEGORIES, toList } = require("./compare");
+const { CATEGORIES, toList, displayValues } = require("./compare");
 
 const HINT_TYPES = ["opposite", "secret_info", "truth_and_lies", "info"];
 
@@ -145,32 +145,21 @@ function truthAndLies({ secret, vocabulary, known, random }) {
   return { statements };
 }
 
+// L'élément choisi par le joueur et ses valeurs. Les valeurs sont rangées
+// sous `values` : une clé `type` écraserait le type de l'indice à la lecture
 function info({ elements, choice }) {
-  //choice is the word the player want info about
-  //vocabulary is the list of words ingame
-  //step 1: find the object in vocabulary
-  const element = elements.find(
-    (e) =>
-      e.nom.toLowerCase() ===
-      String(choice ?? "")
-        .trim()
-        .toLowerCase()
-  ); //on prend le mot choisi par le joueur et on le met en minuscule pour comparer
-  if (!element) throw new HttpError(401, `Unknown element "${choice}"`); //si l'élément n'existe pas, on renvoie une erreur
-  return {
-    element: element.nom,
-    type: element.type,
-    place: element.lieu,
-    color: element.couleur,
-    shape: element.shape
-  };
+  const name = String(choice ?? "").trim().toLowerCase();
+  if (!name) throw new HttpError(400, "Pick an element first.");
+  const element = elements.find((e) => e.nom.toLowerCase() === name);
+  if (!element) throw new HttpError(400, `Unknown element "${choice}"`);
+  return { element: element.nom, values: displayValues(element) };
 }
 
 const BUILDERS = {
   opposite,
   secret_info: secretInfo,
   truth_and_lies: truthAndLies,
-  info: info
+  info
 };
 
 // Construit le contenu d'un indice. Le texte est mis en forme par le client.

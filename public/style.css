@@ -2514,3 +2514,18 @@ body.hard-mode #game-status {
 .playtest-link:hover {
   background: rgba(245, 158, 11, 0.12);
 }
+
+/* Choix d'un élément pour un indice */
+.hint-pick-container {
+  margin: 12px 0 4px;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Dans la fenêtre : la liste agrandit la fenêtre au lieu d'être coupée */
+#hint-pick-suggestions {
+  position: static;
+  margin-top: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+}

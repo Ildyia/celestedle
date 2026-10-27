@@ -44,9 +44,11 @@ function memorialMessage() {
 
 // Partie du jour : l'état vient du serveur, la page ne fait que l'afficher
 export class Game {
-  constructor({ synonyms, suggestions, onFinished }) {
+  constructor({ synonyms, suggestions, hintPicker, onFinished }) {
     this.synonyms = synonyms;
     this.suggestions = suggestions;
+    this.hintPicker = hintPicker;
+    this.pickingHint = null; // indice en attente du choix d'un élément
     this.onFinished = onFinished;
     this.mode = storage.get(KEYS.mode) === "hard" ? "hard" : "normal";
     this.state = null;
@@ -80,8 +82,17 @@ export class Game {
     document
       .querySelectorAll("[data-hint-type]")
       .forEach((btn) =>
-        btn.addEventListener("click", () => this.useHint(btn.dataset.hintType))
+        btn.addEventListener("click", () =>
+          btn.dataset.hintChoose !== undefined
+            ? this.chooseForHint(btn.dataset.hintType)
+            : this.useHint(btn.dataset.hintType)
+        )
       );
+    byId("hint-pick-input").addEventListener("input", () => (byId("hint-pick-error").hidden = true));
+    byId("hint-pick-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      this.confirmHintChoice();
+    });
     giveupBtn.addEventListener("click", () => openModal("forfeit-modal"));
     byId("confirm-forfeit-btn")?.addEventListener("click", () =>
       this.forfeit()
@@ -275,11 +286,37 @@ export class Game {
     }
   }
 
-  async useHint(type) {
+  // Indice qui demande un élément : fenêtre de choix avec suggestions
+  chooseForHint(type) {
+    closeModal("hint-modal");
+    this.pickingHint = type;
+    const input = byId("hint-pick-input");
+    input.value = "";
+    byId("hint-pick-error").hidden = true;
+    openModal("hint-pick-modal");
+    input.focus();
+  }
+
+  async confirmHintChoice() {
+    const input = byId("hint-pick-input");
+    const error = byId("hint-pick-error");
+    // Synonymes acceptés, comme pour un essai
+    const { guess } = this.synonyms.resolve(input.value);
+    if (!this.hintPicker.elements.some((e) => e.nom.toLowerCase() === guess.trim().toLowerCase())) {
+      error.textContent = "Unknown element. Pick one from the list.";
+      error.hidden = false;
+      return;
+    }
+    closeModal("hint-pick-modal");
+    this.hintPicker.hide();
+    await this.useHint(this.pickingHint, guess.trim());
+  }
+
+  async useHint(type, choice) {
     closeModal("hint-modal");
     try {
       await player.ensure();
-      this.render(await api.hint(this.mode, type, this.state?.wordId));
+      this.render(await api.hint(this.mode, type, this.state?.wordId, choice));
     } catch (err) {
       if (err instanceof ApiError && (err.details?.lockedBy || err.details?.wordChanged)) await this.load();
       showToast(err.message);

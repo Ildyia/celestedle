@@ -80,3 +80,16 @@ test("truth_and_lies : vérité inconnue et mensonges pas encore éliminés", ()
 test("un type d'indice inconnu est refusé", () => {
   assert.throws(() => buildHint("cheat", {}), /Unknown hint type/);
 });
+
+test("info renvoie les valeurs de l'élément choisi", () => {
+  const hint = buildHint("info", { secret, elements, choice: "  Near " });
+  assert.deepEqual(hint, {
+    element: "near",
+    values: { type: "hazards", lieu: "core", couleur: "red", shape: "round" }
+  });
+});
+
+test("info refuse un élément absent ou inconnu", () => {
+  assert.throws(() => buildHint("info", { secret, elements }), /Pick an element/);
+  assert.throws(() => buildHint("info", { secret, elements, choice: "nope" }), /Unknown element/);
+});

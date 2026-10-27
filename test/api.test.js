@@ -672,3 +672,25 @@ test("mot changé pendant la partie : essai, indice et abandon refusés avec le 
   const ok = await api.request("POST", "/api/game/guess", { token, body: { mode: "normal", guess: "theo", wordId: after.wordId } });
   assert.equal(ok.status, 200, JSON.stringify(ok.data));
 });
+
+test("indice info : compte en normal, bonus en plus de l'indice en Hard", async () => {
+  const { token } = await api.newPlayer();
+  const hint = (mode, type, choice) => api.request("POST", "/api/game/hint", { token, body: { mode, type, choice } });
+
+  const normal = await hint("normal", "info", "red booster");
+  assert.equal(normal.status, 200);
+  assert.equal(normal.data.hints[0].type, "info");
+  assert.equal(normal.data.hints[0].element, "red booster");
+  assert.deepEqual(normal.data.rules.bonusHints, []);
+
+  const unknown = await hint("hard", "info", "nope");
+  assert.equal(unknown.status, 400);
+  assert.equal((await hint("hard", "opposite")).status, 200);
+  const bonus = await hint("hard", "info", "red booster");
+  assert.equal(bonus.status, 200);
+  assert.equal(bonus.data.hints.length, 2);
+  assert.equal((await hint("hard", "info", "red booster")).status, 409);
+  const third = await hint("hard", "secret_info");
+  assert.equal(third.status, 409);
+  assert.match(third.data.error, /No hints left/);
+});

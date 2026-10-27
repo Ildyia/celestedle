@@ -69,13 +69,24 @@ async function init() {
     box: byId("element-suggestions"),
     showAllButton: byId("show-all-btn")
   });
-  synonyms.onChange((all) => suggestions.setData({ synonyms: all }));
+  // Choix d'un élément pour un indice : toujours avec suggestions, même en Hard
+  const hintPicker = new Suggestions({
+    input: byId("hint-pick-input"),
+    box: byId("hint-pick-suggestions")
+  });
+  hintPicker.setRules({ enabled: true, minChars: 1, showAll: false });
+  synonyms.onChange((all) => {
+    suggestions.setData({ synonyms: all });
+    hintPicker.setData({ synonyms: all });
+  });
   suggestions.setData({ synonyms: synonyms.all() });
+  hintPicker.setData({ synonyms: synonyms.all() });
   bindSynonymsModal(synonyms, getElements);
 
   const game = new Game({
     synonyms,
     suggestions,
+    hintPicker,
     onFinished: (state) => refreshCommunityStats(state.mode)
   });
   new ReportsPanel({ getElements });
@@ -120,6 +131,7 @@ async function init() {
   showAdmin(player.profile);
   player.onChange(showAdmin);
   suggestions.setData({ elements });
+  hintPicker.setData({ elements });
   synonyms.setOfficial(aliases);
 
   api

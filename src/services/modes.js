@@ -17,7 +17,8 @@ const MODES = {
     suggestionMinChars: 3,
     showAllList: true,
     consistentGuesses: false,
-    bonusHint: []
+    // Indices qui ne comptent pas dans maxHints (utilisables une fois chacun)
+    bonusHints: []
   },
   hard: {
     id: "hard",
@@ -27,7 +28,7 @@ const MODES = {
     suggestionMinChars: 4,
     showAllList: false,
     consistentGuesses: true,
-    bonusHint: ["info"]
+    bonusHints: ["info"]
   }
 };
 

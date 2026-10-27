@@ -253,6 +253,15 @@
               >
                 1 Truth &amp; 2 Lies
               </button>
+              <!-- data-hint-choose : ouvre d'abord le choix d'un élément -->
+              <button
+                type="button"
+                class="btn-primary"
+                data-hint-type="info"
+                data-hint-choose
+              >
+                See an element's info
+              </button>
             </div>
           </div>
         </div>
@@ -503,10 +512,14 @@
               <strong>1 Truth &amp; 2 Lies</strong>: three statements, only one
               of them is true.
             </li>
+            <li>
+              <strong>Element Info</strong>: pick any element and see all its
+              values. In hard mode, it comes on top of your regular hint.
+            </li>
           </ul>
           <p>
-            In normal mode, each hint can be used once per day. No hints in hard
-            mode. A hint will always try to give you a useful clue (eg, "correct
+            Each hint can be used once per day, and hard mode allows fewer of
+            them. A hint will always try to give you a useful clue (eg, "correct
             attribute" will not give you something you already know).
           </p>
 
@@ -659,6 +672,39 @@
           <button type="submit" class="btn-primary">Add</button>
         </form>
         <p id="synonym-error-msg" class="form-error"></p>
+      </div>
+    </div>
+
+    <div id="hint-pick-modal" class="rules-modal hidden">
+      <div class="rules-content modal-narrow">
+        <button
+          type="button"
+          class="close-modal-btn"
+          data-close-modal="hint-pick-modal"
+          aria-label="Close"
+        >
+          &times;
+        </button>
+        <h2>Which element?</h2>
+        <p>Pick the element you want to know more about.</p>
+        <form id="hint-pick-form">
+          <div class="input-container hint-pick-container">
+            <input
+              type="text"
+              id="hint-pick-input"
+              class="bug-input"
+              autocomplete="off"
+              placeholder="Type an element..."
+              aria-label="Element name"
+            />
+            <div id="hint-pick-suggestions" class="suggestions-box"></div>
+          </div>
+          <p id="hint-pick-error" class="text-wrong small-subtext" hidden></p>
+          <div class="modal-actions centered">
+            <button type="button" class="btn-secondary" data-close-modal="hint-pick-modal">Cancel</button>
+            <button type="submit" class="btn-primary">Use the hint</button>
+          </div>
+        </form>
       </div>
     </div>
 
