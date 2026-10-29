@@ -44,6 +44,10 @@ router.post("/connections/practice", requirePlayer, practiceLimit, (req, res) =>
   res.json(connections.newPracticePuzzle(req.player, req.body?.mode ?? "normal"));
 });
 
+router.get("/connections/stats", (req, res) => {
+  res.json(connections.communityStats(req.query.mode ?? "normal"));
+});
+
 router.get("/connections/leaderboard", (req, res) => {
   res.json({ top: connections.leaderboard(req.player?.id, req.query.mode ?? "normal") });
 });

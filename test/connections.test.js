@@ -135,6 +135,9 @@ test("partie : erreur, « à une case près », doublon, groupe trouvé puis vic
   board = await api.request("GET", "/api/connections/leaderboard", { token });
   assert.equal(board.data.top[0].isMe, true);
   assert.equal(board.data.top[0].mistakes, 2);
+  const stats = await api.request("GET", "/api/connections/stats", { token });
+  assert.ok(stats.data.wins >= 1);
+  assert.ok(stats.data.winRate > 0);
 
   // Aussi dans le classement du jour de la page principale, et compté dans le
   // classement général (tous modes)

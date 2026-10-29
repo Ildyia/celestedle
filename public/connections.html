@@ -10,6 +10,27 @@
     <link rel="icon" href="assets/berrywinged.png" type="image/png" />
   </head>
   <body>
+    <div id="layout-wrapper">
+    <div id="left-sidebar-column">
+      <div class="sidebar-block">
+        <div class="sidebar-header">
+          <img src="./assets/illustration/backpack.png" alt="" class="sidebar-header-icon" />
+          <h3>
+            Community Stats
+            <span id="cx-stats-mode" class="small-subtext"></span>
+          </h3>
+        </div>
+        <div class="stats-list">
+          <p>Grids solved today: <span id="cx-stats-wins">0</span></p>
+          <p>Win rate: <span id="cx-stats-rate">-</span></p>
+          <p>Avg. mistakes: <span id="cx-stats-mistakes">-</span></p>
+          <p>Avg. hints: <span id="cx-stats-hints">-</span></p>
+          <p>Avg. time: <span id="cx-stats-time">-</span></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="main-content-column">
     <main id="cx-page">
       <header class="cx-header">
         <h1>Celestedle</h1>
@@ -24,13 +45,13 @@
           </button>
         </nav>
         <nav id="game-tabs" class="game-tabs" aria-label="Games">
-          <a class="game-tab game-tab-left" href="./">Celestedle</a>
+          <a class="game-tab game-tab-left" href="./"><img src="assets/illustration/start.png" alt="" /><span>Celestedle</span></a>
           <div id="mode-switch" role="group" aria-label="Game mode">
             <button type="button" data-cx-mode="normal" data-mode="normal" aria-pressed="true">Normal</button>
             <button type="button" data-cx-mode="hard" data-mode="hard" aria-pressed="false">Hard</button>
           </div>
           <a id="connections-tab" class="game-tab game-tab-right" href="connections.html" aria-current="page"
-            >Connections <span id="connections-tab-badge" class="game-tab-badge" hidden></span
+            ><img src="assets/illustration/pico8.png" alt="" /><span>Connections</span> <span id="connections-tab-badge" class="game-tab-badge" hidden></span
           ></a>
         </nav>
         <p class="cx-subtitle">Find 4 groups of 4 Celeste elements that share something.</p>
@@ -110,6 +131,8 @@
         </section>
       </section>
     </main>
+    </div>
+    </div>
 
     <div id="cx-rules-modal" class="rules-modal hidden">
       <div class="rules-content bug-modal-content">

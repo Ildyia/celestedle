@@ -136,6 +136,7 @@ class ConnectionsGame {
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
         byId("cx-locked").hidden = false;
         byId("mode-switch").hidden = true;
+        byId("left-sidebar-column").hidden = true;
         return;
       }
       showToast(err.message);
@@ -357,7 +358,23 @@ class ConnectionsGame {
     }
   }
 
+  // Chiffres du jour de la grille commune, dans la colonne de gauche
+  async loadStats() {
+    try {
+      const stats = await api.connectionsStats(this.mode);
+      byId("cx-stats-mode").textContent = this.mode === "hard" ? "(Hard)" : "";
+      byId("cx-stats-wins").textContent = stats.wins ?? 0;
+      byId("cx-stats-rate").textContent = stats.winRate === null ? "-" : `${stats.winRate}%`;
+      byId("cx-stats-mistakes").textContent = stats.avgMistakes ?? "-";
+      byId("cx-stats-hints").textContent = stats.avgHints ?? "-";
+      byId("cx-stats-time").textContent = stats.avgSeconds === null ? "-" : formatDuration(stats.avgSeconds);
+    } catch {
+      // chiffres secondaires
+    }
+  }
+
   async loadBoard() {
+    this.loadStats();
     try {
       const { top } = await api.connectionsBoard(this.mode);
       const body = byId("cx-board");

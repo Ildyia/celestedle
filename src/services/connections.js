@@ -262,6 +262,12 @@ const useHint = db.transaction((player, type, { mode = "normal", practice = fals
   return { state: buildState(puzzle, repo.findGameById(game.id), { mode, practice, reset: loaded.reset }) };
 });
 
+// Chiffres du jour de la grille commune (hors entraînement)
+function communityStats(mode = "normal") {
+  const { finished, ...stats } = repo.dayStats(dailyKey(checkMode(mode), todayParis()));
+  return { ...stats, winRate: finished ? Math.round((stats.wins / finished) * 100) : null };
+}
+
 function leaderboard(playerId, mode = "normal") {
   return repo.dailyBoard(dailyKey(checkMode(mode), todayParis())).map((row) => ({
     rank: row.rank,
@@ -340,6 +346,7 @@ module.exports = {
   guess,
   newPracticePuzzle,
   leaderboard,
+  communityStats,
   useHint,
   HINT_TYPES,
   MAX_HINTS,

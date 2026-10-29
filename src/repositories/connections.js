@@ -72,6 +72,26 @@ const stmts = {
             @elementIds, @groupIndex, @createdAt)
   `),
 
+  // Chiffres du jour de la communauté : moyennes sur les victoires, taux de
+  // victoire sur les parties terminées
+  dayStats: db.prepare(`
+    WITH finished AS (
+      SELECT g.status,
+             (SELECT COUNT(*) FROM connection_attempts a
+              WHERE a.game_id = g.id AND a.group_index IS NULL) AS mistakes,
+             (SELECT COUNT(*) FROM connection_hints h WHERE h.game_id = g.id) AS hints,
+             (julianday(g.finished_at) - julianday(g.started_at)) * 86400 AS seconds
+      FROM connection_games g
+      WHERE g.date = ? AND g.status <> 'playing'
+    )
+    SELECT COUNT(*) AS finished,
+           COALESCE(SUM(status = 'won'), 0) AS wins,
+           ROUND(AVG(CASE WHEN status = 'won' THEN mistakes END), 1) AS avgMistakes,
+           ROUND(AVG(CASE WHEN status = 'won' THEN hints END), 1) AS avgHints,
+           CAST(ROUND(AVG(CASE WHEN status = 'won' THEN seconds END)) AS INTEGER) AS avgSeconds
+    FROM finished
+  `),
+
   // Victoires du jour : moins d'erreurs et d'indices (un indice compte comme
   // une erreur), puis plus rapide
   dailyBoard: db.prepare(`
@@ -201,6 +221,10 @@ function finishGame(id, status, finishedAt) {
   return stmts.finishGame.run({ id, status, finishedAt }).changes === 1;
 }
 
+function dayStats(date) {
+  return stmts.dayStats.get(date);
+}
+
 function hints(gameId) {
   return stmts.hints.all(gameId).map((row) => ({ type: row.type, ...JSON.parse(row.payload) }));
 }
@@ -244,6 +268,7 @@ module.exports = {
   attempts,
   hints,
   addHint,
+  dayStats,
   addAttempt,
   dailyBoard
 };

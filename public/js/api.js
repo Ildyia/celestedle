@@ -88,6 +88,7 @@ export const api = {
   connectionsNewPractice: (mode = "normal") => request("POST", "/connections/practice", { body: { mode } }),
   connectionsAccess: () => request("GET", "/connections-access"),
   connectionsSuggestTag: (suggestion) => request("POST", "/connections/tag-suggestions", { body: suggestion }),
+  connectionsStats: (mode = "normal") => request("GET", `/connections/stats?mode=${mode}`),
   connectionsBoard: (mode = "normal") => request("GET", `/connections/leaderboard?mode=${mode}`),
 
   reports: () => request("GET", "/reports"),
