@@ -140,8 +140,8 @@ test("partie : erreur, « à une case près », doublon, groupe trouvé puis vic
   // classement général (tous modes)
   const daily = await api.request("GET", "/api/leaderboard?period=daily&mode=cx-normal", { token });
   assert.equal(daily.data.me.mistakes, 2);
-  const season = await api.request("GET", "/api/leaderboard?period=season", { token });
-  assert.ok(season.data.me.games >= 1);
+  const global = await api.request("GET", "/api/leaderboard?period=global", { token });
+  assert.ok(global.data.me.games >= 1);
 });
 
 test("partie : perdue à la 4e erreur", async () => {

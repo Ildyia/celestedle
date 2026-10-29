@@ -77,8 +77,7 @@ export const api = {
   myStats: (mode) => request("GET", `/players/me/stats?mode=${mode}`),
   profileOptions: () => request("GET", "/players/options", { auth: false }),
 
-  leaderboard: (period, mode, season = null) =>
-    request("GET", `/leaderboard?period=${period}&mode=${mode}${season ? `&season=${season}` : ""}`),
+  leaderboard: (period, mode) => request("GET", `/leaderboard?period=${period}&mode=${mode}`),
 
   connections: (mode = "normal", practice = false) =>
     request("GET", `/connections?mode=${mode}${practice ? "&practice=1" : ""}`),

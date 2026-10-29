@@ -8,7 +8,6 @@ const { expireOverdueGames } = require("../../services/games");
 const { allModeRules, updateModeRules } = require("../../services/mode-rules");
 const { MODE_IDS } = require("../../services/modes");
 const staff = require("../../services/staff");
-const seasons = require("../../services/seasons");
 const players = require("../../services/players");
 const sprites = require("../../services/sprites");
 const { requireStaff, requireOwner, limitedAction } = require("../../middleware/admin-auth");
@@ -214,19 +213,6 @@ function currentSettings() {
     adminDailyLimit: staff.dailyLimit()
   };
 }
-
-// Saisons du classement : la nouvelle commence aujourd'hui
-router.get("/admin/seasons", (req, res) => {
-  res.json(seasons.list());
-});
-
-router.post("/admin/seasons", limitedAction("start_season", (req) => req.body?.name), (req, res) => {
-  res.status(201).json(seasons.start(req.body?.name));
-});
-
-router.patch("/admin/seasons/:id", limitedAction("rename_season", (req) => req.body?.name), (req, res) => {
-  res.json(seasons.rename(Number(req.params.id), req.body?.name));
-});
 
 router.get("/admin/settings", (req, res) => {
   res.json(currentSettings());

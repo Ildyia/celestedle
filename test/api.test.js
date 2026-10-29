@@ -224,8 +224,8 @@ test("profil : modification, validation et masquage du classement", async () => 
   assert.equal(weekly.data.mode, null);
   assert.equal(weekly.data.me.games, 1);
   assert.ok(weekly.data.me.score > 0 && weekly.data.me.score <= 100);
-  const season = await api.request("GET", "/api/leaderboard?period=season", { token });
-  assert.equal(season.data.me.wins, 1);
+  const global = await api.request("GET", "/api/leaderboard?period=global", { token });
+  assert.equal(global.data.me.wins, 1);
 
   await api.request("PATCH", "/api/players/me", { token, body: { isHidden: true } });
   board = await api.request("GET", "/api/leaderboard?period=daily&mode=normal", { token });
@@ -697,46 +697,4 @@ test("indice info : compte en normal, bonus en plus de l'indice en Hard", async 
   const third = await hint("hard", "secret_info");
   assert.equal(third.status, 409);
   assert.match(third.data.error, /No hints left/);
-});
-
-test("saisons : lancées et renommées par l'équipe admin, la précédente reste consultable", async () => {
-  const seasonsRepo = require("../src/repositories/seasons");
-  const { todayParis, addDays } = require("../src/utils/dates");
-  const admin = { token: (await ownerHeaders())["X-Player-Token"] };
-  const player = await api.newPlayer();
-  assert.equal((await api.request("POST", "/api/admin/seasons", { token: player.token, body: { name: "Nope" } })).status, 403);
-
-  // Une saison commencée hier, avec une partie jouée aujourd'hui
-  const yesterday = addDays(todayParis(), -1);
-  seasonsRepo.insert("Old season", yesterday);
-  const secret = daily.getTodaySecret("normal").element.nom;
-  await api.request("PATCH", "/api/players/me", { token: player.token, body: { name: "Season Climber" } });
-  await api.request("POST", "/api/game/guess", { token: player.token, body: { mode: "normal", guess: wrongGuessFor(secret) } });
-  await api.request("POST", "/api/game/guess", { token: player.token, body: { mode: "normal", guess: secret } });
-
-  assert.equal((await api.request("POST", "/api/admin/seasons", { token: admin.token, body: { name: "x" } })).status, 400);
-  const started = await api.request("POST", "/api/admin/seasons", { token: admin.token, body: { name: "Season 2" } });
-  assert.equal(started.status, 201, JSON.stringify(started.data));
-  assert.equal(started.data.from, todayParis());
-  assert.equal(started.data.current, true);
-
-  // Relancée le même jour : la saison vide est remplacée
-  const again = await api.request("POST", "/api/admin/seasons", { token: admin.token, body: { name: "Spring" } });
-  assert.equal(again.status, 201);
-  const renamed = await api.request("PATCH", `/api/admin/seasons/${again.data.id}`, { token: admin.token, body: { name: "Summer" } });
-  assert.equal(renamed.data.name, "Summer");
-
-  const board = await api.request("GET", "/api/leaderboard?period=season", { token: player.token });
-  assert.equal(board.data.season.name, "Summer");
-  assert.equal(board.data.seasons[0].name, "Summer");
-  assert.equal(board.data.seasons[1].name, "Old season");
-  assert.equal(board.data.seasons[1].to, yesterday);
-  assert.ok(!board.data.seasons.some((s) => s.name === "Spring"));
-  assert.equal(board.data.me.games, 1, "la partie du jour compte dans la nouvelle saison");
-
-  const old = await api.request("GET", `/api/leaderboard?period=season&season=${board.data.seasons[1].id}`, { token: player.token });
-  assert.equal(old.data.season.name, "Old season");
-  assert.equal(old.data.me, null, "rien joué hier");
-  assert.equal((await api.request("GET", "/api/leaderboard?period=season&season=9999")).status, 404);
-  assert.equal((await api.request("GET", "/api/leaderboard?period=global")).status, 400);
 });

@@ -11,7 +11,7 @@ Each day, a secret element or entity from Celeste is picked for all players. You
 - **Detailed Attributes**: compare your guesses on **Type**, **Chapter**, **Colour** and **Shape**.
 - **Hints**: *Opposite*, *Secret Info* and *1 Truth & 2 Lies*.
 - **Profiles**: name, avatar and colour, personal stats and streaks, and a recovery code to play on several devices.
-- **Leaderboards**: a daily ranking per mode; weekly (points summed) and seasonal (smoothed average, seasons started from the admin) rankings combining every mode, each game scored 0–100 against that day's players.
+- **Leaderboards**: a daily ranking per mode; weekly (points summed) and all-time (smoothed average) rankings combining every mode, each game scored 0–100 against that day's players.
 - **Custom Synonyms**: create your own shortcuts for element names.
 - **Community Statistics**: compare your scores with the other players of the day.
 - **Bug Reporting**: report a mistake from the game, or vote for an existing report; reports are mirrored on Discord.

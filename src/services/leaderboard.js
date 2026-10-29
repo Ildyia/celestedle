@@ -5,9 +5,8 @@ const { getMode } = require("./modes");
 const ranking = require("./ranking");
 const connections = require("./connections");
 const staff = require("./staff");
-const seasons = require("./seasons");
 
-const PERIODS = ["daily", "weekly", "season"];
+const PERIODS = ["daily", "weekly", "global"];
 const LIMIT = 50;
 // Classements du jour : un par mode ; « cx-… » pour Connections
 const CONNECTIONS_BOARDS = { "cx-normal": "normal", "cx-hard": "hard" };
@@ -44,14 +43,14 @@ function dailyBoard(board, player) {
   };
 }
 
-// Semaine : somme des scores (l'assiduité compte) ; saison : moyenne lissée
+// Semaine : somme des scores (l'assiduité compte) ; global : moyenne lissée
 // (le niveau compte). Tous les modes ensemble.
-function combinedBoard(period, playerId, seasonId) {
+function combinedBoard(period, playerId) {
   const today = todayParis();
-  const season = period === "season" ? (seasonId ? seasons.find(seasonId) : seasons.current()) : null;
-  const range = season
-    ? { from: season.from, to: season.to ?? today }
-    : { from: weekStart(today), to: addDays(weekStart(today), 6) };
+  const range =
+    period === "weekly"
+      ? { from: weekStart(today), to: addDays(weekStart(today), 6) }
+      : { from: "0000-01-01", to: "9999-12-31" };
   const listed = new Map(statsRepo.listedPlayers().map((p) => [p.id, p]));
   const totals = ranking
     .playerTotals(ranking.scoreGames(statsRepo.rankedResults(range.from, range.to)))
@@ -73,21 +72,17 @@ function combinedBoard(period, playerId, seasonId) {
   return {
     period,
     mode: null,
-    range,
-    // Saison affichée et liste des saisons (en cours d'abord) pour choisir
-    season,
-    seasons: season ? seasons.list() : undefined,
+    range: period === "global" ? null : range,
     top: entries.slice(0, LIMIT),
     me: entries.find((e) => e.isMe) ?? null,
     oneShots: []
   };
 }
 
-// mode : celui du classement du jour ; seasonId : une saison passée (par
-// défaut celle en cours). Ignorés pour les autres périodes.
-function getLeaderboard(period, mode, player = null, seasonId = null) {
+// mode : celui du classement du jour (ignoré pour la semaine et le global)
+function getLeaderboard(period, mode, player = null) {
   if (!PERIODS.includes(period)) throw new HttpError(400, `Unknown period "${period}"`);
-  return period === "daily" ? dailyBoard(mode, player) : combinedBoard(period, player?.id ?? null, seasonId);
+  return period === "daily" ? dailyBoard(mode, player) : combinedBoard(period, player?.id ?? null);
 }
 
 module.exports = { PERIODS, getLeaderboard };
