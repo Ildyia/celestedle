@@ -31,6 +31,12 @@ router.post("/connections/guess", requirePlayer, (req, res) => {
   res.json(connections.guess(req.player, names, options));
 });
 
+router.post("/connections/hint", requirePlayer, (req, res) => {
+  const { type, mode = "normal", practice, gridId } = req.body || {};
+  const options = { mode, practice: practice === true, gridId: typeof gridId === "string" ? gridId : undefined };
+  res.json(connections.useHint(req.player, type, options));
+});
+
 // Playtest : nouvelle grille d'entraînement, autant que voulu (la génération
 // prend quelques millisecondes ; la limite évite seulement les abus)
 const practiceLimit = rateLimit({ name: "connections-practice", windowMs: 60 * 1000, max: 30 });

@@ -83,6 +83,8 @@ export const api = {
     request("GET", `/connections?mode=${mode}${practice ? "&practice=1" : ""}`),
   connectionsGuess: (names, mode = "normal", practice = false, gridId) =>
     request("POST", "/connections/guess", { body: { names, mode, practice, gridId } }),
+  connectionsHint: (type, mode = "normal", practice = false, gridId) =>
+    request("POST", "/connections/hint", { body: { type, mode, practice, gridId } }),
   connectionsNewPractice: (mode = "normal") => request("POST", "/connections/practice", { body: { mode } }),
   connectionsAccess: () => request("GET", "/connections-access"),
   connectionsSuggestTag: (suggestion) => request("POST", "/connections/tag-suggestions", { body: suggestion }),

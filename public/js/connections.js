@@ -18,10 +18,17 @@ const MODE_KEY = "celestedle_cx_mode";
 const MARKS_KEY = "celestedle_cx_marks";
 const MARK_COUNT = 4;
 const FEEDBACK_MS = 4000;
+const HINT_NAMES = { kinds: "Kinds", category: "Category", pair: "Pair" };
+// Un indice compte comme une erreur au classement : deuxième clic pour confirmer
+const CONFIRM_MS = 3000;
 const MODE_NOTES = {
   normal: "Normal: every group is clear-cut, no decoy groups.",
   hard: "Hard: decoy groups are allowed (4 tiles can look like a group and not be one). Mark tiles with colours to plan ahead."
 };
+
+function hintsText(count) {
+  return count ? ` and ${count} hint${count === 1 ? "" : "s"}` : "";
+}
 
 class ConnectionsGame {
   constructor() {
@@ -59,6 +66,10 @@ class ConnectionsGame {
       this.renderGrid();
     });
     byId("cx-submit-btn").addEventListener("click", () => this.submit());
+    this.confirming = null;
+    document.querySelectorAll("[data-cx-hint]").forEach((btn) =>
+      btn.addEventListener("click", () => this.askHint(btn.dataset.cxHint))
+    );
     byId("cx-share-btn").addEventListener("click", () => this.share());
   }
 
@@ -150,6 +161,7 @@ class ConnectionsGame {
     this.renderGroups(byId("cx-found"), state.found);
     this.renderGrid();
     this.renderMistakes();
+    this.renderHints();
     this.renderEnd();
   }
 
@@ -176,12 +188,15 @@ class ConnectionsGame {
     clear(grid);
     grid.hidden = !playing;
     grid.classList.toggle("painting", this.paint !== null);
+    const hinted = new Set(this.state.hints.filter((h) => h.type === "pair").flatMap((h) => h.tiles.map((t) => t.nom)));
     grid.append(
       ...this.order.map((name) =>
         el(
           "button",
           {
-            className: `cx-tile${this.marks[name] !== undefined ? ` mark-${this.marks[name]}` : ""}`,
+            className: `cx-tile${this.marks[name] !== undefined ? ` mark-${this.marks[name]}` : ""}${
+              hinted.has(name) ? " hinted" : ""
+            }`,
             attrs: { type: "button", "aria-pressed": String(this.selected.has(name)) },
             on: { click: () => (this.paint === null ? this.toggle(name) : this.mark(name)) }
           },
@@ -223,14 +238,72 @@ class ConnectionsGame {
     byId("cx-mistake-dots").parentElement.hidden = status !== "playing";
   }
 
+  renderHints() {
+    const { hints, maxHints, status } = this.state;
+    const playing = status === "playing";
+    const left = Math.max(0, maxHints - hints.length);
+    byId("cx-hints").hidden = !playing;
+    byId("cx-hints-left").textContent = left ? `Hints left: ${left}` : "No hints left";
+    document.querySelectorAll("[data-cx-hint]").forEach((btn) => {
+      const type = btn.dataset.cxHint;
+      const used = hints.some((h) => h.type === type);
+      btn.disabled = used || left === 0 || this.busy;
+      btn.classList.toggle("confirming", this.confirming === type);
+      btn.textContent = this.confirming === type ? "Sure? Counts as a mistake" : `💡 ${HINT_NAMES[type]}`;
+    });
+
+    const list = byId("cx-hint-list");
+    list.hidden = !playing || hints.length === 0;
+    list.replaceChildren(...hints.map((hint) => el("li", { text: `💡 ${this.hintText(hint)}` })));
+  }
+
+  hintText(hint) {
+    if (hint.type === "kinds") return `Kinds: ${hint.kinds.map((k) => KIND_LABELS[k] ?? k).join(" · ")}`;
+    if (hint.type === "category") return `Category: ${hint.label} (${KIND_LABELS[hint.kind] ?? hint.kind})`;
+    return `Pair: ${hint.tiles.map((t) => capitalize(t.nom)).join(" + ")} go together`;
+  }
+
+  // Premier clic : demande confirmation ; deuxième clic : utilise l'indice
+  async askHint(type) {
+    if (this.busy) return;
+    if (this.confirming !== type) {
+      this.confirming = type;
+      clearTimeout(this.confirmTimer);
+      this.confirmTimer = setTimeout(() => {
+        this.confirming = null;
+        this.renderHints();
+      }, CONFIRM_MS);
+      this.renderHints();
+      return;
+    }
+    clearTimeout(this.confirmTimer);
+    this.confirming = null;
+    this.busy = true;
+    try {
+      await player.ensure();
+      const { state } = await api.connectionsHint(type, this.mode, this.practice, this.state.gridId);
+      this.busy = false;
+      this.render(state);
+    } catch (err) {
+      this.busy = false;
+      showToast(err.message, FEEDBACK_MS);
+      if (err instanceof ApiError && err.details?.gridChanged) {
+        this.resetLocal();
+        await this.load();
+        return;
+      }
+      this.renderHints();
+    }
+  }
+
   renderEnd() {
-    const { status, solution, mistakes, elapsedSeconds } = this.state;
+    const { status, solution, mistakes, hints, elapsedSeconds } = this.state;
     byId("cx-end").hidden = status === "playing";
     if (status === "playing") return;
     byId("cx-end-title").textContent = status === "won" ? "Well done! 🍓" : "Out of mistakes! ❌";
     byId("cx-end-text").textContent =
       status === "won"
-        ? `All 4 groups found with ${mistakes} mistake${mistakes === 1 ? "" : "s"}, in ${formatDuration(elapsedSeconds)}.`
+        ? `All 4 groups found with ${mistakes} mistake${mistakes === 1 ? "" : "s"}${hintsText(hints.length)}, in ${formatDuration(elapsedSeconds)}.`
         : this.practice
           ? "Here were the groups. Draw a new grid to try again."
           : "Here were today's groups. A new grid comes at midnight (Paris time).";
@@ -288,7 +361,7 @@ class ConnectionsGame {
       const body = byId("cx-board");
       clear(body);
       if (top.length === 0) {
-        body.append(el("tr", {}, [el("td", { text: "Nobody has solved today's grid yet.", attrs: { colspan: 4 } })]));
+        body.append(el("tr", {}, [el("td", { text: "Nobody has solved today's grid yet.", attrs: { colspan: 5 } })]));
         return;
       }
       body.append(
@@ -302,6 +375,7 @@ class ConnectionsGame {
               ])
             ]),
             el("td", { className: "board-num", text: String(entry.mistakes) }),
+            el("td", { className: "board-num", text: String(entry.hints) }),
             el("td", { className: "board-num", text: formatDuration(entry.seconds) })
           ])
         )
@@ -312,12 +386,15 @@ class ConnectionsGame {
   }
 
   async share() {
-    const { status, attempts, mistakes, date } = this.state;
-    const outcome = status === "won" ? `solved with ${mistakes} mistake${mistakes === 1 ? "" : "s"}` : "not solved";
+    const { status, attempts, mistakes, hints, date } = this.state;
+    const outcome =
+      status === "won" ? `solved with ${mistakes} mistake${mistakes === 1 ? "" : "s"}${hintsText(hints.length)}` : "not solved";
     const grid = attempts.map((levels) => levels.map((level) => SHARE_EMOJI[level]).join("")).join("\n");
     const name = `Celestedle Connections${this.mode === "hard" ? " Hard" : ""}`;
     const title = this.state.practice ? `${name} (practice)` : `${name} ${date}`;
-    const text = `${title}: ${outcome}\n\n${grid}\n${SHARE_LEGEND}\n\n${SITE_URL}`;
+    const bulbs = hints.length ? `\n${"💡".repeat(hints.length)}` : "";
+    const legend = hints.length ? `${SHARE_LEGEND}, 💡 per hint` : SHARE_LEGEND;
+    const text = `${title}: ${outcome}\n\n${grid}${bulbs}\n${legend}\n\n${SITE_URL}`;
     try {
       await navigator.clipboard.writeText(text);
       byId("cx-share-btn").textContent = "Copied!";

@@ -50,6 +50,12 @@ const stmts = {
     VALUES (@date, @playerId, @version, @startedAt)
   `),
   clearAttempts: db.prepare("DELETE FROM connection_attempts WHERE game_id = ?"),
+  clearHints: db.prepare("DELETE FROM connection_hints WHERE game_id = ?"),
+  hints: db.prepare("SELECT type, payload FROM connection_hints WHERE game_id = ? ORDER BY created_at, rowid"),
+  addHint: db.prepare(`
+    INSERT INTO connection_hints (game_id, type, payload, created_at)
+    VALUES (@gameId, @type, @payload, @createdAt)
+  `),
   restartGame: db.prepare(`
     UPDATE connection_games SET puzzle_version = @version, status = 'playing',
       started_at = @startedAt, finished_at = NULL
@@ -66,18 +72,20 @@ const stmts = {
             @elementIds, @groupIndex, @createdAt)
   `),
 
-  // Victoires du jour : moins d'erreurs, puis plus rapide
+  // Victoires du jour : moins d'erreurs et d'indices (un indice compte comme
+  // une erreur), puis plus rapide
   dailyBoard: db.prepare(`
     WITH ranked AS (
       SELECT p.id, p.name, p.avatar, p.color,
              (SELECT COUNT(*) FROM connection_attempts a
               WHERE a.game_id = g.id AND a.group_index IS NULL) AS mistakes,
+             (SELECT COUNT(*) FROM connection_hints h WHERE h.game_id = g.id) AS hints,
              CAST(ROUND((julianday(g.finished_at) - julianday(g.started_at)) * 86400) AS INTEGER) AS seconds,
              g.finished_at
       FROM connection_games g JOIN players p ON p.id = g.player_id
       WHERE g.date = @date AND g.status = 'won' AND p.is_hidden = 0 AND p.is_anonymous = 0
     )
-    SELECT *, ROW_NUMBER() OVER (ORDER BY mistakes, seconds, finished_at) AS rank
+    SELECT *, ROW_NUMBER() OVER (ORDER BY mistakes + hints, seconds, finished_at) AS rank
     FROM ranked ORDER BY rank LIMIT 50
   `)
 };
@@ -184,12 +192,21 @@ function createGame({ date, playerId, version, startedAt }) {
 // La grille a été régénérée : la partie repart de zéro
 const restartGame = db.transaction((id, version, startedAt) => {
   stmts.clearAttempts.run(id);
+  stmts.clearHints.run(id);
   stmts.restartGame.run({ id, version, startedAt });
   return findGameById(id);
 });
 
 function finishGame(id, status, finishedAt) {
   return stmts.finishGame.run({ id, status, finishedAt }).changes === 1;
+}
+
+function hints(gameId) {
+  return stmts.hints.all(gameId).map((row) => ({ type: row.type, ...JSON.parse(row.payload) }));
+}
+
+function addHint(gameId, type, payload, createdAt) {
+  stmts.addHint.run({ gameId, type, payload: JSON.stringify(payload), createdAt });
 }
 
 function attempts(gameId) {
@@ -225,6 +242,8 @@ module.exports = {
   restartGame,
   finishGame,
   attempts,
+  hints,
+  addHint,
   addAttempt,
   dailyBoard
 };
