@@ -68,6 +68,9 @@ export function renderHints(container, hints) {
   }
 }
 
+// Nom court d'un indice bonus sur le bouton (« Info available »)
+const BONUS_LABELS = { info: "Info" };
+
 // Boutons de la fenêtre d'indices : un indice déjà utilisé est grisé, et
 // tous le sont quand la limite du mode est atteinte, sauf les indices bonus
 // du mode (rules.bonusHints) qui ne comptent pas dans la limite
@@ -75,7 +78,8 @@ export function updateHintButtons(state) {
   const used = state.hints.map((h) => h.type);
   const bonus = state.rules.bonusHints ?? [];
   const left = Math.max(0, state.rules.maxHints - used.filter((t) => !bonus.includes(t)).length);
-  const bonusLeft = bonus.filter((t) => !used.includes(t)).length;
+  const bonusAvailable = bonus.filter((t) => !used.includes(t));
+  const bonusLeft = bonusAvailable.length;
   document.querySelectorAll("[data-hint-type]").forEach((btn) => {
     const type = btn.dataset.hintType;
     btn.disabled = used.includes(type) || (left === 0 && !bonus.includes(type));
@@ -83,7 +87,11 @@ export function updateHintButtons(state) {
   const label = document.getElementById("hint-btn-text");
   if (label) {
     label.textContent =
-      left > 0 ? `Hints (${left} left)` : bonusLeft > 0 ? "Bonus hint left" : "No hints left";
+      left > 0
+        ? `Hints (${left} left)`
+        : bonusLeft > 0
+          ? `${bonusAvailable.map((t) => BONUS_LABELS[t] ?? HINT_NAMES[t]).join(" + ")} available`
+          : "No hints left";
   }
   const button = document.getElementById("hint-btn");
   if (button) button.disabled = (left === 0 && bonusLeft === 0) || state.status !== "playing";
