@@ -28,10 +28,6 @@
   color: var(--text-muted);
 }
 
-.cx-subtitle a {
-  color: var(--color-indigo);
-  margin-left: 6px;
-}
 
 .cx-actions {
   display: flex;
@@ -40,15 +36,6 @@
 
 .cx-actions .action-btn {
   min-width: 140px;
-}
-
-.cx-badge {
-  justify-self: center;
-  font-size: 0.8rem;
-  padding: 4px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--color-partial);
-  color: var(--color-partial);
 }
 
 .cx-panel {

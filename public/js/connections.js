@@ -3,7 +3,8 @@ import { el, byId, clear, bindModalClosing, openModal, closeModal } from "./dom.
 import { capitalize, formatDuration } from "./format.js";
 import { player } from "./player.js";
 import { initOptions } from "./options.js";
-import { storage } from "./storage.js";
+import { storage, KEYS } from "./storage.js";
+import { initGameTabs } from "./game-tabs.js";
 import { showToast } from "./toast.js";
 import { avatarUrl } from "./profile.js";
 
@@ -13,7 +14,6 @@ const SHARE_EMOJI = ["🟨", "🟩", "🟦", "🟪"];
 const KIND_LABELS = { type: "Type", colour: "Colour", shape: "Shape", chapter: "Chapter", tag: "Tag" };
 const SITE_URL = "https://celestedle.vercel.app/connections.html";
 const SHARE_LEGEND = "One row per guess, one colour per group";
-const MODE_KEY = "celestedle_cx_mode";
 // Marques de couleur du mode Hard : { [gridId]: { [nom]: 0..3 } }, dans ce navigateur seulement
 const MARKS_KEY = "celestedle_cx_marks";
 const MARK_COUNT = 4;
@@ -37,7 +37,8 @@ class ConnectionsGame {
     this.selected = new Set();
     this.busy = false;
     this.practice = false;
-    this.mode = storage.get(MODE_KEY) === "hard" ? "hard" : "normal";
+    // Même mode que Celestedle : on le garde en passant d'un jeu à l'autre
+    this.mode = storage.get(KEYS.mode) === "hard" ? "hard" : "normal";
     this.paint = null; // couleur de marque active (mode Hard), null = sélection
     this.marks = {};
 
@@ -76,7 +77,7 @@ class ConnectionsGame {
   async setMode(mode) {
     if (mode === this.mode || this.busy) return;
     this.mode = mode;
-    storage.set(MODE_KEY, mode);
+    storage.set(KEYS.mode, mode);
     this.resetLocal();
     await this.load();
   }
@@ -134,6 +135,7 @@ class ConnectionsGame {
     } catch (err) {
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
         byId("cx-locked").hidden = false;
+        byId("mode-switch").hidden = true;
         return;
       }
       showToast(err.message);
@@ -426,16 +428,6 @@ async function sendSuggestion(e) {
   }
 }
 
-// Badge de test masqué une fois Connections ouvert à tous
-async function showAccess() {
-  try {
-    const { access } = await api.connectionsAccess();
-    byId("cx-test-badge").hidden = access === "public";
-  } catch {
-    // Badge laissé tel quel si l'API ne répond pas
-  }
-}
-
 async function init() {
   bindModalClosing();
   byId("cx-rules-btn").addEventListener("click", () => openModal("cx-rules-modal"));
@@ -446,7 +438,7 @@ async function init() {
   byId("cx-suggest-form").addEventListener("submit", sendSuggestion);
   initOptions();
   await player.load();
-  showAccess();
+  initGameTabs("connections");
   await new ConnectionsGame().load();
 }
 

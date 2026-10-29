@@ -1912,6 +1912,106 @@ input[type="checkbox"]:not(.switch input):checked::after {
   margin: 4px auto 6px;
 }
 
+/* Onglets des jeux (Celestedle / Connections), le sélecteur de mode entre les
+   deux. Sans onglet Connections, il ne reste que le sélecteur. */
+.game-tabs {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.game-tab {
+  display: none;
+}
+
+.game-tabs.has-tabs {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  gap: 8px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.18);
+}
+
+.game-tabs.has-tabs .game-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 22px;
+  margin-bottom: -2px;
+  border: 2px solid transparent;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  text-decoration: none;
+}
+
+.game-tabs.has-tabs .game-tab-left {
+  justify-self: start;
+}
+
+.game-tabs.has-tabs .game-tab-right {
+  justify-self: end;
+}
+
+.game-tabs.has-tabs .game-tab:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Onglet du jeu affiché : relié à la ligne, comme un classeur */
+.game-tabs.has-tabs .game-tab[aria-current="page"] {
+  color: var(--text-main);
+  background: var(--bg-card);
+  border-color: rgba(255, 255, 255, 0.18);
+  border-bottom: 2px solid var(--bg-card);
+}
+
+.game-tabs.has-tabs #mode-switch {
+  margin: 0 0 8px;
+}
+
+.game-tab-badge {
+  font-size: 0.8rem;
+}
+
+/* « New » après l'ouverture, jusqu'à la première visite */
+.game-tab-badge.is-new {
+  font-size: 0.7rem;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--color-partial);
+  color: #111827;
+}
+
+/* Mobile : le sélecteur au-dessus, les deux onglets posés sur la ligne */
+@media (max-width: 600px) {
+  .game-tabs.has-tabs {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: "mode mode" "left right";
+    row-gap: 6px;
+  }
+
+  .game-tabs.has-tabs #mode-switch {
+    grid-area: mode;
+    justify-self: center;
+    margin: 0;
+  }
+
+  .game-tabs.has-tabs .game-tab-left {
+    grid-area: left;
+  }
+
+  .game-tabs.has-tabs .game-tab-right {
+    grid-area: right;
+  }
+
+  .game-tabs.has-tabs .game-tab {
+    padding: 8px 14px;
+    font-size: 1rem;
+  }
+}
+
 
 #mode-switch button,
 .segmented button {
@@ -1930,7 +2030,6 @@ input[type="checkbox"]:not(.switch input):checked::after {
   padding: 9px 28px;
 }
 
-#mode-switch button[aria-pressed="true"],
 /* Classement du jour : jusqu'à 4 modes, sur deux lignes si besoin */
 .segmented.board-modes {
   flex-wrap: wrap;
@@ -1938,6 +2037,7 @@ input[type="checkbox"]:not(.switch input):checked::after {
   max-width: 100%;
 }
 
+#mode-switch button[aria-pressed="true"],
 .segmented button[aria-pressed="true"] {
   background: var(--color-indigo);
   color: #ffffff;

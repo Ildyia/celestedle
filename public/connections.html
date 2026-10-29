@@ -12,12 +12,7 @@
   <body>
     <main id="cx-page">
       <header class="cx-header">
-        <h1>Connections</h1>
-        <p class="cx-subtitle">
-          Find 4 groups of 4 Celeste elements that share something.
-          <a href="./">Back to Celestedle</a>
-        </p>
-        <p id="cx-test-badge" class="cx-badge">Playtest: not open to everyone yet</p>
+        <h1>Celestedle</h1>
         <nav class="cx-actions" aria-label="Menu">
           <button type="button" id="cx-rules-btn" class="action-btn">
             <img src="assets/illustration/journal.png" alt="" />
@@ -28,6 +23,17 @@
             <span>Suggest a new tag</span>
           </button>
         </nav>
+        <nav id="game-tabs" class="game-tabs" aria-label="Games">
+          <a class="game-tab game-tab-left" href="./">Celestedle</a>
+          <div id="mode-switch" role="group" aria-label="Game mode">
+            <button type="button" data-cx-mode="normal" data-mode="normal" aria-pressed="true">Normal</button>
+            <button type="button" data-cx-mode="hard" data-mode="hard" aria-pressed="false">Hard</button>
+          </div>
+          <a id="connections-tab" class="game-tab game-tab-right" href="connections.html" aria-current="page"
+            >Connections <span id="connections-tab-badge" class="game-tab-badge" hidden></span
+          ></a>
+        </nav>
+        <p class="cx-subtitle">Find 4 groups of 4 Celeste elements that share something.</p>
       </header>
 
       <section id="cx-locked" class="cx-panel" hidden>
@@ -39,10 +45,6 @@
 
       <section id="cx-game" hidden>
         <div class="cx-modes">
-          <div class="segmented" role="group" aria-label="Mode">
-            <button type="button" data-cx-mode="normal" aria-pressed="true">Normal</button>
-            <button type="button" data-cx-mode="hard" aria-pressed="false">Hard</button>
-          </div>
           <div class="segmented" role="group" aria-label="Grid">
             <button type="button" data-cx-grid="daily" aria-pressed="true">Today's grid</button>
             <button type="button" data-cx-grid="practice" aria-pressed="false">Practice</button>

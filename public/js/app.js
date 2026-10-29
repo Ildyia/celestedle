@@ -11,6 +11,7 @@ import { Game } from "./game.js";
 import { ReportsPanel } from "./reports.js";
 import { ProfilePanel } from "./profile.js";
 import { LeaderboardPanel } from "./leaderboard.js";
+import { initGameTabs } from "./game-tabs.js";
 import { fillRulesText } from "./rules-text.js";
 
 let elements = [];
@@ -111,19 +112,9 @@ async function init() {
     player.load()
   ]);
   elements = loadedElements;
-  // Connections : lien visible de qui peut y jouer (réglage d'accès de l'admin)
-  const showPlaytest = async () => {
-    const link = byId("playtest-link");
-    try {
-      const { access, canPlay } = await api.connectionsAccess();
-      link.hidden = !canPlay;
-      link.textContent = access === "public" ? "✨ New: Connections" : "🧪 Playtest: Connections";
-    } catch {
-      link.hidden = true;
-    }
-  };
-  showPlaytest();
-  player.onChange(showPlaytest);
+  // Onglet Connections : visible de qui peut y jouer (réglage d'accès de l'admin)
+  initGameTabs("celestedle");
+  player.onChange(() => initGameTabs("celestedle"));
   // Accès direct à l'admin pour l'équipe
   const showAdmin = (profile) => {
     byId("admin-link").hidden = !["owner", "administrator"].includes(profile?.role);
