@@ -23,9 +23,14 @@ function isStaff(player) {
 const CONNECTIONS_ACCESS_KEY = "connections_access";
 const CONNECTIONS_ACCESS = ["staff", "playtest", "public"];
 
+// Sans réglage enregistré : CONNECTIONS_ACCESS, sinon playtest
+function defaultConnectionsAccess() {
+  return CONNECTIONS_ACCESS.includes(config.connectionsAccess) ? config.connectionsAccess : "playtest";
+}
+
 function connectionsAccess() {
-  const value = settingsRepo.get(CONNECTIONS_ACCESS_KEY, "playtest");
-  return CONNECTIONS_ACCESS.includes(value) ? value : "playtest";
+  const value = settingsRepo.get(CONNECTIONS_ACCESS_KEY, defaultConnectionsAccess());
+  return CONNECTIONS_ACCESS.includes(value) ? value : defaultConnectionsAccess();
 }
 
 function setConnectionsAccess(access) {

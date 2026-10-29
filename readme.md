@@ -39,6 +39,7 @@ Useful environment variables (`.env`):
 | `CORS_ORIGINS` | Extra allowed origins, comma separated |
 | `PERMANENT_OWNER_TOKEN` | Beta only: recovery code of a profile recreated as owner at startup (16+ characters) |
 | `PERMANENT_OWNER_NAME` | Name of that profile (default `Amélia`) |
+| `CONNECTIONS_ACCESS` | Who can play Connections until the admin changes it: `staff`, `playtest` (default) or `public`. Set it to `public` on the beta |
 
 Elements live in `db.json` (attributes), `public/assets/entities/mapping.json` (sprites) and `aliases.json` (official synonyms). They are copied into the database at startup, except elements edited from the admin page.
 

@@ -25,6 +25,10 @@ module.exports = {
     name: process.env.PERMANENT_OWNER_NAME || "Amélia"
   },
 
+  // Accès à Connections tant que l'admin ne l'a pas réglé : staff, playtest
+  // ou public (la bêta, dont la base repart de zéro, l'ouvre ainsi à tous)
+  connectionsAccess: process.env.CONNECTIONS_ACCESS || "",
+
   discord: {
     token: process.env.DISCORD_BOT_TOKEN || "",
     // Valeurs historiques, utilisées tant que /setup-reports n'a pas été lancé
