@@ -12,6 +12,7 @@ const COLUMNS = {
   // Connections : erreurs au lieu d'essais
   dailyGrid: [
     { label: "Mistakes", value: (e) => e.mistakes },
+    { label: "Hints", value: (e) => e.hints },
     { label: "Time", value: (e) => formatDuration(e.seconds) }
   ],
   weekly: [
@@ -38,7 +39,7 @@ const SCORE_TEXT =
 
 const NOTES = {
   daily: "Fewest tries first, then fastest time. First-try wins are pure luck: they're listed apart, without a rank (they still count for the week and all-time rankings).",
-  dailyGrid: "Fewest mistakes first, then fastest time.",
+  dailyGrid: "Fewest mistakes first (a hint counts as one), then fastest time.",
   weekly: `${SCORE_TEXT} Weekly points add up every game of the week.`,
   global: `${SCORE_TEXT} All-time score: your average game score, smoothed so that it stays close to the community average until you've played a few games.`
 };

@@ -196,6 +196,58 @@
   white-space: nowrap;
 }
 
+.cx-hints {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#cx-hints-left {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.cx-hints .action-btn {
+  height: 38px;
+  padding: 0 14px;
+}
+
+.cx-hints .action-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Deuxième clic attendu pour confirmer */
+.cx-hints .action-btn.confirming {
+  border-color: var(--color-partial);
+  color: var(--color-partial);
+}
+
+.cx-hint-list {
+  list-style: none;
+  margin: 0;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-radius: 10px;
+  background: rgba(15, 22, 38, 0.6);
+  border: 1px dashed var(--color-partial);
+  color: var(--text-main);
+}
+
+.cx-tile.hinted {
+  border-color: var(--color-partial);
+  box-shadow: 0 0 0 2px var(--color-partial) inset;
+}
+
+.cx-rules-hints {
+  margin: 0 0 6px;
+  padding-left: 18px;
+}
+
 .cx-controls {
   display: flex;
   justify-content: center;

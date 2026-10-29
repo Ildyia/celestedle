@@ -52,7 +52,9 @@ const stmts = {
            CASE WHEN g.date LIKE 'hard:%' THEN 'cx-hard' ELSE 'cx-normal' END,
            CASE WHEN g.date LIKE 'hard:%' THEN substr(g.date, 6) ELSE g.date END,
            g.status = 'won',
+           -- Un indice compte comme une erreur
            (SELECT COUNT(*) FROM connection_attempts a WHERE a.game_id = g.id AND a.group_index IS NULL)
+             + (SELECT COUNT(*) FROM connection_hints h WHERE h.game_id = g.id)
     FROM connection_games g
     WHERE g.status <> 'playing'
       AND (g.date BETWEEN @from AND @to OR g.date BETWEEN 'hard:' || @from AND 'hard:' || @to)

@@ -55,6 +55,7 @@
           count in the ranking and don't change today's grid.
         </p>
         <div id="cx-found" class="cx-groups"></div>
+        <ul id="cx-hint-list" class="cx-hint-list" hidden></ul>
         <div id="cx-grid" class="cx-grid" role="group" aria-label="Tiles"></div>
 
         <div id="cx-paint" class="cx-paint" hidden>
@@ -75,6 +76,13 @@
           <span id="cx-mistake-dots" aria-live="polite"></span>
         </div>
 
+        <div id="cx-hints" class="cx-hints">
+          <span id="cx-hints-left"></span>
+          <button type="button" class="action-btn" data-cx-hint="kinds" title="What sort of link each group is">💡 Kinds</button>
+          <button type="button" class="action-btn" data-cx-hint="category" title="The name of a group you haven't found">💡 Category</button>
+          <button type="button" class="action-btn" data-cx-hint="pair" title="Two tiles that go together">💡 Pair</button>
+        </div>
+
         <div id="cx-controls" class="cx-controls">
           <button type="button" id="cx-shuffle-btn" class="action-btn">Shuffle</button>
           <button type="button" id="cx-clear-btn" class="action-btn">Deselect all</button>
@@ -90,10 +98,10 @@
 
         <section id="cx-board-panel" class="cx-panel">
           <h2>Today's ranking</h2>
-          <p class="small-subtext">Fewest mistakes first, then fastest time.</p>
+          <p class="small-subtext">Fewest mistakes first (a hint counts as one), then fastest time.</p>
           <table class="leaderboard-table">
             <thead>
-              <tr><th>#</th><th>Player</th><th>Mistakes</th><th>Time</th></tr>
+              <tr><th>#</th><th>Player</th><th>Mistakes</th><th>Hints</th><th>Time</th></tr>
             </thead>
             <tbody id="cx-board"></tbody>
           </table>
@@ -151,11 +159,23 @@
             doesn't.
           </p>
 
+          <h4>Hints</h4>
+          <ul class="cx-rules-hints">
+            <li><strong>💡 Kinds</strong>: what sort of link each group is (type, colour, chapter, tag…).</li>
+            <li><strong>💡 Category</strong>: the name of a group you haven't found yet, the tag first if there is one.</li>
+            <li><strong>💡 Pair</strong>: two tiles that go together.</li>
+          </ul>
+          <p class="small-subtext">
+            Each hint can be used once per grid: all 3 in Normal, only 1 in
+            Hard. A hint doesn't make you lose, but it counts as a mistake in
+            the rankings.
+          </p>
+
           <h4>Normal or Hard</h4>
           <div class="cx-rules-modes">
             <div class="cx-rules-mode">
               <strong>Normal</strong>
-              <p>Every group is clear-cut: nothing looks like a group without being one.</p>
+              <p>Every group is clear-cut: nothing looks like a group without being one. At most one tag group per grid.</p>
             </div>
             <div class="cx-rules-mode hard">
               <strong>Hard</strong>

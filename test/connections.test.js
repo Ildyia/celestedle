@@ -389,7 +389,7 @@ test("générateur : un tag qui couvre presque tout le catalogue ne bloque plus 
   }
 });
 
-test("générateur : avec beaucoup de tags liés aux types, le mode normal reste sans faux groupe", () => {
+test("générateur : avec beaucoup de tags liés aux types, le mode normal reste sans faux groupe et a un tag au plus", () => {
   const elements = elementsRepo.listActive();
   const types = [...new Set(elements.map((e) => e.type))];
   const random = seededRandom(5);
@@ -405,8 +405,10 @@ test("générateur : avec beaucoup de tags liés aux types, le mode normal reste
   });
   const categories = buildCategories(elements, tags);
   for (let seed = 1; seed <= 10; seed++) {
-    const puzzle = generatePuzzle(elements, tags, seededRandom(seed));
+    // Comme le mode normal : un seul groupe tag au plus
+    const puzzle = generatePuzzle(elements, tags, seededRandom(seed), { maxTags: 1 });
     assert.equal(puzzle.rule, "strict", `grille ${seed}`);
+    assert.ok(puzzle.groups.filter((g) => g.kind === "tag").length <= 1);
     const chosen = puzzle.groups.map((g) => categories.find((c) => c.key === g.key));
     const ordered = puzzle.groups.flatMap((g) => g.elementIds);
     assert.equal(hasObviousDecoy(ordered, chosen, categories), false);
@@ -513,4 +515,53 @@ test("accès à Connections : équipe seulement, playtest ou ouvert à tous", as
 
   assert.equal((await setAccess("playtest", await owner())).status, 200);
   assert.equal(await status(playtesterToken), 200);
+});
+
+test("indices : chacun une fois, 3 en normal et 1 en Hard, comptés au classement", async () => {
+  const token = await newAdministrator();
+  await api.request("PATCH", "/api/players/me", { token, body: { name: "Hint Seeker" } });
+  const puzzle = connections.getPuzzle();
+  const hint = (type, mode = "normal") => api.request("POST", "/api/connections/hint", { token, body: { type, mode } });
+
+  let state = (await api.request("GET", "/api/connections", { token })).data;
+  assert.equal(state.maxHints, 3);
+  assert.deepEqual(state.hints, []);
+
+  assert.equal((await hint("everything")).status, 400);
+  const kinds = await hint("kinds");
+  assert.equal(kinds.status, 200, JSON.stringify(kinds.data));
+  assert.deepEqual(kinds.data.state.hints[0].kinds, puzzle.groups.map((g) => g.kind).sort());
+  assert.equal((await hint("kinds")).status, 409, "déjà utilisé");
+
+  const category = (await hint("category")).data.state.hints[1];
+  const named = puzzle.groups.find((g) => g.label === category.label);
+  assert.ok(named, "le nom d'un vrai groupe");
+  if (puzzle.groups.some((g) => g.kind === "tag")) assert.equal(category.kind, "tag", "le tag d'abord");
+
+  state = (await hint("pair")).data.state;
+  const ids = state.hints[2].tiles.map((t) => puzzle.tiles.find((id) => elementsRepo.findById(id).nom === t.nom));
+  assert.equal(ids.length, 2);
+  const group = puzzle.groups.find((g) => g.elementIds.includes(ids[0]));
+  assert.ok(group.elementIds.includes(ids[1]), "les 2 cases vont ensemble");
+  assert.notEqual(group.label, named.label, "un autre groupe que celui déjà nommé");
+  assert.equal(state.status, "playing", "un indice ne fait pas perdre");
+  assert.equal(state.mistakes, 0);
+
+  // Hard : un seul indice
+  assert.equal((await hint("pair", "hard")).status, 200);
+  const second = await hint("kinds", "hard");
+  assert.equal(second.status, 409);
+  assert.match(second.data.error, /No hints left/);
+
+  // Victoire : les indices comptent au classement du jour
+  for (const g of puzzle.groups) {
+    const names = g.elementIds.map((id) => elementsRepo.findById(id).nom);
+    state = (await api.request("POST", "/api/connections/guess", { token, body: { names } })).data.state;
+  }
+  assert.equal(state.status, "won");
+  const board = await api.request("GET", "/api/connections/leaderboard", { token });
+  const me = board.data.top.find((e) => e.isMe);
+  assert.equal(me.hints, 3);
+  assert.equal(me.mistakes, 0);
+  assert.equal((await hint("kinds")).status, 409, "partie finie");
 });

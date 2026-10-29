@@ -190,7 +190,8 @@ function hasObviousDecoy(tiles, chosen, categories, rule = "strict") {
 // Grille { groups: [{ key, kind, label, level, elementIds }], tiles: [16 ids] }.
 // level (0 à 3) donne seulement la couleur du groupe, tirée au hasard : elle
 // ne dit rien de sa difficulté.
-// Un groupe tag est imposé quand un tag complet le permet.
+// Un groupe tag est imposé quand un tag complet le permet ; maxTags limite
+// leur nombre (1 en normal : un tag ne se devine pas sans le connaître).
 // Mode normal : pas de faux groupe ; si aucune grille stricte n'est trouvée
 // (rare), on accepte un « faux groupe parfait » plutôt que de ne pas avoir de
 // grille. Mode Hard (allowDecoys) : faux groupes permis, seule l'unicité de
@@ -198,11 +199,11 @@ function hasObviousDecoy(tiles, chosen, categories, rule = "strict") {
 // En dernier recours, le mode normal accepte aussi une grille à faux groupes
 // (rule "none") : mieux vaut une grille imparfaite que pas de grille. La règle
 // utilisée est renvoyée (rule) pour que l'admin le voie.
-function generatePuzzle(elements, tags, random = Math.random, { allowDecoys = false } = {}) {
+function generatePuzzle(elements, tags, random = Math.random, { allowDecoys = false, maxTags = MAX_SAME_KIND } = {}) {
   const rules = allowDecoys ? ["none"] : ["strict", "relaxed", "none"];
   const stats = { incompatible: 0, decoy: 0, multiple: 0 };
   for (const rule of rules) {
-    const puzzle = tryGenerate(elements, tags, random, rule, stats);
+    const puzzle = tryGenerate(elements, tags, random, rule, stats, maxTags);
     if (puzzle) return { ...puzzle, rule };
   }
   throw noPuzzleError(elements, tags, stats);
@@ -221,7 +222,7 @@ function noPuzzleError(elements, tags, stats) {
   );
 }
 
-function tryGenerate(elements, tags, random, rule, stats) {
+function tryGenerate(elements, tags, random, rule, stats, maxTags) {
   // Un tag qui ne peut pas servir de groupe (hors limites ou incomplet) ne
   // compte pas non plus dans la vérification : un tag qui couvre presque tout
   // le catalogue rendait toutes les combinaisons de 4 cases valides, et plus
@@ -238,7 +239,8 @@ function tryGenerate(elements, tags, random, rule, stats) {
     const chosen = [...first];
     for (const category of shuffle(usable.filter((c) => !first.includes(c)), random)) {
       if (chosen.length === GROUP_COUNT) break;
-      if (chosen.filter((c) => c.kind === category.kind).length < MAX_SAME_KIND) chosen.push(category);
+      const limit = category.kind === "tag" ? maxTags : MAX_SAME_KIND;
+      if (chosen.filter((c) => c.kind === category.kind).length < limit) chosen.push(category);
     }
     if (chosen.length < GROUP_COUNT) break;
 

@@ -10,6 +10,15 @@ const { GROUP_SIZE, GROUP_COUNT, buildCategories, generatePuzzle, seededRandom }
 const MAX_MISTAKES = 4;
 const MODES = ["normal", "hard"];
 
+// Indices, du plus léger au plus fort, chacun une fois par partie. Ils ne font
+// pas perdre, mais comptent comme une erreur dans les classements.
+// kinds : la sorte de chaque groupe ; category : le nom d'un groupe pas encore
+// trouvé (le tag d'abord) ; pair : 2 cases qui vont ensemble
+const HINT_TYPES = ["kinds", "category", "pair"];
+const MAX_HINTS = { normal: 3, hard: 1 };
+// Normal : un seul groupe tag par grille (en Hard, la limite commune)
+const MAX_TAGS = { normal: 1, hard: undefined };
+
 // Normal : grilles sans faux groupe. Hard : faux groupes permis (seule
 // l'unicité de la solution compte), les cases peuvent être pré-coloriées.
 function checkMode(mode = "normal") {
@@ -35,7 +44,10 @@ function seedFor(key) {
 }
 
 function generate(mode, random) {
-  return generatePuzzle(elementsRepo.listActive(), repo.listTags(), random, { allowDecoys: mode === "hard" });
+  return generatePuzzle(elementsRepo.listActive(), repo.listTags(), random, {
+    allowDecoys: mode === "hard",
+    maxTags: MAX_TAGS[mode]
+  });
 }
 
 function getPuzzle(date = todayParis(), mode = "normal") {
@@ -88,11 +100,43 @@ function groupView(group, elementsById) {
   };
 }
 
+// Ce que montre un indice déjà utilisé
+function hintView(hint, puzzle, elementsById) {
+  if (hint.type === "kinds") return { type: "kinds", kinds: puzzle.groups.map((g) => g.kind).sort() };
+  if (hint.type === "category") {
+    const group = puzzle.groups[hint.groupIndex];
+    return { type: "category", label: group.label, kind: group.kind };
+  }
+  return { type: "pair", tiles: hint.elementIds.map((id) => tileOf(elementsById.get(id))) };
+}
+
+function pick(list, random) {
+  return list[Math.floor(random() * list.length)];
+}
+
+// Ce que révèle un indice, tiré au moment de l'utiliser parmi les groupes pas
+// encore trouvés
+function drawHint(type, puzzle, found, used, random) {
+  if (type === "kinds") return {};
+  const left = puzzle.groups.map((g, i) => i).filter((i) => !found.has(i));
+  if (type === "category") {
+    const tags = left.filter((i) => puzzle.groups[i].kind === "tag");
+    return { groupIndex: pick(tags.length ? tags : left, random) };
+  }
+  // Paire : de préférence dans un autre groupe que celui déjà nommé
+  const named = used.find((h) => h.type === "category")?.groupIndex;
+  const others = left.filter((i) => i !== named);
+  const members = [...puzzle.groups[pick(others.length ? others : left, random)].elementIds];
+  const first = members.splice(Math.floor(random() * members.length), 1)[0];
+  return { elementIds: [first, pick(members, random)] };
+}
+
 // État renvoyé au joueur : les groupes ne sont révélés qu'une fois trouvés,
 // ou tous à la fin de la partie
 function buildState(puzzle, game, { mode, practice, reset = false }) {
   const elementsById = new Map(puzzle.tiles.map((id) => [id, elementsRepo.findById(id)]));
   const attempts = game ? repo.attempts(game.id) : [];
+  const hints = game ? repo.hints(game.id) : [];
   const foundIndexes = attempts.filter((a) => a.groupIndex !== null).map((a) => a.groupIndex);
   const foundIds = new Set(foundIndexes.flatMap((i) => puzzle.groups[i].elementIds));
   const status = game?.status ?? "playing";
@@ -110,6 +154,8 @@ function buildState(puzzle, game, { mode, practice, reset = false }) {
     reset,
     maxMistakes: MAX_MISTAKES,
     mistakes: attempts.filter((a) => a.groupIndex === null).length,
+    maxHints: MAX_HINTS[mode],
+    hints: hints.map((hint) => hintView(hint, puzzle, elementsById)),
     tiles: puzzle.tiles.filter((id) => !foundIds.has(id)).map((id) => tileOf(elementsById.get(id))),
     found: foundIndexes.map((i) => groupView(puzzle.groups[i], elementsById)),
     // Pour le partage : couleur du groupe de chaque case proposée
@@ -186,12 +232,43 @@ const guess = db.transaction((player, names, { mode = "normal", practice = false
   return { result, state: buildState(puzzle, repo.findGameById(game.id), { mode, practice, reset: loaded.reset }) };
 });
 
+// Indice : chacun une fois, MAX_HINTS par partie selon le mode
+const useHint = db.transaction((player, type, { mode = "normal", practice = false, gridId, random = Math.random } = {}) => {
+  checkMode(mode);
+  if (!HINT_TYPES.includes(type)) throw new HttpError(400, `Unknown hint "${type}".`);
+  const puzzle = puzzleFor(player, mode, practice);
+  if (gridId !== undefined && gridId !== `${puzzle.date}#${puzzle.version}`) {
+    throw new HttpError(409, practice ? "This grid was replaced: here is the new one." : "A new grid is out: here it is!", {
+      gridChanged: true
+    });
+  }
+  const loaded = loadGame(player.id, puzzle);
+  let { game } = loaded;
+  if (game && game.status !== "playing") throw new HttpError(409, "This grid is over.");
+
+  const used = game ? repo.hints(game.id) : [];
+  if (used.some((h) => h.type === type)) throw new HttpError(409, "You already used this hint.");
+  if (used.length >= MAX_HINTS[mode]) throw new HttpError(409, "No hints left for this grid.");
+
+  const at = nowIso();
+  game ??= repo.createGame({ date: puzzle.date, playerId: player.id, version: puzzle.version, startedAt: at });
+  const found = new Set(
+    repo
+      .attempts(game.id)
+      .filter((a) => a.groupIndex !== null)
+      .map((a) => a.groupIndex)
+  );
+  repo.addHint(game.id, type, drawHint(type, puzzle, found, used, random), at);
+  return { state: buildState(puzzle, repo.findGameById(game.id), { mode, practice, reset: loaded.reset }) };
+});
+
 function leaderboard(playerId, mode = "normal") {
   return repo.dailyBoard(dailyKey(checkMode(mode), todayParis())).map((row) => ({
     rank: row.rank,
     player: { id: row.id, name: row.name, avatar: row.avatar, color: row.color },
     isMe: row.id === playerId,
     mistakes: row.mistakes,
+    hints: row.hints,
     seconds: row.seconds
   }));
 }
@@ -263,6 +340,9 @@ module.exports = {
   guess,
   newPracticePuzzle,
   leaderboard,
+  useHint,
+  HINT_TYPES,
+  MAX_HINTS,
   listTags: () => repo.listTags(),
   saveTag,
   deleteTag,
