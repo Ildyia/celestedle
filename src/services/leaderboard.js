@@ -17,6 +17,7 @@ function toEntry(row, playerId) {
     player: { id: row.id, name: row.name, avatar: row.avatar, color: row.color },
     isMe: row.id === playerId,
     tries: row.tries ?? null,
+    hints: row.hints ?? null,
     seconds: row.seconds ?? null
   };
 }

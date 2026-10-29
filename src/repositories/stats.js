@@ -1,9 +1,9 @@
 const db = require("../db");
 
-// Victoire au premier essai : pure chance, affichée à part dans le classement
-// du jour (elle compte normalement pour la semaine et le global)
-const ONE_SHOT_SQL = "(s.status = 'won' AND s.tries = 1)";
-const RANKED_WIN_SQL = "(s.status = 'won' AND s.tries > 1)";
+// Victoire au premier essai sans indice : pure chance, affichée à part dans le
+// classement du jour (elle compte normalement pour la semaine et le global)
+const ONE_SHOT_SQL = "(s.status = 'won' AND s.tries = 1 AND s.hints = 0)";
+const RANKED_WIN_SQL = "(s.status = 'won' AND (s.tries > 1 OR s.hints > 0))";
 
 // Joueurs visibles dans les classements
 const LISTED_SQL = "p.is_hidden = 0 AND p.is_anonymous = 0";
@@ -24,8 +24,9 @@ const stmts = {
 
   daily: db.prepare(`
     WITH ranked AS (
-      SELECT p.id, p.name, p.avatar, p.color, s.tries, s.seconds,
-             ROW_NUMBER() OVER (ORDER BY s.tries, s.seconds, s.finished_at) AS rank
+      SELECT p.id, p.name, p.avatar, p.color, s.tries, s.hints, s.seconds,
+             -- Un indice compte comme un essai
+             ROW_NUMBER() OVER (ORDER BY s.tries + s.hints, s.seconds, s.finished_at) AS rank
       FROM game_summaries s JOIN players p ON p.id = s.player_id
       WHERE s.date = @date AND s.mode = @mode AND ${RANKED_WIN_SQL} AND ${LISTED_SQL}
     )
@@ -44,7 +45,8 @@ const stmts = {
   // y compris des profils non listés : ils comptent pour comparer les joueurs
   // du jour, mais ne sont pas affichés
   rankedResults: db.prepare(`
-    SELECT s.player_id AS playerId, s.mode AS board, s.date, s.status = 'won' AS won, s.tries AS cost
+    SELECT s.player_id AS playerId, s.mode AS board, s.date, s.status = 'won' AS won,
+           s.tries + s.hints AS cost -- un indice compte comme un essai
     FROM game_summaries s
     WHERE s.date BETWEEN @from AND @to AND s.status <> 'playing'
     UNION ALL

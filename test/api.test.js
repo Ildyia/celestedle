@@ -698,3 +698,21 @@ test("indice info : compte en normal, bonus en plus de l'indice en Hard", async 
   assert.equal(third.status, 409);
   assert.match(third.data.error, /No hints left/);
 });
+
+test("classements : en Celestedle, un indice compte comme un essai", async () => {
+  const { token, player } = await api.newPlayer();
+  await api.request("PATCH", "/api/players/me", { token, body: { name: "Hinted Theo" } });
+  const secret = daily.getTodaySecret("normal").element.nom;
+  await api.request("POST", "/api/game/guess", { token, body: { mode: "normal", guess: wrongGuessFor(secret) } });
+  const hint = await api.request("POST", "/api/game/hint", { token, body: { mode: "normal", type: "opposite" } });
+  assert.equal(hint.status, 200, JSON.stringify(hint.data));
+  await api.request("POST", "/api/game/guess", { token, body: { mode: "normal", guess: secret } });
+
+  const board = await api.request("GET", "/api/leaderboard?period=daily&mode=normal", { token });
+  const me = board.data.top.find((e) => e.player.id === player.id);
+  assert.equal(me.tries, 2);
+  assert.equal(me.hints, 1);
+  // Classé comme 3 essais : derrière toute victoire en 2 essais sans indice
+  const twoTries = board.data.top.filter((e) => e.tries + e.hints === 2);
+  assert.ok(twoTries.every((e) => e.rank < me.rank));
+});

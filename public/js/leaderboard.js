@@ -7,6 +7,7 @@ import { player } from "./player.js";
 const COLUMNS = {
   daily: [
     { label: "Tries", value: (e) => e.tries },
+    { label: "Hints", value: (e) => e.hints },
     { label: "Time", value: (e) => formatDuration(e.seconds) }
   ],
   // Connections : erreurs au lieu d'essais
@@ -38,7 +39,7 @@ const SCORE_TEXT =
   "Each game scores 0 to 100: the share of that day's players you beat in the same mode (a loss scores 0), so a win on a hard day is worth more. All modes count.";
 
 const NOTES = {
-  daily: "Fewest tries first, then fastest time. First-try wins are pure luck: they're listed apart, without a rank (they still count for the week and all-time rankings).",
+  daily: "Fewest tries first (a hint counts as one), then fastest time. First-try wins without hints are pure luck: they're listed apart, without a rank (they still count for the week and all-time rankings).",
   dailyGrid: "Fewest mistakes first (a hint counts as one), then fastest time.",
   weekly: `${SCORE_TEXT} Weekly points add up every game of the week.`,
   global: `${SCORE_TEXT} All-time score: your average game score, smoothed so that it stays close to the community average until you've played a few games.`
