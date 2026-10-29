@@ -106,6 +106,12 @@ SQLite ne sait pas modifier une contrainte `CHECK` ou supprimer certaines colonn
 
 Les rôles (`owner`, `administrator`…) sont gérés dans `services/staff.js`. `middleware/admin-auth.js` protège les routes admin. L'accès à Connections (staff, playtest ou public) se règle depuis l'admin.
 
+### Les classements
+
+- **Du jour** : un par mode (Normal, Hard, Grid et Grid Hard pour Connections), triés par essais ou erreurs, puis par temps.
+- **Semaine et global** : tous les modes ensemble. Chaque partie reçoit un score de 0 à 100 (`services/ranking.js`), c'est-à-dire la part des joueurs du même jour et du même mode qu'on a battus. Une défaite vaut 0, et une victoire vaut 50 s'il y a moins de 3 joueurs.
+- La semaine **additionne** les scores, ce qui récompense l'assiduité. Le global fait une **moyenne lissée**, comme si chacun avait déjà joué 10 parties au score moyen (`PRIOR_GAMES`), ce qui récompense le niveau sans avantager les comptes neufs.
+
 ### Les réglages
 
 La table `settings` est un simple stockage clé et valeur (`repositories/settings.js`). On y met les petits paramètres modifiables depuis l'admin sans toucher au code.

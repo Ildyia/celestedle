@@ -1,6 +1,6 @@
 import { api } from "./api.js";
 import { el, byId, clear, openModal } from "./dom.js";
-import { formatDuration, formatNumber } from "./format.js";
+import { formatDuration } from "./format.js";
 import { avatarUrl } from "./profile.js";
 import { player } from "./player.js";
 
@@ -9,23 +9,43 @@ const COLUMNS = {
     { label: "Tries", value: (e) => e.tries },
     { label: "Time", value: (e) => formatDuration(e.seconds) }
   ],
+  // Connections : erreurs au lieu d'essais
+  dailyGrid: [
+    { label: "Mistakes", value: (e) => e.mistakes },
+    { label: "Time", value: (e) => formatDuration(e.seconds) }
+  ],
   weekly: [
-    { label: "Points", value: (e) => e.points },
-    { label: "Wins", value: (e) => e.wins },
-    { label: "Time", value: (e) => formatDuration(e.totalSeconds) }
+    { label: "Points", value: (e) => Math.round(e.score) },
+    { label: "Games", value: (e) => e.games },
+    { label: "Wins", value: (e) => e.wins }
   ],
   global: [
-    { label: "Points", value: (e) => e.points },
-    { label: "Wins", value: (e) => e.wins },
-    { label: "Avg. tries", value: (e) => formatNumber(e.avgTries) }
+    { label: "Score", value: (e) => e.score.toFixed(1) },
+    { label: "Games", value: (e) => e.games },
+    { label: "Wins", value: (e) => e.wins }
   ]
 };
 
 const EMPTY_TEXT = {
   daily: "Nobody has found today's word yet. Be the first!",
-  weekly: "No wins this week yet.",
-  global: "No wins yet."
+  dailyGrid: "Nobody has solved today's grid yet. Be the first!",
+  weekly: "No games this week yet.",
+  global: "No games yet."
 };
+
+const SCORE_TEXT =
+  "Each game scores 0 to 100: the share of that day's players you beat in the same mode (a loss scores 0), so a win on a hard day is worth more. All modes count.";
+
+const NOTES = {
+  daily: "Fewest tries first, then fastest time. First-try wins are pure luck: they're listed apart, without a rank (they still count for the week and all-time rankings).",
+  dailyGrid: "Fewest mistakes first, then fastest time.",
+  weekly: `${SCORE_TEXT} Weekly points add up every game of the week.`,
+  global: `${SCORE_TEXT} All-time score: your average game score, smoothed so that it stays close to the community average until you've played a few games.`
+};
+
+function isGrid(mode) {
+  return mode.startsWith("cx-");
+}
 
 export class LeaderboardPanel {
   constructor({ getMode }) {
@@ -55,8 +75,24 @@ export class LeaderboardPanel {
 
   open() {
     this.mode = this.getMode();
+    this.showGridModes();
     openModal("leaderboard-modal");
     this.load();
+  }
+
+  // Classements du jour de Connections : pour qui peut y jouer
+  async showGridModes() {
+    let canPlay = false;
+    try {
+      ({ canPlay } = await api.connectionsAccess());
+    } catch {
+      // Lien caché par défaut
+    }
+    document.querySelectorAll("[data-board-mode^='cx-']").forEach((btn) => (btn.hidden = !canPlay));
+    if (!canPlay && isGrid(this.mode)) {
+      this.mode = "normal";
+      this.load();
+    }
   }
 
   async load() {
@@ -66,6 +102,8 @@ export class LeaderboardPanel {
     document.querySelectorAll("[data-board-mode]").forEach((btn) =>
       btn.setAttribute("aria-pressed", String(btn.dataset.boardMode === this.mode))
     );
+    // Semaine et global : tous les modes ensemble
+    byId("leaderboard-modes").hidden = this.period !== "daily";
     clear(this.table);
     this.oneShots.hidden = true;
     this.anonymousNote.hidden = !player.profile?.isAnonymous;
@@ -92,23 +130,21 @@ export class LeaderboardPanel {
   }
 
   render(board) {
-    const columns = COLUMNS[board.period];
+    const kind = board.period === "daily" && isGrid(board.mode) ? "dailyGrid" : board.period;
+    const columns = COLUMNS[kind];
     this.head.replaceChildren(
       el("tr", {}, [el("th", { text: "#" }), el("th", { text: "Player" }), ...columns.map((c) => el("th", { text: c.label }))])
     );
     if (board.top.length === 0) {
-      const text = board.oneShots?.length ? "No ranked win yet today (first-try wins are listed below)." : EMPTY_TEXT[board.period];
+      const text = board.oneShots?.length ? "No ranked win yet today (first-try wins are listed below)." : EMPTY_TEXT[kind];
       this.table.append(el("tr", {}, [el("td", { text, attrs: { colspan: 2 + columns.length } })]));
     } else {
       this.table.append(...board.top.map((entry) => this.row(entry, columns)));
       if (board.me && board.me.rank > 50) this.table.append(this.row(board.me, columns));
     }
     this.renderOneShots(board.oneShots ?? []);
-    const range = board.range ? ` (${board.range.from} → ${board.range.to})` : "";
-    this.note.textContent =
-      board.period === "daily"
-        ? "Fewest tries first, then fastest time. First-try wins are pure luck: they're listed apart, without a rank (they still score points for the week)."
-        : `Points: 11 minus the number of tries per win, 1 minimum${range}. Hidden profiles are not listed.`;
+    const range = board.period === "weekly" ? ` (${board.range.from} → ${board.range.to})` : "";
+    this.note.textContent = `${NOTES[kind]}${range} Hidden profiles are not listed.`;
   }
 
   // Victoires du jour au premier essai : mentionnées à part, sans rang

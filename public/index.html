@@ -43,8 +43,9 @@
             follow your own stats and streaks.
           </li>
           <li>
-            <strong>Leaderboards</strong>: daily, weekly and all-time, for both
-            modes. You can hide your profile if you prefer.
+            <strong>Leaderboards</strong>: a daily ranking for each mode, plus
+            weekly and all-time rankings that combine every mode. You can hide
+            your profile if you prefer.
           </li>
           <li>
             <strong>Bug reports</strong>: similar reports show up while you
@@ -883,12 +884,18 @@
             All time
           </button>
         </div>
-        <div class="segmented" role="group" aria-label="Mode">
+        <div id="leaderboard-modes" class="segmented board-modes" role="group" aria-label="Mode">
           <button type="button" data-board-mode="normal" aria-pressed="true">
             Normal
           </button>
           <button type="button" data-board-mode="hard" aria-pressed="false">
             Hard
+          </button>
+          <button type="button" data-board-mode="cx-normal" aria-pressed="false" title="Connections" hidden>
+            Grid
+          </button>
+          <button type="button" data-board-mode="cx-hard" aria-pressed="false" title="Connections, hard mode" hidden>
+            Grid Hard
           </button>
         </div>
         <div class="board-scroll">

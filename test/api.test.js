@@ -220,8 +220,12 @@ test("profil : modification, validation et masquage du classement", async () => 
   assert.ok(board.data.top.some((e) => e.player.name === "Madeline Main"));
   assert.equal(board.data.me.isMe, true);
 
-  const weekly = await api.request("GET", "/api/leaderboard?period=weekly&mode=normal", { token });
-  assert.equal(weekly.data.me.points, 9);
+  const weekly = await api.request("GET", "/api/leaderboard?period=weekly", { token });
+  assert.equal(weekly.data.mode, null);
+  assert.equal(weekly.data.me.games, 1);
+  assert.ok(weekly.data.me.score > 0 && weekly.data.me.score <= 100);
+  const global = await api.request("GET", "/api/leaderboard?period=global", { token });
+  assert.equal(global.data.me.wins, 1);
 
   await api.request("PATCH", "/api/players/me", { token, body: { isHidden: true } });
   board = await api.request("GET", "/api/leaderboard?period=daily&mode=normal", { token });
@@ -261,8 +265,8 @@ test("classements : une victoire au premier essai est à part le jour même, mai
   assert.ok(!board.data.top.some((e) => e.player.id === player.id));
   assert.ok(board.data.oneShots.some((e) => e.player.id === player.id && e.isMe));
 
-  const weekly = await api.request("GET", "/api/leaderboard?period=weekly&mode=normal", { token });
-  assert.equal(weekly.data.me.points, 10);
+  const weekly = await api.request("GET", "/api/leaderboard?period=weekly", { token });
+  assert.ok(weekly.data.me.score > 0);
   assert.equal(weekly.data.me.wins, 1);
 });
 

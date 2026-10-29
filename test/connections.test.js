@@ -87,6 +87,7 @@ test("Connections est réservé à l'équipe admin pendant les tests", async () 
   assert.equal((await api.request("GET", "/api/connections", { token })).status, 403);
   assert.equal((await api.request("POST", "/api/connections/guess", { token, body: { names: [] } })).status, 403);
   assert.equal((await api.request("GET", "/api/admin/connections/tags", { token })).status, 403);
+  assert.equal((await api.request("GET", "/api/leaderboard?period=daily&mode=cx-normal", { token })).status, 403);
 });
 
 test("partie : erreur, « à une case près », doublon, groupe trouvé puis victoire", async () => {
@@ -134,6 +135,13 @@ test("partie : erreur, « à une case près », doublon, groupe trouvé puis vic
   board = await api.request("GET", "/api/connections/leaderboard", { token });
   assert.equal(board.data.top[0].isMe, true);
   assert.equal(board.data.top[0].mistakes, 2);
+
+  // Aussi dans le classement du jour de la page principale, et compté dans le
+  // classement général (tous modes)
+  const daily = await api.request("GET", "/api/leaderboard?period=daily&mode=cx-normal", { token });
+  assert.equal(daily.data.me.mistakes, 2);
+  const global = await api.request("GET", "/api/leaderboard?period=global", { token });
+  assert.ok(global.data.me.games >= 1);
 });
 
 test("partie : perdue à la 4e erreur", async () => {

@@ -5,9 +5,6 @@ const db = require("../db");
 const ONE_SHOT_SQL = "(s.status = 'won' AND s.tries = 1)";
 const RANKED_WIN_SQL = "(s.status = 'won' AND s.tries > 1)";
 
-// Points d'une victoire : 11 - essais, minimum 1. Une défaite vaut 0.
-const POINTS_SQL = "CASE WHEN s.status = 'won' THEN MAX(1, 11 - s.tries) ELSE 0 END";
-
 // Joueurs visibles dans les classements
 const LISTED_SQL = "p.is_hidden = 0 AND p.is_anonymous = 0";
 
@@ -43,25 +40,26 @@ const stmts = {
     LIMIT @limit
   `),
 
-  // Semaine (dates bornées) ou global (bornes extrêmes)
-  aggregated: db.prepare(`
-    WITH totals AS (
-      SELECT p.id, p.name, p.avatar, p.color,
-             SUM(${POINTS_SQL}) AS points,
-             SUM(s.status = 'won') AS wins,
-             ROUND(AVG(CASE WHEN s.status = 'won' THEN s.tries END), 1) AS avgTries,
-             SUM(CASE WHEN s.status = 'won' THEN s.seconds ELSE 0 END) AS totalSeconds
-      FROM game_summaries s JOIN players p ON p.id = s.player_id
-      WHERE s.mode = @mode AND s.date BETWEEN @from AND @to
-        AND s.status <> 'playing' AND ${LISTED_SQL}
-      GROUP BY p.id
-      HAVING points > 0
-    ), ranked AS (
-      SELECT *,
-             ROW_NUMBER() OVER (ORDER BY points DESC, wins DESC, totalSeconds ASC, avgTries ASC) AS rank
-      FROM totals
-    )
-    SELECT * FROM ranked WHERE rank <= @limit OR id = @playerId ORDER BY rank
+  // Parties terminées de tous les modes sur une période (semaine ou global),
+  // y compris des profils non listés : ils comptent pour comparer les joueurs
+  // du jour, mais ne sont pas affichés
+  rankedResults: db.prepare(`
+    SELECT s.player_id AS playerId, s.mode AS board, s.date, s.status = 'won' AS won, s.tries AS cost
+    FROM game_summaries s
+    WHERE s.date BETWEEN @from AND @to AND s.status <> 'playing'
+    UNION ALL
+    SELECT g.player_id,
+           CASE WHEN g.date LIKE 'hard:%' THEN 'cx-hard' ELSE 'cx-normal' END,
+           CASE WHEN g.date LIKE 'hard:%' THEN substr(g.date, 6) ELSE g.date END,
+           g.status = 'won',
+           (SELECT COUNT(*) FROM connection_attempts a WHERE a.game_id = g.id AND a.group_index IS NULL)
+    FROM connection_games g
+    WHERE g.status <> 'playing'
+      AND (g.date BETWEEN @from AND @to OR g.date BETWEEN 'hard:' || @from AND 'hard:' || @to)
+  `),
+
+  listedPlayers: db.prepare(`
+    SELECT p.id, p.name, p.avatar, p.color FROM players p WHERE ${LISTED_SQL}
   `),
 
   playerGames: db.prepare(`
@@ -139,8 +137,12 @@ function dailyOneShots(date, mode) {
   return stmts.dailyOneShots.all({ date, mode, limit: LEADERBOARD_LIMIT });
 }
 
-function aggregatedLeaderboard(mode, from, to, playerId) {
-  return stmts.aggregated.all({ mode, from, to, playerId, limit: LEADERBOARD_LIMIT });
+function rankedResults(from, to) {
+  return stmts.rankedResults.all({ from, to }).map((r) => ({ ...r, won: r.won === 1 }));
+}
+
+function listedPlayers() {
+  return stmts.listedPlayers.all();
 }
 
 function playerGames(playerId, mode) {
@@ -163,7 +165,8 @@ module.exports = {
   communityStats,
   dailyLeaderboard,
   dailyOneShots,
-  aggregatedLeaderboard,
+  rankedResults,
+  listedPlayers,
   playerGames,
   dayOverview,
   history,

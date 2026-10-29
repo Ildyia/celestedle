@@ -1931,6 +1931,13 @@ input[type="checkbox"]:not(.switch input):checked::after {
 }
 
 #mode-switch button[aria-pressed="true"],
+/* Classement du jour : jusqu'à 4 modes, sur deux lignes si besoin */
+.segmented.board-modes {
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 100%;
+}
+
 .segmented button[aria-pressed="true"] {
   background: var(--color-indigo);
   color: #ffffff;
