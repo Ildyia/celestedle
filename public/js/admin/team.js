@@ -21,7 +21,9 @@ const ACTION_LABELS = {
   delete_tag: "Supprime un tag Connections",
   regenerate_grid: "Régénère une grille Connections",
   playtester: "Change l'accès playtester",
-  connections_access: "Change qui peut jouer à Connections"
+  connections_access: "Change qui peut jouer à Connections",
+  start_season: "Lance une nouvelle saison",
+  rename_season: "Renomme une saison"
 };
 
 // Onglet Équipe, réservé au propriétaire : administrateurs, quota, journal

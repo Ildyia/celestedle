@@ -20,7 +20,7 @@ const COLUMNS = {
     { label: "Games", value: (e) => e.games },
     { label: "Wins", value: (e) => e.wins }
   ],
-  global: [
+  season: [
     { label: "Score", value: (e) => e.score.toFixed(1) },
     { label: "Games", value: (e) => e.games },
     { label: "Wins", value: (e) => e.wins }
@@ -31,7 +31,7 @@ const EMPTY_TEXT = {
   daily: "Nobody has found today's word yet. Be the first!",
   dailyGrid: "Nobody has solved today's grid yet. Be the first!",
   weekly: "No games this week yet.",
-  global: "No games yet."
+  season: "No games this season yet."
 };
 
 const SCORE_TEXT =
@@ -41,7 +41,7 @@ const NOTES = {
   daily: "Fewest tries first, then fastest time. First-try wins are pure luck: they're listed apart, without a rank (they still count for the week and all-time rankings).",
   dailyGrid: "Fewest mistakes first (a hint counts as one), then fastest time.",
   weekly: `${SCORE_TEXT} Weekly points add up every game of the week.`,
-  global: `${SCORE_TEXT} All-time score: your average game score, smoothed so that it stays close to the community average until you've played a few games.`
+  season: `${SCORE_TEXT} Season score: your average game score, smoothed so that it stays close to the community average until you've played a few games (the ranking settles as the season goes on).`
 };
 
 function isGrid(mode) {
@@ -53,6 +53,12 @@ export class LeaderboardPanel {
     this.getMode = getMode;
     this.period = "daily";
     this.mode = "normal";
+    this.seasonId = null; // null = saison en cours
+    this.seasonSelect = byId("leaderboard-season");
+    this.seasonSelect.addEventListener("change", () => {
+      this.seasonId = Number(this.seasonSelect.value);
+      this.load();
+    });
     this.table = byId("leaderboard-body");
     this.head = byId("leaderboard-head");
     this.note = byId("leaderboard-note");
@@ -103,13 +109,14 @@ export class LeaderboardPanel {
     document.querySelectorAll("[data-board-mode]").forEach((btn) =>
       btn.setAttribute("aria-pressed", String(btn.dataset.boardMode === this.mode))
     );
-    // Semaine et global : tous les modes ensemble
+    // Semaine et saison : tous les modes ensemble
     byId("leaderboard-modes").hidden = this.period !== "daily";
+    this.seasonSelect.hidden = this.period !== "season";
     clear(this.table);
     this.oneShots.hidden = true;
     this.anonymousNote.hidden = !player.profile?.isAnonymous;
     try {
-      this.render(await api.leaderboard(this.period, this.mode));
+      this.render(await api.leaderboard(this.period, this.mode, this.seasonId));
     } catch (err) {
       this.note.textContent = err.message;
     }
@@ -144,8 +151,21 @@ export class LeaderboardPanel {
       if (board.me && board.me.rank > 50) this.table.append(this.row(board.me, columns));
     }
     this.renderOneShots(board.oneShots ?? []);
-    const range = board.period === "weekly" ? ` (${board.range.from} → ${board.range.to})` : "";
-    this.note.textContent = `${NOTES[kind]}${range} Hidden profiles are not listed.`;
+    if (board.seasons) this.renderSeasons(board);
+    const range =
+      board.period === "daily" ? "" : `${board.range.from} → ${board.season?.current ? "today" : board.range.to}. `;
+    this.note.textContent = `${range}${NOTES[kind]} Hidden profiles are not listed.`;
+  }
+
+  renderSeasons(board) {
+    this.seasonSelect.replaceChildren(
+      ...board.seasons.map((season) =>
+        el("option", {
+          text: season.current ? `${season.name} (current)` : season.name,
+          attrs: { value: String(season.id), ...(season.id === board.season.id ? { selected: "" } : {}) }
+        })
+      )
+    );
   }
 
   // Victoires du jour au premier essai : mentionnées à part, sans rang

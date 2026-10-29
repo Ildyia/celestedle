@@ -44,7 +44,7 @@
           </li>
           <li>
             <strong>Leaderboards</strong>: a daily ranking for each mode, plus
-            weekly and all-time rankings that combine every mode. You can hide
+            weekly and seasonal rankings that combine every mode. You can hide
             your profile if you prefer.
           </li>
           <li>
@@ -880,10 +880,11 @@
           <button type="button" data-board-period="weekly" aria-pressed="false">
             This week
           </button>
-          <button type="button" data-board-period="global" aria-pressed="false">
-            All time
+          <button type="button" data-board-period="season" aria-pressed="false">
+            Season
           </button>
         </div>
+        <select id="leaderboard-season" class="bug-input board-season" aria-label="Season" hidden></select>
         <div id="leaderboard-modes" class="segmented board-modes" role="group" aria-label="Mode">
           <button type="button" data-board-mode="normal" aria-pressed="true">
             Normal

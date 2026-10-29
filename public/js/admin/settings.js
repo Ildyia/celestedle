@@ -27,8 +27,44 @@ function readHardRules() {
   );
 }
 
+function fillSeasons(seasons) {
+  const [current, ...past] = seasons;
+  byId("season-current").textContent = `En cours : ${current.name}, depuis le ${current.from}.`;
+  byId("season-rename-input").value = current.name;
+  byId("season-rename-form").dataset.seasonId = current.id;
+  byId("season-past").textContent = past.length
+    ? `Saisons passées : ${past.map((s) => `${s.name} (${s.from} → ${s.to})`).join(", ")}.`
+    : "";
+}
+
 // Onglet Réglages : renvoie la fonction qui recharge les valeurs actuelles
 export function bindSettings({ notify }) {
+  byId("season-rename-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      const id = Number(e.target.dataset.seasonId);
+      const season = await admin.renameSeason(id, byId("season-rename-input").value.trim());
+      fillSeasons(await admin.seasons());
+      notify(`Saison renommée : ${season.name}.`);
+    } catch (err) {
+      notify(err.message, true);
+    }
+  });
+
+  byId("season-start-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = byId("season-start-input").value.trim();
+    if (!window.confirm(`Lancer « ${name} » aujourd'hui ? Le classement de la saison repart de zéro.`)) return;
+    try {
+      const season = await admin.startSeason(name);
+      byId("season-start-input").value = "";
+      fillSeasons(await admin.seasons());
+      notify(`${season.name} a commencé.`);
+    } catch (err) {
+      notify(err.message, true);
+    }
+  });
+
   byId("settings-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     try {
@@ -43,5 +79,9 @@ export function bindSettings({ notify }) {
     }
   });
 
-  return async () => fill(await admin.settings());
+  return async () => {
+    const [settings, seasons] = await Promise.all([admin.settings(), admin.seasons()]);
+    fill(settings);
+    fillSeasons(seasons);
+  };
 }
