@@ -1,7 +1,8 @@
 // Score de 0 à 100 de chaque partie, comparable d'un mode à l'autre : la part
-// des joueurs du même jour et du même mode qu'on a battus. Une défaite vaut 0 ;
-// les perdants comptent comme battus par les gagnants, donc gagner un jour où
-// peu de joueurs gagnent rapporte beaucoup (Hard notamment).
+// des joueurs du même jour et du même mode qu'on a battus, une égalité comptant
+// pour moitié. Les perdants sont battus par tous les gagnants et à égalité
+// entre eux : la moyenne de chaque jour et de chaque mode vaut ainsi 50, et
+// jouer un mode où l'on perd souvent (Hard) ne fait pas baisser son score.
 
 // En dessous de ce nombre de joueurs, la comparaison n'a pas de sens : une
 // victoire vaut 50
@@ -30,14 +31,15 @@ function scoreGames(results) {
     const others = games.length - 1;
     for (const game of games) {
       let score = 0;
-      if (game.won && games.length < MIN_PLAYERS) {
-        score = FEW_PLAYERS_WIN;
-      } else if (game.won) {
+      if (games.length < MIN_PLAYERS) {
+        score = game.won ? FEW_PLAYERS_WIN : 0;
+      } else {
         let beaten = 0;
         for (const other of games) {
           if (other === game) continue;
-          if (!other.won || other.cost > game.cost) beaten += 1;
-          else if (other.cost === game.cost) beaten += 0.5;
+          if (game.won && !other.won) beaten += 1;
+          else if (!game.won && !other.won) beaten += 0.5;
+          else if (game.won && other.won) beaten += other.cost > game.cost ? 1 : other.cost === game.cost ? 0.5 : 0;
         }
         score = (100 * beaten) / others;
       }

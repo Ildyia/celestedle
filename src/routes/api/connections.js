@@ -9,10 +9,16 @@ const { todayParis, addDays, msUntilNextDay } = require("../../utils/dates");
 
 const router = express.Router();
 
-// Qui peut jouer, pour afficher ou non le lien et le badge de test
+// Qui peut jouer, pour afficher ou non le lien et le badge de test ; les
+// grilles d'entraînement sont réservées à l'équipe admin
 router.get("/connections-access", (req, res) => {
-  res.json({ access: staff.connectionsAccess(), canPlay: staff.canPlaytest(req.player) });
+  res.json({ access: staff.connectionsAccess(), canPlay: staff.canPlaytest(req.player), canPractice: staff.isStaff(req.player) });
 });
+
+function checkPractice(req, practice) {
+  if (practice && !staff.isStaff(req.player)) throw new HttpError(403, "Practice grids are for the admin team.");
+  return practice;
+}
 
 // Le jeu est ouvert selon le réglage d'accès, la gestion à l'équipe admin
 router.use("/connections", requirePlaytester);
@@ -21,19 +27,19 @@ router.use("/admin/connections", requireStaff);
 // ?mode=normal|hard ; ?practice=1 : grille d'entraînement du joueur au lieu
 // de la grille du jour
 router.get("/connections", (req, res) => {
-  const options = { mode: req.query.mode ?? "normal", practice: req.query.practice === "1" };
+  const options = { mode: req.query.mode ?? "normal", practice: checkPractice(req, req.query.practice === "1") };
   res.json({ ...connections.getState(req.player, options), nextGridInMs: msUntilNextDay() });
 });
 
 router.post("/connections/guess", requirePlayer, (req, res) => {
   const { names, mode = "normal", practice, gridId } = req.body || {};
-  const options = { mode, practice: practice === true, gridId: typeof gridId === "string" ? gridId : undefined };
+  const options = { mode, practice: checkPractice(req, practice === true), gridId: typeof gridId === "string" ? gridId : undefined };
   res.json(connections.guess(req.player, names, options));
 });
 
 router.post("/connections/hint", requirePlayer, (req, res) => {
   const { type, mode = "normal", practice, gridId } = req.body || {};
-  const options = { mode, practice: practice === true, gridId: typeof gridId === "string" ? gridId : undefined };
+  const options = { mode, practice: checkPractice(req, practice === true), gridId: typeof gridId === "string" ? gridId : undefined };
   res.json(connections.useHint(req.player, type, options));
 });
 
@@ -41,6 +47,7 @@ router.post("/connections/hint", requirePlayer, (req, res) => {
 // prend quelques millisecondes ; la limite évite seulement les abus)
 const practiceLimit = rateLimit({ name: "connections-practice", windowMs: 60 * 1000, max: 30 });
 router.post("/connections/practice", requirePlayer, practiceLimit, (req, res) => {
+  checkPractice(req, true);
   res.json(connections.newPracticePuzzle(req.player, req.body?.mode ?? "normal"));
 });
 

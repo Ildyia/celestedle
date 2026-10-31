@@ -6,7 +6,7 @@ const game = (playerId, board, won, cost, date = "2026-10-29") => ({ playerId, b
 const scoreOf = (scored, playerId, board = "normal") =>
   scored.find((g) => g.playerId === playerId && g.board === board).score;
 
-test("score : part des joueurs du jour battus, défaite à 0, égalité à moitié", () => {
+test("score : part des joueurs du jour battus, égalité à moitié, perdants à égalité entre eux", () => {
   const scored = scoreGames([
     game("a", "normal", true, 3),
     game("b", "normal", true, 4),
@@ -17,7 +17,7 @@ test("score : part des joueurs du jour battus, défaite à 0, égalité à moiti
   assert.equal(scoreOf(scored, "a"), 100);
   assert.equal(scoreOf(scored, "b"), 62.5); // bat d et e, égalité avec c
   assert.equal(scoreOf(scored, "d"), 25); // bat seulement e, malgré ses 30 essais
-  assert.equal(scoreOf(scored, "e"), 0);
+  assert.equal(scoreOf(scored, "e"), 0, "seul perdant : n'a battu personne");
 });
 
 test("score : gagner quand peu de joueurs gagnent rapporte plus", () => {
@@ -25,7 +25,17 @@ test("score : gagner quand peu de joueurs gagnent rapporte plus", () => {
   const normal = ["a", "b", "c", "d", "e"].map((id, i) => game(id, "normal", true, 2 + i));
   const scored = scoreGames([...hard, ...normal]);
   assert.equal(scoreOf(scored, "a", "hard"), 100);
+  assert.equal(scoreOf(scored, "b", "hard"), 37.5, "à égalité avec les 3 autres perdants");
   assert.equal(scoreOf(scored, "c", "normal"), 50);
+});
+
+test("score : la moyenne de chaque jour et de chaque mode vaut 50, même quand presque tout le monde perd", () => {
+  const hard = Array.from({ length: 10 }, (_, i) => game(`p${i}`, "hard", i < 3, i < 3 ? 3 + i : 8));
+  const normal = Array.from({ length: 10 }, (_, i) => game(`p${i}`, "normal", true, 2 + i));
+  const scored = scoreGames([...hard, ...normal]);
+  const mean = (board) => scored.filter((g) => g.board === board).reduce((sum, g) => sum + g.score, 0) / 10;
+  assert.equal(Math.round(mean("hard") * 1000) / 1000, 50);
+  assert.equal(Math.round(mean("normal") * 1000) / 1000, 50);
 });
 
 test("score : chaque mode et chaque jour sont comparés à part", () => {

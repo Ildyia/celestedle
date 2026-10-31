@@ -234,6 +234,10 @@ test("playtester : joue à Connections sans accès à l'admin, accès retirable"
   assert.equal(me.data.player.isPlaytester, true);
   assert.equal((await api.request("GET", "/api/connections", { token })).status, 200);
   assert.equal((await api.request("GET", "/api/connections/leaderboard", { token })).status, 200);
+  // Entraînement réservé à l'équipe admin
+  assert.equal((await api.request("GET", "/api/connections?practice=1", { token })).status, 403);
+  assert.equal((await api.request("POST", "/api/connections/practice", { token })).status, 403);
+  assert.equal((await api.request("GET", "/api/connections-access", { token })).data.canPractice, false);
 
   // Aucun droit admin : ni tags, ni grilles, ni tableau de bord
   assert.equal((await api.request("GET", "/api/admin/connections/tags", { token })).status, 403);

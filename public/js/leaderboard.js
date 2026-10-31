@@ -35,14 +35,12 @@ const EMPTY_TEXT = {
   global: "No games yet."
 };
 
-const SCORE_TEXT =
-  "Each game scores 0 to 100: the share of that day's players you beat in the same mode (a loss scores 0), so a win on a hard day is worth more. All modes count.";
-
+// Notes courtes : le détail est dans les règles
 const NOTES = {
-  daily: "Fewest tries first (a hint counts as one), then fastest time. First-try wins without hints are pure luck: they're listed apart, without a rank (they still count for the week and all-time rankings).",
-  dailyGrid: "Fewest mistakes first (a hint counts as one), then fastest time.",
-  weekly: `${SCORE_TEXT} Weekly points add up every game of the week.`,
-  global: `${SCORE_TEXT} All-time score: your average game score, smoothed so that it stays close to the community average until you've played a few games.`
+  daily: "Fewest tries first, then fastest time. 🍀 First-try wins without hints are listed apart.",
+  dailyGrid: "Fewest mistakes first, then fastest time.",
+  weekly: "All modes: every game scores 0 to 100 against that day's players, and the week adds them up.",
+  global: "All modes: your average game score. See the rules for details."
 };
 
 function isGrid(mode) {

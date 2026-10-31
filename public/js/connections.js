@@ -456,6 +456,11 @@ async function init() {
   initOptions();
   await player.load();
   initGameTabs("connections");
+  // Grilles d'entraînement : équipe admin seulement
+  api
+    .connectionsAccess()
+    .then(({ canPractice }) => (byId("cx-grid-switch").hidden = !canPractice))
+    .catch(() => {});
   await new ConnectionsGame().load();
 }
 

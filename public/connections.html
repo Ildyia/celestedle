@@ -66,7 +66,7 @@
 
       <section id="cx-game" hidden>
         <div class="cx-modes">
-          <div class="segmented" role="group" aria-label="Grid">
+          <div id="cx-grid-switch" class="segmented" role="group" aria-label="Grid" hidden>
             <button type="button" data-cx-grid="daily" aria-pressed="true">Today's grid</button>
             <button type="button" data-cx-grid="practice" aria-pressed="false">Practice</button>
           </div>
@@ -208,11 +208,12 @@
             </div>
           </div>
 
-          <h4>Today's grid and practice</h4>
+          <h4>Rankings</h4>
           <p>
             Each mode has one grid a day, the same for everyone, ranked by
-            fewest mistakes, then fastest time. Practice grids are yours only:
-            draw as many as you like, they don't count in the ranking.
+            fewest mistakes (a hint counts as one), then fastest time. Your
+            grids also count in the weekly and all-time rankings, with every
+            other mode: see the rules of Celestedle.
           </p>
         </div>
       </div>

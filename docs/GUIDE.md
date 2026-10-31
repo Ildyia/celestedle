@@ -109,7 +109,7 @@ Les rôles (`owner`, `administrator`…) sont gérés dans `services/staff.js`. 
 ### Les classements
 
 - **Du jour** : un par mode (Normal, Hard, Grid et Grid Hard pour Connections), triés par essais ou erreurs, puis par temps. En Connections, un indice compte comme une erreur (3 indices en Normal, 1 en Hard, chacun une fois, voir `useHint` dans `services/connections.js`).
-- **Semaine et global** : tous les modes ensemble. Chaque partie reçoit un score de 0 à 100 (`services/ranking.js`), c'est-à-dire la part des joueurs du même jour et du même mode qu'on a battus. Une défaite vaut 0, et une victoire vaut 50 s'il y a moins de 3 joueurs.
+- **Semaine et global** : tous les modes ensemble. Chaque partie reçoit un score de 0 à 100 (`services/ranking.js`), c'est-à-dire la part des joueurs du même jour et du même mode qu'on a battus. Les perdants sont à égalité entre eux (une égalité compte pour moitié), si bien que chaque mode a une moyenne de 50 chaque jour : jouer en Hard ne fait pas baisser son score. Avec moins de 3 joueurs, une victoire vaut 50 et une défaite 0.
 - La semaine **additionne** les scores, ce qui récompense l'assiduité. Le global fait une **moyenne lissée**, comme si chacun avait déjà joué 10 parties au score moyen (`PRIOR_GAMES`), ce qui récompense le niveau sans avantager les comptes neufs.
 
 ### Les réglages
