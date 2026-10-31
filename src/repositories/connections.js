@@ -72,24 +72,26 @@ const stmts = {
             @elementIds, @groupIndex, @createdAt)
   `),
 
-  // Chiffres du jour de la communauté : moyennes sur les victoires, taux de
-  // victoire sur les parties terminées
+  // Chiffres du jour d'une grille : moyennes sur les victoires
   dayStats: db.prepare(`
-    WITH finished AS (
+    WITH day AS (
       SELECT g.status,
              (SELECT COUNT(*) FROM connection_attempts a
               WHERE a.game_id = g.id AND a.group_index IS NULL) AS mistakes,
              (SELECT COUNT(*) FROM connection_hints h WHERE h.game_id = g.id) AS hints,
              (julianday(g.finished_at) - julianday(g.started_at)) * 86400 AS seconds
       FROM connection_games g
-      WHERE g.date = ? AND g.status <> 'playing'
+      WHERE g.date = ?
     )
-    SELECT COUNT(*) AS finished,
+    SELECT COUNT(*) AS players,
+           COALESCE(SUM(status <> 'playing'), 0) AS finished,
            COALESCE(SUM(status = 'won'), 0) AS wins,
+           COALESCE(SUM(status = 'lost'), 0) AS losses,
+           COALESCE(SUM(status = 'playing'), 0) AS playing,
            ROUND(AVG(CASE WHEN status = 'won' THEN mistakes END), 1) AS avgMistakes,
            ROUND(AVG(CASE WHEN status = 'won' THEN hints END), 1) AS avgHints,
            CAST(ROUND(AVG(CASE WHEN status = 'won' THEN seconds END)) AS INTEGER) AS avgSeconds
-    FROM finished
+    FROM day
   `),
 
   // Victoires du jour : moins d'erreurs et d'indices (un indice compte comme

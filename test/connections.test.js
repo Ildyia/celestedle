@@ -135,6 +135,10 @@ test("partie : erreur, « à une case près », doublon, groupe trouvé puis vic
   board = await api.request("GET", "/api/connections/leaderboard", { token });
   assert.equal(board.data.top[0].isMe, true);
   assert.equal(board.data.top[0].mistakes, 2);
+  const overview = await api.request("GET", "/api/admin/overview", { token });
+  assert.equal(overview.data.connections.normal.puzzle.groups.length, 4);
+  assert.ok(overview.data.connections.normal.stats.wins >= 1);
+  assert.ok("hard" in overview.data.connections);
   const stats = await api.request("GET", "/api/connections/stats", { token });
   assert.ok(stats.data.wins >= 1);
   assert.ok(stats.data.winRate > 0);

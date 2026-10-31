@@ -264,8 +264,25 @@ const useHint = db.transaction((player, type, { mode = "normal", practice = fals
 
 // Chiffres du jour de la grille commune (hors entraînement)
 function communityStats(mode = "normal") {
-  const { finished, ...stats } = repo.dayStats(dailyKey(checkMode(mode), todayParis()));
-  return { ...stats, winRate: finished ? Math.round((stats.wins / finished) * 100) : null };
+  const { wins, finished, avgMistakes, avgHints, avgSeconds } = repo.dayStats(dailyKey(checkMode(mode), todayParis()));
+  return { wins, avgMistakes, avgHints, avgSeconds, winRate: finished ? Math.round((wins / finished) * 100) : null };
+}
+
+// Admin, onglet Aujourd'hui : grille du jour et chiffres de chaque mode
+function todayOverview() {
+  const date = todayParis();
+  return Object.fromEntries(
+    MODES.map((mode) => {
+      let puzzle;
+      try {
+        puzzle = puzzlePreview(date, mode);
+      } catch (err) {
+        puzzle = { date, mode, error: `${err.name}: ${err.message}` };
+      }
+      const { finished, ...stats } = repo.dayStats(dailyKey(mode, date));
+      return [mode, { puzzle, stats: { ...stats, winRate: finished ? Math.round((stats.wins / finished) * 100) : null } }];
+    })
+  );
 }
 
 function leaderboard(playerId, mode = "normal") {
@@ -347,6 +364,7 @@ module.exports = {
   newPracticePuzzle,
   leaderboard,
   communityStats,
+  todayOverview,
   useHint,
   HINT_TYPES,
   MAX_HINTS,

@@ -535,3 +535,14 @@
   max-width: 420px;
   margin: 8px 0 4px;
 }
+
+/* Aujourd'hui : grilles Connections du jour */
+.overview-section-title {
+  margin: 18px 0 8px;
+}
+
+.cx-overview-groups {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0;
+}

@@ -8,6 +8,7 @@ const { expireOverdueGames } = require("../../services/games");
 const { allModeRules, updateModeRules } = require("../../services/mode-rules");
 const { MODE_IDS } = require("../../services/modes");
 const staff = require("../../services/staff");
+const connections = require("../../services/connections");
 const players = require("../../services/players");
 const sprites = require("../../services/sprites");
 const { requireStaff, requireOwner, limitedAction } = require("../../middleware/admin-auth");
@@ -71,7 +72,8 @@ router.get("/admin/overview", (req, res) => {
           stats: byMode[mode] ?? { players: 0, wins: 0, forfeits: 0, losses: 0, playing: 0 }
         }
       ])
-    )
+    ),
+    connections: connections.todayOverview()
   });
 });
 
