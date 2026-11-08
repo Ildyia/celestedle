@@ -80,19 +80,27 @@ export class LeaderboardPanel {
     this.load();
   }
 
-  // Classements du jour de Connections : pour qui peut y jouer
+  // Classements du jour des jeux en test : pour qui peut y jouer
   async showGridModes() {
-    let canPlay = false;
-    try {
-      ({ canPlay } = await api.connectionsAccess());
-    } catch {
-      // Lien caché par défaut
-    }
-    document.querySelectorAll("[data-board-mode^='cx-']").forEach((btn) => (btn.hidden = !canPlay));
-    if (!canPlay && isGrid(this.mode)) {
-      this.mode = "normal";
-      this.load();
-    }
+    const games = [
+      { prefix: "cx-", access: api.connectionsAccess },
+      { prefix: "tech", access: api.techsAccess }
+    ];
+    await Promise.all(
+      games.map(async ({ prefix, access }) => {
+        let canPlay = false;
+        try {
+          ({ canPlay } = await access());
+        } catch {
+          // Onglet caché par défaut
+        }
+        document.querySelectorAll(`[data-board-mode^='${prefix}']`).forEach((btn) => (btn.hidden = !canPlay));
+        if (!canPlay && this.mode.startsWith(prefix)) {
+          this.mode = "normal";
+          this.load();
+        }
+      })
+    );
   }
 
   async load() {

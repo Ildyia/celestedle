@@ -106,6 +106,15 @@ SQLite ne sait pas modifier une contrainte `CHECK` ou supprimer certaines colonn
 
 Les rôles (`owner`, `administrator`…) sont gérés dans `services/staff.js`. `middleware/admin-auth.js` protège les routes admin. L'accès à Connections (staff, playtest ou public) se règle depuis l'admin.
 
+### Les techs (Celestedle Techs)
+
+Un Celestedle dont la réponse est une tech. Il utilise **le même moteur** que Celestedle : `createGameService` (`services/games.js`), `createDaily` (`services/daily.js`), les repositories `createGamesRepo` et `createSecretsRepo`, avec ses propres tables (`techs`, `tech_secrets`, `tech_games`…, migration 015). Tout ce qui lui est propre est dans `services/techs.js` : les colonnes, la difficulté comparée dans l'ordre (flèches ⬆️ ⬇️) et les règles des modes `tech` et `tech-hard`.
+
+- `techs.json` remplit la table au premier démarrage seulement. Ensuite, les techs se gèrent dans l'admin, onglet Techs : liste, édition, image ou GIF de 3 Mo, tech du jour et accès.
+- Les synonymes sont tirés des noms : « Superdash (Super) » donne « Super » et « Superdash ».
+- Côté page, `public/js/catalogs.js` décrit chaque jeu (colonnes, images, routes de l'API, textes). `Game`, le tableau, les indices et le partage les reçoivent en paramètre.
+- L'accès (staff, playtest ou public) se règle comme pour Connections, avec `TECHS_ACCESS` comme valeur par défaut.
+
 ### Les classements
 
 - **Du jour** : un par mode (Normal, Hard, Grid et Grid Hard pour Connections), triés par essais ou erreurs, puis par temps. En Connections, un indice compte comme une erreur (3 indices en Normal, 1 en Hard, chacun une fois, voir `useHint` dans `services/connections.js`).

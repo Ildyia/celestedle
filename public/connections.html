@@ -45,14 +45,23 @@
           </button>
         </nav>
         <nav id="game-tabs" class="game-tabs" aria-label="Games">
-          <a class="game-tab game-tab-left" href="./"><img src="assets/illustration/start.png" alt="" /><span>Celestedle</span></a>
+          <div class="game-tab-list">
+            <a class="game-tab" href="./"
+              ><img src="assets/illustration/start.png" alt="" /><span>Celestedle</span></a
+            >
+            <a id="connections-tab" class="game-tab" href="connections.html" hidden aria-current="page"
+              ><img src="assets/illustration/pico8.png" alt="" /><span>Connections</span>
+              <span id="connections-tab-badge" class="game-tab-badge" hidden></span
+            ></a>
+            <a id="techs-tab" class="game-tab" href="techs.html" hidden
+              ><img src="assets/illustration/feather.png" alt="" /><span>Techs</span>
+              <span id="techs-tab-badge" class="game-tab-badge" hidden></span
+            ></a>
+          </div>
           <div id="mode-switch" role="group" aria-label="Game mode">
             <button type="button" data-cx-mode="normal" data-mode="normal" aria-pressed="true">Normal</button>
             <button type="button" data-cx-mode="hard" data-mode="hard" aria-pressed="false">Hard</button>
           </div>
-          <a id="connections-tab" class="game-tab game-tab-right" href="connections.html" aria-current="page"
-            ><img src="assets/illustration/pico8.png" alt="" /><span>Connections</span> <span id="connections-tab-badge" class="game-tab-badge" hidden></span
-          ></a>
         </nav>
         <p class="cx-subtitle">Find 4 groups of 4 Celeste elements that share something.</p>
       </header>

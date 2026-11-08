@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Celestedle Techs</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="theme-celeste.css" />
+    <link rel="icon" href="assets/berrywinged.png" type="image/png" />
+  </head>
+  <body>
+    <div id="custom-cursor">
+      <img
+        src="assets/illustration/birdcursor.png"
+        id="default-cursor"
+        alt=""
+      />
+      <img
+        src="assets/illustration/cursorbirdclicking.png"
+        id="pointer-cursor"
+        alt=""
+      />
+      <img
+        src="assets/illustration/cursorbirdwriting.png"
+        id="text-hover-cursor"
+        alt=""
+      />
+    </div>
+
+    <div id="layout-wrapper">
+      <div id="left-sidebar-column">
+        <div id="stats-sidebar" class="sidebar-block">
+          <div class="sidebar-header">
+            <img
+              src="./assets/illustration/backpack.png"
+              alt=""
+              class="sidebar-header-icon"
+            />
+            <h3>
+              Community Stats
+              <span id="stats-mode-label" class="small-subtext"></span>
+            </h3>
+          </div>
+          <div class="stats-list">
+            <p>Victories today: <span id="success-count">0</span></p>
+            <p>Avg. tries: <span id="avg-tries-count">-</span></p>
+            <p id="avg-hints-row">Avg. hints: <span id="avg-hints-count">-</span></p>
+            <p id="win-rate-row" hidden>Win rate: <span id="win-rate-count">-</span></p>
+            <p>Avg. time: <span id="avg-time-count">-</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div id="main-content-column">
+        <h1>Celestedle</h1>
+
+        <nav id="top-actions" class="top-actions" aria-label="Menu">
+          <button type="button" id="rules-btn" class="action-btn">
+            <img src="assets/illustration/journal.png" alt="" />
+            <span>Rules</span>
+          </button>
+          <button type="button" id="profile-btn" class="action-btn">
+            <img
+              src="assets/illustration/strawberry.png"
+              id="profile-btn-avatar"
+              alt=""
+            />
+            <span id="profile-btn-label">Profile</span>
+          </button>
+          <button type="button" id="leaderboard-btn" class="action-btn">
+            <img src="assets/illustration/goldflag.png" alt="" />
+            <span>Rankings</span>
+          </button>
+          <button type="button" id="options-btn" class="action-btn">
+            <img src="assets/illustration/options.png" alt="" />
+            <span>Options</span>
+          </button>
+        </nav>
+
+        <div class="quick-links">
+          <a id="admin-link" class="playtest-link admin-link" href="admin.html" hidden>🛠️ Admin</a>
+        </div>
+        <nav id="game-tabs" class="game-tabs" aria-label="Games">
+          <div class="game-tab-list">
+            <a class="game-tab" href="./"
+              ><img src="assets/illustration/start.png" alt="" /><span>Celestedle</span></a
+            >
+            <a id="connections-tab" class="game-tab" href="connections.html" hidden
+              ><img src="assets/illustration/pico8.png" alt="" /><span>Connections</span>
+              <span id="connections-tab-badge" class="game-tab-badge" hidden></span
+            ></a>
+            <a id="techs-tab" class="game-tab" href="techs.html" hidden aria-current="page"
+              ><img src="assets/illustration/feather.png" alt="" /><span>Techs</span>
+              <span id="techs-tab-badge" class="game-tab-badge" hidden></span
+            ></a>
+          </div>
+          <div id="mode-switch" role="group" aria-label="Game mode">
+            <button type="button" data-mode="normal" aria-pressed="true">
+              Normal
+            </button>
+            <button type="button" data-mode="hard" aria-pressed="false">
+              Hard
+            </button>
+          </div>
+        </nav>
+        <p
+          id="hard-rules"
+          class="hard-rules"
+          data-rules-mode="tech-hard"
+          data-rules-text="summary"
+          hidden
+        ></p>
+
+        <div id="game-status">
+          <p class="tries-badge">
+            <img
+              src="assets/illustration/normalflag.png"
+              alt="Tries"
+              class="btn-icon"
+            />
+            <span id="try-count">0</span>
+          </p>
+          <p class="tries-badge" id="game-timer-badge">
+            <img
+              src="assets/illustration/time.png"
+              alt="Time"
+              class="btn-icon"
+            />
+            <span id="game-timer-display">00:00</span>
+          </p>
+          <button id="hint-btn" class="btn">
+            <img src="assets/illustration/assist.png" alt="" class="btn-icon" />
+            <span id="hint-btn-text">Hints</span>
+          </button>
+          <button id="giveup-btn" class="btn">
+            <img src="assets/illustration/skull.png" alt="" class="btn-icon" />
+            <span>Give Up</span>
+          </button>
+          <button id="share-btn" hidden>Share</button>
+        </div>
+
+        <div id="hint-modal" class="rules-modal hidden">
+          <div class="rules-content modal-narrow">
+            <button
+              type="button"
+              class="close-modal-btn"
+              data-close-modal="hint-modal"
+              aria-label="Close"
+            >
+              &times;
+            </button>
+            <h2>Choose a Hint</h2>
+            <div class="modal-stack">
+              <button
+                type="button"
+                class="btn-primary"
+                data-hint-type="opposite"
+              >
+                Reveal the opposite tech
+              </button>
+              <button
+                type="button"
+                class="btn-primary"
+                data-hint-type="secret_info"
+              >
+                Reveal 1 correct attribute
+              </button>
+              <button
+                type="button"
+                class="btn-primary"
+                data-hint-type="truth_and_lies"
+              >
+                1 Truth &amp; 2 Lies
+              </button>
+              <!-- data-hint-choose : ouvre d'abord le choix d'un élément -->
+              <button
+                type="button"
+                class="btn-primary"
+                data-hint-type="info"
+                data-hint-choose
+              >
+                See a tech's info
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="active-hints-container"></div>
+        <div id="message-container"></div>
+
+        <section id="techs-locked" class="sidebar-block techs-locked" hidden>
+          <h2>Coming soon</h2>
+          <p>Celestedle Techs is being playtested. It will open to everyone soon!</p>
+        </section>
+
+        <div id="game-container">
+          <form id="guess-form">
+            <div class="input-container">
+              <input
+                type="text"
+                id="element-input"
+                autocomplete="off"
+                placeholder="Guess a tech..."
+                aria-label="Tech name"
+              />
+              <button type="button" id="show-all-btn" title="Show all techs">
+                <img src="assets/illustration/eye.png" alt="Show all" />
+              </button>
+              <div id="element-suggestions" class="suggestions-box"></div>
+            </div>
+            <button
+              type="submit"
+              id="guess-btn"
+              class="btn-primary"
+              aria-label="Guess"
+            >
+              <img
+                src="assets/illustration/right arrow.png"
+                alt=""
+                class="btn-icon-primary"
+              />
+            </button>
+          </form>
+
+          <table id="guesses-table" class="techs-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Difficulty</th>
+                <th>Utility</th>
+                <th>Dash</th>
+                <th>Hard&shy;coded</th>
+              </tr>
+            </thead>
+            <tbody id="guesses-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="right-sidebar-column">
+        <div id="timer-sidebar" class="sidebar-block">
+          <h3>Next Tech in:</h3>
+          <p id="next-word-timer"></p>
+          <p class="small-subtext">(or when there is an update)</p>
+        </div>
+
+        <div id="discord-sidebar" class="sidebar-block">
+          <div class="discord-promo-content">
+            <h3>Community</h3>
+            <p>
+              Join the Discord server to catch updates, read changelogs, or talk
+              to the dev! <br />
+              You can also check the code on GitHub, or help me with a small tip
+              on Ko-fi!
+            </p>
+            <a
+              href="https://discord.gg/3yqgMbuMbX"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="social-sidebar-link discord-sidebar-link"
+            >
+              <img src="assets/discordlogo.png" alt="" class="social-icon" />
+              Join Discord
+            </a>
+            <a
+              href="https://github.com/Ildyia/celestedle"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="social-sidebar-link github-sidebar-link"
+            >
+              <img src="assets/githublogo.png" alt="" class="social-icon" />
+              View on GitHub
+            </a>
+            <a
+              href="https://ko-fi.com/ildyia"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="social-sidebar-link kofi-sidebar-link"
+            >
+              <img
+                src="assets/illustration/love.png"
+                alt=""
+                class="social-icon"
+              />
+              Support me on Ko-fi!
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer id="site-footer">
+      <a href="credits.html" class="legal-link">Credits</a>
+      <a href="legal-notice.html" class="legal-link">Legal Notice</a>
+      <span id="app-version" class="app-version"></span>
+    </footer>
+
+    <div id="rules-modal" class="rules-modal hidden">
+      <div class="rules-content bug-modal-content">
+        <button
+          type="button"
+          class="close-modal-btn"
+          data-close-modal="rules-modal"
+          aria-label="Close"
+        >
+          &times;
+        </button>
+        <div class="rules-content-static">
+          <h2>Rules of Celestedle Techs</h2>
+          <p>
+            Guess the Celeste tech of the day by entering its name. Each guess
+            shows how close it is to the answer, column by column. Some techs
+            have short names too: "super", "hyper", "wb" or "theovator" work.
+          </p>
+
+          <h4>Columns</h4>
+          <ul>
+            <li><strong>Category</strong>: mechanics, dash tech, dashless tech, entity tech…</li>
+            <li>
+              <strong>Difficulty</strong>: from Passive to Beginner, Intermediate,
+              Advanced and Expert. A wrong difficulty shows ⬆️ when the answer is
+              harder, ⬇️ when it is easier.
+            </li>
+            <li><strong>Utility</strong>: what the tech is mostly used for.</li>
+            <li><strong>Dash</strong>: whether you need a dash to do it.</li>
+            <li>
+              <strong>Hardcoded</strong>: "yes" if the game has code for it,
+              "derived" if it comes from mixing other mechanics.
+            </li>
+          </ul>
+          <p class="example-label">Colours:</p>
+          <ul>
+            <li><span class="color-box correct"></span> Right value</li>
+            <li><span class="color-box wrong"></span> Wrong value (with an arrow for the difficulty)</li>
+          </ul>
+
+          <h4>Hints</h4>
+          <ul>
+            <li><strong>Opposite</strong>: the tech that shares the least with the answer.</li>
+            <li><strong>Secret Info</strong>: one value of the answer you don't know yet.</li>
+            <li><strong>1 Truth &amp; 2 Lies</strong>: three statements, only one is true.</li>
+            <li><strong>Tech Info</strong>: pick any tech and see all its values.</li>
+          </ul>
+          <p>Each hint can be used once per day, and hard mode allows fewer of them.</p>
+
+          <h4>Normal and Hard</h4>
+          <ul>
+            <li data-rules-mode="tech" data-rules-text="sentence">Normal: 3 hints, unlimited tries.</li>
+            <li>
+              <strong>Hard</strong>: its own tech of the day.
+              <span data-rules-mode="tech-hard" data-rules-text="sentence"></span>
+              Every guess must fit the clues you already have, or it is refused
+              and costs a try.
+            </li>
+          </ul>
+
+          <h4>Rankings</h4>
+          <p>
+            Techs have their own daily rankings, and count in the weekly and
+            all-time rankings with every other mode: see the rules of
+            Celestedle for how a game is scored. Each hint counts as one extra
+            try.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div id="options-modal" class="rules-modal hidden">
+      <div class="rules-content bug-modal-content modal-narrow">
+        <button
+          type="button"
+          class="close-modal-btn"
+          data-close-modal="options-modal"
+          aria-label="Close"
+        >
+          &times;
+        </button>
+        <h2>Options</h2>
+        <div class="option-row">
+          <label for="toggle-theme-checkbox"
+            >Celeste Background &amp; Theme</label
+          >
+          <label class="switch"
+            ><input type="checkbox" id="toggle-theme-checkbox" /><span
+              class="slider"
+            ></span
+          ></label>
+        </div>
+        <hr class="options-separator" />
+        <div class="option-row">
+          <label for="toggle-timer-checkbox">Show Timer</label>
+          <label class="switch"
+            ><input type="checkbox" id="toggle-timer-checkbox" checked /><span
+              class="slider"
+            ></span
+          ></label>
+        </div>
+        <hr class="options-separator" />
+        <div class="option-row">
+          <label for="toggle-cursor-checkbox">Custom Cursor</label>
+          <label class="switch"
+            ><input type="checkbox" id="toggle-cursor-checkbox" checked /><span
+              class="slider"
+            ></span
+          ></label>
+        </div>
+        <hr class="options-separator" />
+        <div class="option-row">
+          <label for="toggle-colorblind-checkbox">Colorblind Mode</label>
+          <label class="switch"
+            ><input type="checkbox" id="toggle-colorblind-checkbox" /><span
+              class="slider"
+            ></span
+          ></label>
+        </div>
+        <hr class="options-separator" />
+        <div class="colorblind-preview">
+          <p class="small-subtext">Colorblind preview:</p>
+          <div class="preview-grid">
+            <div class="preview-item">
+              <span class="color-box correct"></span> Correct
+            </div>
+            <div class="preview-item">
+              <span class="color-box partial"></span> Partial
+            </div>
+            <div class="preview-item">
+              <span class="color-box notTotallyWrong"></span> Close
+            </div>
+            <div class="preview-item">
+              <span class="color-box wrong"></span> Wrong
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="hint-pick-modal" class="rules-modal hidden">
+      <div class="rules-content modal-narrow">
+        <button
+          type="button"
+          class="close-modal-btn"
+          data-close-modal="hint-pick-modal"
+          aria-label="Close"
+        >
+          &times;
+        </button>
+        <h2>Which tech?</h2>
+        <p>Pick the tech you want to know more about.</p>
+        <form id="hint-pick-form">
+          <div class="input-container hint-pick-container">
+            <input
+              type="text"
+              id="hint-pick-input"
+              class="bug-input"
+              autocomplete="off"
+              placeholder="Type a tech..."
+              aria-label="Tech name"
+            />
+            <div id="hint-pick-suggestions" class="suggestions-box"></div>
+          </div>
+          <p id="hint-pick-error" class="text-wrong small-subtext" hidden></p>
+          <div class="modal-actions centered">
+            <button type="button" class="btn-secondary" data-close-modal="hint-pick-modal">Cancel</button>
+            <button type="submit" class="btn-primary">Use the hint</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="forfeit-modal" class="rules-modal hidden">
+      <div class="rules-content modal-narrow text-center">
+        <h2 class="text-wrong">Give up?</h2>
+        <p>
+          Are you sure you want to forfeit today's Celestedle and reveal the
+          secret answer?
+        </p>
+        <div class="modal-actions centered">
+          <button type="button" id="confirm-forfeit-btn" class="btn-danger">
+            Yes, Forfeit
+          </button>
+          <button
+            type="button"
+            class="btn-secondary"
+            data-close-modal="forfeit-modal"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="profile-modal" class="rules-modal hidden">
+      <div class="rules-content bug-modal-content">
+        <button
+          type="button"
+          class="close-modal-btn"
+          data-close-modal="profile-modal"
+          aria-label="Close"
+        >
+          &times;
+        </button>
+        <h2>My Profile</h2>
+        <form id="profile-form">
+          <div class="form-group">
+            <label for="profile-name-input">Name</label>
+            <input
+              type="text"
+              id="profile-name-input"
+              class="bug-input"
+              maxlength="20"
+              minlength="3"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <span class="form-label">Avatar</span>
+            <div id="profile-avatars" class="avatar-grid"></div>
+          </div>
+          <div class="form-group">
+            <span class="form-label">Colour</span>
+            <div id="profile-colors" class="color-grid"></div>
+          </div>
+          <div class="form-group">
+            <label for="profile-discord-input"
+              >Discord username (optional)</label
+            >
+            <input
+              type="text"
+              id="profile-discord-input"
+              class="bug-input"
+              maxlength="40"
+              placeholder="e.g. madeline_climbs"
+              autocomplete="off"
+            />
+            <p class="small-subtext">
+              Only visible to the admin, to contact you about your bug reports.
+              Never shown in the rankings.
+            </p>
+          </div>
+          <div class="form-group form-inline">
+            <input type="checkbox" id="profile-hidden-checkbox" />
+            <label for="profile-hidden-checkbox"
+              >Hide my profile from the leaderboards</label
+            >
+          </div>
+          <p id="profile-anonymous-note" class="small-subtext" hidden>
+            Your profile is anonymous: save it once to appear in the
+            leaderboards.
+          </p>
+          <button type="submit" class="btn-primary btn-wide">
+            Save profile
+          </button>
+        </form>
+
+        <div class="modal-section">
+          <h3>My stats</h3>
+          <div class="segmented" role="group" aria-label="Stats mode">
+            <button type="button" data-stats-mode="normal" aria-pressed="true">
+              Normal
+            </button>
+            <button type="button" data-stats-mode="hard" aria-pressed="false">
+              Hard
+            </button>
+          </div>
+          <div id="profile-stats"></div>
+        </div>
+
+        <div class="modal-section">
+          <h3>Player ID</h3>
+          <p class="small-subtext">
+            Public identifier of your profile. Give it to the site owner if you
+            are asked to help with the admin.
+          </p>
+          <code id="player-id" class="player-id"></code>
+        </div>
+
+        <div class="modal-section">
+          <h3>Recovery code</h3>
+          <p class="small-subtext">
+            Paste this code on another device to play with the same profile.
+            Keep it private: anyone with it can use your profile.
+          </p>
+          <div class="recovery-row">
+            <code id="recovery-code" data-visible="false">••••••••••••</code>
+            <button type="button" id="show-code-btn" class="btn-secondary">
+              Show
+            </button>
+            <button type="button" id="copy-code-btn" class="btn-secondary">
+              Copy
+            </button>
+          </div>
+          <form id="restore-form" class="recovery-row">
+            <input
+              type="text"
+              id="restore-code-input"
+              class="bug-input"
+              placeholder="Paste a recovery code"
+              aria-label="Recovery code"
+              autocomplete="off"
+            />
+            <button type="submit" class="btn-secondary">Use this code</button>
+          </form>
+          <p class="small-subtext">
+            Lost your code? If your Discord username is in your profile, use the
+            <strong>/passcode</strong> command on the Celestedle Discord server:
+            the bot sends you a new code in a private message.
+          </p>
+        </div>
+
+        <div class="modal-section">
+          <h3>Delete my profile</h3>
+          <p class="small-subtext">
+            Deletes your profile, your games, your stats and your votes. Your
+            bug reports stay, without your name. This can't be undone.
+          </p>
+          <button type="button" id="delete-profile-btn" class="btn-secondary">
+            Delete my profile
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="leaderboard-modal" class="rules-modal hidden">
+      <div class="rules-content bug-modal-content">
+        <button
+          type="button"
+          class="close-modal-btn"
+          data-close-modal="leaderboard-modal"
+          aria-label="Close"
+        >
+          &times;
+        </button>
+        <h2>Rankings</h2>
+        <div class="segmented" role="group" aria-label="Period">
+          <button type="button" data-board-period="daily" aria-pressed="true">
+            Today
+          </button>
+          <button type="button" data-board-period="weekly" aria-pressed="false">
+            This week
+          </button>
+          <button type="button" data-board-period="global" aria-pressed="false">
+            All time
+          </button>
+        </div>
+        <div id="leaderboard-modes" class="segmented board-modes" role="group" aria-label="Mode">
+          <button type="button" data-board-mode="normal" aria-pressed="true">
+            Normal
+          </button>
+          <button type="button" data-board-mode="hard" aria-pressed="false">
+            Hard
+          </button>
+          <button type="button" data-board-mode="cx-normal" aria-pressed="false" title="Connections" hidden>
+            Grid
+          </button>
+          <button type="button" data-board-mode="cx-hard" aria-pressed="false" title="Connections, hard mode" hidden>
+            Grid Hard
+          </button>
+          <button type="button" data-board-mode="tech" aria-pressed="false" hidden>
+            Techs
+          </button>
+          <button type="button" data-board-mode="tech-hard" aria-pressed="false" hidden>
+            Techs Hard
+          </button>
+        </div>
+        <div class="board-scroll">
+          <table class="leaderboard-table">
+            <thead id="leaderboard-head"></thead>
+            <tbody id="leaderboard-body"></tbody>
+          </table>
+        </div>
+        <div id="leaderboard-one-shots" class="one-shots" hidden></div>
+        <p id="leaderboard-note" class="small-subtext"></p>
+        <p id="leaderboard-anonymous-note" class="small-subtext" hidden>
+          You're not listed: open <strong>Profile</strong> and save it to join
+          the leaderboards.
+        </p>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="js/techs-app.js" type="module"></script>
+  </body>
+</html>

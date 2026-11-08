@@ -8,22 +8,22 @@ function minutesText(seconds) {
 }
 
 // Les indices bonus ne comptent pas dans la limite : « 1 hint + Element Info »
-function hintsText(rules) {
+function hintsText(rules, names = {}) {
   const base = rules.maxHints === 0 ? "no hints" : plural(rules.maxHints, "hint");
-  const bonus = (rules.bonusHints ?? []).map((type) => HINT_NAMES[type]);
+  const bonus = (rules.bonusHints ?? []).map((type) => names[type] ?? HINT_NAMES[type]);
   return bonus.length ? `${base} + ${bonus.join(" + ")}` : base;
 }
 
-function limits(rules) {
+function limits(rules, names) {
   return {
-    hints: hintsText(rules),
+    hints: hintsText(rules, names),
     tries: !rules.maxTries ? "unlimited tries" : rules.maxTries === 1 ? "1 try" : `${rules.maxTries} tries`
   };
 }
 
 // Bandeau sous le sélecteur de mode
-export function rulesSummary(rules) {
-  const { hints, tries } = limits(rules);
+export function rulesSummary(rules, names) {
+  const { hints, tries } = limits(rules, names);
   const time = rules.timeLimitSeconds ? formatDuration(rules.timeLimitSeconds) : "no time limit";
   const parts = [hints, tries, time, `suggestions from ${rules.suggestionMinChars} letters`];
   if (rules.consistentGuesses) parts.push("guesses must fit your clues (or cost a try)");
@@ -31,8 +31,8 @@ export function rulesSummary(rules) {
 }
 
 // Phrase de la fenêtre des règles
-export function rulesSentence(rules) {
-  const { hints, tries } = limits(rules);
+export function rulesSentence(rules, names) {
+  const { hints, tries } = limits(rules, names);
   const time = rules.timeLimitSeconds
     ? `${minutesText(rules.timeLimitSeconds)} from your first guess (or your hint, if you take it first)`
     : "no time limit";
@@ -40,11 +40,12 @@ export function rulesSentence(rules) {
 }
 
 // Remplit les éléments [data-rules-mode][data-rules-text="sentence|summary|suggestions"]
-export function fillRulesText(modeId, rules) {
+// names : noms des indices propres au jeu (« Tech Info »)
+export function fillRulesText(modeId, rules, names) {
   document.querySelectorAll(`[data-rules-mode="${modeId}"]`).forEach((node) => {
     const kind = node.dataset.rulesText;
-    if (kind === "sentence") node.textContent = rulesSentence(rules);
-    if (kind === "summary") node.textContent = rulesSummary(rules);
+    if (kind === "sentence") node.textContent = rulesSentence(rules, names);
+    if (kind === "summary") node.textContent = rulesSummary(rules, names);
     if (kind === "suggestions") node.textContent = String(rules.suggestionMinChars);
   });
 }

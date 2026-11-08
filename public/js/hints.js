@@ -1,5 +1,6 @@
 import { el, clear } from "./dom.js";
-import { capitalize, CATEGORY_LABELS } from "./format.js";
+import { capitalize } from "./format.js";
+import { CELESTEDLE } from "./catalogs.js";
 
 export const HINT_NAMES = {
   opposite: "Opposite",
@@ -9,17 +10,17 @@ export const HINT_NAMES = {
 };
 
 // Type et forme n'ont qu'une valeur ; chapitres et couleurs peuvent en avoir plusieurs
-function statementText({ category, value }) {
-  const verb = category === "shape" || category === "type" ? "is" : "includes";
-  return `${CATEGORY_LABELS[category]} ${verb} "${value}"`;
+function statementText(catalog, { category, value }) {
+  const verb = catalog.multiValued.includes(category) ? "includes" : "is";
+  return `${catalog.labels[category]} ${verb} "${value}"`;
 }
 
 const NOTHING_NEW = "You already know everything this hint could tell you.";
 
-function oppositeText(hint) {
-  if (!hint.element) return "No opposite element found.";
-  const categories = hint.categories.map((c) => CATEGORY_LABELS[c]);
-  if (categories.length === 4) return `${capitalize(hint.element)} is a perfect opposite!`;
+function oppositeText(catalog, hint) {
+  if (!hint.element) return `No opposite ${catalog.noun} found.`;
+  const categories = hint.categories.map((c) => catalog.labels[c]);
+  if (categories.length === catalog.categories.length) return `${capitalize(hint.element)} is a perfect opposite!`;
   if (categories.length === 0) return `${capitalize(hint.element)} shares something in every category.`;
   const list =
     categories.length === 1
@@ -28,14 +29,14 @@ function oppositeText(hint) {
   return `${capitalize(hint.element)} is opposite to the word on ${list}.`;
 }
 
-function hintBody(hint) {
-  if (hint.type === "opposite") return [el("p", { text: oppositeText(hint) })];
+function hintBody(catalog, hint) {
+  if (hint.type === "opposite") return [el("p", { text: oppositeText(catalog, hint) })];
   if (hint.type === "secret_info") {
     if (!hint.category) return [el("p", { text: NOTHING_NEW })];
     const verb = hint.category === "lieu" ? "can be found in" : hint.partial ? "includes" : "is";
     return [
       el("p", {}, [
-        `Its ${CATEGORY_LABELS[hint.category].toLowerCase()} ${verb}: `,
+        `Its ${catalog.labels[hint.category].toLowerCase()} ${verb}: `,
         el("strong", { text: hint.value })
       ])
     ];
@@ -47,22 +48,22 @@ function hintBody(hint) {
         "ul",
         { className: "hint-statements" },
         Object.entries(hint.values).map(([category, value]) =>
-          el("li", { text: `${CATEGORY_LABELS[category]}: ${value || "none"}` })
+          el("li", { text: `${catalog.labels[category]}: ${value || "none"}` })
         )
       )
     ];
   }
   if (hint.statements.length === 0) return [el("p", { text: NOTHING_NEW })];
-  return [el("ul", { className: "hint-statements" }, hint.statements.map((s) => el("li", { text: statementText(s) })))];
+  return [el("ul", { className: "hint-statements" }, hint.statements.map((s) => el("li", { text: statementText(catalog, s) })))];
 }
 
-export function renderHints(container, hints) {
+export function renderHints(container, hints, catalog = CELESTEDLE) {
   clear(container);
   for (const hint of hints) {
     container.append(
       el("div", { className: "hint-card" }, [
-        el("span", { className: "hint-card-title", text: HINT_NAMES[hint.type] }),
-        ...hintBody(hint)
+        el("span", { className: "hint-card-title", text: catalog.hintNames[hint.type] ?? HINT_NAMES[hint.type] }),
+        ...hintBody(catalog, hint)
       ])
     );
   }

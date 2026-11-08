@@ -79,6 +79,15 @@ export const api = {
 
   leaderboard: (period, mode) => request("GET", `/leaderboard?period=${period}&mode=${mode}`),
 
+  techsAccess: () => request("GET", "/techs-access"),
+  techsList: () => request("GET", "/techs/list"),
+  techsModes: () => request("GET", "/techs/modes"),
+  techsStats: (mode) => request("GET", `/techs/stats?mode=${mode}`),
+  techsGame: (mode) => request("GET", `/techs/game?mode=${mode}`),
+  techsGuess: (mode, guess, wordId) => request("POST", "/techs/guess", { body: { mode, guess, wordId } }),
+  techsHint: (mode, type, wordId, choice) => request("POST", "/techs/hint", { body: { mode, type, wordId, choice } }),
+  techsForfeit: (mode, wordId) => request("POST", "/techs/forfeit", { body: { mode, wordId } }),
+
   connections: (mode = "normal", practice = false) =>
     request("GET", `/connections?mode=${mode}${practice ? "&practice=1" : ""}`),
   connectionsGuess: (names, mode = "normal", practice = false, gridId) =>

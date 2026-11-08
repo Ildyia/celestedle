@@ -3,8 +3,12 @@ import { el, clear } from "./dom.js";
 import { capitalize } from "./format.js";
 
 // Liste déroulante sous le champ de saisie. Désactivée en mode Hard.
+// imageUrl(nom) : vignette ; detail(élément) : texte d'aide (couleurs des
+// éléments pour le mode daltonien)
 export class Suggestions {
-  constructor({ input, box, showAllButton }) {
+  constructor({ input, box, showAllButton, imageUrl = spriteUrl, detail = (e) => e.couleur ?? [] }) {
+    this.imageUrl = imageUrl;
+    this.detail = detail;
     this.input = input;
     this.box = box;
     this.showAllButton = showAllButton;
@@ -64,12 +68,12 @@ export class Suggestions {
     for (const [synonym, official] of Object.entries(this.synonyms)) {
       if (synonym.startsWith(query)) {
         const element = this.elements.find((e) => e.nom.toLowerCase() === official.toLowerCase());
-        add(official, priorityOf(official.toLowerCase()), element?.couleur ?? [], true);
+        add(official, priorityOf(official.toLowerCase()), element ? this.detail(element) : [], true);
       }
     }
-    for (const { nom, couleur } of this.elements) {
-      const lower = nom.toLowerCase();
-      if (lower.includes(query)) add(nom, priorityOf(lower), couleur, false);
+    for (const element of this.elements) {
+      const lower = element.nom.toLowerCase();
+      if (lower.includes(query)) add(element.nom, priorityOf(lower), this.detail(element), false);
     }
 
     const sorted = [...matches.entries()].sort(
@@ -81,7 +85,7 @@ export class Suggestions {
   showAll() {
     if (!this.enabled || !this.showAllAllowed) return;
     const sorted = [...this.elements].sort((a, b) => a.nom.localeCompare(b.nom));
-    this.render(sorted.map((e) => ({ name: e.nom, colors: e.couleur, isSynonym: false })));
+    this.render(sorted.map((e) => ({ name: e.nom, colors: this.detail(e), isSynonym: false })));
   }
 
   render(items) {
@@ -94,7 +98,7 @@ export class Suggestions {
         "div",
         { className: "suggestion-item", dataset: { name: item.name } },
         [
-          el("img", { className: "suggestion-thumb", attrs: { src: spriteUrl(item.name), alt: "", loading: "lazy" } }),
+          el("img", { className: "suggestion-thumb", attrs: { src: this.imageUrl(item.name), alt: "", loading: "lazy" } }),
           el("span", { text: capitalize(item.name) }),
           item.isSynonym
             ? el("img", { className: "synonym-marker", attrs: { src: "assets/entities/switch.svg", alt: "(synonym)" } })

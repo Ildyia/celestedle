@@ -716,3 +716,12 @@ test("classements : en Celestedle, un indice compte comme un essai", async () =>
   const twoTries = board.data.top.filter((e) => e.tries + e.hints === 2);
   assert.ok(twoTries.every((e) => e.rank < me.rank));
 });
+
+test("techs : en playtest par défaut, fermées aux joueurs sans accès", async () => {
+  const { token } = await api.newPlayer();
+  const access = await api.request("GET", "/api/techs-access", { token });
+  assert.equal(access.data.access, "playtest");
+  assert.equal(access.data.canPlay, false);
+  assert.equal((await api.request("GET", "/api/techs/game", { token })).status, 403);
+  assert.equal((await api.request("GET", "/api/leaderboard?period=daily&mode=tech", { token })).status, 403);
+});

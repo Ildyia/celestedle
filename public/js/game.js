@@ -1,4 +1,4 @@
-import { api, ApiError } from "./api.js";
+import { ApiError } from "./api.js";
 import { el, byId, clear, openModal, closeModal } from "./dom.js";
 import { capitalize, formatDuration } from "./format.js";
 import { storage, KEYS } from "./storage.js";
@@ -9,6 +9,7 @@ import { GameTimer } from "./game-timer.js";
 import { copyShareText } from "./share.js";
 import { showToast } from "./toast.js";
 import { fillRulesText } from "./rules-text.js";
+import { CELESTEDLE, modeKind } from "./catalogs.js";
 
 const SYNONYMS_USED_KEY = "celestedle_synonyms_used";
 
@@ -42,15 +43,18 @@ function memorialMessage() {
   ]);
 }
 
-// Partie du jour : l'état vient du serveur, la page ne fait que l'afficher
+// Partie du jour : l'état vient du serveur, la page ne fait que l'afficher.
+// catalog : Celestedle ou les techs (voir catalogs.js)
 export class Game {
-  constructor({ synonyms, suggestions, hintPicker, onFinished }) {
+  constructor({ synonyms, suggestions, hintPicker, onFinished, catalog = CELESTEDLE }) {
+    this.catalog = catalog;
     this.synonyms = synonyms;
     this.suggestions = suggestions;
     this.hintPicker = hintPicker;
     this.pickingHint = null; // indice en attente du choix d'un élément
     this.onFinished = onFinished;
-    this.mode = storage.get(KEYS.mode) === "hard" ? "hard" : "normal";
+    // Choix Normal / Hard partagé entre les jeux
+    this.mode = storage.get(KEYS.mode) === "hard" ? catalog.modes.hard : catalog.modes.normal;
     this.state = null;
     this.busy = false;
 
@@ -101,12 +105,12 @@ export class Game {
     document
       .querySelectorAll("[data-mode]")
       .forEach((btn) =>
-        btn.addEventListener("click", () => this.setMode(btn.dataset.mode))
+        btn.addEventListener("click", () => this.setMode(this.catalog.modes[btn.dataset.mode]))
       );
     // Une partie Hard a pu commencer dans un autre onglet : on revérifie
     // au retour sur la page, pour ne pas laisser le mode normal ouvert à côté
     const recheck = () => {
-      if (this.mode !== "hard" && player.token && !document.hidden) this.load();
+      if (this.mode !== this.catalog.modes.hard && player.token && !document.hidden) this.load();
     };
     window.addEventListener("focus", recheck);
     document.addEventListener("visibilitychange", recheck);
@@ -115,26 +119,26 @@ export class Game {
   async setMode(mode) {
     if (mode === this.mode || this.busy) return;
     this.mode = mode;
-    storage.set(KEYS.mode, mode);
+    storage.set(KEYS.mode, modeKind(this.catalog, mode));
     await this.load();
   }
 
   async load() {
     try {
-      const state = await api.game(this.mode);
+      const state = await this.catalog.api.game(this.mode);
       if (state.lockedBy && state.lockedBy !== this.mode) {
         showToast(
           "Your Hard game is still running: finish it (or give up) before going back to Normal.",
           4000
         );
         this.mode = state.lockedBy;
-        storage.set(KEYS.mode, this.mode);
+        storage.set(KEYS.mode, modeKind(this.catalog, this.mode));
         return this.load();
       }
       this.render(state);
       if (state.reset) {
         showToast(
-          "The secret word has been changed by an admin! Your game has been reset.",
+          `The secret ${this.catalog.noun} has been changed by an admin! Your game has been reset.`,
           4000
         );
       }
@@ -163,14 +167,15 @@ export class Game {
     this.state = state;
     const { nodes } = this;
     const playing = state.status === "playing";
-    const hard = state.mode === "hard";
+    const hard = state.mode === this.catalog.modes.hard;
+    const kind = modeKind(this.catalog, state.mode);
 
     document.body.classList.toggle("hard-mode", hard);
     // Partie Hard commencée : pas de retour au mode normal avant la fin
     const locked = hard && playing && Boolean(state.startedAt);
     document.querySelectorAll("[data-mode]").forEach((btn) => {
-      btn.setAttribute("aria-pressed", String(btn.dataset.mode === state.mode));
-      btn.disabled = locked && btn.dataset.mode !== state.mode;
+      btn.setAttribute("aria-pressed", String(btn.dataset.mode === kind));
+      btn.disabled = locked && btn.dataset.mode !== kind;
       btn.title = btn.disabled ? "Finish your Hard game first" : "";
     });
     nodes.hardRules.hidden = !hard;
@@ -178,8 +183,8 @@ export class Game {
     nodes.tries.textContent = state.rules.maxTries
       ? `${state.tries}/${state.rules.maxTries}`
       : state.tries;
-    renderBoard(nodes.board, state, this.synonymsUsed());
-    renderHints(nodes.hints, state.hints);
+    renderBoard(nodes.board, state, this.synonymsUsed(), this.catalog);
+    renderHints(nodes.hints, state.hints, this.catalog);
     updateHintButtons(state);
     this.timer.update(state);
     this.suggestions.setRules({
@@ -187,7 +192,7 @@ export class Game {
       minChars: state.rules.suggestionMinChars,
       showAll: state.rules.showAllList
     });
-    fillRulesText(state.mode, state.rules);
+    fillRulesText(state.mode, state.rules, this.catalog.hintNames);
 
     nodes.form.hidden = !playing;
     nodes.hintBtn.hidden = !playing;
@@ -208,7 +213,7 @@ export class Game {
         className: "win-message",
         title: "GG! Victory! 🎉",
         body: [
-          "You found the secret element in ",
+          `You found the secret ${this.catalog.noun} in `,
           el("strong", { text: String(state.tries) }),
           ` ${state.tries === 1 ? "try" : "tries"} and `,
           el("strong", { text: time }),
@@ -219,7 +224,7 @@ export class Game {
         className: "lose-message",
         title: "Nice try... Aba(n)ddon! ❌",
         body: [
-          "You didn't find today's Celestedle! The answer was ",
+          `You didn't find today's ${this.catalog.title}! The answer was `,
           answer,
           ` (time: ${time}, ${hints}).`
         ]
@@ -233,7 +238,7 @@ export class Game {
         body: [
           "The answer was ",
           answer,
-          `. Come back tomorrow for a new Hard word.`
+          `. Come back tomorrow for a new Hard ${this.catalog.noun === "element" ? "word" : this.catalog.noun}.`
         ]
       }
     }[state.status];
@@ -259,7 +264,7 @@ export class Game {
     const { guess, synonymOf } = this.synonyms.resolve(rawInput);
     try {
       await player.ensure();
-      const { state, guess: result, rejected } = await api.guess(this.mode, guess, this.state?.wordId);
+      const { state, guess: result, rejected } = await this.catalog.api.guess(this.mode, guess, this.state?.wordId);
       this.suggestions.hide();
       if (rejected) {
         // Hard : essai incohérent, refusé mais compté
@@ -303,7 +308,7 @@ export class Game {
     // Synonymes acceptés, comme pour un essai
     const { guess } = this.synonyms.resolve(input.value);
     if (!this.hintPicker.elements.some((e) => e.nom.toLowerCase() === guess.trim().toLowerCase())) {
-      error.textContent = "Unknown element. Pick one from the list.";
+      error.textContent = `Unknown ${this.catalog.noun}. Pick one from the list.`;
       error.hidden = false;
       return;
     }
@@ -316,7 +321,7 @@ export class Game {
     closeModal("hint-modal");
     try {
       await player.ensure();
-      this.render(await api.hint(this.mode, type, this.state?.wordId, choice));
+      this.render(await this.catalog.api.hint(this.mode, type, this.state?.wordId, choice));
     } catch (err) {
       if (err instanceof ApiError && (err.details?.lockedBy || err.details?.wordChanged)) await this.load();
       showToast(err.message);
@@ -327,7 +332,7 @@ export class Game {
     closeModal("forfeit-modal");
     try {
       await player.ensure();
-      const state = await api.forfeit(this.mode, this.state?.wordId);
+      const state = await this.catalog.api.forfeit(this.mode, this.state?.wordId);
       this.render(state);
       this.finished(state);
     } catch (err) {
@@ -345,7 +350,7 @@ export class Game {
 
   async share() {
     try {
-      await copyShareText(this.state);
+      await copyShareText(this.state, this.catalog);
       this.nodes.shareBtn.textContent = "Copied!";
     } catch {
       this.nodes.shareBtn.textContent = "Copy failed";
