@@ -1,18 +1,895 @@
 [
-  { "name": "Climbhop", "category": "Mechanics", "difficulty": "Beginner", "utility": "Stamina Preservation", "dash_required": "no", "hardcoded": "yes" },
-  { "name": "Corner Correction", "category": "Mechanics", "difficulty": "Passive", "utility": "Leniency", "dash_required": "no", "hardcoded": "yes" },
-  { "name": "Coyote Time", "category": "Mechanics", "difficulty": "Passive", "utility": "Leniency", "dash_required": "no", "hardcoded": "yes" },
-  { "name": "Dash Attack", "category": "Mechanics", "difficulty": "Beginner", "utility": "Interaction Window", "dash_required": "yes", "hardcoded": "yes" },
-  { "name": "Fastfalling", "category": "Mechanics", "difficulty": "Beginner", "utility": "Vertical Speed", "dash_required": "no", "hardcoded": "yes" },
-  { "name": "Liftboost", "category": "Mechanics", "difficulty": "Beginner", "utility": "Momentum Transfer", "dash_required": "no", "hardcoded": "yes" },
-  { "name": "Superdash (Super)", "category": "Dash Tech", "difficulty": "Intermediate", "utility": "Horizontal Speed", "dash_required": "yes", "hardcoded": "yes" },
-  { "name": "Hyperdash (Hyper)", "category": "Dash Tech", "difficulty": "Intermediate", "utility": "Horizontal Speed", "dash_required": "yes", "hardcoded": "yes" },
-  { "name": "Extended Super/Hyper", "category": "Dash Tech", "difficulty": "Intermediate", "utility": "Dash Recovery", "dash_required": "yes", "hardcoded": "derived" },
-  { "name": "Wavedash", "category": "Dash Tech", "difficulty": "Intermediate", "utility": "Horizontal Speed", "dash_required": "yes", "hardcoded": "derived" },
-  { "name": "Ultradash (Ultra)", "category": "Dash Tech", "difficulty": "Advanced", "utility": "Momentum Multiplier", "dash_required": "yes", "hardcoded": "yes" },
-  { "name": "Wallbounce (WB)", "category": "Dash Tech", "difficulty": "Intermediate", "utility": "Vertical Height", "dash_required": "yes", "hardcoded": "yes" },
-  { "name": "Demodash", "category": "Dash Tech", "difficulty": "Advanced", "utility": "Hitbox Reduction", "dash_required": "yes", "hardcoded": "yes" },
-  { "name": "Neutral Jump", "category": "Dashless Tech", "difficulty": "Intermediate", "utility": "Dashless Climb", "dash_required": "no", "hardcoded": "derived" },
-  { "name": "Cornerboost (CB)", "category": "Dashless Tech", "difficulty": "Advanced", "utility": "Horizontal Speed", "dash_required": "no", "hardcoded": "derived" },
-  { "name": "Jellyvator / Theovator", "category": "Entity Tech", "difficulty": "Expert", "utility": "Infinite Height", "dash_required": "no", "hardcoded": "derived" }
+  {
+    "name": "Climbhop",
+    "aliases": [],
+    "category": "Mechanics",
+    "difficulty": "Passive",
+    "utility": "Leniency",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Corner Correction",
+    "aliases": [],
+    "category": "Mechanics",
+    "difficulty": "Passive",
+    "utility": "Leniency",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Coyote Time",
+    "aliases": [
+      "Coyote Jump",
+      "Coyote Frames"
+    ],
+    "category": "Mechanics",
+    "difficulty": "Passive",
+    "utility": "Leniency",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Dash Attack",
+    "aliases": [],
+    "category": "Mechanics",
+    "difficulty": "Beginner",
+    "utility": "Leniency",
+    "dash_required": "Yes",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Directional Spikes",
+    "aliases": [],
+    "category": "Mechanics",
+    "difficulty": "Passive",
+    "utility": "Clipping",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Fastbubbling",
+    "aliases": [
+      "Fastbubble"
+    ],
+    "category": "Mechanics",
+    "difficulty": "Beginner",
+    "utility": "Control",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Fastfalling",
+    "aliases": [
+      "Fastfall"
+    ],
+    "category": "Mechanics",
+    "difficulty": "Beginner",
+    "utility": "Speed",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Input Buffering",
+    "aliases": [
+      "Buffering",
+      "Buffer"
+    ],
+    "category": "Mechanics",
+    "difficulty": "Passive",
+    "utility": "Leniency",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Liftboost",
+    "aliases": [
+      "Blockboost"
+    ],
+    "category": "Mechanics",
+    "difficulty": "Beginner",
+    "utility": "Speed",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Screen Transition",
+    "aliases": [],
+    "category": "Mechanics",
+    "difficulty": "Beginner",
+    "utility": "Dash Recovery",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Wind Resistance",
+    "aliases": [],
+    "category": "Mechanics",
+    "difficulty": "Beginner",
+    "utility": "Control",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Spring Cancel",
+    "aliases": [],
+    "category": "Dash Tech",
+    "difficulty": "Intermediate",
+    "utility": "Control",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Superdash (Super)",
+    "aliases": [],
+    "category": "Dash Tech",
+    "difficulty": "Intermediate",
+    "utility": "Speed",
+    "dash_required": "Yes",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Hyperdash (Hyper)",
+    "aliases": [],
+    "category": "Dash Tech",
+    "difficulty": "Intermediate",
+    "utility": "Speed",
+    "dash_required": "Yes",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Extended Super/Hyper",
+    "aliases": [
+      "Extended Dashes",
+      "Extended Super",
+      "Extended Hyper"
+    ],
+    "category": "Dash Tech",
+    "difficulty": "Intermediate",
+    "utility": "Dash Recovery",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Reverse Super/Hyper",
+    "aliases": [
+      "Reverse Dashes",
+      "Reverse Super",
+      "Reverse Hyper"
+    ],
+    "category": "Dash Tech",
+    "difficulty": "Intermediate",
+    "utility": "Speed",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Wavedash",
+    "aliases": [
+      "Midair Hyper"
+    ],
+    "category": "Dash Tech",
+    "difficulty": "Intermediate",
+    "utility": "Speed",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Superwave",
+    "aliases": [],
+    "category": "Dash Tech",
+    "difficulty": "Advanced",
+    "utility": "Speed",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Hyper Bunnyhop",
+    "aliases": [
+      "Hyper Bhop"
+    ],
+    "category": "Dash Tech",
+    "difficulty": "Intermediate",
+    "utility": "Speed",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Ultradash (Ultra)",
+    "aliases": [],
+    "category": "Dash Tech",
+    "difficulty": "Advanced",
+    "utility": "Speed",
+    "dash_required": "Yes",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Grounded Ultra",
+    "aliases": [],
+    "category": "Dash Tech",
+    "difficulty": "Advanced",
+    "utility": "Speed",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Delayed Ultra",
+    "aliases": [],
+    "category": "Dash Tech",
+    "difficulty": "Expert",
+    "utility": "Speed",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Demodash (Demo)",
+    "aliases": [
+      "Crouch Dash"
+    ],
+    "category": "Dash Tech",
+    "difficulty": "Intermediate",
+    "utility": "Hitbox",
+    "dash_required": "Yes",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Demohyper",
+    "aliases": [],
+    "category": "Dash Tech",
+    "difficulty": "Advanced",
+    "utility": "Speed",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Wallbounce (WB)",
+    "aliases": [
+      "Wounce"
+    ],
+    "category": "Dash Tech",
+    "difficulty": "Intermediate",
+    "utility": "Height",
+    "dash_required": "Yes",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Spiked Wallbounce",
+    "aliases": [],
+    "category": "Dash Tech",
+    "difficulty": "Advanced",
+    "utility": "Height",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Undemo Dashing (Omed)",
+    "aliases": [
+      "Undemo"
+    ],
+    "category": "Dash Tech",
+    "difficulty": "Advanced",
+    "utility": "Hitbox",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Bunnyhop (Bhop)",
+    "aliases": [],
+    "category": "Dashless Tech",
+    "difficulty": "Beginner",
+    "utility": "Speed",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Cornerjump",
+    "aliases": [],
+    "category": "Dashless Tech",
+    "difficulty": "Beginner",
+    "utility": "Height",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "5jump",
+    "aliases": [],
+    "category": "Dashless Tech",
+    "difficulty": "Advanced",
+    "utility": "Distance",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Cornerkick",
+    "aliases": [
+      "Coffee Jump"
+    ],
+    "category": "Dashless Tech",
+    "difficulty": "Intermediate",
+    "utility": "Height",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Ceiling Pop (Cpop)",
+    "aliases": [],
+    "category": "Dashless Tech",
+    "difficulty": "Expert",
+    "utility": "Distance",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Crouch Jump",
+    "aliases": [],
+    "category": "Dashless Tech",
+    "difficulty": "Beginner",
+    "utility": "Hitbox",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Neutral Jump (Neutral)",
+    "aliases": [],
+    "category": "Dashless Tech",
+    "difficulty": "Intermediate",
+    "utility": "Stamina",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Wallboost",
+    "aliases": [],
+    "category": "Dashless Tech",
+    "difficulty": "Advanced",
+    "utility": "Stamina",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Cornerboost (CB)",
+    "aliases": [],
+    "category": "Dashless Tech",
+    "difficulty": "Advanced",
+    "utility": "Speed",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Reverse Cornerboost (RCB)",
+    "aliases": [],
+    "category": "Dashless Tech",
+    "difficulty": "Expert",
+    "utility": "Speed",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Double Cornerboost (DCB)",
+    "aliases": [],
+    "category": "Dashless Tech",
+    "difficulty": "Expert",
+    "utility": "Speed",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "6jump",
+    "aliases": [],
+    "category": "Dashless Tech",
+    "difficulty": "Advanced",
+    "utility": "Distance",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "7jump",
+    "aliases": [],
+    "category": "Dashless Tech",
+    "difficulty": "Expert",
+    "utility": "Distance",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "4tile",
+    "aliases": [],
+    "category": "Dashless Tech",
+    "difficulty": "Advanced",
+    "utility": "Height",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "6tile",
+    "aliases": [],
+    "category": "Dashless Tech",
+    "difficulty": "Expert",
+    "utility": "Height",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Spike Climb",
+    "aliases": [],
+    "category": "Dashless Tech",
+    "difficulty": "Expert",
+    "utility": "Height",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Spike Jump",
+    "aliases": [
+      "Spikejump"
+    ],
+    "category": "Dashless Tech",
+    "difficulty": "Expert",
+    "utility": "Height",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Stamina Cancel",
+    "aliases": [],
+    "category": "Dashless Tech",
+    "difficulty": "Intermediate",
+    "utility": "Stamina",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Cornerslip",
+    "aliases": [
+      "Jasig Jump"
+    ],
+    "category": "Dashless Tech",
+    "difficulty": "Advanced",
+    "utility": "Dash Recovery",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Archie",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Advanced",
+    "utility": "Height",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Bubble Super/Hyper",
+    "aliases": [
+      "Bubble Super",
+      "Bubble Hyper",
+      "Bubsuper"
+    ],
+    "category": "Entity Tech",
+    "difficulty": "Advanced",
+    "utility": "Speed",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Bumper Clip",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Expert",
+    "utility": "Clipping",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Launch Boost",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Beginner",
+    "utility": "Speed",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Fish Jump",
+    "aliases": [
+      "Snowball Jump",
+      "Seeker Jump",
+      "Oshiro Jump",
+      "Iceball Jump",
+      "Fish Super"
+    ],
+    "category": "Entity Tech",
+    "difficulty": "Beginner",
+    "utility": "Height",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Cloud Super/Hyper",
+    "aliases": [
+      "Cloud Hyper",
+      "Cloud Super"
+    ],
+    "category": "Entity Tech",
+    "difficulty": "Advanced",
+    "utility": "Height",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Core Super/Hyper",
+    "aliases": [
+      "Core Hyper",
+      "Core Super"
+    ],
+    "category": "Entity Tech",
+    "difficulty": "Advanced",
+    "utility": "Speed",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Delayed Blockboost",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Advanced",
+    "utility": "Speed",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Multiboost",
+    "aliases": [
+      "Double Blockboost"
+    ],
+    "category": "Entity Tech",
+    "difficulty": "Expert",
+    "utility": "Speed",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Dream Grab",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Beginner",
+    "utility": "Control",
+    "dash_required": "Yes",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Dream Jump",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Beginner",
+    "utility": "Height",
+    "dash_required": "Yes",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Dream Hyper",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Advanced",
+    "utility": "Speed",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Dream Smuggle",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Expert",
+    "utility": "Control",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Featherboost",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Intermediate",
+    "utility": "Speed",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Feather Super",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Intermediate",
+    "utility": "Speed",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Heart Ultra",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Intermediate",
+    "utility": "Speed",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Jumpthrough Clip",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Intermediate",
+    "utility": "Clipping",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Feather Clip",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Advanced",
+    "utility": "Clipping",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Feather Hitbox Preservation",
+    "aliases": [
+      "Feather Hitbox Retention"
+    ],
+    "category": "Entity Tech",
+    "difficulty": "Expert",
+    "utility": "Hitbox",
+    "dash_required": "No",
+    "hardcoded": "Glitch"
+  },
+  {
+    "name": "Lava Neutrals",
+    "aliases": [
+      "Lava Neutral"
+    ],
+    "category": "Entity Tech",
+    "difficulty": "Advanced",
+    "utility": "Stamina",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Moon Boost",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Advanced",
+    "utility": "Speed",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Cassette Boost",
+    "aliases": [
+      "Reform Boost"
+    ],
+    "category": "Entity Tech",
+    "difficulty": "Advanced",
+    "utility": "Height",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Reform Kick",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Advanced",
+    "utility": "Height",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Cassoosted Fuper",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Expert",
+    "utility": "Speed",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Core Block Entity Displacement (CED)",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Expert",
+    "utility": "Control",
+    "dash_required": "Yes",
+    "hardcoded": "Glitch"
+  },
+  {
+    "name": "Seeker Bounce",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Intermediate",
+    "utility": "Speed",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Theo/Jelly Regrab",
+    "aliases": [
+      "Theo Regrab",
+      "Jelly Regrab",
+      "Regrab"
+    ],
+    "category": "Entity Tech",
+    "difficulty": "Intermediate",
+    "utility": "Height",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Neutral Drop",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Beginner",
+    "utility": "Control",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Holdable Laddering",
+    "aliases": [
+      "Jelly Laddering",
+      "Jelly Ladder"
+    ],
+    "category": "Entity Tech",
+    "difficulty": "Expert",
+    "utility": "Height",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Theo/Jelly Ultra",
+    "aliases": [
+      "Theo Ultra",
+      "Jelly Ultra"
+    ],
+    "category": "Entity Tech",
+    "difficulty": "Expert",
+    "utility": "Speed",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Backboost",
+    "aliases": [
+      "Throwable Backboost"
+    ],
+    "category": "Entity Tech",
+    "difficulty": "Intermediate",
+    "utility": "Speed",
+    "dash_required": "No",
+    "hardcoded": "Coded"
+  },
+  {
+    "name": "Jellyvator / Theovator",
+    "aliases": [
+      "Vator"
+    ],
+    "category": "Entity Tech",
+    "difficulty": "Advanced",
+    "utility": "Height",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Waterboost",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Advanced",
+    "utility": "Speed",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Koral Clip",
+    "aliases": [],
+    "category": "Entity Tech",
+    "difficulty": "Expert",
+    "utility": "Clipping",
+    "dash_required": "No",
+    "hardcoded": "Glitch"
+  },
+  {
+    "name": "Bino Clip",
+    "aliases": [],
+    "category": "Other Tech",
+    "difficulty": "Advanced",
+    "utility": "Clipping",
+    "dash_required": "No",
+    "hardcoded": "Glitch"
+  },
+  {
+    "name": "Bino Control Storage (BCS)",
+    "aliases": [],
+    "category": "Other Tech",
+    "difficulty": "TAS",
+    "utility": "Control",
+    "dash_required": "No",
+    "hardcoded": "Glitch"
+  },
+  {
+    "name": "Bubsdrop",
+    "aliases": [],
+    "category": "Other Tech",
+    "difficulty": "Advanced",
+    "utility": "Control",
+    "dash_required": "No",
+    "hardcoded": "Glitch"
+  },
+  {
+    "name": "Cassette Raise",
+    "aliases": [],
+    "category": "Other Tech",
+    "difficulty": "Expert",
+    "utility": "Control",
+    "dash_required": "No",
+    "hardcoded": "Glitch"
+  },
+  {
+    "name": "Cutscene Warp",
+    "aliases": [],
+    "category": "Other Tech",
+    "difficulty": "Intermediate",
+    "utility": "Clipping",
+    "dash_required": "No",
+    "hardcoded": "Glitch"
+  },
+  {
+    "name": "Half Stamina Climbing",
+    "aliases": [],
+    "category": "Other Tech",
+    "difficulty": "Expert",
+    "utility": "Stamina",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Kermit Dash",
+    "aliases": [],
+    "category": "Other Tech",
+    "difficulty": "Expert",
+    "utility": "Control",
+    "dash_required": "Yes",
+    "hardcoded": "Glitch"
+  },
+  {
+    "name": "Pause Buffering",
+    "aliases": [],
+    "category": "Other Tech",
+    "difficulty": "Intermediate",
+    "utility": "Leniency",
+    "dash_required": "No",
+    "hardcoded": "Glitch"
+  },
+  {
+    "name": "Roboboost",
+    "aliases": [],
+    "category": "Other Tech",
+    "difficulty": "TAS",
+    "utility": "Speed",
+    "dash_required": "Yes",
+    "hardcoded": "Derived"
+  },
+  {
+    "name": "Spinner Stunning",
+    "aliases": [],
+    "category": "Other Tech",
+    "difficulty": "TAS",
+    "utility": "Clipping",
+    "dash_required": "No",
+    "hardcoded": "Glitch"
+  },
+  {
+    "name": "Subpixel Manipulation",
+    "aliases": [],
+    "category": "Other Tech",
+    "difficulty": "Expert",
+    "utility": "Control",
+    "dash_required": "No",
+    "hardcoded": "Derived"
+  }
 ]

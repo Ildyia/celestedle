@@ -37,7 +37,7 @@ export const TECHS = {
     difficulty: "Difficulty",
     utility: "Utility",
     dash_required: "Dash",
-    hardcoded: "Hardcoded"
+    hardcoded: "Origin"
   },
   multiValued: [],
   // Image ou GIF envoyé depuis l'admin (une image par défaut sinon)

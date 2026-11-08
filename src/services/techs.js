@@ -14,11 +14,12 @@ const CATEGORY_LABELS = {
   difficulty: "Difficulty",
   utility: "Utility",
   dash_required: "Dash",
-  hardcoded: "Hardcoded"
+  hardcoded: "Origin"
 };
 
-// La difficulté se compare dans l'ordre : flèche vers le haut ou le bas
-const DIFFICULTIES = ["passive", "beginner", "intermediate", "advanced", "expert"];
+// La difficulté se compare dans l'ordre : flèche vers le haut ou le bas.
+// « TAS » : en pratique réservée aux tool-assisted speedruns.
+const DIFFICULTIES = ["passive", "beginner", "intermediate", "advanced", "expert", "tas"];
 
 const comparator = createComparator({
   categories: techsRepo.TECH_FIELDS,
@@ -35,8 +36,7 @@ const hintCatalog = {
   displayValues: comparator.displayValues
 };
 
-// Règles des deux modes, sur le modèle de Celestedle (16 techs au départ :
-// le Hard laisse moins d'essais)
+// Règles des deux modes, sur le modèle de Celestedle
 const MODES = {
   tech: {
     id: "tech",
@@ -51,7 +51,7 @@ const MODES = {
   "tech-hard": {
     id: "tech-hard",
     maxHints: 1,
-    maxTries: 6,
+    maxTries: 8,
     timeLimitSeconds: 3 * 60,
     suggestionMinChars: 3,
     showAllList: false,

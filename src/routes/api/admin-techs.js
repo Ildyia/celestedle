@@ -12,8 +12,9 @@ const { todayParis } = require("../../utils/dates");
 const router = express.Router();
 router.use("/admin/techs", requireStaff);
 
+// « tas » s'écrit en capitales, les autres niveaux avec une majuscule
 function capitalize(text) {
-  return text.charAt(0).toUpperCase() + text.slice(1);
+  return text === "tas" ? "TAS" : text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 function secretSummary(mode) {

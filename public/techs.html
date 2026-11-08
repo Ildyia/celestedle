@@ -230,7 +230,7 @@
                 <th>Difficulty</th>
                 <th>Utility</th>
                 <th>Dash</th>
-                <th>Hard&shy;coded</th>
+                <th>Origin</th>
               </tr>
             </thead>
             <tbody id="guesses-body"></tbody>
@@ -310,23 +310,32 @@
           <h2>Rules of Celestedle Techs</h2>
           <p>
             Guess the Celeste tech of the day by entering its name. Each guess
-            shows how close it is to the answer, column by column. Some techs
-            have short names too: "super", "hyper", "wb" or "theovator" work.
+            shows how close it is to the answer, column by column. Short names
+            work too: "super", "hyper", "wb", "bhop", "cb" or "theovator".
           </p>
 
           <h4>Columns</h4>
           <ul>
-            <li><strong>Category</strong>: mechanics, dash tech, dashless tech, entity tech…</li>
             <li>
-              <strong>Difficulty</strong>: from Passive to Beginner, Intermediate,
-              Advanced and Expert. A wrong difficulty shows ⬆️ when the answer is
-              harder, ⬇️ when it is easier.
+              <strong>Category</strong>: Mechanics, Dash Tech, Dashless Tech,
+              Entity Tech or Other Tech, like on the Celeste Wiki.
             </li>
-            <li><strong>Utility</strong>: what the tech is mostly used for.</li>
+            <li>
+              <strong>Difficulty</strong>: Passive, Beginner, Intermediate,
+              Advanced, Expert or TAS (only really done in tool-assisted
+              runs). A wrong difficulty shows ⬆️ when the answer is harder,
+              ⬇️ when it is easier.
+            </li>
+            <li>
+              <strong>Utility</strong>: what it is mostly used for: Speed,
+              Height, Distance, Stamina, Dash Recovery, Hitbox, Clipping,
+              Leniency or Control.
+            </li>
             <li><strong>Dash</strong>: whether you need a dash to do it.</li>
             <li>
-              <strong>Hardcoded</strong>: "yes" if the game has code for it,
-              "derived" if it comes from mixing other mechanics.
+              <strong>Origin</strong>: Coded (the game has code for it),
+              Derived (it comes from mixing other mechanics) or Glitch (a bug
+              of the game).
             </li>
           </ul>
           <p class="example-label">Colours:</p>
@@ -334,6 +343,10 @@
             <li><span class="color-box correct"></span> Right value</li>
             <li><span class="color-box wrong"></span> Wrong value (with an arrow for the difficulty)</li>
           </ul>
+          <p class="small-subtext">
+            Tech list based on the
+            <a href="https://celeste.ink/wiki/Tech" target="_blank" rel="noopener">Celeste Wiki</a>.
+          </p>
 
           <h4>Hints</h4>
           <ul>

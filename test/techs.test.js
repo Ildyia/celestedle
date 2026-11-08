@@ -25,10 +25,32 @@ test("techs.json : techs importées, synonymes tirés des noms", () => {
   assert.equal(techsRepo.findByNameOrAlias("theovator").nom, "Jellyvator / Theovator");
 });
 
+test("techs.json v2 : techs ajoutées, champs jamais modifiés mis à jour, modifications de l'admin gardées", () => {
+  const db = require("../src/db");
+  const { seedTechs } = require("../src/db/seed-techs");
+  // Base remplie avec la version 1, puis modifiée dans l'admin
+  db.prepare("UPDATE settings SET value = '1' WHERE key = 'techs_seed_version'").run();
+  db.prepare("DELETE FROM techs WHERE name = 'Archie'").run();
+  db.prepare("UPDATE techs SET utility = 'Stamina Preservation', difficulty = 'Beginner' WHERE name = 'Climbhop'").run();
+  db.prepare("UPDATE techs SET utility = 'My own value' WHERE name = 'Coyote Time'").run();
+  db.prepare("UPDATE techs SET name = 'Demodash' WHERE name = 'Demodash (Demo)'").run();
+
+  seedTechs(db);
+  assert.ok(techsRepo.findByName("Archie"), "tech manquante ajoutée");
+  const climbhop = techsRepo.findByName("Climbhop");
+  assert.equal(climbhop.utility, "Leniency");
+  assert.equal(climbhop.difficulty, "Passive");
+  assert.equal(techsRepo.findByName("Coyote Time").utility, "My own value", "valeur de l'admin gardée");
+  assert.equal(techsRepo.findByNameOrAlias("demo").nom, "Demodash (Demo)", "renommée, synonymes ajoutés");
+  assert.equal(techsRepo.findByNameOrAlias("bhop").nom, "Bunnyhop (Bhop)");
+  assert.ok(techsRepo.count() >= 90);
+});
+
 test("comparaison : la difficulté dit si la réponse est plus ou moins dure", () => {
   const { compareCategory } = techs.comparator;
   assert.equal(compareCategory("difficulty", "Beginner", "Advanced"), "higher");
   assert.equal(compareCategory("difficulty", "Expert", "Passive"), "lower");
+  assert.equal(compareCategory("difficulty", "Expert", "TAS"), "higher");
   assert.equal(compareCategory("difficulty", "Intermediate", "intermediate"), "correct");
   assert.equal(compareCategory("category", "Dash Tech", "Mechanics"), "wrong");
 });
@@ -111,12 +133,12 @@ test("admin des techs : créer, modifier, image GIF, tech du jour, accès", asyn
   assert.ok(list.data.difficulties.includes("Expert"));
   assert.ok(list.data.today.tech.secret.nom);
 
-  const tech = { name: "Bubble Super", category: "Entity Tech", difficulty: "advanced", utility: "Horizontal Speed", dash_required: "yes", hardcoded: "derived", aliases: "bubsuper, bubble super" };
+  const tech = { name: "Glider Super", category: "Entity Tech", difficulty: "advanced", utility: "Horizontal Speed", dash_required: "yes", hardcoded: "derived", aliases: "glidesuper, glider sup" };
   assert.equal((await api.request("POST", "/api/admin/techs", { token, body: { ...tech, difficulty: "Godlike" } })).status, 400);
   const created = await api.request("POST", "/api/admin/techs", { token, body: tech });
   assert.equal(created.status, 201, JSON.stringify(created.data));
   assert.equal(created.data.difficulty, "Advanced");
-  assert.deepEqual(created.data.aliases.sort(), ["bubble super", "bubsuper"]);
+  assert.deepEqual(created.data.aliases.sort(), ["glider sup", "glidesuper"]);
   assert.equal((await api.request("POST", "/api/admin/techs", { token, body: tech })).status, 409);
 
   const edited = await api.request("PATCH", `/api/admin/techs/${created.data.id}`, { token, body: { utility: "Dash Recovery" } });
@@ -131,12 +153,12 @@ test("admin des techs : créer, modifier, image GIF, tech du jour, accès", asyn
   });
   const withMedia = await res.json();
   assert.equal(res.status, 200, JSON.stringify(withMedia));
-  assert.match(withMedia.media, /^uploads\/bubble-super-\w+\.gif$/);
-  const served = await fetch(`${api.base}/tech-media/${encodeURIComponent("Bubble Super")}`);
+  assert.match(withMedia.media, /^uploads\/glider-super-\w+\.gif$/);
+  const served = await fetch(`${api.base}/tech-media/${encodeURIComponent("Glider Super")}`);
   assert.equal(Buffer.from(await served.arrayBuffer()).equals(gif), true);
 
-  const imposed = await api.request("POST", "/api/admin/techs/secret", { token, body: { mode: "tech", action: "set", name: "bubsuper" } });
-  assert.equal(imposed.data.tech.secret.nom, "Bubble Super");
+  const imposed = await api.request("POST", "/api/admin/techs/secret", { token, body: { mode: "tech", action: "set", name: "glidesuper" } });
+  assert.equal(imposed.data.tech.secret.nom, "Glider Super");
   assert.equal(imposed.data.tech.secret.source, "admin");
 
   const access = await api.request("PUT", "/api/admin/techs/access", { token, body: { access: "staff" } });

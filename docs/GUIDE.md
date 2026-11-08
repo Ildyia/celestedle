@@ -110,7 +110,7 @@ Les rôles (`owner`, `administrator`…) sont gérés dans `services/staff.js`. 
 
 Un Celestedle dont la réponse est une tech. Il utilise **le même moteur** que Celestedle : `createGameService` (`services/games.js`), `createDaily` (`services/daily.js`), les repositories `createGamesRepo` et `createSecretsRepo`, avec ses propres tables (`techs`, `tech_secrets`, `tech_games`…, migration 015). Tout ce qui lui est propre est dans `services/techs.js` : les colonnes, la difficulté comparée dans l'ordre (flèches ⬆️ ⬇️) et les règles des modes `tech` et `tech-hard`.
 
-- `techs.json` remplit la table au premier démarrage seulement. Ensuite, les techs se gèrent dans l'admin, onglet Techs : liste, édition, image ou GIF de 3 Mo, tech du jour et accès.
+- `techs.json` (liste tirée du [Celeste Wiki](https://celeste.ink/wiki/Tech)) remplit la table au premier démarrage. Pour ajouter des techs à une base déjà remplie, augmente `SEED_VERSION` dans `src/db/seed-techs.js` : au démarrage suivant, les techs manquantes sont ajoutées, sans toucher à celles modifiées dans l'admin. Le reste se gère dans l'admin, onglet Techs : liste, édition, image ou GIF de 3 Mo, tech du jour et accès.
 - Les synonymes sont tirés des noms : « Superdash (Super) » donne « Super » et « Superdash ».
 - Côté page, `public/js/catalogs.js` décrit chaque jeu (colonnes, images, routes de l'API, textes). `Game`, le tableau, les indices et le partage les reçoivent en paramètre.
 - L'accès (staff, playtest ou public) se règle comme pour Connections, avec `TECHS_ACCESS` comme valeur par défaut.
