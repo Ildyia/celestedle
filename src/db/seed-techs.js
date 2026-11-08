@@ -74,6 +74,7 @@ function seedTechs(db) {
     VALUES (@slug, @name, @category, @difficulty, @utility, @dash_required, @hardcoded)
   `);
   const byName = db.prepare("SELECT * FROM techs WHERE name = ?");
+  const slugTaken = db.prepare("SELECT 1 FROM techs WHERE slug = ?");
   const rename = db.prepare("UPDATE techs SET name = ?, updated_at = datetime('now') WHERE id = ?");
   const setField = Object.fromEntries(
     FIELDS.map((f) => [f, db.prepare(`UPDATE techs SET ${f} = ?, updated_at = datetime('now') WHERE id = ?`)])
@@ -87,7 +88,10 @@ function seedTechs(db) {
       const oldName = RENAMED[tech.name.toLowerCase()];
       const row = byName.get(tech.name) ?? (oldName ? byName.get(oldName) : null);
       if (!row) {
-        const id = insert.run({ ...tech, slug: toSlug(tech.name) }).lastInsertRowid;
+        // Slug déjà pris (tech créée dans l'admin avec un nom proche) : suffixe
+        let slug = toSlug(tech.name);
+        while (slugTaken.get(slug)) slug += "-2";
+        const id = insert.run({ ...tech, slug }).lastInsertRowid;
         for (const a of allAliases(tech)) alias.run(a, id);
         added += 1;
         continue;
@@ -120,4 +124,14 @@ function seedTechs(db) {
   );
 }
 
-module.exports = { seedTechs, aliasesFromName, SEED_VERSION };
+// Au démarrage : une erreur dans les techs ne doit pas empêcher le site de
+// démarrer (la mise à jour est retentée au démarrage suivant)
+function seedTechsSafely(db) {
+  try {
+    seedTechs(db);
+  } catch (err) {
+    console.error("[DB] Mise à jour des techs impossible :", err);
+  }
+}
+
+module.exports = { seedTechs, seedTechsSafely, aliasesFromName, SEED_VERSION };
