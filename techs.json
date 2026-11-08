@@ -1,0 +1,18 @@
+[
+  { "name": "Climbhop", "category": "Mechanics", "difficulty": "Beginner", "utility": "Stamina Preservation", "dash_required": "no", "hardcoded": "yes" },
+  { "name": "Corner Correction", "category": "Mechanics", "difficulty": "Passive", "utility": "Leniency", "dash_required": "no", "hardcoded": "yes" },
+  { "name": "Coyote Time", "category": "Mechanics", "difficulty": "Passive", "utility": "Leniency", "dash_required": "no", "hardcoded": "yes" },
+  { "name": "Dash Attack", "category": "Mechanics", "difficulty": "Beginner", "utility": "Interaction Window", "dash_required": "yes", "hardcoded": "yes" },
+  { "name": "Fastfalling", "category": "Mechanics", "difficulty": "Beginner", "utility": "Vertical Speed", "dash_required": "no", "hardcoded": "yes" },
+  { "name": "Liftboost", "category": "Mechanics", "difficulty": "Beginner", "utility": "Momentum Transfer", "dash_required": "no", "hardcoded": "yes" },
+  { "name": "Superdash (Super)", "category": "Dash Tech", "difficulty": "Intermediate", "utility": "Horizontal Speed", "dash_required": "yes", "hardcoded": "yes" },
+  { "name": "Hyperdash (Hyper)", "category": "Dash Tech", "difficulty": "Intermediate", "utility": "Horizontal Speed", "dash_required": "yes", "hardcoded": "yes" },
+  { "name": "Extended Super/Hyper", "category": "Dash Tech", "difficulty": "Intermediate", "utility": "Dash Recovery", "dash_required": "yes", "hardcoded": "derived" },
+  { "name": "Wavedash", "category": "Dash Tech", "difficulty": "Intermediate", "utility": "Horizontal Speed", "dash_required": "yes", "hardcoded": "derived" },
+  { "name": "Ultradash (Ultra)", "category": "Dash Tech", "difficulty": "Advanced", "utility": "Momentum Multiplier", "dash_required": "yes", "hardcoded": "yes" },
+  { "name": "Wallbounce (WB)", "category": "Dash Tech", "difficulty": "Intermediate", "utility": "Vertical Height", "dash_required": "yes", "hardcoded": "yes" },
+  { "name": "Demodash", "category": "Dash Tech", "difficulty": "Advanced", "utility": "Hitbox Reduction", "dash_required": "yes", "hardcoded": "yes" },
+  { "name": "Neutral Jump", "category": "Dashless Tech", "difficulty": "Intermediate", "utility": "Dashless Climb", "dash_required": "no", "hardcoded": "derived" },
+  { "name": "Cornerboost (CB)", "category": "Dashless Tech", "difficulty": "Advanced", "utility": "Horizontal Speed", "dash_required": "no", "hardcoded": "derived" },
+  { "name": "Jellyvator / Theovator", "category": "Entity Tech", "difficulty": "Expert", "utility": "Infinite Height", "dash_required": "no", "hardcoded": "derived" }
+]

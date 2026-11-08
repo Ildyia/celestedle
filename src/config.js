@@ -28,6 +28,7 @@ module.exports = {
   // Accès à Connections tant que l'admin ne l'a pas réglé : staff, playtest
   // ou public (la bêta, dont la base repart de zéro, l'ouvre ainsi à tous)
   connectionsAccess: process.env.CONNECTIONS_ACCESS || "",
+  techsAccess: process.env.TECHS_ACCESS || "",
 
   discord: {
     token: process.env.DISCORD_BOT_TOKEN || "",

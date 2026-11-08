@@ -11,11 +11,15 @@ function requireStaff(req, res, next) {
 
 // Modes en test : playtesters et équipe admin
 // Ouvert à tous : même sans profil (il est créé au premier essai)
-function requirePlaytester(req, res, next) {
-  if (staff.canPlaytest(req.player)) return next();
-  if (!req.player) return next(new HttpError(401, "Sign in with your player profile first."));
-  next(new HttpError(403, "This mode is only open to playtesters for now."));
+function requireAccess(game) {
+  return (req, res, next) => {
+    if (staff.canPlay(game, req.player)) return next();
+    if (!req.player) return next(new HttpError(401, "Sign in with your player profile first."));
+    next(new HttpError(403, "This mode is only open to playtesters for now."));
+  };
 }
+
+const requirePlaytester = requireAccess("connections");
 
 function requireOwner(req, res, next) {
   if (req.player?.role !== "owner") return next(new HttpError(403, "Only the owner can do this."));
@@ -38,4 +42,4 @@ function limitedAction(action, target = () => null) {
   };
 }
 
-module.exports = { requireStaff, requirePlaytester, requireOwner, limitedAction };
+module.exports = { requireStaff, requirePlaytester, requireAccess, requireOwner, limitedAction };

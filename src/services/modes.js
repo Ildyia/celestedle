@@ -1,10 +1,5 @@
 const { HttpError } = require("../utils/http-error");
-const {
-  CATEGORIES,
-  CATEGORY_LABELS,
-  compareValues,
-  toList
-} = require("./compare");
+const { elementsComparator, toList } = require("./compare");
 
 // Règles par défaut de chaque mode. Les champs listés dans ADJUSTABLE se
 // règlent dans l'admin (voir mode-rules.js) ; null = pas de limite.
@@ -75,20 +70,23 @@ function getMode(id = "normal") {
 // Mode Hard : l'essai doit pouvoir être la réponse. Si `candidate` était le
 // mot secret, chaque essai précédent aurait reçu exactement le même verdict.
 // Renvoie null si l'essai est cohérent, sinon une explication.
-function findInconsistency(candidate, previous) {
+// comparator : celui du catalogue (éléments par défaut, ou techs)
+function findInconsistency(candidate, previous, comparator = elementsComparator) {
   for (const { element, verdict } of previous) {
-    for (const category of CATEGORIES) {
+    for (const category of comparator.categories) {
       const expected = verdict[category];
-      if (compareValues(element[category], candidate[category]) === expected)
+      if (comparator.compareCategory(category, element[category], candidate[category]) === expected)
         continue;
 
-      const label = CATEGORY_LABELS[category];
+      const label = comparator.labels[category];
       const values = toList(element[category]).join(", ");
       let message;
       if (expected === "correct") {
         message = `${label} must stay "${values}" (clue from ${element.nom}).`;
       } else if (expected === "wrong") {
         message = `${label}: "${values}" was already ruled out by ${element.nom}.`;
+      } else if (expected === "higher" || expected === "lower") {
+        message = `${label} must be ${expected} than "${values}" (clue from ${element.nom}).`;
       } else {
         message = `${label} doesn't fit the clue from ${element.nom}.`;
       }

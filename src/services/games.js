@@ -1,188 +1,228 @@
 const elementsRepo = require("../repositories/elements");
-const gamesRepo = require("../repositories/games");
+const elementsGamesRepo = require("../repositories/games");
 const db = require("../db");
 const { HttpError } = require("../utils/http-error");
 const { nowIso, secondsBetween } = require("../utils/dates");
-const { verdictFor, displayValues } = require("./compare");
+const { elementsComparator } = require("./compare");
 const { MODE_IDS, findInconsistency } = require("./modes");
 const { getModeRules } = require("./mode-rules");
-const { HINT_TYPES, buildHint } = require("./hints");
-const daily = require("./daily");
+const { HINT_TYPES, ELEMENTS_CATALOG, buildHint } = require("./hints");
+const elementsDaily = require("./daily");
 
-function deadlineOf(game, mode) {
-  if (!mode.timeLimitSeconds || !game) return null;
-  return new Date(
-    Date.parse(game.started_at) + mode.timeLimitSeconds * 1000
-  ).toISOString();
-}
+// Parties d'un catalogue (éléments de Celestedle, techs) : mêmes règles, mêmes
+// indices, avec ses propres tables, son mot du jour et ses modes.
+// options : { items, gamesRepo, daily, comparator, hintCatalog, getRules,
+//             modeIds, normalMode, hardMode, unknownMessage }
+function createGameService({
+  items,
+  gamesRepo,
+  daily,
+  comparator,
+  hintCatalog,
+  getRules,
+  modeIds,
+  normalMode,
+  hardMode,
+  unknownMessage
+}) {
+  const { verdictFor, displayValues } = comparator;
 
-// Mode Hard : une partie dont le temps est écoulé est perdue, à l'heure limite
-function expireIfNeeded(game, mode) {
-  const deadline = deadlineOf(game, mode);
-  if (
-    game?.status === "playing" &&
-    deadline &&
-    Date.now() > Date.parse(deadline)
-  ) {
-    gamesRepo.finish(game.id, "lost", deadline);
-    return gamesRepo.findById(game.id);
+  function deadlineOf(game, mode) {
+    if (!mode.timeLimitSeconds || !game) return null;
+    return new Date(
+      Date.parse(game.started_at) + mode.timeLimitSeconds * 1000
+    ).toISOString();
   }
-  return game;
-}
 
-// Partie du jour du joueur, remise à zéro si l'admin a changé le mot
-function loadGame(playerId, mode, secret) {
-  let game = playerId ? gamesRepo.find(secret.date, mode.id, playerId) : null;
-  let reset = false;
-  if (game && game.secret_version !== secret.version) {
-    game = gamesRepo.restart(game.id, secret.version, nowIso());
-    reset = true;
+  // Mode Hard : une partie dont le temps est écoulé est perdue, à l'heure limite
+  function expireIfNeeded(game, mode) {
+    const deadline = deadlineOf(game, mode);
+    if (
+      game?.status === "playing" &&
+      deadline &&
+      Date.now() > Date.parse(deadline)
+    ) {
+      gamesRepo.finish(game.id, "lost", deadline);
+      return gamesRepo.findById(game.id);
+    }
+    return game;
   }
-  return { game: expireIfNeeded(game, mode), reset };
-}
 
-function guessHistory(game, secretElement) {
-  if (!game) return [];
-  return gamesRepo.guessedElementIds(game.id).map((id) => {
-    const element = elementsRepo.findById(id);
-    return { element, verdict: verdictFor(element, secretElement) };
-  });
-}
-
-// État renvoyé au client. La réponse n'est incluse que si la partie est finie.
-function buildState({ mode, secret, game, reset = false }) {
-  const history = guessHistory(game, secret.element);
-  const tries = history.length + (game?.wasted_tries ?? 0);
-  const status = game?.status ?? "playing";
-  const finished = status !== "playing";
-  const now = finished && game.finished_at ? game.finished_at : nowIso();
-
-  return {
-    mode: mode.id,
-    date: secret.date,
-    wordId: `${secret.date}#${secret.version}`,
-    status,
-    reset,
-    rules: {
-      maxHints: mode.maxHints,
-      maxTries: mode.maxTries,
-      timeLimitSeconds: mode.timeLimitSeconds,
-      suggestionMinChars: mode.suggestionMinChars,
-      showAllList: mode.showAllList,
-      consistentGuesses: mode.consistentGuesses,
-      bonusHints: mode.bonusHints
-    },
-    guesses: history.map(({ element, verdict }) => ({
-      nom: element.nom,
-      valeurs: displayValues(element),
-      verdict
-    })),
-    hints: game ? gamesRepo.hints(game.id) : [],
-    tries,
-    wastedTries: game?.wasted_tries ?? 0,
-    triesLeft: mode.maxTries ? Math.max(0, mode.maxTries - tries) : null,
-    startedAt: game?.started_at ?? null,
-    finishedAt: game?.finished_at ?? null,
-    deadline: deadlineOf(game, mode),
-    elapsedSeconds: game ? secondsBetween(game.started_at, now) : 0,
-    solution: finished
-      ? { nom: secret.element.nom, valeurs: displayValues(secret.element) }
-      : null
-  };
-}
-
-// Une partie Hard en cours bloque le mode normal : sinon on pourrait
-// chercher le mot Hard avec la liste et les suggestions du mode normal
-function lockingMode(playerId, modeId) {
-  if (!playerId || modeId === "hard") return null;
-  const hard = getModeRules("hard");
-  const secret = daily.getTodaySecret(hard.id);
-  const game = expireIfNeeded(
-    gamesRepo.find(secret.date, hard.id, playerId),
-    hard
-  );
-  return game?.status === "playing" && game.secret_version === secret.version
-    ? hard.id
-    : null;
-}
-
-function ensureNotLocked(playerId, modeId) {
-  const lockedBy = lockingMode(playerId, modeId);
-  if (lockedBy) {
-    throw new HttpError(
-      409,
-      "Finish your Hard game first (or give up) to play Normal.",
-      { lockedBy }
-    );
+  // Partie du jour du joueur, remise à zéro si l'admin a changé le mot
+  function loadGame(playerId, mode, secret) {
+    let game = playerId ? gamesRepo.find(secret.date, mode.id, playerId) : null;
+    let reset = false;
+    if (game && game.secret_version !== secret.version) {
+      game = gamesRepo.restart(game.id, secret.version, nowIso());
+      reset = true;
+    }
+    return { game: expireIfNeeded(game, mode), reset };
   }
-}
 
-function getState(player, modeId) {
-  const mode = getModeRules(modeId);
-  const secret = daily.getTodaySecret(mode.id);
-  const { game, reset } = loadGame(player?.id, mode, secret);
-  return {
-    ...buildState({ mode, secret, game, reset }),
-    lockedBy: lockingMode(player?.id, mode.id)
-  };
-}
-
-// wordId : le mot affiché chez le joueur. Passé minuit ou mot changé par
-// l'admin, on le prévient au lieu d'appliquer son action au nouveau mot
-function ensureSameWord(secret, wordId) {
-  if (wordId !== undefined && wordId !== `${secret.date}#${secret.version}`) {
-    throw new HttpError(409, "A new word is out! Here is the new game.", {
-      wordChanged: true
+  function guessHistory(game, secretElement) {
+    if (!game) return [];
+    return gamesRepo.guessedElementIds(game.id).map((id) => {
+      const element = items.findById(id);
+      return { element, verdict: verdictFor(element, secretElement) };
     });
   }
-}
 
-function ensurePlaying(game) {
-  if (game && game.status !== "playing") {
-    throw new HttpError(409, "Today's game is already over for this mode.");
-  }
-}
+  // État renvoyé au client. La réponse n'est incluse que si la partie est finie.
+  function buildState({ mode, secret, game, reset = false }) {
+    const history = guessHistory(game, secret.element);
+    const tries = history.length + (game?.wasted_tries ?? 0);
+    const status = game?.status ?? "playing";
+    const finished = status !== "playing";
+    const now = finished && game.finished_at ? game.finished_at : nowIso();
 
-const guess = db.transaction((player, modeId, input, wordId) => {
-  const mode = getModeRules(modeId);
-  const secret = daily.getTodaySecret(mode.id);
-  ensureSameWord(secret, wordId);
-  const element = elementsRepo.findByNameOrAlias(input);
-  if (!element || !element.isActive) {
-    throw new HttpError(400, "Unknown element. Check the spelling.");
-  }
-  ensureNotLocked(player.id, mode.id);
-
-  const loaded = loadGame(player.id, mode, secret);
-  let { game } = loaded;
-  ensurePlaying(game);
-
-  const history = guessHistory(game, secret.element);
-  if (history.some((h) => h.element.id === element.id)) {
-    throw new HttpError(409, "You already tried this one!");
-  }
-  const problem = mode.consistentGuesses
-    ? findInconsistency(element, history)
-    : null;
-
-  const at = nowIso();
-  if (!game) {
-    game = gamesRepo.create({
-      date: secret.date,
+    return {
       mode: mode.id,
-      playerId: player.id,
-      secretVersion: secret.version,
-      startedAt: at
-    });
+      date: secret.date,
+      wordId: `${secret.date}#${secret.version}`,
+      status,
+      reset,
+      rules: {
+        maxHints: mode.maxHints,
+        maxTries: mode.maxTries,
+        timeLimitSeconds: mode.timeLimitSeconds,
+        suggestionMinChars: mode.suggestionMinChars,
+        showAllList: mode.showAllList,
+        consistentGuesses: mode.consistentGuesses,
+        bonusHints: mode.bonusHints
+      },
+      guesses: history.map(({ element, verdict }) => ({
+        nom: element.nom,
+        valeurs: displayValues(element),
+        verdict
+      })),
+      hints: game ? gamesRepo.hints(game.id) : [],
+      tries,
+      wastedTries: game?.wasted_tries ?? 0,
+      triesLeft: mode.maxTries ? Math.max(0, mode.maxTries - tries) : null,
+      startedAt: game?.started_at ?? null,
+      finishedAt: game?.finished_at ?? null,
+      deadline: deadlineOf(game, mode),
+      elapsedSeconds: game ? secondsBetween(game.started_at, now) : 0,
+      solution: finished
+        ? { nom: secret.element.nom, valeurs: displayValues(secret.element) }
+        : null
+    };
   }
-  const triesBefore = history.length + game.wasted_tries;
-  const lastTry = mode.maxTries && triesBefore + 1 >= mode.maxTries;
 
-  // Essai incohérent : refusé sans verdict (il donnerait des indices) mais
-  // il consomme un essai
-  if (problem) {
-    gamesRepo.addWastedTry(game.id);
-    if (lastTry) gamesRepo.finish(game.id, "lost", at);
+  // Une partie Hard en cours bloque le mode normal : sinon on pourrait
+  // chercher le mot Hard avec la liste et les suggestions du mode normal
+  function lockingMode(playerId, modeId) {
+    if (!playerId || modeId === hardMode) return null;
+    const hard = getRules(hardMode);
+    const secret = daily.getTodaySecret(hard.id);
+    const game = expireIfNeeded(
+      gamesRepo.find(secret.date, hard.id, playerId),
+      hard
+    );
+    return game?.status === "playing" && game.secret_version === secret.version
+      ? hard.id
+      : null;
+  }
+
+  function ensureNotLocked(playerId, modeId) {
+    const lockedBy = lockingMode(playerId, modeId);
+    if (lockedBy) {
+      throw new HttpError(
+        409,
+        "Finish your Hard game first (or give up) to play Normal.",
+        { lockedBy }
+      );
+    }
+  }
+
+  function getState(player, modeId) {
+    const mode = getRules(modeId);
+    const secret = daily.getTodaySecret(mode.id);
+    const { game, reset } = loadGame(player?.id, mode, secret);
+    return {
+      ...buildState({ mode, secret, game, reset }),
+      lockedBy: lockingMode(player?.id, mode.id)
+    };
+  }
+
+  // wordId : le mot affiché chez le joueur. Passé minuit ou mot changé par
+  // l'admin, on le prévient au lieu d'appliquer son action au nouveau mot
+  function ensureSameWord(secret, wordId) {
+    if (wordId !== undefined && wordId !== `${secret.date}#${secret.version}`) {
+      throw new HttpError(409, "A new word is out! Here is the new game.", {
+        wordChanged: true
+      });
+    }
+  }
+
+  function ensurePlaying(game) {
+    if (game && game.status !== "playing") {
+      throw new HttpError(409, "Today's game is already over for this mode.");
+    }
+  }
+
+  const guess = db.transaction((player, modeId, input, wordId) => {
+    const mode = getRules(modeId);
+    const secret = daily.getTodaySecret(mode.id);
+    ensureSameWord(secret, wordId);
+    const element = items.findByNameOrAlias(input);
+    if (!element || !element.isActive) {
+      throw new HttpError(400, unknownMessage);
+    }
+    ensureNotLocked(player.id, mode.id);
+
+    const loaded = loadGame(player.id, mode, secret);
+    let { game } = loaded;
+    ensurePlaying(game);
+
+    const history = guessHistory(game, secret.element);
+    if (history.some((h) => h.element.id === element.id)) {
+      throw new HttpError(409, "You already tried this one!");
+    }
+    const problem = mode.consistentGuesses
+      ? findInconsistency(element, history, comparator)
+      : null;
+
+    const at = nowIso();
+    if (!game) {
+      game = gamesRepo.create({
+        date: secret.date,
+        mode: mode.id,
+        playerId: player.id,
+        secretVersion: secret.version,
+        startedAt: at
+      });
+    }
+    const triesBefore = history.length + game.wasted_tries;
+    const lastTry = mode.maxTries && triesBefore + 1 >= mode.maxTries;
+
+    // Essai incohérent : refusé sans verdict (il donnerait des indices) mais
+    // il consomme un essai
+    if (problem) {
+      gamesRepo.addWastedTry(game.id);
+      if (lastTry) gamesRepo.finish(game.id, "lost", at);
+      const state = buildState({
+        mode,
+        secret,
+        game: gamesRepo.findById(game.id),
+        reset: loaded.reset
+      });
+      return {
+        state,
+        guess: null,
+        rejected: { message: problem.message, category: problem.category }
+      };
+    }
+
+    gamesRepo.addGuess(game.id, element.id, at);
+
+    const verdict = verdictFor(element, secret.element);
+    if (verdict.isCorrect) {
+      gamesRepo.finish(game.id, "won", at);
+    } else if (lastTry) {
+      gamesRepo.finish(game.id, "lost", at);
+    }
+
     const state = buildState({
       mode,
       secret,
@@ -191,108 +231,104 @@ const guess = db.transaction((player, modeId, input, wordId) => {
     });
     return {
       state,
-      guess: null,
-      rejected: { message: problem.message, category: problem.category }
+      guess: { nom: element.nom, valeurs: displayValues(element), verdict }
     };
-  }
-
-  gamesRepo.addGuess(game.id, element.id, at);
-
-  const verdict = verdictFor(element, secret.element);
-  if (verdict.isCorrect) {
-    gamesRepo.finish(game.id, "won", at);
-  } else if (lastTry) {
-    gamesRepo.finish(game.id, "lost", at);
-  }
-
-  const state = buildState({
-    mode,
-    secret,
-    game: gamesRepo.findById(game.id),
-    reset: loaded.reset
   });
-  return {
-    state,
-    guess: { nom: element.nom, valeurs: displayValues(element), verdict }
-  };
-});
 
-const useHint = db.transaction((player, modeId, type, wordId, choice) => {
-  const mode = getModeRules(modeId);
-  if (!HINT_TYPES.includes(type))
-    throw new HttpError(400, `Unknown hint type "${type}"`);
-  ensureNotLocked(player.id, mode.id);
-  const secret = daily.getTodaySecret(mode.id);
-  ensureSameWord(secret, wordId);
+  const useHint = db.transaction((player, modeId, type, wordId, choice) => {
+    const mode = getRules(modeId);
+    if (!HINT_TYPES.includes(type))
+      throw new HttpError(400, `Unknown hint type "${type}"`);
+    ensureNotLocked(player.id, mode.id);
+    const secret = daily.getTodaySecret(mode.id);
+    ensureSameWord(secret, wordId);
 
-  let { game } = loadGame(player.id, mode, secret);
-  ensurePlaying(game);
+    let { game } = loadGame(player.id, mode, secret);
+    ensurePlaying(game);
 
-  const used = game ? gamesRepo.hints(game.id) : [];
-  if (used.some((h) => h.type === type)) {
-    throw new HttpError(409, "You already used this hint today.");
-  }
-  const isBonus = mode.bonusHints.includes(type);
-  const counted = used.filter((h) => !mode.bonusHints.includes(h.type));
-  if (!isBonus && counted.length >= mode.maxHints) {
-    throw new HttpError(
-      409,
-      `No hints left (${mode.maxHints} max in this mode).`
-    );
-  }
+    const used = game ? gamesRepo.hints(game.id) : [];
+    if (used.some((h) => h.type === type)) {
+      throw new HttpError(409, "You already used this hint today.");
+    }
+    const isBonus = mode.bonusHints.includes(type);
+    const counted = used.filter((h) => !mode.bonusHints.includes(h.type));
+    if (!isBonus && counted.length >= mode.maxHints) {
+      throw new HttpError(
+        409,
+        `No hints left (${mode.maxHints} max in this mode).`
+      );
+    }
 
-  // Un indice avant le premier essai démarre la partie (et le chrono)
-  if (!game) {
-    game = gamesRepo.create({
-      date: secret.date,
-      mode: mode.id,
-      playerId: player.id,
-      secretVersion: secret.version,
-      startedAt: nowIso()
+    // Un indice avant le premier essai démarre la partie (et le chrono)
+    if (!game) {
+      game = gamesRepo.create({
+        date: secret.date,
+        mode: mode.id,
+        playerId: player.id,
+        secretVersion: secret.version,
+        startedAt: nowIso()
+      });
+    }
+
+    const payload = buildHint(type, {
+      secret: secret.element,
+      elements: items.listActive(),
+      guesses: guessHistory(game, secret.element),
+      previousHints: used,
+      vocabulary: items.vocabulary(),
+      random: (offset) => daily.seededRandom(mode.id, offset),
+      choice,
+      catalog: hintCatalog
     });
-  }
+    gamesRepo.addHint(game.id, type, payload, nowIso());
 
-  const payload = buildHint(type, {
-    secret: secret.element,
-    elements: elementsRepo.listActive(),
-    guesses: guessHistory(game, secret.element),
-    previousHints: used,
-    vocabulary: elementsRepo.vocabulary(),
-    random: (offset) => daily.seededRandom(mode.id, offset),
-    choice
+    return buildState({ mode, secret, game: gamesRepo.findById(game.id) });
   });
-  gamesRepo.addHint(game.id, type, payload, nowIso());
 
-  return buildState({ mode, secret, game: gamesRepo.findById(game.id) });
-});
+  const forfeit = db.transaction((player, modeId, wordId) => {
+    const mode = getRules(modeId);
+    const secret = daily.getTodaySecret(mode.id);
+    ensureSameWord(secret, wordId);
 
-const forfeit = db.transaction((player, modeId, wordId) => {
-  const mode = getModeRules(modeId);
-  const secret = daily.getTodaySecret(mode.id);
-  ensureSameWord(secret, wordId);
+    let { game } = loadGame(player.id, mode, secret);
+    ensurePlaying(game);
 
-  let { game } = loadGame(player.id, mode, secret);
-  ensurePlaying(game);
+    const at = nowIso();
+    if (!game) {
+      game = gamesRepo.create({
+        date: secret.date,
+        mode: mode.id,
+        playerId: player.id,
+        secretVersion: secret.version,
+        startedAt: at
+      });
+    }
+    gamesRepo.finish(game.id, "forfeit", at);
+    return buildState({ mode, secret, game: gamesRepo.findById(game.id) });
+  });
 
-  const at = nowIso();
-  if (!game) {
-    game = gamesRepo.create({
-      date: secret.date,
-      mode: mode.id,
-      playerId: player.id,
-      secretVersion: secret.version,
-      startedAt: at
-    });
+  function expireOverdueGames() {
+    for (const mode of modeIds.map(getRules)) {
+      if (mode.timeLimitSeconds)
+        gamesRepo.expireOverdue(mode.id, mode.timeLimitSeconds, nowIso());
+    }
   }
-  gamesRepo.finish(game.id, "forfeit", at);
-  return buildState({ mode, secret, game: gamesRepo.findById(game.id) });
-});
 
-function expireOverdueGames() {
-  for (const mode of MODE_IDS.map(getModeRules)) {
-    if (mode.timeLimitSeconds)
-      gamesRepo.expireOverdue(mode.id, mode.timeLimitSeconds, nowIso());
-  }
+  return { getState, guess, useHint, forfeit, expireOverdueGames, normalMode };
 }
 
-module.exports = { getState, guess, useHint, forfeit, expireOverdueGames };
+module.exports = {
+  ...createGameService({
+    items: elementsRepo,
+    gamesRepo: elementsGamesRepo,
+    daily: elementsDaily,
+    comparator: elementsComparator,
+    hintCatalog: ELEMENTS_CATALOG,
+    getRules: getModeRules,
+    modeIds: MODE_IDS,
+    normalMode: "normal",
+    hardMode: "hard",
+    unknownMessage: "Unknown element. Check the spelling."
+  }),
+  createGameService
+};

@@ -50,6 +50,7 @@
           <button type="button" role="tab" data-tab="elements" aria-selected="false">Éléments</button>
           <button type="button" role="tab" data-tab="reports" aria-selected="false">Reports</button>
           <button type="button" role="tab" data-tab="connections" aria-selected="false">Connections</button>
+          <button type="button" role="tab" data-tab="techs" aria-selected="false">Techs</button>
           <button type="button" role="tab" data-tab="settings" aria-selected="false">Réglages</button>
           <button type="button" role="tab" data-tab="players" aria-selected="false">Joueurs</button>
           <button type="button" role="tab" data-tab="team" aria-selected="false" data-owner-only hidden>Équipe</button>
@@ -234,6 +235,91 @@
               <div class="modal-actions">
                 <button type="button" id="cx-tag-delete-btn" class="btn-danger" hidden>Supprimer</button>
                 <button type="button" id="cx-tag-cancel-btn" class="btn-secondary">Annuler</button>
+                <button type="submit" class="btn-primary">Enregistrer</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section id="tab-techs" class="admin-panel" role="tabpanel" hidden>
+          <div class="admin-toolbar">
+            <label for="techs-access">Qui peut jouer</label>
+            <select id="techs-access" class="bug-input">
+              <option value="staff">Équipe admin seulement</option>
+              <option value="playtest">Playtesters et équipe</option>
+              <option value="public">Tout le monde</option>
+            </select>
+          </div>
+          <div id="techs-today" class="admin-modes"></div>
+
+          <div class="admin-toolbar">
+            <input type="search" id="techs-search" class="bug-input" placeholder="Rechercher une tech" aria-label="Rechercher une tech" />
+            <button type="button" id="new-tech-btn" class="btn-primary">Nouvelle tech</button>
+          </div>
+          <div class="elements-layout">
+            <div class="admin-table-wrapper">
+              <table class="admin-table">
+                <thead>
+                  <tr><th></th><th>Nom</th><th>Catégorie</th><th>Difficulté</th><th>Utilité</th><th>Dash</th><th>Hardcoded</th></tr>
+                </thead>
+                <tbody id="techs-body"></tbody>
+              </table>
+            </div>
+            <form id="tech-form" class="admin-card element-form" hidden>
+              <h3 id="tech-form-title">Modifier</h3>
+              <div class="form-group">
+                <label for="tech-name">Nom</label>
+                <input type="text" id="tech-name" class="bug-input" maxlength="60" required />
+              </div>
+              <div class="form-group">
+                <label for="tech-aliases">Autres noms acceptés (séparés par des virgules)</label>
+                <input type="text" id="tech-aliases" class="bug-input" placeholder="Super, Superdash" />
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="tech-category">Catégorie</label>
+                  <input type="text" id="tech-category" class="bug-input" list="tech-category-values" maxlength="40" required />
+                </div>
+                <div class="form-group">
+                  <label for="tech-difficulty">Difficulté</label>
+                  <select id="tech-difficulty" class="bug-input"></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="tech-utility">Utilité</label>
+                <input type="text" id="tech-utility" class="bug-input" list="tech-utility-values" maxlength="40" required />
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="tech-dash">Dash nécessaire</label>
+                  <input type="text" id="tech-dash" class="bug-input" list="tech-dash-values" maxlength="40" required />
+                </div>
+                <div class="form-group">
+                  <label for="tech-hardcoded">Hardcoded</label>
+                  <input type="text" id="tech-hardcoded" class="bug-input" list="tech-hardcoded-values" maxlength="40" required />
+                </div>
+              </div>
+              <datalist id="tech-category-values"></datalist>
+              <datalist id="tech-utility-values"></datalist>
+              <datalist id="tech-dash-values"></datalist>
+              <datalist id="tech-hardcoded-values"></datalist>
+              <div class="form-group">
+                <label for="tech-media-file">Image ou GIF</label>
+                <div class="sprite-picker">
+                  <img id="tech-media-preview" class="sprite-preview tech-media-preview" alt="Aperçu" />
+                  <div class="sprite-picker-fields">
+                    <input type="file" id="tech-media-file" accept="image/png,image/gif,image/jpeg,image/webp" />
+                    <p class="small-subtext">PNG, GIF, JPEG ou WebP, 3 Mo au plus. Envoyé à l'enregistrement.</p>
+                    <button type="button" id="tech-media-remove" class="btn-secondary btn-small" hidden>Retirer l'image</button>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group form-inline">
+                <input type="checkbox" id="tech-active" />
+                <label for="tech-active">Jouable (peut être tirée et proposée)</label>
+              </div>
+              <div class="modal-actions">
+                <button type="button" id="tech-cancel-btn" class="btn-secondary">Annuler</button>
                 <button type="submit" class="btn-primary">Enregistrer</button>
               </div>
             </form>

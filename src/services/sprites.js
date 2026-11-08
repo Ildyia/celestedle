@@ -33,10 +33,16 @@ function uploadFile(sprite) {
   return path.join(UPLOADS_DIR, name);
 }
 
+// Images et GIF des techs : plus lourds qu'un sprite
+const MAX_MEDIA_BYTES = 3 * 1024 * 1024;
+
 // Enregistre l'image et renvoie son chemin à mettre dans elements.sprite
-function saveUpload(element, buffer) {
+// (ou techs.media, avec maxBytes = MAX_MEDIA_BYTES)
+function saveUpload(element, buffer, { maxBytes = MAX_BYTES } = {}) {
   if (!Buffer.isBuffer(buffer) || buffer.length === 0) throw new HttpError(400, "No image received.");
-  if (buffer.length > MAX_BYTES) throw new HttpError(413, "The image must be 1 MB or less.");
+  if (buffer.length > maxBytes) {
+    throw new HttpError(413, `The image must be ${Math.round(maxBytes / (1024 * 1024))} MB or less.`);
+  }
   const format = FORMATS.find((f) => f.test(buffer));
   if (!format) throw new HttpError(400, "Use a PNG, GIF, JPEG or WebP image.");
 
@@ -52,4 +58,4 @@ function removeUpload(sprite) {
   if (file) fs.rmSync(file, { force: true });
 }
 
-module.exports = { MAX_BYTES, isUpload, uploadFile, saveUpload, removeUpload };
+module.exports = { MAX_BYTES, MAX_MEDIA_BYTES, isUpload, uploadFile, saveUpload, removeUpload };

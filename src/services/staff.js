@@ -18,35 +18,50 @@ function isStaff(player) {
   return STAFF_ROLES.includes(player?.role);
 }
 
-// Accès à Connections, réglé depuis l'admin : équipe seulement, playtest
-// (playtesters et équipe) ou ouvert à tous
-const CONNECTIONS_ACCESS_KEY = "connections_access";
-const CONNECTIONS_ACCESS = ["staff", "playtest", "public"];
+// Accès aux jeux en test (Connections, techs), réglé depuis l'admin : équipe
+// seulement, playtest (playtesters et équipe) ou ouvert à tous
+const GAME_ACCESS = ["staff", "playtest", "public"];
+const ACCESS_SETTINGS = {
+  connections: { key: "connections_access", fallback: () => config.connectionsAccess },
+  techs: { key: "techs_access", fallback: () => config.techsAccess }
+};
 
-// Sans réglage enregistré : CONNECTIONS_ACCESS, sinon playtest
-function defaultConnectionsAccess() {
-  return CONNECTIONS_ACCESS.includes(config.connectionsAccess) ? config.connectionsAccess : "playtest";
+function accessSetting(game) {
+  const setting = ACCESS_SETTINGS[game];
+  if (!setting) throw new HttpError(400, `Unknown game "${game}".`);
+  return setting;
 }
 
-function connectionsAccess() {
-  const value = settingsRepo.get(CONNECTIONS_ACCESS_KEY, defaultConnectionsAccess());
-  return CONNECTIONS_ACCESS.includes(value) ? value : defaultConnectionsAccess();
+// Sans réglage enregistré : variable d'environnement (CONNECTIONS_ACCESS,
+// TECHS_ACCESS), sinon playtest
+function defaultAccess(game) {
+  const value = accessSetting(game).fallback();
+  return GAME_ACCESS.includes(value) ? value : "playtest";
 }
 
-function setConnectionsAccess(access) {
-  if (!CONNECTIONS_ACCESS.includes(access)) {
-    throw new HttpError(400, `access must be one of ${CONNECTIONS_ACCESS.join(", ")}.`);
+function gameAccess(game) {
+  const value = settingsRepo.get(accessSetting(game).key, defaultAccess(game));
+  return GAME_ACCESS.includes(value) ? value : defaultAccess(game);
+}
+
+function setGameAccess(game, access) {
+  if (!GAME_ACCESS.includes(access)) {
+    throw new HttpError(400, `access must be one of ${GAME_ACCESS.join(", ")}.`);
   }
-  settingsRepo.set(CONNECTIONS_ACCESS_KEY, access);
+  settingsRepo.set(accessSetting(game).key, access);
   return access;
 }
 
-// Modes en test : sans profil, on ne joue qu'en accès ouvert à tous
-function canPlaytest(player) {
-  const access = connectionsAccess();
+// Sans profil, on ne joue qu'en accès ouvert à tous
+function canPlay(game, player) {
+  const access = gameAccess(game);
   if (access === "public" || isStaff(player)) return true;
   return access === "playtest" && player?.isPlaytester === true;
 }
+
+const connectionsAccess = () => gameAccess("connections");
+const setConnectionsAccess = (access) => setGameAccess("connections", access);
+const canPlaytest = (player) => canPlay("connections", player);
 
 // Enregistré au journal par la route (modification comptée dans le quota)
 function setPlaytester(playerId, enabled) {
@@ -145,6 +160,9 @@ module.exports = {
   DEFAULT_DAILY_LIMIT,
   isStaff,
   canPlaytest,
+  canPlay,
+  gameAccess,
+  setGameAccess,
   connectionsAccess,
   setConnectionsAccess,
   setPlaytester,

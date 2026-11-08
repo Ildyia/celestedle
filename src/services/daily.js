@@ -45,68 +45,77 @@ function setRepeatDelay(days) {
   settingsRepo.set(REPEAT_DELAY_KEY, days);
 }
 
-function pickAuto(date, mode) {
-  const elements = elementsRepo.listActive();
-  if (elements.length === 0) throw new Error("Aucun élément actif en base");
+// Mot du jour d'un catalogue. items : repository des éléments (ou des techs) ;
+// secrets : sa table de mots du jour ; primary : le mode « normal » du
+// catalogue, dont le mode Hard évite le mot ; checkMode(mode) refuse un mode
+// inconnu.
+function createDaily({ items, secrets, primary, checkMode }) {
+  function pickAuto(date, mode) {
+    const elements = items.listActive();
+    if (elements.length === 0) throw new Error("Aucun élément actif en base");
 
-  const excluded = secretsRepo.recentElementIds(date, mode, getRepeatDelay());
-  // Le mode Hard évite le mot du mode normal du même jour
-  if (mode !== "normal") excluded.add(getSecretRow(date, "normal").element_id);
+    const excluded = secrets.recentElementIds(date, mode, getRepeatDelay());
+    // Le mode Hard évite le mot du mode normal du même jour
+    if (mode !== primary) excluded.add(getSecretRow(date, primary).element_id);
 
-  const start = startIndex(date, mode, elements.length);
-  for (let i = 0; i < elements.length; i++) {
-    const candidate = elements[(start + i) % elements.length];
-    if (!excluded.has(candidate.id)) return candidate;
+    const start = startIndex(date, mode, elements.length);
+    for (let i = 0; i < elements.length; i++) {
+      const candidate = elements[(start + i) % elements.length];
+      if (!excluded.has(candidate.id)) return candidate;
+    }
+    return elements[start];
   }
-  return elements[start];
-}
 
-function getSecretRow(date, mode) {
-  getMode(mode);
-  return (
-    secretsRepo.get(date, mode) ??
-    secretsRepo.createIfMissing(date, mode, pickAuto(date, mode).id)
-  );
-}
-
-function getTodaySecret(mode = "normal") {
-  const row = getSecretRow(todayParis(), mode);
-  return { ...row, element: elementsRepo.findById(row.element_id) };
-}
-
-// Choix de l'admin : remplace le mot du jour et incrémente sa version, ce qui
-// fait repartir à zéro les parties en cours de ce mode.
-function setSecret(mode, element) {
-  getMode(mode);
-  secretsRepo.replace(todayParis(), mode, element.id, "admin");
-  return getTodaySecret(mode);
-}
-
-function drawRandomSecret(mode) {
-  const current = getTodaySecret(mode).element_id;
-  const candidates = elementsRepo.listActive().filter((e) => e.id !== current);
-  return setSecret(mode, candidates[Math.floor(Math.random() * candidates.length)]);
-}
-
-// Nombre pseudo-aléatoire stable pour la journée et le mode (indices)
-function seededRandom(mode, offset = 0) {
-  const { element } = getTodaySecret(mode);
-  let hash = seedHash;
-  const str = `${element.nom}${mode === "normal" ? "" : mode}${offset}`;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash * 33 + str.charCodeAt(i)) | 0;
-    hash = (Math.sin(hash) * 10000) | 0;
+  function getSecretRow(date, mode) {
+    checkMode(mode);
+    return secrets.get(date, mode) ?? secrets.createIfMissing(date, mode, pickAuto(date, mode).id);
   }
-  return Math.abs(hash);
+
+  function getTodaySecret(mode = primary) {
+    const row = getSecretRow(todayParis(), mode);
+    return { ...row, element: items.findById(row.element_id) };
+  }
+
+  // Choix de l'admin : remplace le mot du jour et incrémente sa version, ce qui
+  // fait repartir à zéro les parties en cours de ce mode.
+  function setSecret(mode, element) {
+    checkMode(mode);
+    secrets.replace(todayParis(), mode, element.id, "admin");
+    return getTodaySecret(mode);
+  }
+
+  function drawRandomSecret(mode) {
+    const current = getTodaySecret(mode).element_id;
+    const candidates = items.listActive().filter((e) => e.id !== current);
+    return setSecret(mode, candidates[Math.floor(Math.random() * candidates.length)]);
+  }
+
+  // Nombre pseudo-aléatoire stable pour la journée et le mode (indices)
+  function seededRandom(mode, offset = 0) {
+    const { element } = getTodaySecret(mode);
+    let hash = seedHash;
+    const str = `${element.nom}${mode === "normal" ? "" : mode}${offset}`;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash * 33 + str.charCodeAt(i)) | 0;
+      hash = (Math.sin(hash) * 10000) | 0;
+    }
+    return Math.abs(hash);
+  }
+
+  return { getTodaySecret, getSecretRow, setSecret, drawRandomSecret, seededRandom };
 }
+
+const elementsDaily = createDaily({
+  items: elementsRepo,
+  secrets: secretsRepo,
+  primary: "normal",
+  checkMode: (mode) => getMode(mode)
+});
 
 module.exports = {
   DEFAULT_REPEAT_DELAY,
-  getTodaySecret,
-  getSecretRow,
-  setSecret,
-  drawRandomSecret,
+  ...elementsDaily,
+  createDaily,
   getRepeatDelay,
-  setRepeatDelay,
-  seededRandom
+  setRepeatDelay
 };

@@ -10,37 +10,68 @@ const LISTED_SQL = "p.is_hidden = 0 AND p.is_anonymous = 0";
 
 const LEADERBOARD_LIMIT = 50;
 
-const stmts = {
-  // Moyennes sur les victoires ; taux de victoire sur les parties terminées
-  community: db.prepare(`
+// Requêtes du jour d'une table de parties : game_summaries (Celestedle) ou
+// tech_game_summaries (techs), mêmes colonnes
+function dayStatements(table) {
+  return {
+    // Moyennes sur les victoires ; taux de victoire sur les parties terminées
+    community: db.prepare(`
     SELECT COALESCE(SUM(status = 'won'), 0) AS wins,
            COUNT(*) AS finished,
            ROUND(AVG(CASE WHEN status = 'won' THEN tries END), 1) AS avgTries,
            ROUND(AVG(CASE WHEN status = 'won' THEN hints END), 1) AS avgHints,
            CAST(ROUND(AVG(CASE WHEN status = 'won' THEN seconds END)) AS INTEGER) AS avgSeconds
-    FROM game_summaries s
+    FROM ${table} s
     WHERE date = ? AND mode = ? AND status <> 'playing'
   `),
 
-  daily: db.prepare(`
+    daily: db.prepare(`
     WITH ranked AS (
       SELECT p.id, p.name, p.avatar, p.color, s.tries, s.hints, s.seconds,
              -- Un indice compte comme un essai
              ROW_NUMBER() OVER (ORDER BY s.tries + s.hints, s.seconds, s.finished_at) AS rank
-      FROM game_summaries s JOIN players p ON p.id = s.player_id
+      FROM ${table} s JOIN players p ON p.id = s.player_id
       WHERE s.date = @date AND s.mode = @mode AND ${RANKED_WIN_SQL} AND ${LISTED_SQL}
     )
     SELECT * FROM ranked WHERE rank <= @limit OR id = @playerId ORDER BY rank
   `),
 
-  dailyOneShots: db.prepare(`
+    dailyOneShots: db.prepare(`
     SELECT p.id, p.name, p.avatar, p.color, s.tries, s.seconds
-    FROM game_summaries s JOIN players p ON p.id = s.player_id
+    FROM ${table} s JOIN players p ON p.id = s.player_id
     WHERE s.date = @date AND s.mode = @mode AND ${ONE_SHOT_SQL} AND ${LISTED_SQL}
     ORDER BY s.finished_at
     LIMIT @limit
   `),
 
+    dayOverview: db.prepare(`
+    SELECT mode,
+           COUNT(*) AS players,
+           SUM(status = 'won') AS wins,
+           SUM(status = 'forfeit') AS forfeits,
+           SUM(status = 'lost') AS losses,
+           SUM(status = 'playing') AS playing,
+           ROUND(AVG(CASE WHEN status = 'won' THEN tries END), 1) AS avgTries,
+           CAST(ROUND(AVG(CASE WHEN status = 'won' THEN seconds END)) AS INTEGER) AS avgSeconds,
+           ROUND(AVG(hints), 1) AS avgHints
+    FROM ${table} WHERE date = ? GROUP BY mode
+  `)
+  };
+}
+
+const DAY = {
+  game_summaries: dayStatements("game_summaries"),
+  tech_game_summaries: dayStatements("tech_game_summaries")
+};
+
+// Les modes des techs (tech, tech-hard) ont leurs propres tables
+function dayFor(mode) {
+  return DAY[
+    String(mode).startsWith("tech") ? "tech_game_summaries" : "game_summaries"
+  ];
+}
+
+const stmts = {
   // Parties terminées de tous les modes sur une période (semaine ou global),
   // y compris des profils non listés : ils comptent pour comparer les joueurs
   // du jour, mais ne sont pas affichés
@@ -48,6 +79,10 @@ const stmts = {
     SELECT s.player_id AS playerId, s.mode AS board, s.date, s.status = 'won' AS won,
            s.tries + s.hints AS cost -- un indice compte comme un essai
     FROM game_summaries s
+    WHERE s.date BETWEEN @from AND @to AND s.status <> 'playing'
+    UNION ALL
+    SELECT s.player_id, s.mode, s.date, s.status = 'won', s.tries + s.hints
+    FROM tech_game_summaries s
     WHERE s.date BETWEEN @from AND @to AND s.status <> 'playing'
     UNION ALL
     SELECT g.player_id,
@@ -70,19 +105,6 @@ const stmts = {
     SELECT date, status, tries, seconds FROM game_summaries
     WHERE player_id = ? AND mode = ? AND status <> 'playing'
     ORDER BY date
-  `),
-
-  dayOverview: db.prepare(`
-    SELECT mode,
-           COUNT(*) AS players,
-           SUM(status = 'won') AS wins,
-           SUM(status = 'forfeit') AS forfeits,
-           SUM(status = 'lost') AS losses,
-           SUM(status = 'playing') AS playing,
-           ROUND(AVG(CASE WHEN status = 'won' THEN tries END), 1) AS avgTries,
-           CAST(ROUND(AVG(CASE WHEN status = 'won' THEN seconds END)) AS INTEGER) AS avgSeconds,
-           ROUND(AVG(hints), 1) AS avgHints
-    FROM game_summaries WHERE date = ? GROUP BY mode
   `),
 
   history: db.prepare(`
@@ -129,20 +151,34 @@ const stmts = {
 };
 
 function communityStats(date, mode) {
-  const { finished, ...stats } = stmts.community.get(date, mode);
-  return { ...stats, winRate: finished ? Math.round((stats.wins / finished) * 100) : null };
+  const { finished, ...stats } = dayFor(mode).community.get(date, mode);
+  return {
+    ...stats,
+    winRate: finished ? Math.round((stats.wins / finished) * 100) : null
+  };
 }
 
 function dailyLeaderboard(date, mode, playerId) {
-  return stmts.daily.all({ date, mode, playerId, limit: LEADERBOARD_LIMIT });
+  return dayFor(mode).daily.all({
+    date,
+    mode,
+    playerId,
+    limit: LEADERBOARD_LIMIT
+  });
 }
 
 function dailyOneShots(date, mode) {
-  return stmts.dailyOneShots.all({ date, mode, limit: LEADERBOARD_LIMIT });
+  return dayFor(mode).dailyOneShots.all({
+    date,
+    mode,
+    limit: LEADERBOARD_LIMIT
+  });
 }
 
 function rankedResults(from, to) {
-  return stmts.rankedResults.all({ from, to }).map((r) => ({ ...r, won: r.won === 1 }));
+  return stmts.rankedResults
+    .all({ from, to })
+    .map((r) => ({ ...r, won: r.won === 1 }));
 }
 
 function listedPlayers() {
@@ -153,8 +189,11 @@ function playerGames(playerId, mode) {
   return stmts.playerGames.all(playerId, mode);
 }
 
-function dayOverview(date) {
-  return stmts.dayOverview.all(date);
+// Chiffres du jour par mode, pour Celestedle ou pour les techs
+function dayOverview(date, { techs = false } = {}) {
+  return DAY[techs ? "tech_game_summaries" : "game_summaries"].dayOverview.all(
+    date
+  );
 }
 
 function history() {
@@ -162,7 +201,9 @@ function history() {
 }
 
 function wordStats() {
-  return stmts.wordStats.all().map((w) => ({ ...w, isActive: w.isActive === 1 }));
+  return stmts.wordStats
+    .all()
+    .map((w) => ({ ...w, isActive: w.isActive === 1 }));
 }
 
 module.exports = {
