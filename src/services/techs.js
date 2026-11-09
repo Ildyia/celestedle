@@ -18,8 +18,9 @@ const CATEGORY_LABELS = {
 };
 
 // La difficulté se compare dans l'ordre : flèche vers le haut ou le bas.
-// « TAS » : en pratique réservée aux tool-assisted speedruns.
-const DIFFICULTIES = ["passive", "beginner", "intermediate", "advanced", "expert", "tas"];
+// GM et GM+ : grandmaster, au-dessus d'Expert (comme les maps de la
+// communauté). « TAS » : en pratique réservée aux tool-assisted speedruns.
+const DIFFICULTIES = ["passive", "beginner", "intermediate", "advanced", "expert", "gm", "gm+", "tas"];
 
 const comparator = createComparator({
   categories: techsRepo.TECH_FIELDS,

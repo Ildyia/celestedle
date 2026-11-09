@@ -278,7 +278,8 @@
               <div class="form-row">
                 <div class="form-group">
                   <label for="tech-category">Catégorie</label>
-                  <input type="text" id="tech-category" class="bug-input" list="tech-category-values" maxlength="40" required />
+                  <select id="tech-category" class="bug-input" data-tech-choice></select>
+                  <input type="text" id="tech-category-new" class="bug-input" maxlength="40" placeholder="Nouvelle valeur" hidden />
                 </div>
                 <div class="form-group">
                   <label for="tech-difficulty">Difficulté</label>
@@ -287,22 +288,21 @@
               </div>
               <div class="form-group">
                 <label for="tech-utility">Utilité</label>
-                <input type="text" id="tech-utility" class="bug-input" list="tech-utility-values" maxlength="40" required />
+                <select id="tech-utility" class="bug-input" data-tech-choice></select>
+                <input type="text" id="tech-utility-new" class="bug-input" maxlength="40" placeholder="Nouvelle valeur" hidden />
               </div>
               <div class="form-row">
                 <div class="form-group">
                   <label for="tech-dash">Dash nécessaire</label>
-                  <input type="text" id="tech-dash" class="bug-input" list="tech-dash-values" maxlength="40" required />
+                  <select id="tech-dash" class="bug-input" data-tech-choice></select>
+                  <input type="text" id="tech-dash-new" class="bug-input" maxlength="40" placeholder="Nouvelle valeur" hidden />
                 </div>
                 <div class="form-group">
-                  <label for="tech-hardcoded">Origine (Coded, Derived, Glitch)</label>
-                  <input type="text" id="tech-hardcoded" class="bug-input" list="tech-hardcoded-values" maxlength="40" required />
+                  <label for="tech-hardcoded">Origine</label>
+                  <select id="tech-hardcoded" class="bug-input" data-tech-choice></select>
+                  <input type="text" id="tech-hardcoded-new" class="bug-input" maxlength="40" placeholder="Nouvelle valeur" hidden />
                 </div>
               </div>
-              <datalist id="tech-category-values"></datalist>
-              <datalist id="tech-utility-values"></datalist>
-              <datalist id="tech-dash-values"></datalist>
-              <datalist id="tech-hardcoded-values"></datalist>
               <div class="form-group">
                 <label for="tech-media-file">Image ou GIF</label>
                 <div class="sprite-picker">

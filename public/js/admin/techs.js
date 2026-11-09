@@ -7,13 +7,15 @@ const MODE_LABELS = { tech: "Mode normal", "tech-hard": "Mode Hard" };
 const ACCESS_LABELS = { staff: "réservé à l'équipe admin", playtest: "ouvert aux playtesters", public: "ouvert à tous" };
 const MAX_MEDIA_BYTES = 3 * 1024 * 1024;
 
-// Champs du formulaire ↔ champs d'une tech
+// Champs du formulaire ↔ champs d'une tech. Chacun est une liste des valeurs
+// déjà utilisées, plus « Nouvelle valeur… » qui ouvre un champ de saisie.
 const FIELDS = [
-  { input: "tech-category", field: "category", list: "tech-category-values" },
-  { input: "tech-utility", field: "utility", list: "tech-utility-values" },
-  { input: "tech-dash", field: "dash_required", list: "tech-dash-values" },
-  { input: "tech-hardcoded", field: "hardcoded", list: "tech-hardcoded-values" }
+  { input: "tech-category", field: "category" },
+  { input: "tech-utility", field: "utility" },
+  { input: "tech-dash", field: "dash_required" },
+  { input: "tech-hardcoded", field: "hardcoded" }
 ];
+const NEW_VALUE = "__new__";
 
 export function techMediaUrl(tech) {
   return `${API_BASE_URL}/tech-media/${encodeURIComponent(tech.nom)}?v=${encodeURIComponent(tech.media ?? "")}`;
@@ -46,6 +48,34 @@ export class TechsTab {
       e.preventDefault();
       this.save();
     });
+    for (const { input } of FIELDS) {
+      byId(input).addEventListener("change", () => this.toggleNewValue(input));
+    }
+  }
+
+  // « Nouvelle valeur… » choisi : champ de saisie affiché
+  toggleNewValue(input) {
+    const creating = byId(input).value === NEW_VALUE;
+    byId(`${input}-new`).hidden = !creating;
+    byId(`${input}-new`).required = creating;
+    if (creating) byId(`${input}-new`).focus();
+  }
+
+  fillChoice(input, field, current) {
+    const values = [...new Set(this.techs.map((t) => t[field]).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    if (current && !values.includes(current)) values.push(current);
+    byId(input).replaceChildren(
+      ...values.map((v) => el("option", { text: v, attrs: { value: v } })),
+      el("option", { text: "➕ Nouvelle valeur…", attrs: { value: NEW_VALUE } })
+    );
+    byId(input).value = current || values[0] || NEW_VALUE;
+    byId(`${input}-new`).value = "";
+    this.toggleNewValue(input);
+  }
+
+  choiceValue(input) {
+    const select = byId(input);
+    return select.value === NEW_VALUE ? byId(`${input}-new`).value.trim() : select.value;
   }
 
   async load() {
@@ -53,11 +83,6 @@ export class TechsTab {
     this.techs = data.techs;
     byId("techs-access").value = data.access;
     byId("tech-difficulty").replaceChildren(...data.difficulties.map((d) => el("option", { text: d, attrs: { value: d } })));
-    // Valeurs déjà utilisées, proposées à la saisie
-    for (const { field, list } of FIELDS) {
-      const values = [...new Set(this.techs.map((t) => t[field]))].sort();
-      byId(list).replaceChildren(...values.map((v) => el("option", { attrs: { value: v } })));
-    }
     this.renderToday(data.today);
     this.renderList();
   }
@@ -154,7 +179,7 @@ export class TechsTab {
     byId("tech-name").value = tech?.nom ?? "";
     byId("tech-aliases").value = tech?.aliases.join(", ") ?? "";
     byId("tech-difficulty").value = tech?.difficulty ?? "Beginner";
-    for (const { input, field } of FIELDS) byId(input).value = tech?.[field] ?? "";
+    for (const { input, field } of FIELDS) this.fillChoice(input, field, tech?.[field]);
     byId("tech-media-file").value = "";
     this.showPreview(tech?.media ? techMediaUrl(tech) : null);
     byId("tech-media-remove").hidden = !tech?.media;
@@ -195,7 +220,7 @@ export class TechsTab {
       name: byId("tech-name").value.trim(),
       aliases: byId("tech-aliases").value,
       difficulty: byId("tech-difficulty").value,
-      ...Object.fromEntries(FIELDS.map(({ input, field }) => [field, byId(input).value.trim()])),
+      ...Object.fromEntries(FIELDS.map(({ input, field }) => [field, this.choiceValue(input)])),
       isActive: byId("tech-active").checked
     };
     try {

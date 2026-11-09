@@ -103,7 +103,8 @@ test("partie : erreur, « à une case près », doublon, groupe trouvé puis vic
   assert.equal(start.data.solution, null, "la solution n'est pas envoyée pendant la partie");
 
   const wrong = await api.request("POST", "/api/connections/guess", { token, body: { names: [g0[0], g1[0], g2[0], g3[0]] } });
-  assert.equal(wrong.data.result, "wrong");
+  // 4 cases de 4 groupes : parfois un faux groupe selon la grille du jour
+  assert.ok(["wrong", "decoy"].includes(wrong.data.result));
   assert.equal(wrong.data.state.mistakes, 1);
 
   const close = await api.request("POST", "/api/connections/guess", { token, body: { names: [g0[0], g0[1], g0[2], g1[0]] } });

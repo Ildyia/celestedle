@@ -51,6 +51,8 @@ test("comparaison : la difficulté dit si la réponse est plus ou moins dure", (
   assert.equal(compareCategory("difficulty", "Beginner", "Advanced"), "higher");
   assert.equal(compareCategory("difficulty", "Expert", "Passive"), "lower");
   assert.equal(compareCategory("difficulty", "Expert", "TAS"), "higher");
+  assert.equal(compareCategory("difficulty", "GM+", "GM"), "lower");
+  assert.equal(compareCategory("difficulty", "Expert", "GM"), "higher");
   assert.equal(compareCategory("difficulty", "Intermediate", "intermediate"), "correct");
   assert.equal(compareCategory("category", "Dash Tech", "Mechanics"), "wrong");
 });
@@ -130,7 +132,7 @@ test("admin des techs : créer, modifier, image GIF, tech du jour, accès", asyn
 
   const list = await api.request("GET", "/api/admin/techs", { token });
   assert.equal(list.status, 200);
-  assert.ok(list.data.difficulties.includes("Expert"));
+  assert.deepEqual(list.data.difficulties.slice(-4), ["Expert", "GM", "GM+", "TAS"]);
   assert.ok(list.data.today.tech.secret.nom);
 
   const tech = { name: "Glider Super", category: "Entity Tech", difficulty: "advanced", utility: "Horizontal Speed", dash_required: "yes", hardcoded: "derived", aliases: "glidesuper, glider sup" };
@@ -141,8 +143,9 @@ test("admin des techs : créer, modifier, image GIF, tech du jour, accès", asyn
   assert.deepEqual(created.data.aliases.sort(), ["glider sup", "glidesuper"]);
   assert.equal((await api.request("POST", "/api/admin/techs", { token, body: tech })).status, 409);
 
-  const edited = await api.request("PATCH", `/api/admin/techs/${created.data.id}`, { token, body: { utility: "Dash Recovery" } });
+  const edited = await api.request("PATCH", `/api/admin/techs/${created.data.id}`, { token, body: { utility: "Dash Recovery", difficulty: "gm+" } });
   assert.equal(edited.data.utility, "Dash Recovery");
+  assert.equal(edited.data.difficulty, "GM+");
 
   // GIF de 1 pixel
   const gif = Buffer.from("R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==", "base64");
