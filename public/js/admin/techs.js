@@ -37,6 +37,7 @@ export class TechsTab {
     byId("techs-search").addEventListener("input", () => this.renderList());
     byId("new-tech-btn").addEventListener("click", () => this.edit(null));
     byId("tech-cancel-btn").addEventListener("click", () => this.closeForm());
+    byId("tech-delete-btn").addEventListener("click", () => this.remove());
     byId("techs-access").addEventListener("change", (e) => this.setAccess(e.target));
     byId("tech-media-file").addEventListener("change", () => this.previewFile());
     byId("tech-media-remove").addEventListener("click", () => {
@@ -184,6 +185,7 @@ export class TechsTab {
     this.showPreview(tech?.media ? techMediaUrl(tech) : null);
     byId("tech-media-remove").hidden = !tech?.media;
     byId("tech-active").checked = tech?.isActive ?? true;
+    byId("tech-delete-btn").hidden = !tech;
     this.form.hidden = false;
     this.renderList();
     byId("tech-name").focus();
@@ -213,6 +215,19 @@ export class TechsTab {
     this.previewUrl = URL.createObjectURL(file);
     this.showPreview(this.previewUrl);
     this.removeMedia = false;
+  }
+
+  async remove() {
+    const tech = this.editing;
+    if (!tech || !window.confirm(`Supprimer « ${tech.nom} » ? Ça ne peut pas être annulé.`)) return;
+    try {
+      await admin.deleteTech(tech.id);
+      this.notify(`« ${tech.nom} » supprimée.`);
+      this.closeForm();
+      await this.load();
+    } catch (err) {
+      this.notify(err.message, true);
+    }
   }
 
   async save() {

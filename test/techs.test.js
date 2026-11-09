@@ -164,6 +164,13 @@ test("admin des techs : créer, modifier, image GIF, tech du jour, accès", asyn
   assert.equal(imposed.data.tech.secret.nom, "Glider Super");
   assert.equal(imposed.data.tech.secret.source, "admin");
 
+  // Tech du jour : déjà tirée, on ne peut que la rendre non jouable
+  const played = await api.request("DELETE", `/api/admin/techs/${created.data.id}`, { token });
+  assert.equal(played.status, 409);
+  const unused = await api.request("POST", "/api/admin/techs", { token, body: { ...tech, name: "Typo Tech", aliases: "" } });
+  assert.equal((await api.request("DELETE", `/api/admin/techs/${unused.data.id}`, { token })).status, 204);
+  assert.equal(techsRepo.findByName("Typo Tech"), null);
+
   const access = await api.request("PUT", "/api/admin/techs/access", { token, body: { access: "staff" } });
   assert.equal(access.data.access, "staff");
   assert.equal((await api.request("GET", "/api/techs/game", { token: playerToken })).status, 403);

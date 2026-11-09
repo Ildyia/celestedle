@@ -28,6 +28,12 @@ const stmts = {
     WHERE id = @id
   `),
   clearAliases: db.prepare("DELETE FROM tech_aliases WHERE tech_id = ?"),
+  // Tirée ou proposée dans une partie : elle reste dans l'historique
+  used: db.prepare(`
+    SELECT EXISTS (SELECT 1 FROM tech_secrets WHERE element_id = @id)
+        OR EXISTS (SELECT 1 FROM tech_guesses WHERE element_id = @id) AS used
+  `),
+  remove: db.prepare("DELETE FROM techs WHERE id = ?"),
   addAlias: db.prepare("INSERT OR IGNORE INTO tech_aliases (alias, tech_id) VALUES (?, ?)")
 };
 
@@ -111,6 +117,15 @@ const update = db.transaction((id, input) => {
   return findById(id);
 });
 
+function isUsed(id) {
+  return stmts.used.get({ id }).used === 1;
+}
+
+// Les synonymes partent avec la tech (ON DELETE CASCADE)
+function remove(id) {
+  return stmts.remove.run(id).changes === 1;
+}
+
 function count() {
   return stmts.count.get().n;
 }
@@ -126,5 +141,7 @@ module.exports = {
   vocabulary,
   create,
   update,
+  isUsed,
+  remove,
   count
 };

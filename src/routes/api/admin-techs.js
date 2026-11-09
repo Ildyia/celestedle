@@ -119,6 +119,19 @@ router.delete("/admin/techs/:id/media", limitedAction("delete_tech_media", (req)
   res.json(updated);
 });
 
+// Suppression : seulement une tech jamais tirée ni proposée (sinon elle se
+// rend non jouable, pour garder l'historique des parties)
+router.delete("/admin/techs/:id", limitedAction("delete_tech", (req) => req.params.id), (req, res) => {
+  const tech = techsRepo.findById(Number(req.params.id));
+  if (!tech) throw new HttpError(404, "Unknown tech.");
+  if (techsRepo.isUsed(tech.id)) {
+    throw new HttpError(409, "This tech was already played: untick \"Playable\" instead, to keep past games.");
+  }
+  techsRepo.remove(tech.id);
+  sprites.removeUpload(tech.media);
+  res.status(204).end();
+});
+
 router.put("/admin/techs/access", limitedAction("techs_access", (req) => req.body?.access), (req, res) => {
   res.json({ access: staff.setGameAccess("techs", req.body?.access) });
 });

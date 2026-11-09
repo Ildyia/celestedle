@@ -70,6 +70,7 @@ export const admin = {
   updateTech: (id, changes) => request("PATCH", `/admin/techs/${id}`, changes),
   uploadTechMedia: (id, file) => upload(`/admin/techs/${id}/media`, file),
   deleteTechMedia: (id) => request("DELETE", `/admin/techs/${id}/media`),
+  deleteTech: (id) => request("DELETE", `/admin/techs/${id}`),
   setTechsAccess: (access) => request("PUT", "/admin/techs/access", { access }),
   setTechSecret: (mode, action, name) => request("POST", "/admin/techs/secret", { mode, action, name }),
   reports: () => request("GET", "/admin/reports"),
