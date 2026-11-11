@@ -1,0 +1,110 @@
+/* Style propre à la page de menu (menu.html). Le commun est dans celeste-ui.css. */
+
+
+/* Le menu tient sur un écran : pas de défilement ni de sélection de texte.
+   (Pas dans celeste-ui.css : les pages de jeu, elles, doivent défiler.) */
+body { overflow: hidden; user-select: none; }
+
+/* ===== Écrans ===== */
+.screen { position: fixed; inset: 0; display: none; padding: 32px; }
+body[data-screen="title"] #title,
+body[data-screen="files"] #files,
+body[data-screen="modes"] #modes,
+body[data-screen="options"] #options { display: block; animation: fade .4s ease-out; }
+@keyframes fade { from { opacity: 0; transform: translateY(8px); } }
+
+
+/* Aide clavier en bas à droite, comme les boutons du jeu */
+.hints { position: fixed; right: 24px; bottom: 18px; display: flex; gap: 18px; font-size: 15px; z-index: 5; }
+.hints span b { display: inline-block; min-width: 26px; padding: 2px 6px; margin-right: 6px; border-radius: 6px; background: #fff; color: #111; text-align: center; text-shadow: none; }
+
+/* ===== Titre ===== */
+#title { display: none; text-align: center; }
+#title h1 { margin-top: 18vh; font-size: clamp(54px, 10vw, 120px); letter-spacing: 2px; }
+#title p { margin-top: 26vh; font-size: 22px; animation: blink 1.2s steps(2) infinite; }
+@keyframes blink { 50% { opacity: .2; } }
+#title .ver { position: fixed; left: 24px; bottom: 18px; font-size: 14px; opacity: .6; }
+
+/* ===== Sélection de fichier (profil) ===== */
+#files h2, #options h2 { font-size: 34px; margin-bottom: 26px; }
+.slots { display: flex; flex-direction: column; gap: 18px; max-width: 760px; margin-left: auto; }
+.slot { position: relative; display: flex; align-items: center; gap: 18px; padding: 14px 22px 14px 14px; background: var(--paper); color: var(--ink);
+  border-radius: 6px; box-shadow: 0 6px 0 var(--paper-dark), 0 10px 22px rgba(0,0,0,.5); transform: translateX(120px) rotate(-1deg); transition: transform .25s cubic-bezier(.2,.8,.2,1); cursor: pointer; }
+.slot::before { /* perforation du ticket */ content: ""; position: absolute; left: 112px; top: 8px; bottom: 8px; border-left: 3px dashed var(--paper-dark); }
+.slot.selected { transform: translateX(0) rotate(0deg) scale(1.03); }
+.slot .portrait { width: 84px; height: 84px; border-radius: 4px; background: #c6d9f0; display: grid; place-items: center; flex: none; }
+.slot .portrait img { width: 64px; height: 64px; image-rendering: pixelated; }
+.slot .body { flex: 1; padding-left: 14px; }
+.slot .name { font-size: 26px; }
+.slot .name small { font-size: 13px; opacity: .55; margin-left: 8px; }
+.slot .stats { display: flex; gap: 22px; margin-top: 8px; font-size: 17px; }
+.slot .stats img { width: 22px; height: 22px; vertical-align: -5px; margin-right: 4px; image-rendering: pixelated; }
+.slot.empty .name { opacity: .55; }
+.slot .actions { display: none; flex-direction: column; gap: 6px; margin-left: 10px; font-size: 18px; }
+.slot.selected .actions { display: flex; }
+.slot .actions button { font: inherit; border: none; background: none; color: var(--ink); text-align: left; cursor: pointer; }
+.slot .actions button.active { color: #d1366a; }
+.slot .actions button.active::before { content: "▸ "; }
+
+/* ===== Sélection des modes (sélection de chapitre) ===== */
+.icons { position: absolute; left: 4vw; top: 6vh; display: flex; gap: 22px; align-items: flex-end; }
+.icon { width: 92px; height: 92px; border-radius: 14px; background: rgba(255,255,255,.12); border: 3px solid rgba(255,255,255,.35); display: grid; place-items: center;
+  transition: all .25s cubic-bezier(.2,.8,.2,1); cursor: pointer; }
+.icon img { width: 60%; height: 60%; object-fit: contain; image-rendering: pixelated; }
+.icon.selected { width: 132px; height: 132px; background: rgba(255,255,255,.25); border-color: #fff; transform: translateY(-6px) rotate(-3deg); box-shadow: 0 0 0 4px rgba(255,255,255,.15); }
+.icon.locked { opacity: .45; }
+.mode-label { position: absolute; left: 4vw; top: calc(6vh + 160px); font-size: 22px; opacity: .85; }
+
+.book { position: absolute; right: 5vw; top: 12vh; width: min(460px, 90vw); background: var(--paper); color: var(--ink); border-radius: 8px;
+  box-shadow: 0 8px 0 var(--paper-dark), 0 18px 40px rgba(0,0,0,.55); padding: 26px 28px 30px; transform: rotate(1.5deg); }
+.book .chapter { font-size: 15px; letter-spacing: 3px; opacity: .6; }
+.book h3 { font-size: 40px; margin: 4px 0 10px; }
+.book .desc { font-size: 15px; line-height: 1.45; opacity: .85; min-height: 44px; }
+.tabs { position: absolute; top: -34px; right: 24px; display: flex; gap: 6px; }
+.tab { padding: 8px 14px 14px; border-radius: 6px 6px 0 0; font-size: 15px; color: #fff; cursor: pointer; transform: translateY(6px); transition: transform .15s; }
+.tab.a { background: var(--side-a); }
+.tab.b { background: var(--side-b); }
+.tab.active { transform: translateY(0); }
+.book .record { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
+.book .record div { background: rgba(43,35,53,.07); border-radius: 6px; padding: 10px 8px; text-align: center; font-size: 13px; }
+.book .record strong { display: block; font-size: 22px; margin-bottom: 2px; }
+.book .record img { width: 22px; height: 22px; image-rendering: pixelated; }
+.climb { display: block; margin: 0 auto; font: inherit; font-size: 26px; border: none; padding: 10px 30px; border-radius: 6px; cursor: pointer; color: #fff; }
+.climb.a { background: var(--side-a); box-shadow: 0 5px 0 #3b7bb3; }
+.climb.b { background: var(--side-b); box-shadow: 0 5px 0 #a52d3e; }
+.climb:active { transform: translateY(3px); box-shadow: none; }
+.corner { position: absolute; left: 4vw; bottom: 9vh; display: flex; gap: 14px; }
+.corner button { font: inherit; font-size: 18px; color: #fff; background: rgba(0,0,0,.35); border: 2px solid rgba(255,255,255,.4); border-radius: 8px; padding: 8px 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.corner button img { width: 26px; height: 26px; image-rendering: pixelated; }
+
+/* ===== Options ===== */
+#options h2 { text-align: center; margin-top: 6vh; }
+.menu { list-style: none; width: min(620px, 92vw); margin: 0 auto; font-size: 26px; }
+.menu li { display: flex; justify-content: space-between; padding: 9px 0; cursor: pointer; transition: transform .1s; }
+.menu li.selected { transform: translateX(10px); }
+.menu .value::before { content: "◂ "; opacity: .5; }
+.menu .value::after { content: " ▸"; opacity: .5; }
+.menu li.selected .value::before, .menu li.selected .value::after { opacity: 1; }
+.menu li.sep { height: 18px; padding: 0; pointer-events: none; }
+
+/* TODO : remplacer par le style de .toast-notification (toast.js) */
+#toast { position: fixed; left: 50%; top: 20px; transform: translateX(-50%); background: rgba(0,0,0,.75); padding: 10px 18px; border-radius: 8px; font-size: 16px; opacity: 0; transition: opacity .2s; z-index: 10; }
+#toast.show { opacity: 1; }
+
+@media (max-width: 700px) {
+  .screen { padding: 18px; }
+  .slot { transform: none; }
+  .slot::before { left: 98px; }
+  .slot .portrait { width: 70px; height: 70px; }
+  .slot .stats { gap: 12px; font-size: 14px; flex-wrap: wrap; }
+  .slot { flex-wrap: wrap; }
+  .slot .actions { flex-direction: row; flex-wrap: wrap; gap: 14px; width: 100%; margin: 6px 0 0 88px; font-size: 15px; }
+  .icons { gap: 10px; }
+  .icon { width: 64px; height: 64px; }
+  .icon.selected { width: 84px; height: 84px; }
+  .mode-label { top: calc(6vh + 104px); }
+  .book { top: auto; bottom: 18vh; right: 50%; transform: translateX(50%); }
+  .corner { bottom: 3vh; }
+  .hints { display: none; }
+  .menu { font-size: 20px; }
+}

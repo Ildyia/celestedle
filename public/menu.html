@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Celestedle</title>
+    <link rel="stylesheet" href="celeste-ui.css" />
+    <link rel="stylesheet" href="menu.css" />
+    <link rel="icon" href="assets/berrywinged.png" type="image/png" />
+  </head>
+  <!-- Nouvelle page d'accueil façon menus de Celeste (voir REDESIGN.md).
+       Page de travail : elle deviendra index.html une fois terminée. -->
+<body data-screen="title">
+<div id="scene">
+  <div id="stars"></div>
+  <svg id="mountain" viewBox="0 0 1600 700" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <polygon fill="#3b2a66" points="0,700 0,520 180,430 320,470 470,330 600,390 760,210 900,300 1040,180 1180,330 1320,260 1460,380 1600,320 1600,700" />
+    <polygon fill="#24204a" points="0,700 0,600 220,520 380,560 560,420 700,470 820,300 900,250 980,320 1120,420 1300,380 1460,470 1600,440 1600,700" />
+    <polygon fill="#e9e6ff" opacity=".85" points="820,300 900,250 980,320 940,310 905,330 870,305" />
+    <polygon fill="#16142f" points="0,700 0,650 260,600 520,640 760,560 1000,620 1260,580 1600,640 1600,700" />
+  </svg>
+</div>
+
+<!-- Titre -->
+<section id="title" class="screen">
+  <h1 class="outlined">CELESTEDLE</h1>
+  <p class="outlined">Press Enter</p>
+  <!-- TODO : remplir avec api.version() -->
+  <span class="ver outlined" id="version"></span>
+</section>
+
+<!-- Sélection de fichier = profil (rempli par renderFiles() dans menu.js) -->
+<section id="files" class="screen">
+  <h2 class="outlined">Select a file</h2>
+  <div class="slots" id="slots"></div>
+</section>
+
+<!-- Sélection des modes = sélection de chapitre (rempli par renderModes()) -->
+<section id="modes" class="screen">
+  <div class="icons" id="icons"></div>
+  <div class="mode-label outlined" id="mode-label"></div>
+  <div class="book">
+    <div class="tabs" id="tabs">
+      <div class="tab a" data-side="a">A-Side · Normal</div>
+      <div class="tab b" data-side="b">B-Side · Hard</div>
+    </div>
+    <div class="chapter" id="book-chapter"></div>
+    <h3 id="book-title"></h3>
+    <p class="desc" id="book-desc"></p>
+    <div class="record" id="book-record"></div>
+    <button class="climb a" id="climb">Climb</button>
+  </div>
+  <div class="corner">
+    <!-- TODO : Journal = classement (leaderboard.js) dans une fenêtre papier -->
+    <button id="to-journal"><img src="assets/illustration/journal.png" alt="" />Journal</button>
+    <button id="to-options"><img src="assets/illustration/options.png" alt="" />Options</button>
+  </div>
+</section>
+
+<!-- Options (rempli par renderOptions()) -->
+<section id="options" class="screen">
+  <h2 class="outlined">OPTIONS</h2>
+  <ul class="menu outlined" id="menu"></ul>
+</section>
+
+<div class="hints outlined" id="hints"></div>
+
+<script type="module" src="js/menu.js"></script>
+</body>
+</html>
