@@ -104,6 +104,8 @@ button { font: inherit; color: inherit; }
 /* Petits drapeaux des jeux (menu.html), placés en % du dessin par --x / --y.
    Un jeu auquel le joueur n'a pas accès n'a pas de drapeau (body[data-games]). */
 .game-flag { position: absolute; left: calc(var(--x) / 1600 * 100%); top: calc(var(--y) / 700 * 100%); width: calc(38 / 1600 * 100%); height: calc(56 / 700 * 100%); overflow: visible; }
+/* Liseré sombre : le drapeau se détache du ciel à toute heure */
+.game-flag .cloth, #summit-flag .cloth { stroke: #16142f; stroke-width: 1.5; stroke-linejoin: round; paint-order: stroke; }
 .game-flag .cloth { fill: var(--flag-color); transform-box: fill-box; transform-origin: 0% 50%; animation: wave 1.2s ease-in-out infinite alternate; }
 body:not([data-games~="connections"]) .game-flag[data-game="connections"],
 body:not([data-games~="techs"]) .game-flag[data-game="techs"] { display: none; }

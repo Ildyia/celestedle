@@ -14,7 +14,7 @@ import { showToast } from "./toast.js";
 import { initNextWordTimer } from "./timer.js";
 import { openPanel, panelOpen } from "./menu-panels.js";
 import { createJournal } from "./journal.js";
-import { applySky, startSky } from "./sky.js";
+import { SKY_CHOICES, applySky, skySetting, startSky } from "./sky.js";
 import { STAMPS, TICKET_SLOTS, earnedStamps, stampSvg, setAchievements } from "./stamps.js";
 
 const LAST_GAME_KEY = "celestedle_menu_game";
@@ -30,6 +30,14 @@ function go(next) {
   screen = next;
   document.body.dataset.screen = next;
   render();
+  updateTitle();
+}
+
+// Titre de l'onglet : dit où on est dans le menu
+function updateTitle() {
+  const where = { title: null, files: "Files", modes: games[gameIndex]?.title, options: "Options" }[screen];
+  const name = journalOpen() ? "Journal" : where;
+  document.title = name && name !== "Celestedle" ? `${name} · Celestedle` : "Celestedle";
 }
 
 function render() {
@@ -461,6 +469,7 @@ function selectGame(index) {
   gameIndex = (index + games.length) % games.length;
   storage.set(LAST_GAME_KEY, games[gameIndex].id);
   renderModes();
+  updateTitle();
 }
 
 function selectSide(next) {
@@ -575,6 +584,16 @@ function climb() {
   location.href = games[gameIndex].page;
 }
 
+// Au survol (ou au focus) de Climb, le navigateur va déjà chercher la page
+// du jeu : le passage est plus rapide.
+const prefetched = new Set();
+function prefetchGame() {
+  const page = games[gameIndex]?.page;
+  if (!page || prefetched.has(page)) return;
+  prefetched.add(page);
+  document.head.append(el("link", { attrs: { rel: "prefetch", href: page } }));
+}
+
 // ===== Carte postale d'accueil =====
 // Comme les cartes postales qui ouvrent les chapitres du jeu : montrée une
 // fois, en quittant l'écran titre, puis on arrive sur les fichiers.
@@ -605,9 +624,17 @@ function openReport() {
 
 // ===== Journal (js/journal.js) =====
 const journal = createJournal({ getContext: () => ({ games, gameIndex, side }) });
-const openJournal = () => journal.open();
-const closeJournal = () => journal.close();
 const journalOpen = () => journal.isOpen();
+function openJournal() {
+  journal.open();
+  updateTitle();
+}
+function closeJournal() {
+  journal.close();
+  updateTitle();
+  // Le focus revient au bouton qui a ouvert le carnet
+  byId("to-journal").focus({ preventScroll: true });
+}
 
 // ===== Options =====
 // Chaque préférence : un libellé et une valeur qu'on fait défiler avec ◂ ▸.
@@ -619,7 +646,8 @@ const OPTION_ROWS = [
   { label: "Bird cursor", key: KEYS.customCursor, fallback: true, apply: applyCursor },
   { label: "Colorblind mode", key: KEYS.colorblind, fallback: false },
   // Coupe les animations de décor et raccourcit les mouvements (celeste-ui.css)
-  { label: "Time of day sky", key: KEYS.timeSky, fallback: true, apply: applySky },
+  // Ciel : suit l'heure (Auto) ou reste fixe
+  { label: "Sky", key: KEYS.timeSky, choices: SKY_CHOICES, current: skySetting, apply: applySky },
   { label: "Keyboard hints", key: KEYS.keyHints, fallback: true, apply: renderHints },
   { label: "Performance mode", key: KEYS.performance, fallback: false, apply: applyPerformance },
   { sep: true },
@@ -647,7 +675,8 @@ function renderOptions() {
       return;
     }
     const children = [el("span", { text: row.label })];
-    if (row.key) children.push(el("span", { className: "value", text: storage.getBool(row.key, row.fallback) ? "On" : "Off" }));
+    if (row.choices) children.push(el("span", { className: "value", text: row.choices.find(([id]) => id === row.current())[1] }));
+    else if (row.key) children.push(el("span", { className: "value", text: storage.getBool(row.key, row.fallback) ? "On" : "Off" }));
     const li = el("li", { className: i === optionIndex ? "selected hl" : "" }, children);
     li.addEventListener("click", () => {
       optionIndex = i;
@@ -655,6 +684,8 @@ function renderOptions() {
     });
     menu.append(li);
   });
+  // Petit écran : la ligne choisie reste visible quand la liste défile
+  menu.querySelector(".selected")?.scrollIntoView({ block: "nearest" });
 }
 
 function moveOption(step) {
@@ -664,7 +695,7 @@ function moveOption(step) {
   renderOptions();
 }
 
-function activateOption() {
+function activateOption(step = 1) {
   const row = optionRows()[optionIndex];
   if (row.back) return go(optionsReturn);
   if (row.run) return row.run();
@@ -676,9 +707,16 @@ function activateOption() {
     location.href = row.link;
     return;
   }
-  const on = !storage.getBool(row.key, row.fallback);
-  storage.set(row.key, String(on));
-  row.apply?.(on);
+  if (row.choices) {
+    // Liste de valeurs : on passe à la suivante (ou la précédente avec ←)
+    const at = row.choices.findIndex(([id]) => id === row.current());
+    storage.set(row.key, row.choices[(at + step + row.choices.length) % row.choices.length][0]);
+    row.apply?.();
+  } else {
+    const on = !storage.getBool(row.key, row.fallback);
+    storage.set(row.key, String(on));
+    row.apply?.(on);
+  }
   renderOptions();
 }
 
@@ -736,9 +774,9 @@ const KEY_HANDLERS = {
   options: {
     ArrowUp: () => moveOption(-1),
     ArrowDown: () => moveOption(1),
-    ArrowLeft: () => optionRows()[optionIndex].key && activateOption(),
+    ArrowLeft: () => optionRows()[optionIndex].key && activateOption(-1),
     ArrowRight: () => optionRows()[optionIndex].key && activateOption(),
-    Enter: activateOption,
+    Enter: () => activateOption(),
     Escape: () => go(optionsReturn)
   }
 };
@@ -786,6 +824,22 @@ byId("title").addEventListener("click", leaveTitle);
 byId("postcard-close").addEventListener("click", closePostcard);
 byId("api-down-retry").addEventListener("click", () => location.reload());
 byId("climb").addEventListener("click", climb);
+for (const type of ["pointerenter", "focus", "touchstart"]) byId("climb").addEventListener(type, prefetchGame, { passive: true });
+
+// Glisser du doigt : ← → change de jeu, ou tourne les pages du carnet
+function onSwipe(node, handler) {
+  let from = null;
+  node.addEventListener("touchstart", (e) => (from = e.touches.length === 1 ? e.touches[0] : null), { passive: true });
+  node.addEventListener("touchend", (e) => {
+    if (!from) return;
+    const dx = e.changedTouches[0].clientX - from.clientX;
+    const dy = e.changedTouches[0].clientY - from.clientY;
+    from = null;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) handler(dx < 0 ? 1 : -1);
+  });
+}
+onSwipe(byId("modes"), (step) => games.length > 1 && selectGame(gameIndex + step));
+onSwipe(byId("journal"), (step) => journal.flip(step));
 byId("to-options").addEventListener("click", openOptions);
 byId("to-report").addEventListener("click", openReport);
 byId("to-journal").addEventListener("click", openJournal);
@@ -859,6 +913,7 @@ async function start() {
   renderHints();
   // Prochaine partie : compte à rebours dans le livre ; à minuit, on recharge
   initNextWordTimer(byId("book-next-time"), () => {
+    showToast("A new day on the mountain: today's climbs are ready!");
     loadTodayMarks();
     if (screen === "modes") renderModes();
   });
@@ -870,6 +925,12 @@ async function start() {
   await player.load();
   // Sans jeton, player.load ne prévient pas : on charge quand même les jeux
   if (!player.profile) loadGames();
+  // Retour d'une page de jeu (menu.html#modes) : droit au choix du jeu, sans
+  // repasser par l'écran titre
+  if (location.hash === "#modes" && player.profile && screen === "title") {
+    history.replaceState(null, "", location.pathname + location.search);
+    go("modes");
+  }
 }
 
 start();

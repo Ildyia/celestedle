@@ -63,7 +63,7 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 /* Tickets dans le style de l'écran de fichiers de Celeste, tout en CSS :
    papier à encoches, contour à l'encre, scotch, talon perforé, tampons.
    Tailles en % ou en em de la largeur du ticket (--card-w). */
-.slots { --card-w: min(640px, 62vw); --ink-line: #2f2b45; --mark: #2f2b45; display: flex; flex-direction: column; align-items: center; gap: calc(var(--card-w) * .05); }
+.slots { --card-w: min(640px, 62vw); --halo: #f1ecf7; --ink-line: #2f2b45; --mark: #2f2b45; display: flex; flex-direction: column; align-items: center; gap: calc(var(--card-w) * .05); }
 .slot { position: relative; width: var(--card-w); font-size: calc(var(--card-w) / 25); transition: transform .3s var(--ease-out); cursor: pointer; }
 /* Ticket choisi : il glisse à gauche et son talon sort de derrière */
 /* Ticket choisi : il grossit un peu ; s'il a un talon, il glisse aussi à gauche */
@@ -101,7 +101,7 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 
 /* Ticket doré : tous les tampons gagnés, comme une sauvegarde complète du jeu.
    Papier doré, contour bronze, et un reflet qui passe de temps en temps. */
-.slot.golden { --ink-line: #7a5512; --mark: #7a5512; }
+.slot.golden { --halo: #f5d97a; --ink-line: #7a5512; --mark: #7a5512; }
 .slot.golden .card { color: #4a3208; }
 .slot.golden .card .shape::before {
   background:
@@ -151,7 +151,7 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
 .tape.br { left: 26.6%; top: 77%; }
 
 .card .body { position: absolute; left: 35%; right: 9%; top: 8%; bottom: 8%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .1em; text-align: center; }
-.card .name { max-width: 100%; font-size: 1.75em; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card .name { position: relative; z-index: 1; text-shadow: 0 0 .12em var(--halo), 0 0 .25em var(--halo), 0 0 .4em var(--halo), 0 0 .55em var(--halo); max-width: 100%; font-size: 1.75em; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .card .sub { font-size: 1.2em; color: #6e6a8a; }
 .card .sub.small { font-size: .8em; line-height: 1.3; max-width: 22em; }
 .card input { font: inherit; font-size: .85em; width: 100%; max-width: 18em; margin-top: .4em; padding: .3em .5em; border: 2px solid #b8b2cc; border-radius: 6px; background: #fff; color: #2b2335; user-select: text; }
@@ -177,13 +177,14 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
 .stub .gems { display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, 1.7em); gap: .35em 1.1em; justify-content: start; align-content: center; height: 100%; }
 .stub .gem { width: 1.7em; height: 1.7em; display: grid; place-items: center;
   filter: drop-shadow(1px 0 0 var(--ink-line)) drop-shadow(-1px 0 0 var(--ink-line)) drop-shadow(0 1px 0 var(--ink-line)) drop-shadow(0 -1px 0 var(--ink-line)); }
-.stub .dot { width: 32%; aspect-ratio: 1; border-radius: 50%; background: #4a4760; }
-.stub .gem:has(.dot) { filter: none; }
 /* Cœur de cristal : bleu en A-Side, rouge en B-Side */
-.stub .heart { width: 100%; aspect-ratio: 1;
+.stub :is(.heart, .dot) { width: 100%; aspect-ratio: 1;
   background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.85) 0 9%, transparent 10%), linear-gradient(160deg, var(--gem-light), var(--gem));
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21C5 15 0 11 0 6.2A6 6 0 0 1 12 4a6 6 0 0 1 12 2.2C24 11 19 15 12 21z'/%3E%3C/svg%3E") center / contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21C5 15 0 11 0 6.2A6 6 0 0 1 12 4a6 6 0 0 1 12 2.2C24 11 19 15 12 21z'/%3E%3C/svg%3E") center / contain no-repeat; }
+/* Pas encore gagné aujourd'hui : cœur vide, pâle */
+.stub .dot { background: #e4e1ec; }
+.stub .gem:has(.dot) { opacity: .55; }
 .stub .heart.a { --gem: #1d74d8; --gem-light: #5fb2ff; }
 .stub .heart.b { --gem: #c8204e; --gem-light: #ff6b8e; }
 .stub .streak { display: flex; align-items: center; gap: .3em; font-size: 1.1em; }
@@ -205,7 +206,7 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
 .icons { position: absolute; left: 4vw; top: 6vh; display: flex; gap: 22px; align-items: flex-end; }
 .icon { width: 92px; height: 92px; padding: 0; border-radius: 14px; background: rgba(255,255,255,.12); border: 3px solid rgba(255,255,255,.35); display: grid; place-items: center;
   transition: all .25s var(--ease-out); cursor: pointer; }
-.icon img { width: 60%; height: 60%; object-fit: contain; image-rendering: pixelated; }
+.icon img { width: 80%; height: 80%; object-fit: contain; image-rendering: pixelated; }
 .icon.selected { width: 132px; height: 132px; background: rgba(255,255,255,.25); border-color: #fff; transform: translateY(-6px) rotate(-3deg); box-shadow: 0 0 0 4px rgba(255,255,255,.15); }
 .icon .badge { position: absolute; transform: translate(34px, -34px); font-size: 18px; }
 .mode-label { position: absolute; left: 4vw; top: calc(6vh + 160px); font-size: 22px; opacity: .9; }
@@ -252,7 +253,7 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
 .menu li.selected .value::before, .menu li.selected .value::after { opacity: 1; }
 .menu li.sep { height: 18px; padding: 0; pointer-events: none; }
 /* Longue liste : elle défile sur les petits écrans */
-#options { overflow-y: auto; }
+#options { overflow-y: auto; padding-bottom: 64px; scroll-padding-bottom: 64px; }
 
 /* ===== Journal ===== */
 /* ===== Journal : un carnet comme celui du jeu =====
@@ -286,7 +287,8 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
 .journal-tab:nth-child(5) { --tab: #5fae6a; }
 .journal-tab.active, .journal-tab:hover { filter: none; transform: none; }
 .journal-close { position: absolute; top: 10px; right: 12px; width: 32px; height: 32px; border: none; border-radius: 50%; background: rgba(58, 51, 80, .12); color: var(--j-ink); cursor: pointer; font-size: 16px; }
-.journal-page { flex: 1; overflow: auto; }
+.journal-page { flex: 1; overflow: auto; padding-bottom: 22px;
+  -webkit-mask: linear-gradient(#000 calc(100% - 26px), transparent); mask: linear-gradient(#000 calc(100% - 26px), transparent); }
 .journal-page.turn { animation: page-turn .25s ease-out; }
 @keyframes page-turn { from { opacity: 0; transform: translateX(14px); } }
 .journal-page h3 { font-size: 30px; line-height: 32px; margin-bottom: 14px; }
@@ -299,7 +301,7 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
 .journal-table td:first-child, .journal-table th:first-child { text-align: left; white-space: nowrap; }
 .journal-table .side { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 8px; background: var(--side-a); }
 .journal-table .side.b { background: var(--side-b); }
-.journal-table .game-icon { width: 20px; height: 20px; object-fit: contain; image-rendering: pixelated; vertical-align: -5px; margin-right: 6px; }
+.journal-table .game-icon { width: 30px; height: 22px; object-fit: contain; image-rendering: pixelated; vertical-align: -5px; margin-right: 6px; }
 .journal-table.board td.rank { width: 44px; color: var(--j-soft); }
 .journal-table.board th:nth-child(2), .journal-table.board td.who { text-align: left; }
 .journal-table .who { display: flex; align-items: center; gap: 8px; height: 32px; }
@@ -325,7 +327,7 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
 /* Page Today : choix du jeu et du côté */
 .journal-picker { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 12px; }
 .journal-picker .pick { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px 3px 4px; border: 2px solid transparent; border-radius: 7px; cursor: pointer; font-size: 13px; color: var(--j-ink); background: rgba(58, 51, 80, .08); }
-.journal-picker .pick img { width: 22px; height: 22px; object-fit: contain; image-rendering: pixelated; }
+.journal-picker .pick img { width: 30px; height: 22px; object-fit: contain; image-rendering: pixelated; }
 .journal-picker .pick.active.a { border-color: var(--side-a); background: rgba(90, 168, 232, .18); }
 .journal-picker .pick.active.b { border-color: var(--side-b); background: rgba(224, 71, 91, .15); }
 
@@ -358,6 +360,17 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
   .hints { display: none; }
   body[data-screen="title"] .hints { display: flex; left: 0; right: 0; justify-content: center; bottom: 8vh; }
   .menu { font-size: 20px; }
+  /* Le livre couvre le milieu de l'écran : la caméra cadre le drapeau du jeu
+     en haut à droite, à la place de la lune (cachée sur cet écran).
+     Pied du mât visé : 90px du bord droit, 170px du haut. --fx / --fy : écart
+     du pied au centre du dessin et sa hauteur, en vh (le dessin fait 75vh). */
+  body[data-screen="modes"][data-game] #mountain { transform: scale(var(--s)) translate(calc((50vw - 90px) / var(--s) - var(--fx)), calc((170px - 100vh) / var(--s) + 100vh - var(--fy))); }
+  body[data-screen="modes"][data-game="celestedle"] #mountain { --s: 1.7; --fx: 10.714vh; --fy: 52vh; }
+  body[data-screen="modes"][data-game="techs"] #mountain { --s: 3; --fx: -25.714vh; --fy: 70vh; }
+  body[data-screen="modes"][data-game="connections"] #mountain { --s: 2.4; --fx: 25.714vh; --fy: 44.286vh; }
+  body[data-screen="modes"] #moon { opacity: 0; }
+  /* Le drapeau passe derrière les réglages : décor plus sombre */
+  body[data-screen="options"] #dim { opacity: .72; }
   /* Carnet sur téléphone : onglets en haut, à l'horizontale, et moins de colonnes */
   .journal { width: 100%; padding: 16px 12px 12px 40px; transform: none; }
   .journal-tabs { position: static; flex-direction: row; flex-wrap: wrap; gap: 4px; margin: 0 34px 10px 0; }
@@ -414,4 +427,35 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
   .postcard-stamp img { width: 48px; height: 48px; }
   .postcard-postmark { display: none; }
   .postcard-text h2 { font-size: 22px; }
+}
+
+/* ===== Écrans peu hauts (portable 1280 × 600…) : le livre se tasse pour ne
+   pas passer sous l'aide clavier ===== */
+@media (max-height: 700px) and (min-width: 701px) {
+  .book { top: 44px; padding: 16px 24px 18px; }
+  .book h3 { font-size: 32px; margin: 2px 0 6px; }
+  .book .desc { font-size: 14px; line-height: 1.35; }
+  .book .today { margin-top: 8px; }
+  .book .record { gap: 8px; margin: 10px 0 12px; }
+  .book .record div { padding: 6px 8px; }
+  .climb { font-size: 22px; padding: 8px 26px; }
+  .icons { top: 4vh; }
+  .icon.selected { width: 108px; height: 108px; }
+  .mode-label { top: calc(4vh + 130px); }
+  .corner { bottom: 64px; }
+  #options h2 { margin-top: 2vh; margin-bottom: 14px; }
+  .menu { font-size: 22px; }
+  .menu li { padding: 6px 0; }
+}
+
+/* ===== Focus clavier (Tab) : même contour jaune partout dans le menu ===== */
+:is(button, a, input, select, textarea, [tabindex]):focus-visible { outline: 3px solid var(--hl-b); outline-offset: 3px; }
+
+/* Téléphone peu haut : icônes des jeux plus petites, pour ne pas toucher le livre */
+@media (max-width: 700px) and (max-height: 760px) {
+  .icons { top: 2vh; }
+  .icon { width: 50px; height: 50px; }
+  .icon.selected { width: 62px; height: 62px; }
+  .book { bottom: 15vh; padding: 16px 18px 18px; }
+  .book .record { margin: 10px 0 12px; }
 }

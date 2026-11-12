@@ -256,6 +256,8 @@ html[data-sky="day"] :is(.moon-glow, .m-moon-glow) { display: none; }
 html[data-sky="day"] :is(.moon-body, .m-moon-body) { opacity: .55; }
 /* Page de jeu en journée : montagne plus opaque (sinon délavée sur le ciel
    clair) et en-têtes du tableau en blanc */
+/* Ciel bleu : le drapeau bleu de Techs fonce pour rester visible */
+html[data-sky="day"] .game-flag[data-game="techs"] { --flag-color: #2456c8 !important; }
 html.ui-modern[data-sky="day"] .m-mountain { opacity: .9; }
 html.ui-modern[data-sky="day"] #guesses-table th, html.ui-modern[data-sky="day"] #modern-side { color: #fff; }
 

@@ -36,7 +36,7 @@ redessine les images SVG à chaque étape d'un zoom.
 
 - [x] Stats perso de Connections et Techs dans le journal (`/connections/me/stats`, `/techs/me/stats`).
 - [x] Classement directement dans le journal (pages Today, This week, All time).
-- [x] Ciel selon l'heure locale (nuit, aube, jour, crépuscule) : `js/sky.js`, couleurs dans `modern.css`, option « Time of day sky ».
+- [x] Ciel selon l'heure locale (nuit, aube, jour, crépuscule) : `js/sky.js`, couleurs dans `modern.css`, option « Sky » (Auto, ou un ciel fixe : Dawn, Day, Dusk, Night).
 - [x] Un drapeau par jeu sur la montagne (Celestedle bleu, Connections doré si accessible, Techs = drapeau du sommet) ; celui du jeu choisi grandit.
 - [x] Supprimer son fichier depuis le ticket (Delete, avec confirmation).
 

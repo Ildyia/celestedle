@@ -62,7 +62,25 @@ const boardMode = (game, side) => (game.id === "connections" ? `cx-${game.modes[
 
 export function createJournal({ getContext }) {
   const wrap = byId("journal");
-  let pageIndex = 0;
+  // Dernière page lue : on y revient (le temps de la visite du site)
+  const PAGE_KEY = "celestedle_journal_page";
+  const session = {
+    get: () => {
+      try {
+        return sessionStorage.getItem(PAGE_KEY);
+      } catch {
+        return null;
+      }
+    },
+    set: (value) => {
+      try {
+        sessionStorage.setItem(PAGE_KEY, value);
+      } catch {
+        // Page non retenue : sans conséquence
+      }
+    }
+  };
+  let pageIndex = Math.max(0, PAGES.findIndex((p) => p.id === session.get()));
   // Jeu et côté de la page Today : ceux choisis dans le menu à l'ouverture
   let board = null;
   let request = 0;
@@ -85,6 +103,7 @@ export function createJournal({ getContext }) {
 
   function go(index) {
     pageIndex = (index + PAGES.length) % PAGES.length;
+    session.set(PAGES[pageIndex].id);
     renderTabs();
     renderPage();
   }
@@ -216,7 +235,8 @@ export function createJournal({ getContext }) {
                 }
               }
             },
-            [el("img", { attrs: { src: game.icon, alt: "" } }), side.toUpperCase()]
+            // Un seul jeu : le nom du côté en entier, plus lisible que « A » / « B »
+            [el("img", { attrs: { src: game.icon, alt: "" } }), games.length === 1 ? (side === "a" ? "A-Side" : "B-Side") : side.toUpperCase()]
           );
         })
       )

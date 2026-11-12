@@ -121,7 +121,7 @@ function buildDecor() {
   showAdmin(player.profile);
   player.onChange(showAdmin);
   const nav = el("nav", { attrs: { id: "modern-nav", "aria-label": "Menu" } }, [
-    el("a", { attrs: { href: "menu.html" } }, [el("span", { text: "◂" }), el("span", { className: "m-label", text: "Menu" })]),
+    el("a", { attrs: { href: "menu.html#modes" } }, [el("span", { text: "◂" }), el("span", { className: "m-label", text: "Menu" })]),
     el("button", { attrs: { type: "button", "aria-label": "Pause" }, on: { click: openPause } }, [
       el("span", { className: "m-pause-icon", text: "❚❚" }),
       el("span", { className: "m-label", text: "Pause" })
@@ -147,6 +147,7 @@ function buildDecor() {
       const mode = currentMode();
       side.textContent = SIDES[mode] ?? mode;
       side.dataset.mode = mode;
+      updateTabTitle();
     };
     update();
     const switcher = document.getElementById("mode-switch");
@@ -174,7 +175,7 @@ function pauseItems() {
         document.querySelector(`#mode-switch [data-mode='${other}']`)?.click();
       }
     },
-    { label: "Return to menu", run: () => (location.href = "menu.html") }
+    { label: "Return to menu", run: () => (location.href = "menu.html#modes") }
   ].filter(Boolean);
 }
 
@@ -266,7 +267,20 @@ function countUp(node, target) {
   setTimeout(() => requestAnimationFrame(step), 450);
 }
 
+// Titre de l'onglet : le jeu et le côté, avec une coche (ou une croix) quand
+// la partie vient de se finir, pour le voir depuis un autre onglet
+const endedModes = new Map();
+function updateTabTitle() {
+  if (!document.documentElement.classList.contains("ui-modern")) return;
+  const mode = currentMode();
+  const side = mode === "hard" ? "B-Side" : "A-Side";
+  const mark = endedModes.has(mode) ? (endedModes.get(mode) ? "✓ " : "✗ ") : "";
+  document.title = `${mark}${gameName()} · ${side}`;
+}
+
 function showEnd(detail) {
+  if (!detail.practice) endedModes.set(detail.side === "b" ? "hard" : "normal", detail.status === "won");
+  updateTabTitle();
   if (!document.documentElement.classList.contains("ui-modern")) return;
   closePause();
   const won = detail.status === "won";
@@ -301,7 +315,7 @@ function showEnd(detail) {
   const actions = [
     share,
     rankings && el("button", { className: "m-end-btn", text: "Rankings", attrs: { type: "button" }, on: { click: () => (closeEnd(), rankings()) } }),
-    el("a", { className: "m-end-btn", text: "Menu", attrs: { href: "menu.html" } }),
+    el("a", { className: "m-end-btn", text: "Menu", attrs: { href: "menu.html#modes" } }),
     el("button", { className: "m-end-btn", text: "Close", attrs: { type: "button" }, on: { click: closeEnd } })
   ].filter(Boolean);
 

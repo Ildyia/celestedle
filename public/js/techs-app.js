@@ -5,6 +5,7 @@ import { storage } from "./storage.js";
 import { player } from "./player.js";
 import { initOptions } from "./options.js";
 import { initNextWordTimer } from "./timer.js";
+import { showToast } from "./toast.js";
 import { Suggestions } from "./suggestions.js";
 import { Game } from "./game.js";
 import { ProfilePanel } from "./profile.js";
@@ -131,6 +132,7 @@ async function init() {
     .catch(() => {});
 
   initNextWordTimer(byId("next-word-timer"), () => {
+    showToast("A new day on the mountain: today's climb is ready!");
     game.load();
     refreshCommunityStats(game.mode);
   });

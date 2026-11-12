@@ -5,6 +5,7 @@ import { storage, KEYS } from "./storage.js";
 import { player } from "./player.js";
 import { initOptions } from "./options.js";
 import { initNextWordTimer } from "./timer.js";
+import { showToast } from "./toast.js";
 import { Synonyms, bindSynonymsModal } from "./synonyms.js";
 import { Suggestions } from "./suggestions.js";
 import { Game } from "./game.js";
@@ -104,6 +105,7 @@ async function init() {
   showDisclaimerOnce();
   showVersion();
   initNextWordTimer(byId("next-word-timer"), () => {
+    showToast("A new day on the mountain: today's climb is ready!");
     game.load();
     refreshCommunityStats(game.mode);
   });

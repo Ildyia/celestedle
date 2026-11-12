@@ -3,6 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Guess today's Celeste entity. Each guess shows which details match." />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Celestedle" />
+    <meta property="og:title" content="Celestedle" />
+    <meta property="og:description" content="Guess today's Celeste entity. Each guess shows which details match." />
     <title>Celestedle</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="theme-celeste.css" />
@@ -12,8 +17,8 @@
     <script>
       try {
         if (localStorage.getItem("celestedle_modern_ui") !== "false") document.documentElement.classList.add("ui-modern");
-        var on = localStorage.getItem("celestedle_time_sky") !== "false", h = new Date().getHours();
-        document.documentElement.dataset.sky = !on || h >= 21 || h < 5 ? "night" : h < 8 ? "dawn" : h < 17 ? "day" : "dusk";
+        var v = localStorage.getItem("celestedle_time_sky"), h = new Date().getHours();
+        document.documentElement.dataset.sky = v === "false" ? "night" : /^(night|dawn|day|dusk)$/.test(v) ? v : h >= 21 || h < 5 ? "night" : h < 8 ? "dawn" : h < 17 ? "day" : "dusk";
       } catch {}
     </script>
     <link rel="icon" href="assets/berrywinged.png" type="image/png" />
