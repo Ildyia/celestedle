@@ -54,15 +54,21 @@ button { font: inherit; color: inherit; }
   opacity: .8; animation: twinkle 4s steps(2) infinite; }
 @keyframes twinkle { 50% { opacity: .5; } }
 
-/* Lune en croissant, entourée de petites étoiles. Le halo est sur #moon
-   (drop-shadow suit la forme), la découpe sur .moon-body (masque) : sur un
-   seul élément, le masque couperait aussi le halo. Elle recule un peu quand
-   on avance dans les menus (parallaxe). */
+/* Lune en croissant, entourée de petites étoiles. Elle recule un peu quand
+   on avance dans les menus (parallaxe).
+   Perf : pas de `filter` ici. Un drop-shadow sur un élément qui contient des
+   animations est recalculé à chaque image et fait ramer la page. Le halo est
+   un simple dégradé fixe (::before). */
 #moon {
   position: absolute; top: 5vh; right: 6vw;
   width: clamp(70px, 11vw, 150px); aspect-ratio: 1;
-  filter: drop-shadow(0 0 14px rgba(220, 210, 255, .55)) drop-shadow(0 0 40px rgba(150, 200, 255, .3));
   transition: transform 1.2s var(--ease-out), opacity 1.2s;
+  will-change: transform;
+}
+#moon::before {
+  content: ""; position: absolute; inset: -45%; border-radius: 50%;
+  /* Anneau : transparent sur la lune (le creux du croissant reste du ciel) */
+  background: radial-gradient(circle, transparent 0 25%, rgba(215, 205, 255, .35) 26.5%, rgba(150, 200, 255, .12) 40%, transparent 66%);
 }
 .moon-body {
   position: absolute; inset: 0; border-radius: 50%;
@@ -79,7 +85,10 @@ button { font: inherit; color: inherit; }
   transform: translate(-50%, -50%); animation: sparkle 2.4s ease-in-out infinite; animation-delay: var(--d, 0s); }
 @keyframes sparkle { 50% { opacity: .35; transform: translate(-50%, -50%) scale(.75); } }
 
-#mountain { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 75vh; transition: transform 1.2s var(--ease-out), filter 1.2s; transform-origin: 50% 100%; }
+#mountain { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 75vh; transition: transform 1.2s var(--ease-out); transform-origin: 50% 100%; will-change: transform; }
+/* Voile sombre sur la montagne (options) : bien moins coûteux qu'un filter.
+   Placé avant la neige, pour ne pas recouvrir les flocons animés. */
+#dim { position: absolute; inset: 0; background: #05040f; opacity: 0; transition: opacity 1.2s; }
 
 /* Drapeau au sommet : il flotte au vent */
 #summit-flag .cloth { fill: var(--flag); transform-box: fill-box; transform-origin: 0% 50%; animation: wave 1.4s ease-in-out infinite alternate; }
@@ -88,7 +97,7 @@ button { font: inherit; color: inherit; }
   100% { transform: skewY(5deg) scaleX(.86); }
 }
 
-.snow { position: absolute; top: -10px; width: 3px; height: 3px; background: #fff; opacity: .8; animation: fall linear infinite; }
+.snow { position: absolute; top: -10px; will-change: transform; width: 3px; height: 3px; background: #fff; opacity: .8; animation: fall linear infinite; }
 @keyframes fall { to { transform: translate(-60px, 110vh); } }
 
 /* Texte « à la Celeste » : blanc, contour noir épais */

@@ -13,7 +13,8 @@ body[data-screen="modes"][data-game="celestedle"] #mountain { transform: scale(1
 body[data-screen="modes"][data-game="connections"] #mountain { transform: scale(2) translate(-23.5%, 47%); }
 body[data-screen="modes"][data-game="techs"] #mountain { transform: scale(2.2) translate(-13%, 40%); }
 body[data-screen="modes"] #moon { transform: translate(-8vw, 6vh) scale(.75); opacity: .7; }
-body[data-screen="options"] #mountain { transform: scale(1.3) translateX(4%); filter: brightness(.6); }
+body[data-screen="options"] #mountain { transform: scale(1.3) translateX(4%); }
+body[data-screen="options"] #dim { opacity: .45; }
 body[data-screen="options"] #moon { opacity: .4; }
 
 /* ===== Écrans ===== */
