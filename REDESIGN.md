@@ -22,6 +22,14 @@ Déjà en place :
 - **Options** : mêmes préférences que les pages de jeu, Credits, Legal notice.
 - Clavier partout, aide en bas à droite, mobile, `prefers-reduced-motion`.
 
+## Montagne
+
+`public/assets/menu/mountain.svg` est la source (polygones modifiables) ;
+la page affiche `mountain.png`, son export en 4000 × 1750 px. Après une
+modification du SVG, réexporter le PNG (Inkscape, ou ouvrir le SVG dans le
+navigateur et l'exporter à cette taille). Le PNG est là pour Firefox, qui
+redessine les images SVG à chaque étape d'un zoom.
+
 ## Idées pour la suite
 
 - [ ] Stats perso de Connections et Techs dans le journal (il manque une route `…/me/stats` côté serveur).

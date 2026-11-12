@@ -30,12 +30,13 @@
         <span class="moon-star" style="--x: -6%; --y: 19%; --s: 15px; --c: #ffb3e6; --d: 2.04s">✦</span>
         <span class="moon-star" style="--x: 9%; --y: -7%; --s: 10px; --c: #8fe3ff; --d: 2.21s">✦</span>
       </div>
-      <!-- Montagne : une image fixe (dessinée une fois, puis seulement agrandie
-           par la carte graphique) et le drapeau animé dans son propre calque.
+      <!-- Montagne : une image PNG fixe (Firefox redessine les images SVG à
+           chaque étape d'un zoom, pas les PNG) et le drapeau animé dans son
+           propre calque. Source modifiable : assets/menu/mountain.svg.
            Coordonnées du drapeau = celles du dessin (viewBox 1600 × 700). -->
       <div id="mountain">
         <div class="mountain-art">
-          <img src="assets/menu/mountain.svg" alt="" draggable="false" />
+          <img src="assets/menu/mountain.png" alt="" draggable="false" decoding="async" />
           <svg id="summit-flag" viewBox="896 164 58 92">
             <line x1="900" y1="252" x2="900" y2="168" stroke="#16142f" stroke-width="4" stroke-linecap="round" />
             <rect class="cloth" x="902" y="170" width="46" height="28" />
