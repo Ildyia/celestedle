@@ -34,7 +34,7 @@ redessine les images SVG à chaque étape d'un zoom.
 ## Idées pour la suite
 
 - [ ] Stats perso de Connections et Techs dans le journal (il manque une route `…/me/stats` côté serveur).
-- [ ] Classement directement dans le journal, au lieu du lien vers l'ancienne page.
+- [x] Classement directement dans le journal (pages Today, This week, All time).
 - [ ] Petits drapeaux sur la montagne à l'endroit de chaque jeu.
 - [ ] Supprimer son profil depuis le ticket (aujourd'hui : dans l'ancienne fenêtre profil).
 
