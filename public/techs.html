@@ -370,13 +370,13 @@
             <li><strong>1 Truth &amp; 2 Lies</strong>: three statements, only one is true.</li>
             <li><strong>Tech Info</strong>: pick any tech and see all its values.</li>
           </ul>
-          <p>Each hint can be used once per day, and hard mode allows fewer of them.</p>
+          <p>Each hint can be used once per day, and the B-Side (Hard) allows fewer of them.</p>
 
-          <h4>Normal and Hard</h4>
+          <h4>A-Side and B-Side</h4>
           <ul>
             <li data-rules-mode="tech" data-rules-text="sentence">Normal: 3 hints, unlimited tries.</li>
             <li>
-              <strong>Hard</strong>: its own tech of the day.
+              <strong>B-Side (Hard)</strong>: its own tech of the day.
               <span data-rules-mode="tech-hard" data-rules-text="sentence"></span>
               Every guess must fit the clues you already have, or it is refused
               and costs a try.
@@ -682,22 +682,22 @@
         </div>
         <div id="leaderboard-modes" class="segmented board-modes" role="group" aria-label="Mode">
           <button type="button" data-board-mode="normal" aria-pressed="true">
-            Normal
+            A-Side · Normal
           </button>
           <button type="button" data-board-mode="hard" aria-pressed="false">
-            Hard
+            B-Side · Hard
           </button>
           <button type="button" data-board-mode="cx-normal" aria-pressed="false" title="Connections" hidden>
-            Grid
+            Grid · A-Side
           </button>
           <button type="button" data-board-mode="cx-hard" aria-pressed="false" title="Connections, hard mode" hidden>
-            Grid Hard
+            Grid · B-Side
           </button>
           <button type="button" data-board-mode="tech" aria-pressed="false" hidden>
-            Techs
+            Techs · A-Side
           </button>
           <button type="button" data-board-mode="tech-hard" aria-pressed="false" hidden>
-            Techs Hard
+            Techs · B-Side
           </button>
         </div>
         <div class="board-scroll">
@@ -709,7 +709,7 @@
         <div id="leaderboard-one-shots" class="one-shots" hidden></div>
         <p id="leaderboard-note" class="small-subtext"></p>
         <p id="leaderboard-anonymous-note" class="small-subtext" hidden>
-          You're not listed: open <strong>Profile</strong> and save it to join
+          You're not listed: open your <button type="button" class="link-btn" id="leaderboard-open-profile">profile</button> and save it to join
           the leaderboards.
         </p>
       </div>

@@ -98,7 +98,7 @@ export class Suggestions {
         "div",
         { className: "suggestion-item", dataset: { name: item.name } },
         [
-          el("img", { className: "suggestion-thumb", attrs: { src: this.imageUrl(item.name), alt: "", loading: "lazy" } }),
+          this.imageUrl(item.name) ? el("img", { className: "suggestion-thumb", attrs: { src: this.imageUrl(item.name), alt: "", loading: "lazy" } }) : null,
           el("span", { text: capitalize(item.name) }),
           item.isSynonym
             ? el("img", { className: "synonym-marker", attrs: { src: "assets/entities/switch.svg", alt: "(synonym)" } })

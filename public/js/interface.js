@@ -185,9 +185,11 @@ function renderPause() {
   pauseItems().forEach((item, i) => {
     const li = el("li", { className: i === pause.index ? "selected" : "", text: item.label });
     li.addEventListener("click", () => item.run());
+    // Survol : on déplace seulement la sélection (reconstruire la liste ici
+    // ferait rater le clic en cours)
     li.addEventListener("mouseenter", () => {
       pause.index = i;
-      renderPause();
+      [...list.children].forEach((node, at) => node.classList.toggle("selected", at === i));
     });
     list.append(li);
   });
@@ -312,8 +314,13 @@ function showEnd(detail) {
     setTimeout(() => (share.textContent = "Share"), 2000);
   });
   const rankings = findAction("rankings");
+  // L'autre côté du même jeu, en un clic (pas depuis une partie d'entraînement)
+  const otherMode = detail.side === "b" ? "normal" : "hard";
+  const otherSwitch = detail.practice ? null : document.querySelector(`#mode-switch [data-mode='${otherMode}']`);
   const actions = [
     share,
+    otherSwitch &&
+      el("button", { className: "m-end-btn", text: `Go to ${otherMode === "hard" ? "B-Side" : "A-Side"}`, attrs: { type: "button" }, on: { click: () => (closeEnd(), otherSwitch.click()) } }),
     rankings && el("button", { className: "m-end-btn", text: "Rankings", attrs: { type: "button" }, on: { click: () => (closeEnd(), rankings()) } }),
     el("a", { className: "m-end-btn", text: "Menu", attrs: { href: "menu.html#modes" } }),
     el("button", { className: "m-end-btn", text: "Close", attrs: { type: "button" }, on: { click: closeEnd } })

@@ -95,6 +95,8 @@ export function updateHintButtons(state) {
           : "No hints left";
   }
   const button = document.getElementById("hint-btn");
+  // Pastille du téléphone, où le texte du bouton est caché (modern.css)
+  if (button) button.dataset.left = String(left + bonusLeft);
   if (button) button.disabled = (left === 0 && bonusLeft === 0) || state.status !== "playing";
   return left + bonusLeft;
 }

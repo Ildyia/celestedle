@@ -77,7 +77,9 @@ async function init() {
   setUnavailableHandler(() => {});
 
   const synonyms = new TechSynonyms();
-  const imageUrl = TECHS.imageUrl;
+  // Techs sans image : pas de vignette dans les suggestions (rempli plus bas)
+  const withMedia = new Set();
+  const imageUrl = (name) => (withMedia.has(name) ? TECHS.imageUrl(name) : null);
   const suggestions = new Suggestions({
     input: byId("element-input"),
     box: byId("element-suggestions"),
@@ -122,6 +124,7 @@ async function init() {
   if (!canPlay) return showLocked();
 
   const list = await api.techsList().catch(() => ({ techs: [], aliases: {} }));
+  for (const tech of list.techs) if (tech.hasMedia) withMedia.add(tech.nom);
   suggestions.setData({ elements: list.techs, synonyms: list.aliases });
   hintPicker.setData({ elements: list.techs, synonyms: list.aliases });
   synonyms.set(list.aliases);

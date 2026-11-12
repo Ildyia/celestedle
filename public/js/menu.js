@@ -4,7 +4,7 @@
 
 import { api, setUnavailableHandler } from "./api.js";
 import { player } from "./player.js";
-import { avatarUrl } from "./profile.js";
+import { avatarFit, avatarUrl } from "./profile.js";
 import { storage, KEYS } from "./storage.js";
 import { byId, el, clear } from "./dom.js";
 import { formatDuration } from "./format.js";
@@ -265,6 +265,7 @@ function profileSlot() {
   return {
     color: profile.color,
     portrait: avatarUrl(profile.avatar),
+    portraitStyle: avatarFit(profile.avatar),
     // Les plus rares d'abord, autant que d'emplacements sur le ticket
     stamps: earnedStamps().slice(0, TICKET_SLOTS.length),
     body,
@@ -302,7 +303,7 @@ function slotElement(kind, selected) {
   const card = el("div", { className: "card" }, [
     el("div", { className: "shape" }),
     el("div", { className: "stamps" }, (t.stamps ?? []).map(stampElement)),
-    el("div", { className: "portrait", attrs: { style: `--player-color: ${t.color ?? "#cfd8ef"}` } }, [img(t.portrait)]),
+    el("div", { className: "portrait", attrs: { style: `--player-color: ${t.color ?? "#cfd8ef"}` } }, [el("img", { attrs: { src: t.portrait, alt: "", style: t.portraitStyle ?? "" } })]),
     el("span", { className: "tape tl" }),
     el("span", { className: "tape br" }),
     el("div", { className: "body" }, t.body)
@@ -503,6 +504,7 @@ function renderModes() {
   byId("book-desc").textContent = game.desc[side];
   for (const tab of byId("tabs").children) tab.classList.toggle("active", tab.dataset.side === side);
   byId("climb").className = `climb ${side}`;
+  byId("climb").textContent = "Climb";
   const today = byId("book-today");
   today.textContent = "";
   today.className = "today";
@@ -524,6 +526,8 @@ async function fillBook(game, mode) {
 
   const today = byId("book-today");
   const status = state?.status;
+  // Partie du jour finie : le bouton mène au résultat
+  byId("climb").textContent = ["won", "lost", "forfeit"].includes(status) ? "View result" : state?.startedAt ? "Continue" : "Climb";
   if (status === "won") {
     today.textContent = "✓ Summit reached today";
     today.classList.add("won");

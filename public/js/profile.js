@@ -8,6 +8,19 @@ export function avatarUrl(avatar) {
   return `assets/entities/${avatar}.png`;
 }
 
+// Certains sprites ont beaucoup de vide autour du dessin : on les agrandit
+// (et on les recentre) pour qu'ils remplissent leur case comme les portraits.
+const AVATAR_FIT = {
+  "winged-strawberry": "translate(0, 4%) scale(1.1)",
+  feather: "translate(-5%, -3%) scale(1.7)",
+  refill: "scale(1.45)",
+  pufferfish: "translate(7%, -4%) scale(3.6)",
+  bird: "translate(3%, -28%) scale(1.65)"
+};
+export function avatarFit(avatar) {
+  return AVATAR_FIT[avatar] ? `transform: ${AVATAR_FIT[avatar]}` : "";
+}
+
 // Fenêtre « My profile » : personnalisation, statistiques, code de récupération
 export class ProfilePanel {
   constructor() {
@@ -93,7 +106,7 @@ export class ProfilePanel {
             attrs: { type: "button", "aria-pressed": String(avatar === this.selected.avatar), title: avatar.replace(/-/g, " ") },
             on: { click: () => { this.selected.avatar = avatar; this.renderPickers(); } }
           },
-          [el("img", { attrs: { src: avatarUrl(avatar), alt: avatar.replace(/-/g, " ") } })]
+          [el("img", { attrs: { src: avatarUrl(avatar), alt: avatar.replace(/-/g, " "), style: avatarFit(avatar) } })]
         )
       )
     );

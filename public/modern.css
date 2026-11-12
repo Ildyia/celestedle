@@ -86,6 +86,17 @@ html.ui-modern {
     width: max(100%, calc(55vh * 1600 / 700)); aspect-ratio: 1600 / 700; opacity: .6;
   }
   & .m-mountain img { display: block; width: 100%; height: 100%; }
+  /* Grand écran : la montagne est agrandie et décalée pour que le sommet et
+     son drapeau sortent à droite de la colonne de jeu (mât à 450px du centre),
+     au lieu de passer sous le champ de saisie et le tableau. */
+  @media (min-width: 1100px) {
+    & .m-mountain { --mw: max(calc((100vw + 900px) / 1.125), calc(55vh * 1600 / 700)); width: var(--mw); translate: calc(-50% + 450px - var(--mw) * .0625) 25%; }
+  }
+  /* Écran étroit : le sommet reste derrière le jeu, on l'estompe */
+  @media (max-width: 1099px) {
+    & .m-mountain { opacity: .4; }
+    & .m-flag { opacity: .45; }
+  }
   /* Drapeau du sommet, placé en % du dessin (x 896 → 954, y 164 → 256) */
   & .m-flag { position: absolute; left: calc(896 / 1600 * 100%); top: calc(164 / 700 * 100%); width: calc(58 / 1600 * 100%); height: calc(92 / 700 * 100%); overflow: visible; }
   & .m-cloth { fill: #e0475b; transform-box: fill-box; transform-origin: 0% 50%; animation: m-wave 1.4s ease-in-out infinite alternate; }
@@ -233,6 +244,9 @@ html.ui-modern {
     & #modern-nav { top: 8px; left: 8px; right: 8px; gap: 4px; }
     & #modern-nav a, & #modern-nav button { padding: 6px 8px; font-size: 13px; }
     & #modern-nav .m-label { display: none; }
+    /* Indices restants : pastille sur l'icône (le texte du bouton est caché) */
+    & #hint-btn { position: relative; }
+    & #hint-btn[data-left]:not(:disabled)::after { content: attr(data-left); position: absolute; top: -6px; right: -4px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: var(--m-side-a); color: #fff; font-size: 12px; line-height: 18px; text-align: center; }
     & #modern-hint { display: none; }
     /* Sur téléphone, la lune gênerait les titres longs (« Connections ») */
     & .m-moon { display: none; }

@@ -2211,6 +2211,8 @@ body.hard-mode #game-status {
   padding: 4px;
 }
 
+.avatar-choice { overflow: hidden; }
+
 .avatar-choice img {
   width: 100%;
   aspect-ratio: 1;
@@ -2707,3 +2709,6 @@ body.hard-mode #game-status {
   max-height: 240px;
   overflow-y: auto;
 }
+
+/* Lien dans un texte, qui est en fait un bouton (ouvre une fenêtre) */
+.link-btn { border: none; background: none; padding: 0; font: inherit; color: inherit; font-weight: bold; text-decoration: underline; cursor: pointer; }

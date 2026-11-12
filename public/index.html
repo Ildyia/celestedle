@@ -49,7 +49,7 @@
         </p>
         <ul class="disclaimer-list">
           <li>
-            <strong>Hard mode</strong>: its own daily word, limited hints, tries
+            <strong>B-Side (Hard)</strong>: its own daily word, limited hints, tries
             and time, suggestions only after a few letters, and every guess must
             fit the clues you already found.
           </li>
@@ -542,16 +542,16 @@
             </li>
             <li>
               <strong>Element Info</strong>: pick any element and see all its
-              values. In hard mode, it comes on top of your regular hint.
+              values. On the B-Side (Hard), it comes on top of your regular hint.
             </li>
           </ul>
           <p>
-            Each hint can be used once per day, and hard mode allows fewer of
+            Each hint can be used once per day, and the B-Side (Hard) allows fewer of
             them. A hint will always try to give you a useful clue (eg, "correct
             attribute" will not give you something you already know).
           </p>
 
-          <h4>Hard mode</h4>
+          <h4>B-Side · Hard</h4>
           <ul>
             <li>Its own secret word, different from the normal one.</li>
             <li data-rules-mode="hard" data-rules-text="sentence">
@@ -940,22 +940,22 @@
         </div>
         <div id="leaderboard-modes" class="segmented board-modes" role="group" aria-label="Mode">
           <button type="button" data-board-mode="normal" aria-pressed="true">
-            Normal
+            A-Side · Normal
           </button>
           <button type="button" data-board-mode="hard" aria-pressed="false">
-            Hard
+            B-Side · Hard
           </button>
           <button type="button" data-board-mode="cx-normal" aria-pressed="false" title="Connections" hidden>
-            Grid
+            Grid · A-Side
           </button>
           <button type="button" data-board-mode="cx-hard" aria-pressed="false" title="Connections, hard mode" hidden>
-            Grid Hard
+            Grid · B-Side
           </button>
           <button type="button" data-board-mode="tech" aria-pressed="false" hidden>
-            Techs
+            Techs · A-Side
           </button>
           <button type="button" data-board-mode="tech-hard" aria-pressed="false" hidden>
-            Techs Hard
+            Techs · B-Side
           </button>
         </div>
         <div class="board-scroll">
@@ -967,7 +967,7 @@
         <div id="leaderboard-one-shots" class="one-shots" hidden></div>
         <p id="leaderboard-note" class="small-subtext"></p>
         <p id="leaderboard-anonymous-note" class="small-subtext" hidden>
-          You're not listed: open <strong>Profile</strong> and save it to join
+          You're not listed: open your <button type="button" class="link-btn" id="leaderboard-open-profile">profile</button> and save it to join
           the leaderboards.
         </p>
       </div>

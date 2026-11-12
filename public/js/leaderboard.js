@@ -1,5 +1,5 @@
 import { api } from "./api.js";
-import { el, byId, clear, openModal } from "./dom.js";
+import { el, byId, clear, openModal, closeModal } from "./dom.js";
 import { formatDuration } from "./format.js";
 import { avatarUrl } from "./profile.js";
 import { player } from "./player.js";
@@ -59,6 +59,11 @@ export class LeaderboardPanel {
     this.anonymousNote = byId("leaderboard-anonymous-note");
 
     byId("leaderboard-btn")?.addEventListener("click", () => this.open());
+    // « You're not listed » : le mot « profile » ouvre la fenêtre du profil
+    byId("leaderboard-open-profile")?.addEventListener("click", () => {
+      closeModal("leaderboard-modal");
+      byId("profile-btn")?.click();
+    });
     document.querySelectorAll("[data-board-period]").forEach((btn) =>
       btn.addEventListener("click", () => {
         this.period = btn.dataset.boardPeriod;
