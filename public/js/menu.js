@@ -283,8 +283,9 @@ function emptySlot(kind) {
 function stampElement(stamp, i) {
   const slot = TICKET_SLOTS[i];
   const style = `left: ${slot.x}%; top: ${slot.y}%; width: ${slot.size}%; rotate: ${slot.rotate}deg`;
+  // Version compacte sur le ticket ; la complète (avec le nom) au survol
   const node = el("span", { className: "stamp", attrs: { style, title: stamp.label } });
-  node.innerHTML = stampSvg(stamp);
+  node.innerHTML = `<span class="stamp-small">${stampSvg(stamp, { full: false })}</span><span class="stamp-full">${stampSvg(stamp)}</span>`;
   return node;
 }
 

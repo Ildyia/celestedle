@@ -26,16 +26,16 @@ export const STAMPS = [
 // nom et du compteur de fraises, un par tampon. Le plus rare des tampons
 // gagnés prend le premier. Au survol, un tampon grossit pour qu'on le lise.
 export const TICKET_SLOTS = [
-  { x: 79, y: 2, size: 12, rotate: 10 },
-  { x: 35, y: 61, size: 11, rotate: -14 },
-  { x: 82, y: 58, size: 11, rotate: -6 },
-  { x: 36, y: 1, size: 10, rotate: -10 },
-  { x: 66, y: 1, size: 9, rotate: 16 },
-  { x: 90, y: 30, size: 8, rotate: -18 },
-  { x: 49, y: 70, size: 9, rotate: 8 },
-  { x: 51, y: -3, size: 9, rotate: -4 },
-  { x: 72, y: 70, size: 9, rotate: 12 },
-  { x: 92, y: 4, size: 7, rotate: 22 }
+  { x: 78, y: 0, size: 15, rotate: 10 },
+  { x: 33, y: 56, size: 14, rotate: -14 },
+  { x: 80, y: 54, size: 14, rotate: -6 },
+  { x: 35, y: -3, size: 13, rotate: -10 },
+  { x: 64, y: -4, size: 12, rotate: 16 },
+  { x: 47, y: 66, size: 12, rotate: 8 },
+  { x: 89, y: 30, size: 11, rotate: -18 },
+  { x: 67, y: 70, size: 11, rotate: 12 },
+  { x: 50, y: -6, size: 11, rotate: -4 },
+  { x: 91, y: 2, size: 9, rotate: 22 }
 ];
 
 const PREVIEW_ALL = new URLSearchParams(location.search).get("stamps") === "all";
@@ -56,20 +56,40 @@ export function earnedStamps() {
 const escape = (text) => String(text).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 let uid = 0;
 
-/** Le dessin d'un tampon, en SVG (100 × 100), à insérer tel quel. */
-export function stampSvg(stamp) {
+// Symbole du centre : texte court, ou sprite teinté à l'encre (masque alpha).
+// `box` : carré occupé dans le dessin 100 × 100.
+function centerSymbol(stamp, id, box) {
+  const c = stamp.color;
+  if (stamp.center) {
+    const size = (box * (stamp.center.length > 3 ? 0.42 : 0.6)).toFixed(1);
+    return `<text x="50" y="50" dy=".35em" text-anchor="middle" font-size="${size}" font-weight="700" fill="${c}">${escape(stamp.center)}</text>`;
+  }
+  const at = (100 - box) / 2;
+  return `<mask id="${id}-m" style="mask-type: alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+      <image href="${ASSETS}/${stamp.icon}" x="${at}" y="${at}" width="${box}" height="${box}" preserveAspectRatio="xMidYMid meet" />
+    </mask>
+    <rect x="0" y="0" width="100" height="100" fill="${c}" mask="url(#${id}-m)" />`;
+}
+
+/**
+ * Le dessin d'un tampon, en SVG (100 × 100), à insérer tel quel.
+ * full : avec le nom et le détail en arc (journal, survol) ; sinon version
+ * compacte pour le ticket, où le texte serait trop petit : cercle et gros symbole.
+ */
+export function stampSvg(stamp, { full = true } = {}) {
   const id = `stamp-${stamp.id}-${uid++}`;
   const c = stamp.color;
+  if (!full) {
+    return `<svg viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="50" r="46" fill="none" stroke="${c}" stroke-width="5" />
+    <circle cx="50" cy="50" r="37" fill="none" stroke="${c}" stroke-width="2" stroke-dasharray="4 3" />
+    ${centerSymbol(stamp, id, 54)}
+  </svg>`;
+  }
   // Arc du haut (gauche → droite) et arc du bas (gauche → droite, par en dessous)
   const top = `M 16 50 A 34 34 0 0 1 84 50`;
   const bottom = `M 19 50 A 31 31 0 0 0 81 50`;
   const long = stamp.top.length > 11;
-  const center = stamp.center
-    ? `<text x="50" y="${stamp.center.length > 3 ? 56 : 58}" text-anchor="middle" font-size="${stamp.center.length > 3 ? 17 : 22}" font-weight="700" fill="${c}">${escape(stamp.center)}</text>`
-    : `<mask id="${id}-m" style="mask-type: alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
-         <image href="${ASSETS}/${stamp.icon}" x="33" y="33" width="34" height="34" preserveAspectRatio="xMidYMid meet" />
-       </mask>
-       <rect x="30" y="30" width="40" height="40" fill="${c}" mask="url(#${id}-m)" />`;
   return `<svg viewBox="0 0 100 100" aria-hidden="true">
     <defs><path id="${id}-t" d="${top}" /><path id="${id}-b" d="${bottom}" /></defs>
     <circle cx="50" cy="50" r="47" fill="none" stroke="${c}" stroke-width="3.5" />
@@ -82,6 +102,6 @@ export function stampSvg(stamp) {
     </text>
     <text x="13" y="53" font-size="8" fill="${c}" text-anchor="middle">★</text>
     <text x="87" y="53" font-size="8" fill="${c}" text-anchor="middle">★</text>
-    ${center}
+    ${centerSymbol(stamp, id, 34)}
   </svg>`;
 }
