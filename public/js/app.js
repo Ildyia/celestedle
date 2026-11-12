@@ -92,7 +92,9 @@ async function init() {
   });
   new ReportsPanel({ getElements });
   new ProfilePanel();
-  new LeaderboardPanel({ getMode: () => game.mode });
+  const leaderboard = new LeaderboardPanel({ getMode: () => game.mode });
+  // Lien « Leaderboards » du journal du menu : index.html#leaderboard
+  if (location.hash === "#leaderboard") leaderboard.open();
 
   byId("rules-btn")?.addEventListener("click", () => openModal("rules-modal"));
   document.querySelectorAll("[data-mode]").forEach((btn) =>

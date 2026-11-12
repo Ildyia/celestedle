@@ -3,51 +3,31 @@
 Branche de travail : `ui-celeste` (partie de `main`).
 Récupérer main régulièrement : `git fetch origin && git merge origin/main`.
 
-## Ce qui est déjà là (squelette)
+## État : v1 du menu faite
 
 | Fichier | Rôle |
 |---|---|
-| `public/celeste-ui.css` | Style **commun** : police, couleurs, ciel, montagne, texte à contour, `.hl` qui clignote, `.paper` |
-| `public/menu.css` | Style de la page de menu seulement (écrans titre, fichiers, modes, options) |
-| `public/menu.html` | Nouvelle page d'accueil, ouverte sur `/menu.html` en attendant de remplacer `index.html` |
-| `public/js/menu.js` | Navigation entre écrans (Enter, Échap, clics) déjà branchée ; le contenu est à faire (`TODO` dans le code) |
+| `public/celeste-ui.css` | Style **commun** : police, couleurs, ciel, lune, montagne et drapeau du sommet, texte à contour, `.hl` qui clignote, `.paper` |
+| `public/menu.css` | Style de la page de menu : écrans, endroit de la montagne par jeu (`body[data-game]`), journal |
+| `public/menu.html` | Nouvelle page d'accueil, sur `/menu.html` en attendant de remplacer `index.html` |
+| `public/js/menu.js` | Tout le menu : profil, jeux, options, journal, clavier, neige |
 
-Rien d'autre n'a changé : le serveur et les pages de jeu sont intacts.
+**Règle :** `menu.js` affiche et ne réinvente rien : il passe par `api.js`, `player.js`, `storage.js` et `profile.js`.
 
-**Règle :** `menu.js` affiche et ne réinvente rien. Il passe par `api.js`, `player.js`, `storage.js` et `profile.js`.
+Déjà en place :
+- **Titre** : lune, drapeau qui flotte au sommet, neige, rond « C » qui clignote.
+- **Fichier** : ticket du profil (fraises = victoires, crâne = défaites, meilleur temps, série), Begin, Rename, Recovery code ; New file et Restore sans profil.
+- **Modes** : un endroit de la montagne par jeu (la caméra « monte » jusqu'au sommet pour Techs), A-Side et B-Side, règles du mode, état de la partie du jour, record perso (Celestedle) ou chiffres du jour (Connections, Techs). Connections et Techs n'apparaissent qu'avec l'accès.
+- **Journal** (J) : stats perso et lien vers les classements (`index.html#leaderboard`).
+- **Options** : mêmes préférences que les pages de jeu, Credits, Legal notice.
+- Clavier partout, aide en bas à droite, mobile, `prefers-reduced-motion`.
 
-## À faire, dans l'ordre conseillé
+## Idées pour la suite
 
-### 1. Écran Titre (≈ 30 min)
-- [ ] Neige : créer des `.snow` dans `#scene` (voir la maquette).
-- [ ] Décider : un joueur qui a déjà un profil saute-t-il le titre ?
-
-### 2. Écran Fichier = profil (≈ 3-4 h)
-- [ ] Ticket du profil : nom, avatar (`avatarUrl()` de `profile.js`), victoires, série et temps (`api.myStats`).
-- [ ] Actions sous le ticket : Begin, Rename (`player.update`), Recovery code (`player.token`).
-- [ ] Emplacements « New file » (`player.ensure()`) et « Restore » (`player.restore(code)`).
-- [ ] Navigation ↑↓ entre emplacements (`slotIndex`).
-
-### 3. Écran Modes = chapitres (≈ 3-4 h)
-- [ ] Masquer Connections et Techs sans accès (`api.connectionsAccess()` / `api.techsAccess()`, comme `game-tabs.js`).
-- [ ] Description de chaque jeu et mode (reprendre `rules-text.js`).
-- [ ] Record du joueur dans le mode choisi (`api.myStats`).
-- [ ] Bandeau « déjà joué aujourd'hui ».
-- [ ] Clavier : ←→ pour le jeu, Tab ou A/B pour le côté.
-- [ ] Choisir de vraies icônes par jeu (celles du squelette sont provisoires).
-
-### 4. Journal = classement (≈ 2-3 h)
-- [ ] Ouvrir le classement (`leaderboard.js`) dans une fenêtre papier au lieu du toast.
-
-### 5. Options (≈ 1-2 h)
-- [ ] Brancher sur les vraies préférences : exporter `OPTIONS` de `options.js` ou garder `OPTION_ROWS` avec les mêmes `KEYS`.
-- [ ] Ajouter les lignes Back, Credits et Legal notice ; ←→ pour changer une valeur.
-
-### 6. Finitions du menu (≈ 2 h)
-- [ ] Aide clavier en bas à droite (`renderHints`).
-- [ ] Style du toast (`.toast-notification` de `toast.js`), à la place de `#toast` dans `menu.css`.
-- [ ] `prefers-reduced-motion` : couper le clignotement, la neige et le zoom.
-- [ ] Vérifier sur mobile (360 px) et au clavier seul.
+- [ ] Stats perso de Connections et Techs dans le journal (il manque une route `…/me/stats` côté serveur).
+- [ ] Classement directement dans le journal, au lieu du lien vers l'ancienne page.
+- [ ] Petits drapeaux sur la montagne à l'endroit de chaque jeu.
+- [ ] Supprimer son profil depuis le ticket (aujourd'hui : dans l'ancienne fenêtre profil).
 
 ### 7. Bascule (≈ 1 h)
 - [ ] `index.html` → `celestedle.html` (et mettre à jour les liens : `game-tabs`, `menu.js`, `credits`, admin…).
