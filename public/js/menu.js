@@ -14,6 +14,7 @@ import { showToast } from "./toast.js";
 import { initNextWordTimer } from "./timer.js";
 import { openPanel, panelOpen } from "./menu-panels.js";
 import { createJournal } from "./journal.js";
+import { applySky, startSky } from "./sky.js";
 import { STAMPS, earnedStamps, stampIcon } from "./stamps.js";
 
 const LAST_GAME_KEY = "celestedle_menu_game";
@@ -527,6 +528,7 @@ const OPTION_ROWS = [
   { label: "Bird cursor", key: KEYS.customCursor, fallback: true, apply: applyCursor },
   { label: "Colorblind mode", key: KEYS.colorblind, fallback: false },
   // Coupe les animations de décor et raccourcit les mouvements (celeste-ui.css)
+  { label: "Time of day sky", key: KEYS.timeSky, fallback: true, apply: applySky },
   { label: "Keyboard hints", key: KEYS.keyHints, fallback: true, apply: renderHints },
   { label: "Performance mode", key: KEYS.performance, fallback: false, apply: applyPerformance },
   { sep: true },
@@ -747,6 +749,7 @@ function watchTransition() {
 async function start() {
   applyPerformance(storage.getBool(KEYS.performance, false));
   applyCursor(storage.getBool(KEYS.customCursor, true));
+  startSky();
   letItSnow();
   renderHints();
   // Prochaine partie : compte à rebours dans le livre ; à minuit, on recharge

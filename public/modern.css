@@ -239,3 +239,21 @@ html.ui-modern {
     & #rules-modal .rules-content { padding: 22px 16px; }
   }
 }
+
+/* ===== Ciel selon l'heure (js/sky.js, <html data-sky>) =====
+   Fixe les couleurs du ciel du menu (--sky-*) et des pages de jeu
+   (--m-sky-*). La nuit garde les couleurs par défaut. */
+html[data-sky="dawn"] { --sky-top: #232a63; --sky-mid: #8c4f8a; --sky-low: #f0a07a; --m-sky-top: #232a63; --m-sky-mid: #8c4f8a; --m-sky-low: #f0a07a; }
+html[data-sky="day"] { --sky-top: #3a6db5; --sky-mid: #6f9fd8; --sky-low: #bcd3ee; --m-sky-top: #3a6db5; --m-sky-mid: #6f9fd8; --m-sky-low: #bcd3ee; }
+html[data-sky="dusk"] { --sky-top: #1f1c55; --sky-mid: #7f3c76; --sky-low: #ee8a5c; --m-sky-top: #1f1c55; --m-sky-mid: #7f3c76; --m-sky-low: #ee8a5c; }
+/* Étoiles : moins nombreuses à l'aube et au crépuscule, absentes le jour */
+html[data-sky="dawn"] #stars, html[data-sky="dusk"] #stars { filter: opacity(.45); }
+html[data-sky="dawn"] .m-stars, html[data-sky="dusk"] .m-stars { opacity: .35; }
+html[data-sky="day"] :is(#stars, .m-stars, .moon-star, .snow) { display: none; }
+/* Le jour, la lune reste là, pâle et sans halo */
+html[data-sky="day"] :is(.moon-glow, .m-moon-glow) { display: none; }
+html[data-sky="day"] :is(.moon-body, .m-moon-body) { opacity: .55; }
+/* Page de jeu en journée : montagne plus opaque (sinon délavée sur le ciel
+   clair) et en-têtes du tableau en blanc */
+html.ui-modern[data-sky="day"] .m-mountain { opacity: .9; }
+html.ui-modern[data-sky="day"] #guesses-table th, html.ui-modern[data-sky="day"] #modern-side { color: #fff; }

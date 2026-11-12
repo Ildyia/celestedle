@@ -10,6 +10,7 @@
 // retire quand l'option change et construit le décor et le menu pause.
 import { el, clear } from "./dom.js";
 import { storage, KEYS } from "./storage.js";
+import { startSky } from "./sky.js";
 
 const SIDES = { normal: "A-Side · Normal", hard: "B-Side · Hard" };
 let pause = null;
@@ -194,5 +195,6 @@ export function applyInterface(on) {
   document.documentElement.classList.toggle("no-key-hints", !storage.getBool(KEYS.keyHints, true));
   if (on && !document.getElementById("modern-scene")) buildDecor();
   if (on) structureRules();
+  if (on) startSky();
   if (!on) closePause();
 }

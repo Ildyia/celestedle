@@ -10,6 +10,13 @@
     <link rel="stylesheet" href="celeste-ui.css" />
     <link rel="stylesheet" href="menu.css" />
     <link rel="stylesheet" href="modern.css" />
+    <!-- Ciel selon l'heure, posé avant l'affichage (voir js/sky.js) -->
+    <script>
+      try {
+        var on = localStorage.getItem("celestedle_time_sky") !== "false", h = new Date().getHours();
+        document.documentElement.dataset.sky = !on || h >= 21 || h < 5 ? "night" : h < 8 ? "dawn" : h < 17 ? "day" : "dusk";
+      } catch {}
+    </script>
     <link rel="icon" href="assets/berrywinged.png" type="image/png" />
   </head>
   <!-- Page d'accueil façon menus de Celeste (voir REDESIGN.md).

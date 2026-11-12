@@ -12,7 +12,8 @@ export const KEYS = {
   showTimer: "celestedle_show_timer",
   performance: "celestedle_performance",
   modernUi: "celestedle_modern_ui",
-  keyHints: "celestedle_key_hints"
+  keyHints: "celestedle_key_hints",
+  timeSky: "celestedle_time_sky"
 };
 
 // Clés de la v1, supprimées au premier chargement de la 2.0
