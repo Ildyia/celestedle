@@ -6,11 +6,15 @@ Each day, a secret element or entity from Celeste is picked for all players. You
 
 ## Features
 
+- **Celeste-style menus**: a title screen with the mountain under a sky that follows your time of day, save tickets for profiles, a chapter-select screen for the games (A-Side = Normal, B-Side = Hard), a journal with your progress and every ranking, and an end-of-climb screen.
+- **Three games**: Celestedle (guess the entity), Connections (sort 16 entities into 4 groups) and Techs (guess the movement tech). Connections and Techs open according to the admin's access setting.
+- **Modern or Classic**: the game pages show just the game with a pause menu (Esc); the original full page is still one option away.
+
 - **Daily Challenges**: a new secret Celeste entity every day at midnight (Europe/Paris timezone).
 - **Hard Mode**: its own daily word, 1 hint, 8 tries, 5 minutes, no suggestions, and every guess must fit the clues you already found.
 - **Detailed Attributes**: compare your guesses on **Type**, **Chapter**, **Colour** and **Shape**.
 - **Hints**: *Opposite*, *Secret Info* and *1 Truth & 2 Lies*.
-- **Profiles**: name, avatar and colour, personal stats and streaks, and a recovery code to play on several devices.
+- **Profiles**: name, avatar and colour, personal stats and streaks for each game, and a recovery code to play on several devices.
 - **Leaderboards**: a daily ranking per mode; weekly (points summed) and all-time (smoothed average) rankings combining every mode, each game scored 0–100 against that day's players.
 - **Custom Synonyms**: create your own shortcuts for element names.
 - **Community Statistics**: compare your scores with the other players of the day.
@@ -41,6 +45,8 @@ Useful environment variables (`.env`):
 | `PERMANENT_OWNER_NAME` | Name of that profile (default `Amélia`) |
 | `TECHS_ACCESS` | Same for Celestedle Techs: `staff` (default), `playtest` or `public` |
 | `CONNECTIONS_ACCESS` | Who can play Connections until the admin changes it: `staff`, `playtest` (default) or `public`. Set it to `public` on the beta |
+
+The home page during the redesign is `menu.html` (it will become `index.html`); see `REDESIGN.md` for how the menus and the Modern interface are built, and `docs/GUIDE.md` for the project tour (in French).
 
 Elements live in `db.json` (attributes), `public/assets/entities/mapping.json` (sprites) and `aliases.json` (official synonyms). They are copied into the database at startup, except elements edited from the admin page.
 
