@@ -337,6 +337,8 @@ document.addEventListener("game-end", (event) => showEnd(event.detail));
 export function applyInterface(on) {
   document.documentElement.classList.toggle("ui-modern", on);
   document.documentElement.classList.toggle("no-key-hints", !storage.getBool(KEYS.keyHints, true));
+  // Mode performance (option du menu) : décor sans flou ni animation
+  document.documentElement.classList.toggle("perf", storage.getBool(KEYS.performance, false));
   if (on && !document.getElementById("modern-scene")) buildDecor();
   if (on) structureRules();
   if (on) startSky();

@@ -335,3 +335,8 @@ html.ui-modern {
 @media (prefers-reduced-motion: reduce) {
   html.ui-modern :is(.m-end-card, .m-end-emblem, .m-end-stat) { animation: none; }
 }
+
+/* Mode performance (option du menu, html.perf) : décor sans flou ni
+   animation sur les pages de jeu */
+html.ui-modern.perf .m-moon-glow { display: none; }
+html.ui-modern.perf :is(.m-cloth, .m-end-card, .m-end-emblem, .m-end-stat, #modern-pause, #modern-end) { animation: none !important; }
