@@ -10,6 +10,7 @@ import { copyShareText } from "./share.js";
 import { showToast } from "./toast.js";
 import { fillRulesText } from "./rules-text.js";
 import { CELESTEDLE, modeKind } from "./catalogs.js";
+import { announceEnd } from "./game-end.js";
 
 const SYNONYMS_USED_KEY = "celestedle_synonyms_used";
 
@@ -199,6 +200,17 @@ export class Game {
     nodes.giveupBtn.hidden = !playing;
     nodes.shareBtn.hidden = playing;
     this.renderEndMessage(state);
+    announceEnd(state.mode, state.status, () => ({
+      side: hard ? "b" : "a",
+      stats: [
+        { icon: "normalflag", value: state.tries, label: state.tries === 1 ? "Try" : "Tries" },
+        { icon: "assist", value: state.hints.length, label: state.hints.length === 1 ? "Hint" : "Hints" },
+        { icon: "time", value: formatDuration(state.elapsedSeconds), label: "Time" }
+      ],
+      answer: state.solution?.nom && { name: capitalize(state.solution.nom), image: this.catalog.imageUrl(state.solution.nom) },
+      noun: this.catalog.noun,
+      share: () => nodes.shareBtn.click()
+    }));
   }
 
   renderEndMessage(state) {

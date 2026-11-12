@@ -7,6 +7,7 @@ import { storage, KEYS } from "./storage.js";
 import { initGameTabs } from "./game-tabs.js";
 import { showToast } from "./toast.js";
 import { avatarUrl } from "./profile.js";
+import { announceEnd } from "./game-end.js";
 
 // Connections : 16 éléments à ranger en 4 groupes de 4. Le serveur garde la
 // grille et ne révèle un groupe qu'une fois trouvé.
@@ -302,6 +303,17 @@ class ConnectionsGame {
   renderEnd() {
     const { status, solution, mistakes, hints, elapsedSeconds } = this.state;
     byId("cx-end").hidden = status === "playing";
+    announceEnd(`${this.mode}-${this.practice ? "practice" : "daily"}`, status, () => ({
+      side: this.mode === "hard" ? "b" : "a",
+      practice: this.practice,
+      stats: [
+        { icon: "skull", value: mistakes, label: mistakes === 1 ? "Mistake" : "Mistakes" },
+        { icon: "assist", value: hints.length, label: hints.length === 1 ? "Hint" : "Hints" },
+        { icon: "time", value: formatDuration(elapsedSeconds), label: "Time" }
+      ],
+      noun: "grid",
+      share: () => byId("cx-share-btn").click()
+    }));
     if (status === "playing") return;
     byId("cx-end-title").textContent = status === "won" ? "Well done! 🍓" : "Out of mistakes! ❌";
     byId("cx-end-text").textContent =

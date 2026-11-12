@@ -12,6 +12,7 @@ import { el, clear } from "./dom.js";
 import { storage, KEYS } from "./storage.js";
 import { startSky } from "./sky.js";
 import { player } from "./player.js";
+import { initNextWordTimer } from "./timer.js";
 
 const SIDES = { normal: "A-Side · Normal", hard: "B-Side · Hard" };
 
@@ -229,6 +230,11 @@ function onKey(event) {
     return;
   }
   if (event.key !== "Escape") return;
+  if (endScreen && !endScreen.hidden) {
+    event.preventDefault();
+    closeEnd();
+    return;
+  }
   // Échap ferme d'abord une fenêtre ouverte ou la liste de suggestions
   if (document.querySelector(".rules-modal:not(.hidden)")) return;
   if ([...document.querySelectorAll(".suggestions-box")].some((box) => box.style.display === "block")) return;
@@ -236,13 +242,108 @@ function onKey(event) {
   openPause();
 }
 
+// ===== Écran de fin, façon « chapitre terminé » =====
+// Les jeux annoncent la fin d'une partie (js/game-end.js) ; en Modern, on
+// affiche un écran de bilan par-dessus la page : titre, réponse, essais /
+// indices / temps qui défilent, prochaine partie, et de quoi partager.
+let endScreen = null;
+
+const END_TITLES = { won: "Summit reached!", lost: "Fell short…", forfeit: "Gave up…" };
+
+function countUp(node, target) {
+  const end = Number(target);
+  if (!Number.isFinite(end) || end <= 0 || matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    node.textContent = String(target);
+    return;
+  }
+  const started = performance.now();
+  const step = (now) => {
+    const t = Math.min(1, (now - started) / 700);
+    node.textContent = String(Math.round(end * (1 - (1 - t) ** 3)));
+    if (t < 1) requestAnimationFrame(step);
+  };
+  node.textContent = "0";
+  setTimeout(() => requestAnimationFrame(step), 450);
+}
+
+function showEnd(detail) {
+  if (!document.documentElement.classList.contains("ui-modern")) return;
+  closePause();
+  const won = detail.status === "won";
+  const side = detail.side === "b" ? "B-Side" : "A-Side";
+  const kicker = `${gameName()} · ${side}${detail.practice ? " · Practice" : ""}`;
+
+  const stats = detail.stats.map((stat, i) => {
+    const value = el("strong", { text: String(stat.value) });
+    countUp(value, stat.value);
+    return el("div", { className: "m-end-stat", attrs: { style: `--i: ${i}` } }, [
+      el("img", { attrs: { src: `assets/illustration/${stat.icon}.png`, alt: "" } }),
+      value,
+      el("span", { text: stat.label })
+    ]);
+  });
+
+  const answer = detail.answer
+    ? el("div", { className: "m-end-answer" }, [
+        el("span", { className: "m-end-label", text: won ? `Today's ${detail.noun}` : "The answer was" }),
+        el("div", { className: "m-end-frame" }, [el("img", { attrs: { src: detail.answer.image, alt: "" } })]),
+        el("b", { text: detail.answer.name })
+      ])
+    : null;
+
+  const share = el("button", { className: "m-end-btn primary", text: "Share", attrs: { type: "button" } });
+  share.addEventListener("click", () => {
+    detail.share?.();
+    share.textContent = "Copied!";
+    setTimeout(() => (share.textContent = "Share"), 2000);
+  });
+  const rankings = findAction("rankings");
+  const actions = [
+    share,
+    rankings && el("button", { className: "m-end-btn", text: "Rankings", attrs: { type: "button" }, on: { click: () => (closeEnd(), rankings()) } }),
+    el("a", { className: "m-end-btn", text: "Menu", attrs: { href: "menu.html" } }),
+    el("button", { className: "m-end-btn", text: "Close", attrs: { type: "button" }, on: { click: closeEnd } })
+  ].filter(Boolean);
+
+  const next = el("span", { className: "m-end-next-time" });
+  const card = el("div", { className: `m-end-card ${won ? "won" : "lost"}` }, [
+    el("p", { className: "m-end-kicker", text: kicker }),
+    el("div", { className: "m-end-emblem" }, [el("img", { attrs: { src: `assets/illustration/${won ? "strawberry" : "skull"}.png`, alt: "" } })]),
+    el("h2", { text: END_TITLES[detail.status] ?? "Climb over" }),
+    answer,
+    el("div", { className: "m-end-stats" }, stats),
+    detail.practice ? null : el("p", { className: "m-end-next" }, ["Next climb in ", next]),
+    el("div", { className: "m-end-actions" }, actions)
+  ].filter(Boolean));
+
+  endScreen?.remove();
+  endScreen = el("div", { attrs: { id: "modern-end", role: "dialog", "aria-modal": "true", "aria-label": END_TITLES[detail.status] ?? "Climb over" } }, [card]);
+  endScreen.addEventListener("click", (e) => {
+    if (e.target === endScreen) closeEnd();
+  });
+  document.body.append(endScreen);
+  if (!detail.practice) {
+    initNextWordTimer(next, () => {});
+  }
+  share.focus();
+}
+
+function closeEnd() {
+  if (endScreen) endScreen.hidden = true;
+}
+
+document.addEventListener("game-end", (event) => showEnd(event.detail));
+
 export function applyInterface(on) {
   document.documentElement.classList.toggle("ui-modern", on);
   document.documentElement.classList.toggle("no-key-hints", !storage.getBool(KEYS.keyHints, true));
   if (on && !document.getElementById("modern-scene")) buildDecor();
   if (on) structureRules();
   if (on) startSky();
-  if (!on) closePause();
+  if (!on) {
+    closePause();
+    closeEnd();
+  }
   const title = document.querySelector("#main-content-column h1");
   if (title?.dataset.classicTitle) title.textContent = on ? gameName() : title.dataset.classicTitle;
 }
