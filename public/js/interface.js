@@ -24,9 +24,22 @@ function buildDecor() {
     el("div", { className: "m-moon" }, [el("span", { className: "m-moon-glow" }), el("span", { className: "m-moon-body" })]),
     el("img", { className: "m-mountain", attrs: { src: "assets/menu/mountain.png", alt: "", decoding: "async" } })
   ]);
+  // Règles et classement restent à un clic : ils ouvrent les fenêtres de la
+  // page (boutons Classic masqués, mais toujours là)
+  const shortcut = (id, icon, label) =>
+    el("button", { attrs: { type: "button", "aria-label": label }, on: { click: () => document.getElementById(id)?.click() } }, [
+      el("img", { attrs: { src: `assets/illustration/${icon}.png`, alt: "" } }),
+      el("span", { className: "m-label", text: label })
+    ]);
   const nav = el("nav", { attrs: { id: "modern-nav", "aria-label": "Menu" } }, [
-    el("a", { attrs: { href: "menu.html" } }, [el("span", { className: "m-arrow", text: "◂" }), "Menu"]),
-    el("button", { attrs: { type: "button", "aria-label": "Pause" }, on: { click: openPause } }, [el("span", { className: "m-pause-icon", text: "❚❚" }), "Pause"])
+    el("a", { attrs: { href: "menu.html" } }, [el("span", { text: "◂" }), el("span", { className: "m-label", text: "Menu" })]),
+    el("button", { attrs: { type: "button", "aria-label": "Pause" }, on: { click: openPause } }, [
+      el("span", { className: "m-pause-icon", text: "❚❚" }),
+      el("span", { className: "m-label", text: "Pause" })
+    ]),
+    el("span", { className: "m-gap" }),
+    shortcut("rules-btn", "journal", "Rules"),
+    shortcut("leaderboard-btn", "goldflag", "Rankings")
   ]);
   const hint = el("div", { attrs: { id: "modern-hint", "aria-hidden": "true" } }, [el("b", { text: "Esc" }), "Pause"]);
   document.body.prepend(scene, nav);
@@ -59,6 +72,7 @@ function pauseItems() {
   return [
     { label: "Resume", run: closePause },
     { label: "Rules", run: click("rules-btn") },
+    { label: "Rankings", run: click("leaderboard-btn") },
     { label: "Options", run: click("options-btn") },
     {
       label: `Switch to ${other === "hard" ? "B-Side" : "A-Side"}`,

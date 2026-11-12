@@ -1,79 +1,53 @@
-/* Interface « Modern » des pages de jeu, façon menus de Celeste (voir
-   REDESIGN.md). Tout est rangé sous html.ui-modern : sans cette classe, la
-   page reste exactement l'interface Classic. La classe est posée par un
-   script dans le <head> et par js/interface.js (option « Modern Interface »).
+/* Interface « Modern » des pages de jeu (voir REDESIGN.md). Tout est rangé
+   sous html.ui-modern : sans cette classe, la page reste exactement
+   l'interface Classic. La classe est posée par un script dans le <head> et
+   par js/interface.js (option « Modern Interface »).
 
-   Principe : décor fixe (ciel, lune, montagne), textes blancs à contour
-   noir, et des cartes « papier » à contour d'encre pour tout ce qu'on lit
-   ou remplit. Sur le papier, on change simplement les variables de couleur
-   de style.css (--text-main, --bg-card…) : le contenu suit tout seul. */
+   Principe : le décor du menu (ciel, lune, montagne) et, devant, un HUD
+   sobre comme celui du jeu en partie : bandeaux et panneaux noirs
+   translucides, sans contour coloré, textes blancs à ombre simple. Les
+   seules couleurs vives sont celles du jeu (cases du tableau, A/B-Side).
+   Sur les panneaux, on change les variables de style.css (--text-main,
+   --bg-card…) : le contenu suit tout seul. */
 
 html.ui-modern {
   --m-sky-top: #0b0a24;
   --m-sky-mid: #2a1a4f;
   --m-sky-low: #6a3a7a;
-  /* « Papier de nuit » : cartes sombres à texte clair, pour rester dans
-     l'ambiance de nuit (un papier clair éblouit sur ce fond). --m-ink sert
-     aux contours, plus foncés que la carte ; --m-text au texte. */
-  --m-paper: #2c2546;
-  --m-paper-dark: #1c172f;
-  --m-paper-light: #3a3158;
-  --m-ink: #0e0b1c;
-  --m-text: #ebe5fa;
-  --m-ink-soft: #a99fc8;
+  --m-panel: rgba(10, 8, 26, .72);
+  --m-panel-solid: #1b1730;
+  --m-chip: rgba(0, 0, 0, .5);
+  --m-line: rgba(255, 255, 255, .1);
+  --m-text: #f1edfb;
+  --m-muted: #a9a3c4;
   --m-hl-a: #84ff54;
-  --m-hl-b: #fcff59;
   --m-side-a: #5aa8e8;
   --m-side-b: #e0475b;
-  --m-accent: #d1366a;
-  --m-outline: 2px 0 var(--m-ink), -2px 0 var(--m-ink), 0 2px var(--m-ink), 0 -2px var(--m-ink), 2px 2px var(--m-ink), -2px -2px var(--m-ink), 2px -2px var(--m-ink), -2px 2px var(--m-ink);
-  /* Couleur des onglets et boutons choisis de style.css : l'accent du menu */
-  --color-indigo: #d1366a;
-  --color-indigo-hover: #b02a58;
+  --m-shadow: 0 2px 0 rgba(0, 0, 0, .55);
+  /* Contour « menu du jeu », réservé au titre et au menu pause */
   --m-outline-big: 3px 0 #000, -3px 0 #000, 0 3px #000, 0 -3px #000, 2px 2px #000, -2px -2px #000, 2px -2px #000, -2px 2px #000;
+  /* Onglets et boutons choisis de style.css */
+  --color-indigo: #5aa8e8;
+  --color-indigo-hover: #4b92cf;
 
   /* Le fond d'écran Classic (thème Celeste compris) laisse place au décor */
-  & body {
-    background: var(--m-sky-top) !important;
-    background-image: none !important;
-    color: #fff;
-  }
+  & body { background: var(--m-sky-top) !important; background-image: none !important; color: var(--m-text); }
   & body, & button, & input, & select, & textarea { font-family: "Renogare", "Segoe UI", sans-serif; }
 
-  /* Un « papier » : à appliquer aux cartes, champs et fenêtres */
-  & .sidebar-block, & .bug-card, & .rules-content, & .bug-modal-content, & .suggestions-box {
-    --bg-card: var(--m-paper);
-    --bg-input: var(--m-paper-light);
+  /* Panneau : fenêtres, suggestions, messages */
+  & .rules-content, & .bug-modal-content, & .suggestions-box, & .win-message, & .lose-message, & .memorial-message, & #active-hints-container > * {
+    --bg-card: var(--m-panel-solid);
+    --bg-input: rgba(0, 0, 0, .35);
     --text-main: var(--m-text);
-    --text-muted: var(--m-ink-soft);
-    background: linear-gradient(160deg, color-mix(in srgb, var(--m-tint) 12%, var(--m-paper)), var(--m-paper) 65%) !important;
-    color: var(--m-text);
-    border: 3px solid color-mix(in srgb, var(--m-tint) 40%, var(--m-ink)) !important;
-    border-radius: 8px;
-    box-shadow: 0 6px 0 rgba(0, 0, 0, .35);
+    --text-muted: var(--m-muted);
+    background: var(--m-panel-solid) !important;
+    color: var(--m-text) !important;
+    border: 1px solid var(--m-line) !important;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .45) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
-
-  /* Chaque carte a sa couleur : liseré, teinte du fond et titre.
-     Par défaut, le lavande du menu. */
-  & .sidebar-block, & .bug-card, & .rules-content, & .bug-modal-content, & .suggestions-box,
-  & #game-status button, & #game-status .tries-badge, & #element-input,
-  & .win-message, & .lose-message, & .memorial-message, & #active-hints-container > * { --m-tint: #b48cff; }
-  & #stats-sidebar { --m-tint: #4fd1c5; }
-  & .bug-card { --m-tint: #ff7aa8; }
-  & #timer-sidebar { --m-tint: #f3c95a; }
-  & #discord-sidebar { --m-tint: #7c8cff; }
-  & #game-status .tries-badge:first-child { --m-tint: #84e07a; }
-  & #game-status #game-timer-badge { --m-tint: #6fc3ff; }
-  & #game-status #hint-btn { --m-tint: #f3c95a; }
-  & #game-status #giveup-btn { --m-tint: #ff6b7d; }
-  & .win-message { --m-tint: #84e07a; }
-  & .lose-message { --m-tint: #ff6b7d; }
-  & .sidebar-block h3, & .sidebar-block h2, & .bug-card h3, & .sidebar-header h3, & .rules-content h2, & .modal-title {
-    color: color-mix(in srgb, var(--m-tint) 45%, #fff) !important;
-  }
-  & .sidebar-block h3, & .sidebar-block h2, & .bug-card h3 { border-color: color-mix(in srgb, var(--m-tint) 45%, transparent) !important; }
 }
 
 /* ===== Décor ===== */
@@ -97,35 +71,39 @@ html.ui-modern {
       radial-gradient(1px 1px at 63% 5%, #fff 50%, transparent 51%),
       radial-gradient(2px 2px at 5% 33%, #fff 50%, transparent 51%);
   }
-  /* Même croissant que le menu, plus petit et sans étoiles animées */
+  /* Même croissant que le menu, plus petit */
   & .m-moon {
     --size: clamp(60px, 8vw, 110px);
     --crescent: radial-gradient(circle at 72% 28%, transparent 0 50%, #000 51%);
-    position: absolute; top: 4vh; right: 5vw; width: var(--size); aspect-ratio: 1; opacity: .9;
+    position: absolute; top: calc(4vh + 50px); right: 5vw; width: var(--size); aspect-ratio: 1; opacity: .85;
   }
   & .m-moon-glow, & .m-moon-body { position: absolute; inset: 0; border-radius: 50%; -webkit-mask: var(--crescent); mask: var(--crescent); }
-  & .m-moon-glow { background: #d9d0ff; transform: scale(1.06); filter: blur(calc(var(--size) * .1)); opacity: .6; }
+  & .m-moon-glow { background: #d9d0ff; transform: scale(1.06); filter: blur(calc(var(--size) * .1)); opacity: .5; }
   & .m-moon-body { background: radial-gradient(circle at 35% 60%, #fff, #f4f0ff 60%, #cfc6ef); }
   /* Montagne du menu, en bas et assombrie : le jeu reste lisible devant */
   & .m-mountain {
     position: absolute; left: 50%; bottom: 0; translate: -50% 0;
-    width: max(100%, calc(55vh * 1600 / 700)); aspect-ratio: 1600 / 700; opacity: .7;
+    width: max(100%, calc(55vh * 1600 / 700)); aspect-ratio: 1600 / 700; opacity: .6;
   }
-  & #modern-scene::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgba(11, 10, 36, .55)); }
+  & #modern-scene::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgba(11, 10, 36, .6)); }
+}
 
-  /* « ◂ Menu » et « ❚❚ Pause », en haut à gauche */
-  & #modern-nav { display: flex; gap: 22px; position: absolute; top: 18px; left: 22px; z-index: 50; }
+/* ===== Navigation du haut : Menu, Pause, Rules, Rankings ===== */
+html.ui-modern {
+  & #modern-nav { display: flex; gap: 6px; position: absolute; top: 14px; left: 16px; right: 16px; z-index: 50; }
   & #modern-nav a, & #modern-nav button {
-    display: inline-flex; align-items: center; gap: 8px; padding: 0; border: none; background: none; cursor: pointer;
-    color: #fff; text-decoration: none; font-size: 20px; text-shadow: var(--m-outline-big); transition: transform .12s;
+    display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border: none; border-radius: 8px; cursor: pointer;
+    background: var(--m-chip); color: var(--m-text); text-decoration: none; font-size: 15px; text-shadow: var(--m-shadow);
+    transition: background .12s;
   }
-  & #modern-nav a:hover, & #modern-nav a:focus-visible { color: var(--m-hl-a); transform: translateX(-4px); }
-  & #modern-nav button:hover, & #modern-nav button:focus-visible { color: var(--m-hl-a); transform: translateY(-2px); }
-  & .m-pause-icon { font-size: 14px; letter-spacing: -2px; }
+  & #modern-nav a:hover, & #modern-nav button:hover, & #modern-nav a:focus-visible, & #modern-nav button:focus-visible { background: rgba(255, 255, 255, .14); }
+  & #modern-nav img { width: 20px; height: 20px; object-fit: contain; image-rendering: pixelated; }
+  & #modern-nav .m-gap { flex: 1; }
+  & .m-pause-icon { font-size: 11px; letter-spacing: -2px; }
 
   /* Aide clavier en bas à droite, comme dans le menu (option Keyboard hints) */
-  & #modern-hint { display: flex; align-items: center; gap: 6px; position: fixed; right: 24px; bottom: 18px; z-index: 40; font-size: 15px; color: #fff; text-shadow: var(--m-outline); pointer-events: none; }
-  & #modern-hint b { padding: 2px 6px; border-radius: 6px; background: #fff; color: #111; text-shadow: none; font-weight: normal; }
+  & #modern-hint { display: flex; align-items: center; gap: 6px; position: fixed; right: 20px; bottom: 16px; z-index: 40; font-size: 14px; color: var(--m-muted); text-shadow: var(--m-shadow); pointer-events: none; }
+  & #modern-hint b { padding: 1px 6px; border-radius: 5px; background: rgba(255, 255, 255, .85); color: #111; text-shadow: none; font-weight: normal; }
   &.no-key-hints #modern-hint { display: none; }
 }
 
@@ -133,84 +111,31 @@ html.ui-modern {
 html.ui-modern {
   & #left-sidebar-column, & #right-sidebar-column, & #top-actions, & #game-tabs, & .quick-links, & #site-footer { display: none !important; }
   & #layout-wrapper { display: block; }
-  & #main-content-column { margin: 0 auto; padding-top: 8px; }
-  & #main-content-column h1 { margin-bottom: 0; }
-  /* Côté joué, sous le titre : bleu en A-Side, rouge en B-Side */
-  & #modern-side {
-    display: block; margin: 2px 0 14px; padding: 3px 14px; border-radius: 6px; font-size: 15px; letter-spacing: 2px; text-transform: uppercase;
-    color: #fff; text-shadow: var(--m-outline); background: var(--m-side-a); box-shadow: 0 4px 0 rgba(0, 0, 0, .35);
-  }
-  & #modern-side[data-mode="hard"] { background: var(--m-side-b); }
-}
-
-/* ===== Menu pause, façon Celeste ===== */
-html.ui-modern {
-  & #modern-pause:not([hidden]) {
-    display: flex; flex-direction: column; justify-content: center; position: fixed; inset: 0; z-index: 3000;
-    padding-left: max(8vw, 24px); background: rgba(5, 4, 15, .78); animation: m-fade .15s ease-out;
-  }
-  & #modern-pause h2 { font-size: clamp(28px, 4vw, 44px); margin-bottom: 18px; color: #fff; -webkit-text-fill-color: currentColor; background: none; text-shadow: var(--m-outline-big); letter-spacing: 2px; }
-  & #modern-pause ul { list-style: none; padding: 0; margin: 0; }
-  & #modern-pause li {
-    width: fit-content; padding: 7px 0; font-size: clamp(22px, 3vw, 34px); cursor: pointer;
-    color: #fff; text-shadow: var(--m-outline-big); transition: transform .1s;
-  }
-  & #modern-pause li.selected { transform: translateX(14px); animation: m-hl .25s steps(1) infinite; }
-}
-@keyframes m-fade { from { opacity: 0; } }
-@keyframes m-hl { 0% { color: #84ff54; } 50% { color: #fcff59; } }
-
-/* ===== En-tête ===== */
-html.ui-modern {
+  & #main-content-column { margin: 0 auto; padding-top: 48px; }
   & #main-content-column h1 {
-    margin-top: 10px; font-size: clamp(2.6rem, 6vw, 4.2rem); letter-spacing: 2px;
-    background: none; -webkit-text-fill-color: #fff; color: #fff; text-shadow: var(--m-outline-big);
+    margin: 6px 0 0; font-size: clamp(2.4rem, 5.5vw, 3.8rem); letter-spacing: 2px;
+    background: none; -webkit-text-fill-color: #fff; color: #fff; text-shadow: 0 4px 0 rgba(0, 0, 0, .45);
   }
-  /* Boutons du haut : texte blanc à contour, sans cadre, comme un menu du jeu */
-  & .top-actions .action-btn {
-    background: none !important; border: none !important; box-shadow: none !important;
-    color: #fff; text-shadow: var(--m-outline-big); font-size: 1.05rem; transition: transform .12s;
+  /* Côté joué, sous le titre : un point bleu (A-Side) ou rouge (B-Side) */
+  & #modern-side {
+    display: flex; align-items: center; gap: 8px; margin: 0 0 14px; font-size: 14px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--m-muted); text-shadow: var(--m-shadow);
   }
-  & .top-actions .action-btn:hover, & .top-actions .action-btn:focus-visible { color: var(--m-hl-a); transform: translateY(-2px); }
-  & .top-actions .action-btn img { filter: drop-shadow(0 2px 0 rgba(0, 0, 0, .6)); }
-
-  /* Onglets des jeux : celui où l'on est devient une étiquette papier */
-  & .game-tab {
-    background: none !important; border: 3px solid transparent !important; box-shadow: none !important;
-    color: #fff !important; text-shadow: var(--m-outline); opacity: .85; transition: transform .12s, opacity .12s;
-  }
-  & .game-tab:hover { opacity: 1; transform: translateY(-2px); }
-  & .game-tab[aria-current="page"] {
-    opacity: 1; background: var(--m-paper) !important; border-color: color-mix(in srgb, #ff7aa8 45%, var(--m-ink)) !important; border-radius: 8px;
-    color: #fff !important; text-shadow: none; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
-  }
-  & .game-tab-badge { border: 2px solid var(--m-ink); text-shadow: none; }
-
-  /* Normal / Hard : les onglets A-Side et B-Side du livre de chapitre */
-  & #mode-switch { background: none !important; border: none !important; box-shadow: none !important; gap: 10px; }
-  & #mode-switch button {
-    border: 3px solid var(--m-ink) !important; border-radius: 8px; padding: 6px 22px;
-    background: var(--m-paper-dark) !important; color: var(--m-ink-soft) !important; text-shadow: none;
-    box-shadow: 0 4px 0 rgba(0, 0, 0, .35); transition: transform .12s;
-  }
-  & #mode-switch button[data-mode="normal"][aria-pressed="true"] { background: var(--m-side-a) !important; color: #fff !important; text-shadow: var(--m-outline); }
-  & #mode-switch button[data-mode="hard"][aria-pressed="true"] { background: var(--m-side-b) !important; color: #fff !important; text-shadow: var(--m-outline); }
-  & #mode-switch button:hover { transform: translateY(-2px); }
-  & .hard-rules { color: #fff; text-shadow: var(--m-outline); }
+  & #modern-side::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--m-side-a); }
+  & #modern-side[data-mode="hard"]::before { background: var(--m-side-b); }
+  & .hard-rules { color: var(--m-muted); text-shadow: var(--m-shadow); }
 }
 
-/* ===== Barre de jeu : essais, temps, indices, abandon ===== */
+/* ===== HUD : essais, temps, indices, abandon ===== */
 html.ui-modern {
   & #game-status { background: none !important; border: none !important; box-shadow: none !important; }
   & #game-status button, & #game-status .tries-badge {
-    background: linear-gradient(160deg, color-mix(in srgb, var(--m-tint) 12%, var(--m-paper)), var(--m-paper) 75%) !important; color: var(--m-text) !important;
-    border: 3px solid color-mix(in srgb, var(--m-tint) 40%, var(--m-ink)) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
-    text-shadow: none; transition: transform .12s;
+    background: var(--m-chip) !important; color: var(--m-text) !important;
+    border: none !important; border-radius: 8px; box-shadow: none !important; text-shadow: var(--m-shadow);
+    transition: background .12s;
   }
-  & #game-status button:hover:not(:disabled) { transform: translateY(-2px); }
-  & #hint-btn { color: #f3d27a !important; }
-  & #giveup-btn { color: #ff8a98 !important; }
-  & #game-status button:disabled { opacity: .55; }
+  & #game-status button:hover:not(:disabled) { background: rgba(255, 255, 255, .14) !important; }
+  & #game-status button:disabled { opacity: .5; }
 }
 
 /* ===== Zone de jeu : saisie et tableau des essais ===== */
@@ -218,87 +143,66 @@ html.ui-modern {
   & #game-container { background: none !important; border-color: transparent !important; box-shadow: none !important; backdrop-filter: none !important; }
 
   & #element-input {
-    background: var(--m-paper-light) !important; color: var(--m-text) !important;
-    border: 3px solid color-mix(in srgb, var(--m-tint) 40%, var(--m-ink)) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
+    background: var(--m-chip) !important; color: var(--m-text) !important;
+    border: 2px solid var(--m-line) !important; border-radius: 10px; box-shadow: none !important;
   }
-  & #element-input::placeholder { color: var(--m-ink-soft); }
-  & #element-input:focus { box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important; outline: 3px solid var(--m-hl-a); outline-offset: 2px; }
-  & #guess-btn img { filter: drop-shadow(0 3px 0 rgba(0, 0, 0, .5)); }
-  & .suggestion-item { color: var(--m-text); border-color: var(--m-paper-dark) !important; }
-  & .suggestion-item:hover, & .suggestion-item.selected { background: var(--m-paper-dark) !important; color: var(--m-text) !important; }
+  & #element-input::placeholder { color: var(--m-muted); }
+  & #element-input:focus { border-color: rgba(255, 255, 255, .35) !important; box-shadow: none !important; }
+  & #guess-btn img { filter: drop-shadow(var(--m-shadow)); }
+  & .suggestion-item { color: var(--m-text); border-color: var(--m-line) !important; }
+  & .suggestion-item:hover, & .suggestion-item.selected { background: rgba(255, 255, 255, .08) !important; color: var(--m-text) !important; }
 
-  /* Tableau : en-têtes blancs à contour, cases à contour d'encre */
-  & #guesses-table th { color: #fff; text-shadow: var(--m-outline); border-bottom-color: transparent !important; }
-  & #guesses-table td {
-    border: 3px solid var(--m-ink) !important; border-radius: 8px;
-    color: #fff; text-shadow: var(--m-outline); box-shadow: 0 4px 0 rgba(0, 0, 0, .3);
-  }
-  & #guesses-table { border-spacing: 6px 8px; }
-  & #guesses-table td.wrong { background: #3b3352 !important; color: #e8e1ff !important; }
+  /* Tableau : couleurs du jeu, sans bordure ; les cases fausses en voile sombre */
+  & #guesses-table th { color: var(--m-muted); text-shadow: var(--m-shadow); border-bottom-color: transparent !important; }
+  & #guesses-table { border-spacing: 4px 6px; }
+  & #guesses-table td { border: none !important; border-radius: 8px; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .6); }
+  & #guesses-table td.wrong { background: rgba(10, 8, 26, .65) !important; color: var(--m-text) !important; }
 }
 
-/* ===== Messages de fin, indices actifs ===== */
+/* ===== Messages, fenêtres ===== */
 html.ui-modern {
-  & .win-message, & .lose-message, & .memorial-message {
-    background: linear-gradient(160deg, color-mix(in srgb, var(--m-tint) 12%, var(--m-paper)), var(--m-paper) 70%) !important; color: var(--m-text) !important;
-    border: 3px solid color-mix(in srgb, var(--m-tint) 40%, var(--m-ink)) !important; border-radius: 8px; box-shadow: 0 6px 0 rgba(0, 0, 0, .35) !important;
-    --text-main: var(--m-text); --text-muted: var(--m-ink-soft);
-  }
-  & .win-message h2, & .win-message h3, & .lose-message h2, & .lose-message h3 { color: var(--m-text) !important; -webkit-text-fill-color: currentColor; background: none; }
-  & #active-hints-container > * {
-    background: linear-gradient(160deg, color-mix(in srgb, var(--m-tint) 12%, var(--m-paper)), var(--m-paper) 70%) !important; color: var(--m-text) !important;
-    border: 3px solid color-mix(in srgb, var(--m-tint) 40%, var(--m-ink)) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
-  }
-}
-
-/* ===== Colonnes de côté ===== */
-html.ui-modern {
-  & .sidebar-block h3, & .sidebar-block h2, & .bug-card h3, & .sidebar-header h3 { color: color-mix(in srgb, var(--m-tint) 45%, #fff) !important; -webkit-text-fill-color: currentColor; background: none; }
-  & .sidebar-block p, & .bug-card p, & .stats-list p { color: var(--m-text); }
-  & #next-word-timer { color: #ff7aa8 !important; }
-  & #report-bug-btn {
-    background: var(--m-paper-light) !important; color: var(--m-text) !important;
-    border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .25) !important;
-  }
-  & .social-sidebar-link { border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .25); }
-  & .github-sidebar-link { background: #15111f !important; color: #fff !important; }
-  & .kofi-sidebar-link { background: var(--m-paper-light) !important; color: #ff7aa8 !important; }
-  & #site-footer, & #site-footer a { color: #fff; text-shadow: var(--m-outline); opacity: .9; }
-}
-
-/* ===== Fenêtres ===== */
-html.ui-modern {
-  & .rules-modal { background: rgba(5, 4, 15, .7); backdrop-filter: none; }
+  & .win-message h2, & .win-message h3, & .lose-message h2, & .lose-message h3,
   & .rules-content h2, & .rules-content h3, & .rules-content h4, & .modal-title {
-    color: color-mix(in srgb, var(--m-tint) 45%, #fff) !important; -webkit-text-fill-color: currentColor; background: none; text-shadow: none;
+    color: #fff !important; -webkit-text-fill-color: currentColor; background: none; text-shadow: none;
   }
+  & .rules-modal { background: rgba(5, 4, 15, .7); backdrop-filter: none; }
   & .rules-content p, & .rules-content li, & .rules-content label, & .rules-content td, & .rules-content th { color: var(--m-text); }
-  & .rules-content hr, & .options-separator { border-color: var(--m-paper-dark) !important; background: var(--m-paper-dark); }
+  & .rules-content hr, & .options-separator { border-color: var(--m-line) !important; background: var(--m-line); }
   & .rules-content input, & .rules-content select, & .rules-content textarea {
-    background: var(--m-paper-light) !important; color: var(--m-text) !important; border: 2px solid var(--m-ink-soft) !important; border-radius: 6px;
+    background: rgba(0, 0, 0, .35) !important; color: var(--m-text) !important; border: 1px solid var(--m-line) !important; border-radius: 8px;
   }
-  & .close-modal-btn { color: var(--m-text) !important; }
-  & .close-modal-btn:hover { color: #ff7aa8 !important; }
+  & .close-modal-btn { color: var(--m-muted) !important; }
+  & .close-modal-btn:hover { color: #fff !important; }
   /* L'option Celeste Theme ne concerne que l'interface Classic */
   & .option-classic-only, & .option-classic-only + .options-separator { display: none; }
 
-  & .btn-primary, & .btn-secondary {
-    border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
-    text-shadow: none; transition: transform .12s;
-  }
-  & .btn-primary { background: var(--m-accent) !important; color: #fff !important; }
-  & .btn-secondary { background: var(--m-paper-light) !important; color: var(--m-text) !important; }
-  & .btn-primary:hover, & .btn-secondary:hover { transform: translateY(-2px); }
+  & .btn-primary, & .btn-secondary { border: none !important; border-radius: 8px; box-shadow: none !important; text-shadow: none; }
+  & .btn-primary { background: var(--m-side-a) !important; color: #fff !important; }
+  & .btn-primary:hover { background: #4b92cf !important; }
+  & .btn-secondary { background: rgba(255, 255, 255, .08) !important; color: var(--m-text) !important; }
 }
+
+/* ===== Menu pause, façon Celeste ===== */
+html.ui-modern {
+  & #modern-pause:not([hidden]) {
+    display: flex; flex-direction: column; justify-content: center; position: fixed; inset: 0; z-index: 3000;
+    padding-left: max(8vw, 24px); background: rgba(5, 4, 15, .8); animation: m-fade .15s ease-out;
+  }
+  & #modern-pause h2 { font-size: clamp(28px, 4vw, 44px); margin-bottom: 18px; color: #fff; -webkit-text-fill-color: currentColor; background: none; text-shadow: var(--m-outline-big); letter-spacing: 2px; }
+  & #modern-pause ul { list-style: none; padding: 0; margin: 0; }
+  & #modern-pause li { width: fit-content; padding: 7px 0; font-size: clamp(22px, 3vw, 34px); cursor: pointer; color: #fff; text-shadow: var(--m-outline-big); transition: transform .1s; }
+  & #modern-pause li.selected { transform: translateX(14px); animation: m-hl .25s steps(1) infinite; }
+}
+@keyframes m-fade { from { opacity: 0; } }
+@keyframes m-hl { 0% { color: #84ff54; } 50% { color: #fcff59; } }
 
 @media (max-width: 700px) {
   html.ui-modern {
-    & #modern-nav { top: 10px; left: 12px; gap: 16px; }
-    & #modern-nav a, & #modern-nav button { font-size: 16px; }
+    & #modern-nav { top: 8px; left: 8px; right: 8px; gap: 4px; }
+    & #modern-nav a, & #modern-nav button { padding: 6px 8px; font-size: 13px; }
+    & #modern-nav .m-label { display: none; }
     & #modern-hint { display: none; }
-    & #main-content-column h1 { margin-top: 34px; }
-    & .m-moon { --size: 44px; top: 8px; right: 10px; opacity: .6; }
+    & .m-moon { --size: 40px; top: 52px; right: 10px; opacity: .5; }
     & #guesses-table { border-spacing: 3px 5px; }
-    & #guesses-table td { border-width: 2px !important; border-radius: 6px; }
   }
 }
