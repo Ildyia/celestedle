@@ -15,7 +15,7 @@ import { initNextWordTimer } from "./timer.js";
 import { openPanel, panelOpen } from "./menu-panels.js";
 import { createJournal } from "./journal.js";
 import { applySky, startSky } from "./sky.js";
-import { STAMPS, earnedStamps, stampIcon } from "./stamps.js";
+import { STAMPS, earnedStamps, stampIcon, setAchievements } from "./stamps.js";
 
 const LAST_GAME_KEY = "celestedle_menu_game";
 
@@ -133,7 +133,33 @@ async function createFile() {
   }
 }
 
+// Achievements : posent les tampons sur le ticket ; un tampon gagné depuis
+// la dernière visite est annoncé (liste vue gardée dans ce navigateur)
+async function loadAchievements() {
+  if (!player.profile) {
+    setAchievements([]);
+    return;
+  }
+  try {
+    const { achievements } = await api.myAchievements();
+    setAchievements(achievements);
+    const key = `${KEYS.seenStamps}_${player.profile.id}`;
+    const seen = storage.getJson(key, null);
+    const now = achievements.filter((a) => a.earned).map((a) => a.id);
+    // Première fois sur ce navigateur : on ne fête pas les anciens tampons
+    if (seen) {
+      const fresh = achievements.filter((a) => a.earned && !seen.includes(a.id));
+      if (fresh.length) showToast(`New stamp${fresh.length > 1 ? "s" : ""}: ${fresh.map((a) => a.name).join(", ")}!`, 4000);
+    }
+    storage.setJson(key, now);
+  } catch {
+    // Pas de tampons : le ticket reste vierge
+  }
+  if (screen === "files") renderFiles();
+}
+
 async function loadProfileStats() {
+  loadAchievements();
   if (!player.profile) {
     profileStats = null;
     return;
@@ -228,7 +254,7 @@ function profileSlot() {
   } else {
     body.push(el("div", { className: "sub", text: lastGame.title }), counter(`${ICON}/strawberry.png`, s ? s.wins : "…", "Wins"));
   }
-  const earned = new Set(earnedStamps(profile));
+  const earned = new Set(earnedStamps());
   return {
     color: profile.color,
     portrait: avatarUrl(profile.avatar),

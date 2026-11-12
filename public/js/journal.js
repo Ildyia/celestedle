@@ -8,6 +8,7 @@ import { el, byId, clear } from "./dom.js";
 import { formatDuration } from "./format.js";
 import { avatarUrl } from "./profile.js";
 import { player } from "./player.js";
+import { STAMPS, stampIcon } from "./stamps.js";
 
 const ICON = (name) => `assets/illustration/${name}.png`;
 
@@ -20,6 +21,7 @@ const MY_STATS = {
 
 const PAGES = [
   { id: "progress", tab: "Progress" },
+  { id: "stamps", tab: "Stamps" },
   { id: "daily", tab: "Today" },
   { id: "weekly", tab: "Week" },
   { id: "global", tab: "All time" }
@@ -96,6 +98,7 @@ export function createJournal({ getContext }) {
     void box.offsetWidth; // relance l'animation de page
     box.classList.add("turn");
     if (page.id === "progress") await renderProgress(box, current);
+    else if (page.id === "stamps") await renderStamps(box, current);
     else await renderBoard(box, page.id, current);
   }
 
@@ -146,6 +149,48 @@ export function createJournal({ getContext }) {
         ])
       );
     });
+  }
+
+  // ===== Page Stamps : les achievements =====
+  async function renderStamps(box, current) {
+    box.append(el("h3", { text: "Stamps" }));
+    if (!player.profile) {
+      box.append(el("p", { className: "journal-empty", text: "No file yet: play a game to start collecting stamps." }));
+      return;
+    }
+    let list;
+    try {
+      ({ achievements: list } = await api.myAchievements());
+    } catch (err) {
+      if (current === request) box.append(el("p", { className: "journal-empty", text: err.message }));
+      return;
+    }
+    if (current !== request) return;
+    const done = list.filter((a) => a.earned).length;
+    box.append(
+      el("p", { className: "journal-note stamps-count", text: `${done} / ${list.length} stamps on your ticket` }),
+      el(
+        "div",
+        { className: "stamp-list" },
+        list.map((a) => {
+          const stamp = STAMPS.find((st) => st.id === a.id);
+          return el("div", { className: `stamp-row${a.earned ? " earned" : ""}` }, [
+            el("span", {
+              className: `stamp-badge${stamp?.ring ? " ring" : ""}`,
+              attrs: { style: stamp ? `--stamp-color: ${stamp.color}; --stamp-icon: url("${stampIcon(stamp)}")` : "" }
+            }),
+            el("div", { className: "stamp-text" }, [
+              el("strong", { text: a.name }),
+              el("span", { text: a.description }),
+              a.earned || a.goal === 1
+                ? null
+                : el("span", { className: "stamp-bar", attrs: { style: `--p: ${(a.current / a.goal) * 100}%` } }, [el("i"), `${a.current} / ${a.goal}`])
+            ]),
+            el("span", { className: "stamp-state", text: a.earned ? "✓" : "" })
+          ]);
+        })
+      )
+    );
   }
 
   // ===== Pages de classement =====

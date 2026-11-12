@@ -106,6 +106,14 @@ const stmts = {
     WHERE player_id = ? AND mode = ? AND status <> 'playing'
     ORDER BY date
   `),
+  // Toutes les parties terminées d'un joueur, Celestedle et techs (achievements)
+  playerAllGames: db.prepare(`
+    SELECT mode, date, status, tries, hints FROM game_summaries
+    WHERE player_id = @playerId AND status <> 'playing'
+    UNION ALL
+    SELECT mode, date, status, tries, hints FROM tech_game_summaries
+    WHERE player_id = @playerId AND status <> 'playing'
+  `),
   playerTechGames: db.prepare(`
     SELECT date, status, tries, seconds FROM tech_game_summaries
     WHERE player_id = ? AND mode = ? AND status <> 'playing'
@@ -118,6 +126,7 @@ const stmts = {
     SELECT CASE WHEN g.date LIKE 'hard:%' THEN substr(g.date, 6) ELSE g.date END AS date,
            g.status,
            (SELECT COUNT(*) FROM connection_attempts a WHERE a.game_id = g.id AND a.group_index IS NULL) AS tries,
+           (SELECT COUNT(*) FROM connection_hints h WHERE h.game_id = g.id) AS hints,
            CAST(ROUND((julianday(g.finished_at) - julianday(g.started_at)) * 86400) AS INTEGER) AS seconds
     FROM connection_games g
     WHERE g.player_id = @playerId AND g.status <> 'playing'
@@ -209,6 +218,10 @@ function playerGames(playerId, mode) {
   return stmt.all(playerId, mode);
 }
 
+function playerAllGames(playerId) {
+  return stmts.playerAllGames.all({ playerId });
+}
+
 function playerConnectionGames(playerId, mode) {
   return stmts.playerConnectionGames.all({ playerId, mode });
 }
@@ -231,6 +244,7 @@ function wordStats() {
 }
 
 module.exports = {
+  playerAllGames,
   playerConnectionGames,
   communityStats,
   dailyLeaderboard,

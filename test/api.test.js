@@ -92,6 +92,36 @@ test("une partie normale : essai, doublon, victoire, puis partie terminée", asy
   assert.equal(stats.data.winRate, 100);
 });
 
+test("achievements : rien au départ, tampons gagnés par les victoires", async () => {
+  const { token } = await api.newPlayer();
+  const earned = async () => {
+    const res = await api.request("GET", "/api/players/me/achievements", { token });
+    assert.equal(res.status, 200);
+    return Object.fromEntries(res.data.achievements.map((a) => [a.id, a]));
+  };
+  let list = await earned();
+  assert.equal(Object.keys(list).length, 6);
+  assert.ok(Object.values(list).every((a) => !a.earned && a.current === 0));
+
+  // Victoire au premier essai en Normal : première fraise et one-shot
+  const secret = daily.getTodaySecret("normal").element.nom;
+  await api.request("POST", "/api/game/guess", { token, body: { mode: "normal", guess: secret } });
+  list = await earned();
+  assert.equal(list.strawberry.earned, true);
+  assert.equal(list.winged.earned, true);
+  assert.equal(list.skull.earned, false);
+  assert.equal(list.heart.earned, false);
+  assert.deepEqual([list.summit.current, list.summit.goal], [1, 7]);
+  assert.deepEqual([list.feather.current, list.feather.goal], [1, 25]);
+
+  // Puis le B-Side du même jour : B-Side et cœur de cristal
+  const hard = daily.getTodaySecret("hard").element.nom;
+  await api.request("POST", "/api/game/guess", { token, body: { mode: "hard", guess: hard } });
+  list = await earned();
+  assert.equal(list.skull.earned, true);
+  assert.equal(list.heart.earned, true);
+});
+
 test("les synonymes officiels sont acceptés", async () => {
   const { token } = await api.newPlayer();
   const res = await api.request("POST", "/api/game/guess", { token, body: { mode: "normal", guess: "Red Bubble" } });

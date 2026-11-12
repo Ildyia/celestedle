@@ -1,4 +1,5 @@
 const express = require("express");
+const achievements = require("../../services/achievements");
 const players = require("../../services/players");
 const playersRepo = require("../../repositories/players");
 const { requirePlayer } = require("../../middleware/player");
@@ -37,6 +38,12 @@ router.delete("/players/me", requirePlayer, (req, res) => {
 router.get("/players/me/stats", requirePlayer, (req, res) => {
   expireOverdueGames();
   res.json(players.playerStats(req.player, req.query.mode));
+});
+
+// Achievements du joueur : ils posent les tampons sur son ticket
+router.get("/players/me/achievements", requirePlayer, (req, res) => {
+  expireOverdueGames();
+  res.json({ achievements: achievements.playerAchievements(req.player) });
 });
 
 module.exports = router;

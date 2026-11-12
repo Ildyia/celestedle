@@ -249,9 +249,10 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
   background: var(--tab, #8a7fb0); filter: brightness(.82); transform: translateX(-6px); transition: transform .15s, filter .15s;
 }
 .journal-tab:nth-child(1) { --tab: #d1566a; }
-.journal-tab:nth-child(2) { --tab: #4f9fdc; }
-.journal-tab:nth-child(3) { --tab: #e0a63a; }
-.journal-tab:nth-child(4) { --tab: #5fae6a; }
+.journal-tab:nth-child(2) { --tab: #c79a3a; }
+.journal-tab:nth-child(3) { --tab: #4f9fdc; }
+.journal-tab:nth-child(4) { --tab: #e0a63a; }
+.journal-tab:nth-child(5) { --tab: #5fae6a; }
 .journal-tab.active, .journal-tab:hover { filter: none; transform: none; }
 .journal-close { position: absolute; top: 10px; right: 12px; width: 32px; height: 32px; border: none; border-radius: 50%; background: rgba(58, 51, 80, .12); color: var(--j-ink); cursor: pointer; font-size: 16px; }
 .journal-page { flex: 1; overflow: auto; }
@@ -277,6 +278,22 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 .journal-empty { color: var(--j-soft); font-style: italic; padding: 8px 0; white-space: normal !important; }
 .journal-note { margin-top: 12px; font-size: 13px; line-height: 1.5; color: var(--j-soft); }
 .journal-warn { color: #b0405a; }
+/* Page Stamps : un tampon par achievement, encré s'il est gagné */
+.stamps-count { margin: -8px 0 10px; }
+.stamp-list { display: grid; gap: 4px; }
+.stamp-row { display: grid; grid-template-columns: 52px 1fr 24px; align-items: center; gap: 12px; min-height: 60px; }
+.stamp-badge { position: relative; width: 48px; height: 48px; opacity: .2; filter: grayscale(1); transform: rotate(-8deg); }
+.stamp-badge::before { content: ""; position: absolute; inset: 0; background: var(--stamp-color); -webkit-mask: var(--stamp-icon) center / 80% no-repeat; mask: var(--stamp-icon) center / 80% no-repeat; }
+.stamp-badge.ring { border: 3px solid var(--stamp-color); border-radius: 50%; }
+.stamp-badge.ring::before { -webkit-mask-size: 58%; mask-size: 58%; }
+.stamp-row.earned .stamp-badge { opacity: .85; filter: none; }
+.stamp-text { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--j-soft); }
+.stamp-text strong { font-size: 16px; color: var(--j-ink); }
+.stamp-row:not(.earned) .stamp-text strong { color: var(--j-soft); }
+.stamp-bar { position: relative; display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.stamp-bar i { flex: 0 0 120px; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #5fae6a var(--p), rgba(58, 51, 80, .15) var(--p)); }
+.stamp-state { font-size: 20px; color: #3f9a4d; }
+
 /* Page Today : choix du jeu et du côté */
 .journal-picker { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 12px; }
 .journal-picker .pick { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px 3px 4px; border: 2px solid transparent; border-radius: 7px; cursor: pointer; font-size: 13px; color: var(--j-ink); background: rgba(58, 51, 80, .08); }
