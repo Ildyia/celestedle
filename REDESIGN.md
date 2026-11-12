@@ -19,7 +19,7 @@ Déjà en place :
 - **Fichier** : tickets dans le style du jeu, entièrement en CSS (aucune image du jeu) : papier à encoches et contour à l'encre, portrait tenu par du scotch, nom, dernier jeu choisi, fraises = victoires. Le ticket choisi glisse à gauche et son talon perforé sort : un cœur par partie gagnée aujourd'hui (colonnes = jeux, bleu = A-Side, rouge = B-Side), crâne = défaites, série, meilleur temps. Entrée ouvre le ticket (Begin, Rename, Recovery code ; le code s'affiche dans le talon).
 - **Tampons** : listés dans `js/stamps.js` (icône teintée par masque, couleur, position, taille, angle, cercle ou non). `earnedStamps()` renvoie [] en attendant les achievements ; `menu.html?stamps=all` les montre tous.
 - **Modes** : un endroit de la montagne par jeu (la caméra « monte » jusqu'au sommet pour Techs), A-Side et B-Side, règles du mode, état de la partie du jour, record perso (Celestedle) ou chiffres du jour (Connections, Techs). Connections et Techs n'apparaissent qu'avec l'accès.
-- **Journal** (J) : stats perso et bouton Leaderboards (ouvre les classements dans le menu).
+- **Journal** (J) : un carnet comme celui du jeu (`js/journal.js`), papier crème ligné, onglets marque-page, pages tournées avec ← →. Pages : Progress (stats perso), Today (classement du jour d'un jeu et d'un côté), This week et All time (tous modes).
 - **Options** : mêmes préférences que les pages de jeu, mode performance (`body.perf` : sans neige ni scintillements, contours allégés, cadrage sans zoom), Credits, Legal notice. Tant que le joueur n'a pas choisi, il s'active tout seul si les premiers changements d'écran tournent sous 30 images/s.
 - Clavier partout, aide en bas à droite, mobile, `prefers-reduced-motion`.
 
@@ -67,7 +67,7 @@ Option « Modern Interface (beta) » (options de la page de jeu) ou « Modern ga
 | Sur la page Classic | En Modern |
 |---|---|
 | Profil | ticket du menu (Rename, Edit profile) |
-| Rankings | bouton en haut de la page, menu pause, journal du menu |
+| Rankings | bouton en haut de la page, menu pause, pages du journal du menu |
 | Règles | bouton en haut de la page, menu pause (fiches par rubrique en Modern) |
 | Options | menu pause (Échap ou ❚❚) |
 | Normal / Hard | menu pause (« Switch to B-Side ») ou le livre du menu |

@@ -13,6 +13,7 @@ import { CELESTEDLE, TECHS } from "./catalogs.js";
 import { showToast } from "./toast.js";
 import { initNextWordTimer } from "./timer.js";
 import { openPanel, panelOpen } from "./menu-panels.js";
+import { createJournal } from "./journal.js";
 import { STAMPS, earnedStamps, stampIcon } from "./stamps.js";
 
 const LAST_GAME_KEY = "celestedle_menu_game";
@@ -505,49 +506,11 @@ function climb() {
   location.href = games[gameIndex].page;
 }
 
-// ===== Journal : statistiques du joueur =====
-async function openJournal() {
-  const wrap = byId("journal");
-  wrap.hidden = false;
-  byId("journal-title").textContent = player.profile ? `${player.profile.name}'s journal` : "Journal";
-  const body = byId("journal-body");
-  clear(body);
-  if (!player.profile) {
-    body.append(el("tr", {}, [el("td", { attrs: { colspan: "6" }, text: "No file yet: play a game to start your journal." })]));
-    return;
-  }
-  const rows = [
-    { label: "Celestedle", mode: "normal", color: "var(--side-a)" },
-    { label: "Celestedle", mode: "hard", color: "var(--side-b)" }
-  ];
-  for (const row of rows) {
-    let s;
-    try {
-      s = await api.myStats(row.mode);
-    } catch {
-      continue;
-    }
-    body.append(
-      el("tr", {}, [
-        el("td", {}, [el("span", { className: "side", attrs: { style: `background: ${row.color}` } }), `${row.label} ${row.mode === "hard" ? "B" : "A"}`]),
-        el("td", { text: String(s.played) }),
-        el("td", { text: String(s.wins) }),
-        el("td", { text: String(s.streak.current) }),
-        el("td", { text: String(s.streak.best) }),
-        el("td", { text: formatDuration(s.bestSeconds) })
-      ])
-    );
-  }
-  byId("journal-close").focus();
-}
-
-function closeJournal() {
-  byId("journal").hidden = true;
-}
-
-function journalOpen() {
-  return !byId("journal").hidden;
-}
+// ===== Journal (js/journal.js) =====
+const journal = createJournal({ getContext: () => ({ games, gameIndex, side }) });
+const openJournal = () => journal.open();
+const closeJournal = () => journal.close();
+const journalOpen = () => journal.isOpen();
 
 // ===== Options =====
 // Chaque préférence : un libellé et une valeur qu'on fait défiler avec ◂ ▸.
@@ -695,6 +658,8 @@ document.addEventListener("keydown", (event) => {
   if (panelOpen()) return;
   if (journalOpen()) {
     if (event.key === "Escape" || event.key === "j") closeJournal();
+    if (event.key === "ArrowLeft") journal.flip(-1);
+    if (event.key === "ArrowRight") journal.flip(1);
     return;
   }
   const handler = KEY_HANDLERS[screen][event.key.length === 1 ? event.key.toLowerCase() : event.key];
@@ -711,10 +676,8 @@ byId("climb").addEventListener("click", climb);
 byId("to-options").addEventListener("click", openOptions);
 byId("to-journal").addEventListener("click", openJournal);
 byId("journal-close").addEventListener("click", closeJournal);
-byId("journal-leaderboard").addEventListener("click", () => {
-  closeJournal();
-  openPanel("leaderboard").catch((err) => showToast(err.message));
-});
+byId("journal-prev").addEventListener("click", () => journal.flip(-1));
+byId("journal-next").addEventListener("click", () => journal.flip(1));
 byId("journal").addEventListener("click", (e) => {
   if (e.target === e.currentTarget) closeJournal();
 });

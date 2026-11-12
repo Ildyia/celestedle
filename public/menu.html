@@ -94,18 +94,17 @@
       <ul class="menu outlined" id="menu"></ul>
     </section>
 
-    <!-- Journal : statistiques du joueur, comme le journal du jeu -->
+    <!-- Journal : un carnet à feuilleter, comme le journal du jeu (js/journal.js) -->
     <div id="journal" class="journal-wrap" hidden>
-      <div class="journal paper" role="dialog" aria-modal="true" aria-labelledby="journal-title">
+      <div class="journal" role="dialog" aria-modal="true" aria-label="Journal">
+        <nav class="journal-tabs" id="journal-tabs" aria-label="Journal pages"></nav>
         <button type="button" class="journal-close" id="journal-close" aria-label="Close">✕</button>
-        <h3 id="journal-title"></h3>
-        <table class="journal-table">
-          <thead>
-            <tr><th></th><th>Played</th><th>Wins</th><th>Streak</th><th>Best</th><th>Best time</th></tr>
-          </thead>
-          <tbody id="journal-body"></tbody>
-        </table>
-        <button type="button" class="journal-link" id="journal-leaderboard">Leaderboards ▸</button>
+        <div class="journal-page" id="journal-page"></div>
+        <div class="journal-foot">
+          <button type="button" id="journal-prev" aria-label="Previous page">◂</button>
+          <span id="journal-count"></span>
+          <button type="button" id="journal-next" aria-label="Next page">▸</button>
+        </div>
       </div>
     </div>
 
