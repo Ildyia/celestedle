@@ -506,6 +506,11 @@ function climb() {
   location.href = games[gameIndex].page;
 }
 
+// ===== Signalement de bug (fenêtre de la page de jeu, ouverte ici) =====
+function openReport() {
+  openPanel("reports").catch((err) => showToast(err.message));
+}
+
 // ===== Journal (js/journal.js) =====
 const journal = createJournal({ getContext: () => ({ games, gameIndex, side }) });
 const openJournal = () => journal.open();
@@ -525,7 +530,7 @@ const OPTION_ROWS = [
   { label: "Keyboard hints", key: KEYS.keyHints, fallback: true, apply: renderHints },
   { label: "Performance mode", key: KEYS.performance, fallback: false, apply: applyPerformance },
   { sep: true },
-  { label: "Report a bug", run: () => openPanel("reports").catch((err) => showToast(err.message)) },
+  { label: "Report a bug", run: () => openReport() },
   { label: "Discord", link: "https://discord.gg/3yqgMbuMbX", external: true },
   { label: "GitHub", link: "https://github.com/Ildyia/celestedle", external: true },
   { label: "Support on Ko-fi", link: "https://ko-fi.com/ildyia", external: true },
@@ -591,7 +596,7 @@ const HINTS = {
   // Écran titre : le rond « C » remplace la touche, et clignote
   title: [[null, "Start"]],
   files: [["↑↓", "Move"], ["Enter", "Confirm"], ["Esc", "Back"]],
-  modes: [["←→", "Game"], ["↑↓", "Side"], ["Enter", "Climb"], ["J", "Journal"], ["O", "Options"], ["Esc", "Back"]],
+  modes: [["←→", "Game"], ["↑↓", "Side"], ["Enter", "Climb"], ["J", "Journal"], ["O", "Options"], ["B", "Bug"], ["Esc", "Back"]],
   options: [["↑↓", "Move"], ["Enter", "Change"], ["Esc", "Back"]]
 };
 
@@ -628,6 +633,7 @@ const KEY_HANDLERS = {
     Enter: climb,
     j: openJournal,
     o: openOptions,
+    b: openReport,
     Escape: () => go("files")
   },
   options: {
@@ -674,6 +680,7 @@ document.addEventListener("keydown", (event) => {
 byId("title").addEventListener("click", () => go("files"));
 byId("climb").addEventListener("click", climb);
 byId("to-options").addEventListener("click", openOptions);
+byId("to-report").addEventListener("click", openReport);
 byId("to-journal").addEventListener("click", openJournal);
 byId("journal-close").addEventListener("click", closeJournal);
 byId("journal-prev").addEventListener("click", () => journal.flip(-1));

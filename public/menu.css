@@ -197,7 +197,7 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 .climb.a { background: var(--side-a); box-shadow: 0 5px 0 #3b7bb3; }
 .climb.b { background: var(--side-b); box-shadow: 0 5px 0 #a52d3e; }
 .climb:active { transform: translateY(3px); box-shadow: none; }
-.corner { position: absolute; left: 4vw; bottom: 9vh; display: flex; gap: 14px; }
+.corner { position: absolute; left: 4vw; right: 4vw; bottom: 9vh; display: flex; flex-wrap: wrap; gap: 14px; }
 .corner button { font-size: 18px; color: #fff; background: rgba(0,0,0,.35); border: 2px solid rgba(255,255,255,.4); border-radius: 8px; padding: 8px 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
 .corner button img { width: 26px; height: 26px; image-rendering: pixelated; }
 
@@ -296,7 +296,9 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
   .mode-label { display: none; }
   .book { top: auto; bottom: 16vh; right: 50%; transform: translateX(50%); padding: 22px 20px 24px; }
   .book h3 { font-size: 30px; }
-  .corner { bottom: 3vh; }
+  .corner { bottom: 3vh; gap: 8px; }
+  .corner button { font-size: 14px; padding: 6px 10px; }
+  .corner button img { width: 20px; height: 20px; }
   .hints { display: none; }
   body[data-screen="title"] .hints { display: flex; left: 0; right: 0; justify-content: center; bottom: 8vh; }
   .menu { font-size: 20px; }
