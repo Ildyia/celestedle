@@ -47,7 +47,7 @@ const TABS = {
   players: () => playersTab.load()
 };
 
-const ROLE_LABELS = { owner: "Propriétaire", administrator: "Administrateur" };
+const ROLE_LABELS = { owner: "Owner", administrator: "Administrator" };
 
 let currentTab = "overview";
 let currentRole = null;
@@ -71,8 +71,8 @@ function renderIdentity({ player, role, quota }) {
   currentRole = role;
   const remaining =
     quota.limit === null
-      ? "modifications illimitées"
-      : `${quota.remaining} / ${quota.limit} modification(s) restante(s) aujourd'hui`;
+      ? "unlimited changes"
+      : `${quota.remaining} / ${quota.limit} change(s) left today`;
   byId("admin-identity").replaceChildren(
     el("strong", { text: player.name }),
     el("span", { className: `badge ${role}`, text: ROLE_LABELS[role] }),
@@ -103,20 +103,20 @@ function showAccess(status, { canClaim = false, error = "" } = {}) {
 
 async function checkAccess() {
   if (!storage.get(KEYS.playerToken)) {
-    showAccess("Connecte-toi avec ton profil de joueur : colle ton code de récupération ci-dessous.");
+    showAccess("Sign in with your player profile: paste your recovery code below.");
     return;
   }
   let me;
   try {
     me = await admin.me();
   } catch {
-    showAccess("Ce code de récupération ne correspond à aucun profil. Colle un autre code.");
+    showAccess("This recovery code doesn't match any profile. Paste another code.");
     return;
   }
   if (!me.quota) {
     showAccess(
-      `Le profil « ${me.player.name} » (identifiant ${me.player.id}) n'a pas de droits admin. ` +
-        "Demande au propriétaire de te nommer administrateur, ou utilise un autre profil.",
+      `The profile "${me.player.name}" (ID ${me.player.id}) has no admin rights. ` +
+        "Ask the owner to make you an administrator, or use another profile.",
       { canClaim: me.ownerClaimable }
     );
     return;
@@ -140,7 +140,7 @@ function init() {
       byId("admin-code-input").value = "";
       await checkAccess();
     } catch {
-      byId("admin-access-error").textContent = "Ce code ne correspond à aucun profil.";
+      byId("admin-access-error").textContent = "This code doesn't match any profile.";
     }
   });
 

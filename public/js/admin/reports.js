@@ -2,11 +2,11 @@ import { el, byId } from "../dom.js";
 import { admin } from "./client.js";
 
 const STATUS_LABELS = {
-  new: "Nouveau",
-  working: "En cours",
-  fixed: "Corrigé",
-  cant_reproduce: "Non reproductible",
-  wrong: "Report erroné"
+  new: "New",
+  working: "In progress",
+  fixed: "Fixed",
+  cant_reproduce: "Can't reproduce",
+  wrong: "Wrong report"
 };
 
 // Ordre d'avancement, pour trier par statut
@@ -15,13 +15,13 @@ const OPEN = ["new", "working"];
 
 const COLUMNS = [
   { key: "id", label: "ID" },
-  { key: "elementName", label: "Élément" },
+  { key: "elementName", label: "Element" },
   { key: "bugType", label: "Type" },
   { key: "description", label: "Description", sortable: false },
-  { key: "reporter", label: "Auteur", sortable: false },
+  { key: "reporter", label: "Reporter", sortable: false },
   { key: "score", label: "Votes" },
   { key: "createdAt", label: "Date" },
-  { key: "status", label: "Statut" },
+  { key: "status", label: "Status" },
   { key: "actions", label: "", sortable: false }
 ];
 
@@ -100,8 +100,8 @@ export class ReportsTab {
     return el("td", {}, [
       el("div", { text: report.reporter.name }),
       report.reporter.discordTag
-        ? el("div", { className: "badge", text: `Discord : ${report.reporter.discordTag}` })
-        : el("div", { className: "small-subtext", text: "pas de Discord" })
+        ? el("div", { className: "badge", text: `Discord: ${report.reporter.discordTag}` })
+        : el("div", { className: "small-subtext", text: "no Discord" })
     ]);
   }
 
@@ -110,7 +110,7 @@ export class ReportsTab {
       "select",
       {
         className: "bug-input",
-        attrs: { "aria-label": `Statut de ${report.id}` },
+        attrs: { "aria-label": `Status of ${report.id}` },
         on: {
           change: async (e) => {
             try {
@@ -136,7 +136,7 @@ export class ReportsTab {
     const confirming = this.pendingDelete === report.id;
     return el("button", {
       className: confirming ? "btn-danger btn-small" : "btn-secondary btn-small",
-      text: confirming ? "Confirmer" : "Supprimer",
+      text: confirming ? "Confirm" : "Delete",
       attrs: { type: "button" },
       on: {
         click: async () => {
@@ -155,7 +155,7 @@ export class ReportsTab {
             await admin.deleteReport(report.id);
             this.reports = this.reports.filter((r) => r.id !== report.id);
             this.pendingDelete = null;
-            this.notify(`${report.id} supprimé.`);
+            this.notify(`${report.id} deleted.`);
             this.render();
           } catch (err) {
             this.notify(err.message, true);
@@ -189,14 +189,14 @@ export class ReportsTab {
     if (button.dataset.confirm !== "true") {
       const count = this.reports.filter((r) => !OPEN.includes(r.status)).length;
       button.dataset.confirm = "true";
-      button.textContent = `Confirmer la suppression de ${count} report(s) clos`;
+      button.textContent = `Confirm deleting ${count} closed report(s)`;
       button.className = "btn-danger";
       setTimeout(() => this.resetPurgeButton(), 5000);
       return;
     }
     try {
       const { deleted } = await admin.purgeClosedReports();
-      this.notify(`${deleted} report(s) clos supprimé(s).`);
+      this.notify(`${deleted} closed report(s) deleted.`);
       await this.load();
     } catch (err) {
       this.notify(err.message, true);
@@ -207,7 +207,7 @@ export class ReportsTab {
   resetPurgeButton() {
     const button = byId("purge-closed-btn");
     button.dataset.confirm = "false";
-    button.textContent = "Supprimer les reports clos";
+    button.textContent = "Delete closed reports";
     button.className = "btn-secondary";
   }
 }

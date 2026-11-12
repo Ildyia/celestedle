@@ -37,7 +37,7 @@ export function bindSettings({ notify }) {
         modes: { hard: readHardRules() }
       });
       fill(saved);
-      notify("Réglages enregistrés.");
+      notify("Settings saved.");
     } catch (err) {
       notify(err.message, true);
     }

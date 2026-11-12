@@ -1,27 +1,27 @@
 import { el, byId } from "../dom.js";
 import { admin } from "./client.js";
 
-const ROLE_LABELS = { owner: "Propriétaire", administrator: "Administrateur" };
+const ROLE_LABELS = { owner: "Owner", administrator: "Administrator" };
 
 const ACTION_LABELS = {
-  claim_owner: "Devient propriétaire",
-  grant_admin: "Nomme administrateur",
-  revoke_admin: "Retire administrateur",
-  set_secret: "Change le mot du jour",
-  create_element: "Crée un élément",
-  edit_element: "Modifie un élément",
-  report_status: "Change le statut d'un report",
-  delete_report: "Supprime un report",
-  purge_reports: "Supprime les reports clos",
-  settings: "Modifie les réglages",
-  delete_player: "Supprime un profil",
-  upload_sprite: "Envoie un sprite",
-  create_tag: "Crée un tag Connections",
-  edit_tag: "Modifie un tag Connections",
-  delete_tag: "Supprime un tag Connections",
-  regenerate_grid: "Régénère une grille Connections",
-  playtester: "Change l'accès playtester",
-  connections_access: "Change qui peut jouer à Connections"
+  claim_owner: "Becomes the owner",
+  grant_admin: "Makes an administrator",
+  revoke_admin: "Removes an administrator",
+  set_secret: "Changes the word of the day",
+  create_element: "Creates an element",
+  edit_element: "Edits an element",
+  report_status: "Changes a report's status",
+  delete_report: "Deletes a report",
+  purge_reports: "Deletes closed reports",
+  settings: "Edits the settings",
+  delete_player: "Deletes a profile",
+  upload_sprite: "Uploads a sprite",
+  create_tag: "Creates a Connections tag",
+  edit_tag: "Edits a Connections tag",
+  delete_tag: "Deletes a Connections tag",
+  regenerate_grid: "Redraws a Connections grid",
+  playtester: "Changes playtester access",
+  connections_access: "Changes who can play Connections"
 };
 
 // Onglet Équipe, réservé au propriétaire : administrateurs, quota, journal
@@ -35,7 +35,7 @@ export class TeamTab {
       try {
         const player = await admin.grantAdmin(input.value.trim());
         input.value = "";
-        this.notify(`${player.name} est maintenant administrateur.`);
+        this.notify(`${player.name} is now an administrator.`);
         await this.load();
       } catch (err) {
         this.notify(err.message, true);
@@ -48,7 +48,7 @@ export class TeamTab {
         const { adminDailyLimit } = await admin.saveSettings({
           adminDailyLimit: Number(byId("team-limit-input").value)
         });
-        this.notify(`Limite des administrateurs : ${adminDailyLimit} modification(s) par jour.`);
+        this.notify(`Administrator limit: ${adminDailyLimit} change(s) per day.`);
       } catch (err) {
         this.notify(err.message, true);
       }
@@ -78,7 +78,7 @@ export class TeamTab {
             member.role === "administrator"
               ? el("button", {
                   className: "btn-secondary btn-small",
-                  text: "Retirer",
+                  text: "Remove",
                   attrs: { type: "button" },
                   on: { click: () => this.revoke(member) }
                 })
@@ -94,7 +94,7 @@ export class TeamTab {
       ...actions.map((a) =>
         el("tr", {}, [
           el("td", { text: a.createdAt.replace("T", " ").slice(0, 16) }),
-          el("td", { text: `${a.name} (${ROLE_LABELS[a.role] ?? "ancien membre"})` }),
+          el("td", { text: `${a.name} (${ROLE_LABELS[a.role] ?? "former member"})` }),
           el("td", { text: ACTION_LABELS[a.action] ?? a.action }),
           el("td", { text: a.target ?? "-" })
         ])
@@ -105,7 +105,7 @@ export class TeamTab {
   async revoke(member) {
     try {
       await admin.revokeAdmin(member.id);
-      this.notify(`${member.name} n'est plus administrateur.`);
+      this.notify(`${member.name} is no longer an administrator.`);
       await this.load();
     } catch (err) {
       this.notify(err.message, true);

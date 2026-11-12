@@ -1,7 +1,7 @@
 import { el, byId } from "../dom.js";
 import { admin } from "./client.js";
 
-const ROLE_LABELS = { owner: "Propriétaire", administrator: "Administrateur", player: "Joueur" };
+const ROLE_LABELS = { owner: "Owner", administrator: "Administrator", player: "Player" };
 
 // Recherche de joueurs ; la suppression est réservée au propriétaire
 export class PlayersTab {
@@ -27,7 +27,7 @@ export class PlayersTab {
     if (player.role !== "player") return null;
     return el("button", {
       className: "btn-secondary btn-small",
-      text: player.isPlaytester ? "Retirer playtester" : "Rendre playtester",
+      text: player.isPlaytester ? "Remove playtester" : "Make playtester",
       attrs: { type: "button" },
       on: {
         click: async () => {
@@ -36,8 +36,8 @@ export class PlayersTab {
             Object.assign(player, { isPlaytester: updated.isPlaytester });
             this.notify(
               updated.isPlaytester
-                ? `« ${player.name} » est playtester : il a accès à Connections.`
-                : `« ${player.name} » n'est plus playtester.`
+                ? `"${player.name}" is a playtester: they can play Connections.`
+                : `"${player.name}" is no longer a playtester.`
             );
             this.render();
           } catch (err) {
@@ -53,7 +53,7 @@ export class PlayersTab {
     const confirming = this.pendingDelete === player.id;
     return el("button", {
       className: confirming ? "btn-danger btn-small" : "btn-secondary btn-small",
-      text: confirming ? "Confirmer" : "Supprimer",
+      text: confirming ? "Confirm" : "Delete",
       attrs: { type: "button" },
       on: {
         click: async () => {
@@ -72,7 +72,7 @@ export class PlayersTab {
             await admin.deletePlayer(player.id);
             this.pendingDelete = null;
             this.players = this.players.filter((p) => p.id !== player.id);
-            this.notify(`Profil « ${player.name} » supprimé, avec ses parties.`);
+            this.notify(`Profile "${player.name}" deleted, with its games.`);
             this.render();
           } catch (err) {
             this.notify(err.message, true);

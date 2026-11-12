@@ -4,15 +4,15 @@ import { formatNumber } from "../format.js";
 import { admin } from "./client.js";
 
 const COLUMNS = [
-  { key: "name", label: "Mot" },
-  { key: "timesPicked", label: "Tiré", numeric: true },
-  { key: "lastPicked", label: "Dernière fois" },
-  { key: "games", label: "Parties", numeric: true },
-  { key: "winRate", label: "Victoires %", numeric: true },
-  { key: "avgTries", label: "Essais moy.", numeric: true, format: formatNumber },
-  { key: "timesGuessed", label: "Proposé", numeric: true },
-  { key: "legacyDays", label: "Jours v1", numeric: true },
-  { key: "legacyWins", label: "Victoires v1", numeric: true }
+  { key: "name", label: "Word" },
+  { key: "timesPicked", label: "Drawn", numeric: true },
+  { key: "lastPicked", label: "Last time" },
+  { key: "games", label: "Games", numeric: true },
+  { key: "winRate", label: "Wins %", numeric: true },
+  { key: "avgTries", label: "Avg. tries", numeric: true, format: formatNumber },
+  { key: "timesGuessed", label: "Guessed", numeric: true },
+  { key: "legacyDays", label: "v1 days", numeric: true },
+  { key: "legacyWins", label: "v1 wins", numeric: true }
 ];
 
 // Statistiques par élément, triables par colonne

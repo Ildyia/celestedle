@@ -2,7 +2,7 @@ import { spriteUrl } from "../api.js";
 import { el, byId, clear } from "../dom.js";
 import { admin } from "./client.js";
 
-const KIND_LABELS = { type: "Type", colour: "Couleur", shape: "Forme", chapter: "Chapitre", tag: "Tag" };
+const KIND_LABELS = { type: "Type", colour: "Colour", shape: "Shape", chapter: "Chapter", tag: "Tag" };
 
 // Connections : relecture des grilles à venir et édition des tags
 export class ConnectionsTab {
@@ -33,7 +33,7 @@ export class ConnectionsTab {
     admin
       .connectionsAccess()
       .then(({ access }) => (byId("cx-access").value = access))
-      .catch((err) => this.notify(`Erreur en chargeant l'accès : ${err.message}`, true));
+      .catch((err) => this.notify(`Couldn't load access: ${err.message}`, true));
     const [tags, elements, puzzles, suggestions] = await Promise.allSettled([
       admin.connectionTags(),
       admin.elements(),
@@ -42,23 +42,23 @@ export class ConnectionsTab {
     ]);
     const errors = [];
     if (elements.status === "fulfilled") this.elements = elements.value.elements.filter((e) => e.isActive);
-    else errors.push(`éléments : ${elements.reason.message}`);
+    else errors.push(`elements: ${elements.reason.message}`);
     if (tags.status === "fulfilled") {
       this.tags = tags.value;
       this.renderTags();
-    } else errors.push(`tags : ${tags.reason.message}`);
+    } else errors.push(`tags: ${tags.reason.message}`);
     if (puzzles.status === "fulfilled") this.renderPuzzles(puzzles.value);
-    else errors.push(`grilles : ${puzzles.reason.message}`);
+    else errors.push(`grids: ${puzzles.reason.message}`);
     if (suggestions.status === "fulfilled") this.renderSuggestions(suggestions.value);
-    else errors.push(`suggestions : ${suggestions.reason.message}`);
-    if (errors.length) this.notify(`Erreur en chargeant ${errors.join(" ; ")}`, true);
+    else errors.push(`suggestions: ${suggestions.reason.message}`);
+    if (errors.length) this.notify(`Couldn't load ${errors.join("; ")}`, true);
   }
 
   async setAccess(select) {
-    const labels = { staff: "réservé à l'équipe admin", playtest: "ouvert aux playtesters", public: "ouvert à tous" };
+    const labels = { staff: "admin team only", playtest: "open to playtesters", public: "open to everyone" };
     try {
       const { access } = await admin.setConnectionsAccess(select.value);
-      this.notify(`Connections est maintenant ${labels[access]}.`);
+      this.notify(`Connections is now ${labels[access]}.`);
     } catch (err) {
       this.notify(err.message, true);
       const { access } = await admin.connectionsAccess();
@@ -74,10 +74,10 @@ export class ConnectionsTab {
         puzzle.error
           ? el("div", { className: "admin-card cx-admin-puzzle" }, [
               el("strong", { text: `${puzzle.date} ${puzzle.mode === "hard" ? "Hard" : "Normal"}` }),
-              el("p", { className: "text-wrong", text: `Impossible d'afficher cette grille : ${puzzle.error}` }),
+              el("p", { className: "text-wrong", text: `Can't show this grid: ${puzzle.error}` }),
               el("button", {
                 className: "btn-secondary btn-small",
-                text: "Régénérer",
+                text: "Redraw",
                 attrs: { type: "button" },
                 on: { click: () => this.regenerate(puzzle.date, puzzle.mode) }
               })
@@ -90,18 +90,18 @@ export class ConnectionsTab {
             puzzle.mode === "normal" && ["relaxed", "none"].includes(puzzle.rule)
               ? el("span", {
                   className: "badge",
-                  text: "faux groupes possibles",
-                  attrs: { title: "Aucune grille sans faux groupe n'a été trouvée : régénère-la ou revois les tags" }
+                  text: "decoys possible",
+                  attrs: { title: "No grid without decoys was found: redraw it or review the tags" }
                 })
               : null,
             el("span", {
               className: `badge${puzzle.source === "admin" ? " admin" : ""}`,
-              text: puzzle.source === "admin" ? `régénérée (v${puzzle.version})` : "auto"
+              text: puzzle.source === "admin" ? `redrawn (v${puzzle.version})` : "auto"
             }),
             el("button", {
               className: "btn-secondary btn-small",
-              text: "Régénérer",
-              attrs: { type: "button", title: "Tire une autre grille ; les parties du jour repartent de zéro" },
+              text: "Redraw",
+              attrs: { type: "button", title: "Draws another grid; today's games start over" },
               on: { click: () => this.regenerate(puzzle.date, puzzle.mode) }
             })
           ]),
@@ -120,7 +120,7 @@ export class ConnectionsTab {
   async regenerate(date, mode) {
     try {
       await admin.regenerateConnectionPuzzle(date, mode);
-      this.notify(`Nouvelle grille ${mode === "hard" ? "Hard" : "normale"} pour le ${date}.`);
+      this.notify(`New ${mode === "hard" ? "Hard" : "Normal"} grid for ${date}.`);
       this.renderPuzzles(await admin.connectionPuzzles());
     } catch (err) {
       this.notify(err.message, true);
@@ -131,7 +131,7 @@ export class ConnectionsTab {
     const container = byId("cx-suggestions");
     clear(container);
     if (suggestions.length === 0) {
-      container.append(el("p", { className: "small-subtext", text: "Aucune suggestion pour l'instant." }));
+      container.append(el("p", { className: "small-subtext", text: "No suggestions yet." }));
       return;
     }
     container.append(
@@ -141,21 +141,21 @@ export class ConnectionsTab {
             el("strong", { text: suggestion.label }),
             el("span", {
               className: "small-subtext",
-              text: `${suggestion.playerName ?? "Profil supprimé"}, ${suggestion.createdAt.slice(0, 10)}`
+              text: `${suggestion.playerName ?? "Deleted profile"}, ${suggestion.createdAt.slice(0, 10)}`
             })
           ]),
-          suggestion.elements ? el("p", { text: `Éléments : ${suggestion.elements}` }) : null,
-          suggestion.note ? el("p", { className: "small-subtext", text: `Comment trancher : ${suggestion.note}` }) : null,
+          suggestion.elements ? el("p", { text: `Elements: ${suggestion.elements}` }) : null,
+          suggestion.note ? el("p", { className: "small-subtext", text: `How to decide: ${suggestion.note}` }) : null,
           el("div", { className: "modal-actions" }, [
             el("button", {
               className: "btn-secondary btn-small",
-              text: "Écarter",
+              text: "Dismiss",
               attrs: { type: "button" },
               on: { click: () => this.dismissSuggestion(suggestion) }
             }),
             el("button", {
               className: "btn-primary btn-small",
-              text: "Créer ce tag",
+              text: "Create this tag",
               attrs: { type: "button" },
               on: { click: () => this.editFromSuggestion(suggestion) }
             })
@@ -185,7 +185,7 @@ export class ConnectionsTab {
   async dismissSuggestion(suggestion) {
     try {
       await admin.deleteConnectionSuggestion(suggestion.id);
-      this.notify(`Suggestion « ${suggestion.label} » écartée.`);
+      this.notify(`Suggestion "${suggestion.label}" dismissed.`);
       this.renderSuggestions(await admin.connectionSuggestions());
     } catch (err) {
       this.notify(err.message, true);
@@ -196,7 +196,7 @@ export class ConnectionsTab {
     const body = byId("cx-tags-body");
     clear(body);
     if (this.tags.length === 0) {
-      body.append(el("tr", {}, [el("td", { text: "Aucun tag pour l'instant.", attrs: { colspan: 3 } })]));
+      body.append(el("tr", {}, [el("td", { text: "No tags yet.", attrs: { colspan: 3 } })]));
       return;
     }
     body.append(
@@ -205,12 +205,12 @@ export class ConnectionsTab {
         const types = new Set(this.elements.filter((e) => tag.elementIds.includes(e.id)).map((e) => e.type));
         const state =
           tag.unreviewedIds.length > 0
-            ? { text: `${tag.unreviewedIds.length} élément(s) à classer`, className: "badge" }
+            ? { text: `${tag.unreviewedIds.length} element(s) to sort`, className: "badge" }
             : count < 4 || count > 40
-              ? { text: "Hors limites (4 à 40)", className: "badge" }
+              ? { text: "Out of bounds (4 to 40)", className: "badge" }
               : types.size === 1
-                ? { text: "Un seul type : ne sortira jamais", className: "badge" }
-                : { text: "Utilisé dans les grilles", className: "badge admin" };
+                ? { text: "Single type: will never come out", className: "badge" }
+                : { text: "Used in grids", className: "badge admin" };
         return el(
           "tr",
           { className: `clickable${this.editing?.id === tag.id ? " selected" : ""}`, on: { click: () => this.edit(tag) } },
@@ -240,12 +240,12 @@ export class ConnectionsTab {
     this.fromSuggestion = null;
     this.checked = new Set(tag?.elementIds ?? []);
     this.confirmDelete = false;
-    byId("cx-tag-form-title").textContent = tag ? `Modifier « ${tag.label} »` : "Nouveau tag";
+    byId("cx-tag-form-title").textContent = tag ? `Edit "${tag.label}"` : "New tag";
     byId("cx-tag-label").value = tag?.label ?? "";
     byId("cx-tag-description").value = tag?.description ?? "";
     byId("cx-tag-search").value = "";
     byId("cx-tag-delete-btn").hidden = !tag;
-    byId("cx-tag-delete-btn").textContent = "Supprimer";
+    byId("cx-tag-delete-btn").textContent = "Delete";
     this.form.hidden = false;
     this.renderElements();
     this.renderTags();
@@ -275,7 +275,7 @@ export class ConnectionsTab {
               attrs: {
                 type: "button",
                 "aria-pressed": String(this.checked.has(element.id)),
-                title: unreviewed.has(element.id) ? "Nouvel élément, pas encore classé pour ce tag" : element.nom
+                title: unreviewed.has(element.id) ? "New element, not sorted for this tag yet" : element.nom
               },
               on: { click: () => this.toggle(element.id) }
             },
@@ -284,8 +284,8 @@ export class ConnectionsTab {
         )
     );
     const size = this.checked.size;
-    const warning = size > 40 ? " : plus de 40, ce tag ne sortira jamais" : size > 0 && size < 4 ? " : il en faut au moins 4" : "";
-    byId("cx-tag-count").textContent = `(${size} coché(s) sur ${this.elements.length}${warning})`;
+    const warning = size > 40 ? ": more than 40, this tag will never come out" : size > 0 && size < 4 ? ": it needs at least 4" : "";
+    byId("cx-tag-count").textContent = `(${size} ticked out of ${this.elements.length}${warning})`;
   }
 
   toggle(id) {
@@ -304,7 +304,7 @@ export class ConnectionsTab {
       const saved = this.editing
         ? await admin.updateConnectionTag(this.editing.id, payload)
         : await admin.createConnectionTag(payload);
-      this.notify(`Tag « ${saved.label} » enregistré.`);
+      this.notify(`Tag "${saved.label}" saved.`);
       if (this.fromSuggestion) await admin.deleteConnectionSuggestion(this.fromSuggestion.id).catch(() => {});
       await this.load();
       this.edit(this.tags.find((t) => t.id === saved.id));
@@ -317,12 +317,12 @@ export class ConnectionsTab {
   async remove() {
     if (!this.confirmDelete) {
       this.confirmDelete = true;
-      byId("cx-tag-delete-btn").textContent = "Confirmer la suppression";
+      byId("cx-tag-delete-btn").textContent = "Confirm deletion";
       return;
     }
     try {
       await admin.deleteConnectionTag(this.editing.id);
-      this.notify(`Tag « ${this.editing.label} » supprimé.`);
+      this.notify(`Tag "${this.editing.label}" deleted.`);
       this.closeForm();
       await this.load();
     } catch (err) {

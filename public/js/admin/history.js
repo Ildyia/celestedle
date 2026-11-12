@@ -19,10 +19,10 @@ function renderChart(days) {
     data: {
       labels: dates,
       datasets: [
-        { label: "Joueurs (normal)", data: series("normal", "players"), borderColor: "#6366f1", backgroundColor: "rgba(99,102,241,0.15)", fill: true, tension: 0.3 },
-        { label: "Victoires (normal)", data: series("normal", "wins"), borderColor: "#10b981", tension: 0.3 },
-        { label: "Joueurs (Hard)", data: series("hard", "players"), borderColor: "#ef4444", tension: 0.3 },
-        { label: "Jamais finies (normal)", data: series("normal", "unfinished"), borderColor: "#f59e0b", borderDash: [4, 4], tension: 0.3 }
+        { label: "Players (Normal)", data: series("normal", "players"), borderColor: "#6366f1", backgroundColor: "rgba(99,102,241,0.15)", fill: true, tension: 0.3 },
+        { label: "Wins (Normal)", data: series("normal", "wins"), borderColor: "#10b981", tension: 0.3 },
+        { label: "Players (Hard)", data: series("hard", "players"), borderColor: "#ef4444", tension: 0.3 },
+        { label: "Never finished (Normal)", data: series("normal", "unfinished"), borderColor: "#f59e0b", borderDash: [4, 4], tension: 0.3 }
       ]
     },
     options: {

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,24 +13,24 @@
   <body class="theme-celeste no-custom-cursor">
     <div class="admin-container">
       <div id="admin-access" class="sidebar-block admin-login" hidden>
-        <h3>Accès admin</h3>
+        <h3>Admin access</h3>
         <p id="admin-access-status" class="small-subtext"></p>
 
         <form id="admin-profile-form" class="admin-access-form">
-          <label for="admin-code-input">Code de récupération de ton profil</label>
+          <label for="admin-code-input">Your profile's recovery code</label>
           <input type="text" id="admin-code-input" class="bug-input" autocomplete="off" required />
-          <p class="small-subtext">Dans le jeu : Profile → Recovery code → Copy.</p>
-          <button type="submit" class="btn-primary btn-wide">Utiliser ce profil</button>
+          <p class="small-subtext">In the game: Profile → Recovery code → Copy.</p>
+          <button type="submit" class="btn-primary btn-wide">Use this profile</button>
         </form>
 
         <form id="admin-claim-form" class="admin-access-form" hidden>
-          <label for="admin-claim-input">Mot de passe admin du serveur</label>
+          <label for="admin-claim-input">Server admin password</label>
           <input type="password" id="admin-claim-input" class="bug-input" autocomplete="current-password" required />
           <p class="small-subtext">
-            Le site n'a pas encore de propriétaire. Ce mot de passe fait de ce
-            profil le propriétaire, une seule fois.
+            The site has no owner yet. This password makes this profile the
+            owner, only once.
           </p>
-          <button type="submit" class="btn-primary btn-wide">Devenir propriétaire</button>
+          <button type="submit" class="btn-primary btn-wide">Become the owner</button>
         </form>
 
         <p id="admin-access-error" class="form-error"></p>
@@ -38,22 +38,22 @@
 
       <div id="admin-dashboard" hidden>
         <header class="admin-header">
-          <h1>Administration Celestedle</h1>
+          <h1>Celestedle admin</h1>
           <span id="admin-version" class="small-subtext"></span>
           <span id="admin-identity" class="admin-identity"></span>
         </header>
 
         <nav class="admin-tabs" role="tablist" aria-label="Sections">
-          <button type="button" role="tab" data-tab="overview" aria-selected="true">Aujourd'hui</button>
-          <button type="button" role="tab" data-tab="history" aria-selected="false">Historique</button>
-          <button type="button" role="tab" data-tab="words" aria-selected="false">Mots</button>
-          <button type="button" role="tab" data-tab="elements" aria-selected="false">Éléments</button>
+          <button type="button" role="tab" data-tab="overview" aria-selected="true">Today</button>
+          <button type="button" role="tab" data-tab="history" aria-selected="false">History</button>
+          <button type="button" role="tab" data-tab="words" aria-selected="false">Words</button>
+          <button type="button" role="tab" data-tab="elements" aria-selected="false">Elements</button>
           <button type="button" role="tab" data-tab="reports" aria-selected="false">Reports</button>
           <button type="button" role="tab" data-tab="connections" aria-selected="false">Connections</button>
           <button type="button" role="tab" data-tab="techs" aria-selected="false">Techs</button>
-          <button type="button" role="tab" data-tab="settings" aria-selected="false">Réglages</button>
-          <button type="button" role="tab" data-tab="players" aria-selected="false">Joueurs</button>
-          <button type="button" role="tab" data-tab="team" aria-selected="false" data-owner-only hidden>Équipe</button>
+          <button type="button" role="tab" data-tab="settings" aria-selected="false">Settings</button>
+          <button type="button" role="tab" data-tab="players" aria-selected="false">Players</button>
+          <button type="button" role="tab" data-tab="team" aria-selected="false" data-owner-only hidden>Team</button>
         </nav>
 
         <p id="admin-message" class="admin-message" role="status"></p>
@@ -68,25 +68,25 @@
 
         <section id="tab-history" class="admin-panel" role="tabpanel" hidden>
           <div class="admin-card chart-card">
-            <canvas id="history-chart" aria-label="Joueurs et victoires par jour"></canvas>
+            <canvas id="history-chart" aria-label="Players and wins per day"></canvas>
           </div>
           <div class="admin-table-wrapper">
             <table class="admin-table">
               <thead>
                 <tr>
-                  <th>Date</th><th>Mode</th><th>Mot</th><th>Origine</th><th>Joueurs</th>
-                  <th>Victoires</th><th>Abandons</th><th>Défaites</th><th>Jamais finies</th>
-                  <th>Essais moy.</th><th>Temps moy.</th>
+                  <th>Date</th><th>Mode</th><th>Word</th><th>Source</th><th>Players</th>
+                  <th>Wins</th><th>Forfeits</th><th>Losses</th><th>Never finished</th>
+                  <th>Avg. tries</th><th>Avg. time</th>
                 </tr>
               </thead>
               <tbody id="history-body"></tbody>
             </table>
           </div>
-          <h3 class="admin-subtitle">Avant la 2.0</h3>
+          <h3 class="admin-subtitle">Before 2.0</h3>
           <div class="admin-table-wrapper">
             <table class="admin-table">
               <thead>
-                <tr><th>Date</th><th>Mot</th><th>Victoires</th><th>Essais moy.</th><th>Indices moy.</th><th>Temps moy.</th></tr>
+                <tr><th>Date</th><th>Word</th><th>Wins</th><th>Avg. tries</th><th>Avg. hints</th><th>Avg. time</th></tr>
               </thead>
               <tbody id="legacy-body"></tbody>
             </table>
@@ -95,7 +95,7 @@
 
         <section id="tab-words" class="admin-panel" role="tabpanel" hidden>
           <div class="admin-toolbar">
-            <input type="search" id="words-search" class="bug-input" placeholder="Rechercher un mot" aria-label="Rechercher un mot" />
+            <input type="search" id="words-search" class="bug-input" placeholder="Search a word" aria-label="Search a word" />
           </div>
           <div class="admin-table-wrapper">
             <table class="admin-table sortable">
@@ -107,27 +107,27 @@
 
         <section id="tab-elements" class="admin-panel" role="tabpanel" hidden>
           <div class="admin-toolbar">
-            <input type="search" id="elements-search" class="bug-input" placeholder="Rechercher un élément" aria-label="Rechercher un élément" />
-            <button type="button" id="new-element-btn" class="btn-primary">Nouvel élément</button>
-            <button type="button" id="export-db-btn" class="btn-secondary">Exporter db.json</button>
+            <input type="search" id="elements-search" class="bug-input" placeholder="Search an element" aria-label="Search an element" />
+            <button type="button" id="new-element-btn" class="btn-primary">New element</button>
+            <button type="button" id="export-db-btn" class="btn-secondary">Export db.json</button>
           </div>
           <p class="small-subtext">
-            Un élément modifié ici n'est plus mis à jour par db.json au démarrage.
-            Exporte la base pour recopier les changements dans le dépôt.
+            An element edited here is no longer updated from db.json at startup.
+            Export the database to copy the changes into the repository.
           </p>
           <div class="elements-layout">
             <div class="admin-table-wrapper">
               <table class="admin-table">
                 <thead>
-                  <tr><th></th><th>Nom</th><th>Type</th><th>Forme</th><th>Couleurs</th><th>Lieux</th><th>Source</th></tr>
+                  <tr><th></th><th>Name</th><th>Type</th><th>Shape</th><th>Colours</th><th>Places</th><th>Source</th></tr>
                 </thead>
                 <tbody id="elements-body"></tbody>
               </table>
             </div>
             <form id="element-form" class="admin-card element-form" hidden>
-              <h3 id="element-form-title">Modifier</h3>
+              <h3 id="element-form-title">Edit</h3>
               <div class="form-group">
-                <label for="element-name">Nom</label>
+                <label for="element-name">Name</label>
                 <input type="text" id="element-name" class="bug-input" maxlength="60" required />
               </div>
               <div class="form-row">
@@ -136,37 +136,37 @@
                   <select id="element-type" class="bug-input"></select>
                 </div>
                 <div class="form-group">
-                  <label for="element-shape">Forme</label>
+                  <label for="element-shape">Shape</label>
                   <select id="element-shape" class="bug-input"></select>
                 </div>
               </div>
               <fieldset class="checkbox-grid">
-                <legend>Couleurs</legend>
+                <legend>Colours</legend>
                 <div id="element-colors"></div>
               </fieldset>
               <fieldset class="checkbox-grid">
-                <legend>Lieux</legend>
+                <legend>Places</legend>
                 <div id="element-locations"></div>
               </fieldset>
               <div class="form-group">
                 <label for="element-sprite-file">Sprite</label>
                 <div class="sprite-picker">
-                  <img id="element-sprite-preview" class="sprite-preview" alt="Aperçu du sprite" />
+                  <img id="element-sprite-preview" class="sprite-preview" alt="Sprite preview" />
                   <div class="sprite-picker-fields">
                     <input type="file" id="element-sprite-file" accept="image/png,image/gif,image/jpeg,image/webp" />
-                    <p class="small-subtext">PNG, GIF, JPEG ou WebP, 1 Mo au plus. L'image est envoyée à l'enregistrement.</p>
+                    <p class="small-subtext">PNG, GIF, JPEG or WebP, 1 MB at most. The image is uploaded when you save.</p>
                   </div>
                 </div>
-                <label for="element-sprite" class="small-subtext">Ou chemin d'un fichier du dépôt</label>
-                <input type="text" id="element-sprite" class="bug-input" placeholder="assets/entities/nom.png" />
+                <label for="element-sprite" class="small-subtext">Or the path of a file in the repository</label>
+                <input type="text" id="element-sprite" class="bug-input" placeholder="assets/entities/name.png" />
               </div>
               <div class="form-group form-inline">
                 <input type="checkbox" id="element-active" />
-                <label for="element-active">Jouable (peut être tiré et proposé)</label>
+                <label for="element-active">Playable (can be drawn and suggested)</label>
               </div>
               <div class="modal-actions">
-                <button type="button" id="element-cancel-btn" class="btn-secondary">Annuler</button>
-                <button type="submit" class="btn-primary">Enregistrer</button>
+                <button type="button" id="element-cancel-btn" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn-primary">Save</button>
               </div>
             </form>
           </div>
@@ -174,68 +174,68 @@
 
         <section id="tab-connections" class="admin-panel" role="tabpanel" hidden>
           <div class="admin-toolbar">
-            <a class="btn-secondary" href="connections.html" target="_blank" rel="noopener">Ouvrir la page de jeu</a>
-            <button type="button" id="new-tag-btn" class="btn-primary">Nouveau tag</button>
+            <a class="btn-secondary" href="connections.html" target="_blank" rel="noopener">Open the game page</a>
+            <button type="button" id="new-tag-btn" class="btn-primary">New tag</button>
           </div>
           <div class="form-group cx-access">
-            <label for="cx-access">Qui peut jouer à Connections</label>
+            <label for="cx-access">Who can play Connections</label>
             <select id="cx-access" class="bug-input">
-              <option value="staff">Équipe admin seulement (playtest en pause)</option>
-              <option value="playtest">Playtest : playtesters et équipe admin</option>
-              <option value="public">Ouvert à tous</option>
+              <option value="staff">Admin team only (playtest paused)</option>
+              <option value="playtest">Playtest: playtesters and admin team</option>
+              <option value="public">Open to everyone</option>
             </select>
           </div>
 
-          <h3 class="admin-subtitle">Grilles des 7 prochains jours</h3>
-          <p class="small-subtext">Normal : aucun faux groupe. Hard : faux groupes permis, seule l'unicité de la solution est garantie.</p>
+          <h3 class="admin-subtitle">Grids for the next 7 days</h3>
+          <p class="small-subtext">Normal: no decoy groups. Hard: decoys allowed, only a unique solution is guaranteed.</p>
           <div id="cx-puzzles" class="cx-admin-puzzles"></div>
 
-          <h3 class="admin-subtitle">Tags suggérés par les joueurs</h3>
+          <h3 class="admin-subtitle">Tags suggested by players</h3>
           <p class="small-subtext">
-            « Créer ce tag » ouvre le formulaire prérempli (les éléments cités
-            dont le nom est reconnu sont déjà cochés) ; la suggestion disparaît
-            une fois le tag enregistré.
+            "Create this tag" opens the form prefilled (listed elements whose
+            name is recognised are already ticked); the suggestion goes away
+            once the tag is saved.
           </p>
           <div id="cx-suggestions" class="cx-admin-suggestions"></div>
 
           <h3 class="admin-subtitle">Tags</h3>
           <p class="small-subtext">
-            Un tag n'entre dans les grilles qu'une fois complet : chaque élément
-            doit avoir été classé (coché = il a le tag, non coché = il ne l'a pas).
-            Un élément ajouté après le dernier enregistrement du tag le rend
-            incomplet jusqu'à ce que tu le classes. Il faut au moins 4 éléments
-            cochés, et 40 au plus. Mélange les types : une grille n'a jamais 4
-            cases d'un même type hors de ses groupes, donc un tag dont tous les
-            éléments ont le même type ne peut pas sortir.
+            A tag only goes into grids once it is complete: every element must
+            have been sorted (ticked = it has the tag, unticked = it doesn't).
+            An element added after the tag was last saved makes it incomplete
+            until you sort it. It needs at least 4 ticked elements, and 40 at
+            most. Mix the types: a grid never has 4 tiles of the same type
+            outside its groups, so a tag whose elements all share one type
+            can't come out.
           </p>
           <div class="elements-layout">
             <div class="admin-table-wrapper">
               <table class="admin-table">
                 <thead>
-                  <tr><th>Tag</th><th>Éléments</th><th>État</th></tr>
+                  <tr><th>Tag</th><th>Elements</th><th>Status</th></tr>
                 </thead>
                 <tbody id="cx-tags-body"></tbody>
               </table>
             </div>
             <form id="cx-tag-form" class="admin-card element-form" hidden>
-              <h3 id="cx-tag-form-title">Nouveau tag</h3>
+              <h3 id="cx-tag-form-title">New tag</h3>
               <div class="form-group">
-                <label for="cx-tag-label">Nom affiché dans la grille</label>
-                <input type="text" id="cx-tag-label" class="bug-input" maxlength="60" placeholder="ex. Gives liftboost" required />
+                <label for="cx-tag-label">Name shown in the grid</label>
+                <input type="text" id="cx-tag-label" class="bug-input" maxlength="60" placeholder="e.g. Gives liftboost" required />
               </div>
               <div class="form-group">
-                <label for="cx-tag-description">Définition (pour l'équipe)</label>
-                <textarea id="cx-tag-description" class="bug-input" maxlength="300" rows="2" placeholder="Ce qui compte exactement, pour trancher les cas limites"></textarea>
+                <label for="cx-tag-description">Definition (for the team)</label>
+                <textarea id="cx-tag-description" class="bug-input" maxlength="300" rows="2" placeholder="What exactly counts, to settle edge cases"></textarea>
               </div>
               <div class="form-group">
-                <label for="cx-tag-search">Éléments concernés <span id="cx-tag-count" class="small-subtext"></span></label>
-                <input type="search" id="cx-tag-search" class="bug-input" placeholder="Filtrer la liste" />
+                <label for="cx-tag-search">Elements with this tag <span id="cx-tag-count" class="small-subtext"></span></label>
+                <input type="search" id="cx-tag-search" class="bug-input" placeholder="Filter the list" />
               </div>
               <div id="cx-tag-elements" class="cx-tag-elements"></div>
               <div class="modal-actions">
-                <button type="button" id="cx-tag-delete-btn" class="btn-danger" hidden>Supprimer</button>
-                <button type="button" id="cx-tag-cancel-btn" class="btn-secondary">Annuler</button>
-                <button type="submit" class="btn-primary">Enregistrer</button>
+                <button type="button" id="cx-tag-delete-btn" class="btn-danger" hidden>Delete</button>
+                <button type="button" id="cx-tag-cancel-btn" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn-primary">Save</button>
               </div>
             </form>
           </div>
@@ -243,85 +243,85 @@
 
         <section id="tab-techs" class="admin-panel" role="tabpanel" hidden>
           <div class="admin-toolbar">
-            <label for="techs-access">Qui peut jouer</label>
+            <label for="techs-access">Who can play</label>
             <select id="techs-access" class="bug-input">
-              <option value="staff">Équipe admin seulement</option>
-              <option value="playtest">Playtesters et équipe</option>
-              <option value="public">Tout le monde</option>
+              <option value="staff">Admin team only</option>
+              <option value="playtest">Playtesters and team</option>
+              <option value="public">Everyone</option>
             </select>
           </div>
           <div id="techs-today" class="admin-modes"></div>
 
           <div class="admin-toolbar">
-            <input type="search" id="techs-search" class="bug-input" placeholder="Rechercher une tech" aria-label="Rechercher une tech" />
-            <button type="button" id="new-tech-btn" class="btn-primary">Nouvelle tech</button>
+            <input type="search" id="techs-search" class="bug-input" placeholder="Search a tech" aria-label="Search a tech" />
+            <button type="button" id="new-tech-btn" class="btn-primary">New tech</button>
           </div>
           <div class="elements-layout">
             <div class="admin-table-wrapper">
               <table class="admin-table">
                 <thead>
-                  <tr><th></th><th>Nom</th><th>Catégorie</th><th>Difficulté</th><th>Utilité</th><th>Dash</th><th>Origine</th></tr>
+                  <tr><th></th><th>Name</th><th>Category</th><th>Difficulty</th><th>Utility</th><th>Dash</th><th>Origin</th></tr>
                 </thead>
                 <tbody id="techs-body"></tbody>
               </table>
             </div>
             <form id="tech-form" class="admin-card element-form" hidden>
-              <h3 id="tech-form-title">Modifier</h3>
+              <h3 id="tech-form-title">Edit</h3>
               <div class="form-group">
-                <label for="tech-name">Nom</label>
+                <label for="tech-name">Name</label>
                 <input type="text" id="tech-name" class="bug-input" maxlength="60" required />
               </div>
               <div class="form-group">
-                <label for="tech-aliases">Autres noms acceptés (séparés par des virgules)</label>
+                <label for="tech-aliases">Other accepted names (comma-separated)</label>
                 <input type="text" id="tech-aliases" class="bug-input" placeholder="Super, Superdash" />
               </div>
               <div class="form-row">
                 <div class="form-group">
-                  <label for="tech-category">Catégorie</label>
+                  <label for="tech-category">Category</label>
                   <select id="tech-category" class="bug-input" data-tech-choice></select>
                   <input type="text" id="tech-category-new" class="bug-input" maxlength="40" placeholder="Nouvelle valeur" hidden />
                 </div>
                 <div class="form-group">
-                  <label for="tech-difficulty">Difficulté</label>
+                  <label for="tech-difficulty">Difficulty</label>
                   <select id="tech-difficulty" class="bug-input"></select>
                 </div>
               </div>
               <div class="form-group">
-                <label for="tech-utility">Utilité</label>
+                <label for="tech-utility">Utility</label>
                 <select id="tech-utility" class="bug-input" data-tech-choice></select>
                 <input type="text" id="tech-utility-new" class="bug-input" maxlength="40" placeholder="Nouvelle valeur" hidden />
               </div>
               <div class="form-row">
                 <div class="form-group">
-                  <label for="tech-dash">Dash nécessaire</label>
+                  <label for="tech-dash">Dash needed</label>
                   <select id="tech-dash" class="bug-input" data-tech-choice></select>
                   <input type="text" id="tech-dash-new" class="bug-input" maxlength="40" placeholder="Nouvelle valeur" hidden />
                 </div>
                 <div class="form-group">
-                  <label for="tech-hardcoded">Origine</label>
+                  <label for="tech-hardcoded">Origin</label>
                   <select id="tech-hardcoded" class="bug-input" data-tech-choice></select>
                   <input type="text" id="tech-hardcoded-new" class="bug-input" maxlength="40" placeholder="Nouvelle valeur" hidden />
                 </div>
               </div>
               <div class="form-group">
-                <label for="tech-media-file">Image ou GIF</label>
+                <label for="tech-media-file">Image or GIF</label>
                 <div class="sprite-picker">
-                  <img id="tech-media-preview" class="sprite-preview tech-media-preview" alt="Aperçu" />
+                  <img id="tech-media-preview" class="sprite-preview tech-media-preview" alt="Preview" />
                   <div class="sprite-picker-fields">
                     <input type="file" id="tech-media-file" accept="image/png,image/gif,image/jpeg,image/webp" />
-                    <p class="small-subtext">PNG, GIF, JPEG ou WebP, 3 Mo au plus. Envoyé à l'enregistrement.</p>
-                    <button type="button" id="tech-media-remove" class="btn-secondary btn-small" hidden>Retirer l'image</button>
+                    <p class="small-subtext">PNG, GIF, JPEG or WebP, 3 MB at most. Uploaded when you save.</p>
+                    <button type="button" id="tech-media-remove" class="btn-secondary btn-small" hidden>Remove the image</button>
                   </div>
                 </div>
               </div>
               <div class="form-group form-inline">
                 <input type="checkbox" id="tech-active" />
-                <label for="tech-active">Jouable (peut être tirée et proposée)</label>
+                <label for="tech-active">Playable (can be drawn and suggested)</label>
               </div>
               <div class="modal-actions">
-                <button type="button" id="tech-delete-btn" class="btn-danger" hidden>Supprimer</button>
-                <button type="button" id="tech-cancel-btn" class="btn-secondary">Annuler</button>
-                <button type="submit" class="btn-primary">Enregistrer</button>
+                <button type="button" id="tech-delete-btn" class="btn-danger" hidden>Delete</button>
+                <button type="button" id="tech-cancel-btn" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn-primary">Save</button>
               </div>
             </form>
           </div>
@@ -329,19 +329,19 @@
 
         <section id="tab-reports" class="admin-panel" role="tabpanel" hidden>
           <div class="admin-toolbar">
-            <select id="reports-status-filter" class="bug-input" aria-label="Filtrer par statut">
-              <option value="">Tous les statuts</option>
-              <option value="open">Ouverts (nouveaux et en cours)</option>
-              <option value="new">Nouveau</option>
-              <option value="working">En cours</option>
-              <option value="fixed">Corrigé</option>
-              <option value="cant_reproduce">Non reproductible</option>
-              <option value="wrong">Report erroné</option>
+            <select id="reports-status-filter" class="bug-input" aria-label="Filter by status">
+              <option value="">All statuses</option>
+              <option value="open">Open (new and in progress)</option>
+              <option value="new">New</option>
+              <option value="working">In progress</option>
+              <option value="fixed">Fixed</option>
+              <option value="cant_reproduce">Can't reproduce</option>
+              <option value="wrong">Wrong report</option>
             </select>
-            <button type="button" id="purge-closed-btn" class="btn-secondary">Supprimer les reports clos</button>
+            <button type="button" id="purge-closed-btn" class="btn-secondary">Delete closed reports</button>
           </div>
           <p class="small-subtext">
-            Clic sur un en-tête pour trier. Supprimer un report retire aussi ses votes et ses messages Discord.
+            Click a header to sort. Deleting a report also removes its votes and its Discord messages.
           </p>
           <div class="admin-table-wrapper">
             <table class="admin-table sortable">
@@ -354,54 +354,54 @@
         <section id="tab-settings" class="admin-panel" role="tabpanel" hidden>
           <form id="settings-form" class="admin-card settings-form">
             <div class="form-group">
-              <label for="repeat-delay-input">Délai avant qu'un mot puisse revenir (jours)</label>
+              <label for="repeat-delay-input">Days before a word can come back</label>
               <input type="number" id="repeat-delay-input" class="bug-input" min="0" max="60" step="1" required />
-              <p class="small-subtext">0 : le même mot peut tomber deux jours de suite. S'applique aux prochains tirages.</p>
+              <p class="small-subtext">0: the same word can come two days in a row. Applies to the next draws.</p>
             </div>
 
             <fieldset class="checkbox-grid settings-group">
-              <legend>Mode Hard</legend>
+              <legend>Hard mode</legend>
               <div class="form-group">
-                <label for="hard-max-hints">Indices autorisés (0 à 3)</label>
+                <label for="hard-max-hints">Hints allowed (0 to 3)</label>
                 <input type="number" id="hard-max-hints" class="bug-input" min="0" max="3" step="1" required />
               </div>
               <div class="form-group">
-                <label for="hard-max-tries">Essais (0 = illimité, sinon 1 à 50)</label>
+                <label for="hard-max-tries">Tries (0 = unlimited, otherwise 1 to 50)</label>
                 <input type="number" id="hard-max-tries" class="bug-input" min="0" max="50" step="1" required />
               </div>
               <div class="form-group">
-                <label for="hard-time-limit">Temps limite en minutes (0 = illimité)</label>
+                <label for="hard-time-limit">Time limit in minutes (0 = unlimited)</label>
                 <input type="number" id="hard-time-limit" class="bug-input" min="0" max="60" step="0.5" required />
               </div>
               <div class="form-group">
-                <label for="hard-suggestion-chars">Suggestions à partir de N lettres (1 à 10)</label>
+                <label for="hard-suggestion-chars">Suggestions from N letters (1 to 10)</label>
                 <input type="number" id="hard-suggestion-chars" class="bug-input" min="1" max="10" step="1" required />
               </div>
               <p class="small-subtext">
-                Les changements s'appliquent tout de suite, y compris aux parties en cours :
-                un temps raccourci peut terminer une partie déjà commencée.
+                Changes apply right away, including to games in progress:
+                a shorter time limit can end a game that has already started.
               </p>
             </fieldset>
 
-            <button type="submit" class="btn-primary">Enregistrer</button>
+            <button type="submit" class="btn-primary">Save</button>
           </form>
         </section>
 
         <section id="tab-players" class="admin-panel" role="tabpanel" hidden>
           <form id="players-search-form" class="admin-toolbar">
-            <input type="search" id="players-search-input" class="bug-input" placeholder="Pseudo, identifiant ou tag Discord" aria-label="Rechercher un joueur" />
-            <button type="submit" class="btn-primary">Rechercher</button>
+            <input type="search" id="players-search-input" class="bug-input" placeholder="Name, player ID or Discord tag" aria-label="Search a player" />
+            <button type="submit" class="btn-primary">Search</button>
           </form>
           <p class="small-subtext">
-            Un joueur qui a perdu son profil peut recevoir un nouveau code avec la
-            commande /passcode du bot Discord, si son tag Discord est renseigné.
-            Seul le propriétaire peut supprimer un profil. Un playtester a accès
-            aux modes en test (Connections), sans aucun droit dans l'admin.
+            A player who lost their profile can get a new code with the Discord
+            bot's /passcode command, if their Discord tag is filled in. Only the
+            owner can delete a profile. A playtester can play the games in test
+            (Connections), without any right in the admin.
           </p>
           <div class="admin-table-wrapper">
             <table class="admin-table">
               <thead>
-                <tr><th>Nom</th><th>Identifiant</th><th>Discord</th><th>Rôle</th><th>Parties</th><th>Dernière visite</th><th></th></tr>
+                <tr><th>Name</th><th>Player ID</th><th>Discord</th><th>Role</th><th>Games</th><th>Last visit</th><th></th></tr>
               </thead>
               <tbody id="players-body"></tbody>
             </table>
@@ -410,20 +410,20 @@
 
         <section id="tab-team" class="admin-panel" role="tabpanel" hidden>
           <div class="admin-card team-card">
-            <h3>Administrateurs</h3>
+            <h3>Administrators</h3>
             <p class="small-subtext">
-              Un administrateur peut tout consulter et faire un nombre limité de
-              modifications par jour. Il ne peut pas gérer l'équipe. Le joueur
-              trouve son identifiant dans le jeu : Profile → Player ID.
+              An administrator can see everything and make a limited number of
+              changes per day. They can't manage the team. Players find their ID
+              in the game: Profile → Player ID.
             </p>
             <form id="team-add-form" class="admin-toolbar">
-              <input type="text" id="team-player-input" class="bug-input" placeholder="Identifiant du joueur" aria-label="Identifiant du joueur" required />
-              <button type="submit" class="btn-primary">Nommer administrateur</button>
+              <input type="text" id="team-player-input" class="bug-input" placeholder="Player ID" aria-label="Player ID" required />
+              <button type="submit" class="btn-primary">Make administrator</button>
             </form>
             <div class="admin-table-wrapper">
               <table class="admin-table">
                 <thead>
-                  <tr><th>Nom</th><th>Rôle</th><th>Discord</th><th>Identifiant</th><th>Modifications aujourd'hui</th><th></th></tr>
+                  <tr><th>Name</th><th>Role</th><th>Discord</th><th>Player ID</th><th>Changes today</th><th></th></tr>
                 </thead>
                 <tbody id="team-body"></tbody>
               </table>
@@ -432,17 +432,17 @@
 
           <form id="team-limit-form" class="admin-card settings-form">
             <div class="form-group">
-              <label for="team-limit-input">Modifications par jour pour chaque administrateur</label>
+              <label for="team-limit-input">Changes per day for each administrator</label>
               <input type="number" id="team-limit-input" class="bug-input" min="0" max="1000" step="1" required />
-              <p class="small-subtext">Le compteur repart à zéro à minuit (heure de Paris). Le propriétaire n'a pas de limite.</p>
+              <p class="small-subtext">The counter resets at midnight (Paris time). The owner has no limit.</p>
             </div>
-            <button type="submit" class="btn-primary">Enregistrer</button>
+            <button type="submit" class="btn-primary">Save</button>
           </form>
 
           <div class="admin-table-wrapper">
-            <h3 class="admin-subtitle">Journal des modifications</h3>
+            <h3 class="admin-subtitle">Change log</h3>
             <table class="admin-table">
-              <thead><tr><th>Date</th><th>Qui</th><th>Action</th><th>Cible</th></tr></thead>
+              <thead><tr><th>Date</th><th>Who</th><th>Action</th><th>Target</th></tr></thead>
               <tbody id="audit-body"></tbody>
             </table>
           </div>

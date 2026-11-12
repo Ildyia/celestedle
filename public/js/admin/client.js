@@ -24,7 +24,7 @@ async function request(method, path, body, token = storage.get(KEYS.playerToken)
   }
   if (!res.ok) {
     // debug : message de l'erreur serveur, envoyé à l'équipe admin seulement
-    const error = new Error(data?.debug ? `${data.error} (${data.debug})` : data?.error || `Erreur HTTP ${res.status}`);
+    const error = new Error(data?.debug ? `${data.error} (${data.debug})` : data?.error || `HTTP error ${res.status}`);
     error.status = res.status;
     throw error;
   }
@@ -39,7 +39,7 @@ async function upload(path, file) {
     body: file
   });
   const data = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(data?.error || `Erreur HTTP ${res.status}`);
+  if (!res.ok) throw new Error(data?.error || `HTTP error ${res.status}`);
   return data;
 }
 

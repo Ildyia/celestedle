@@ -3,8 +3,8 @@ import { el, byId } from "../dom.js";
 import { formatDuration, formatNumber } from "../format.js";
 import { admin } from "./client.js";
 
-const MODE_LABELS = { tech: "Mode normal", "tech-hard": "Mode Hard" };
-const ACCESS_LABELS = { staff: "réservé à l'équipe admin", playtest: "ouvert aux playtesters", public: "ouvert à tous" };
+const MODE_LABELS = { tech: "Normal mode", "tech-hard": "Hard mode" };
+const ACCESS_LABELS = { staff: "admin team only", playtest: "open to playtesters", public: "open to everyone" };
 const MAX_MEDIA_BYTES = 3 * 1024 * 1024;
 
 // Champs du formulaire ↔ champs d'une tech. Chacun est une liste des valeurs
@@ -67,7 +67,7 @@ export class TechsTab {
     if (current && !values.includes(current)) values.push(current);
     byId(input).replaceChildren(
       ...values.map((v) => el("option", { text: v, attrs: { value: v } })),
-      el("option", { text: "➕ Nouvelle valeur…", attrs: { value: NEW_VALUE } })
+      el("option", { text: "➕ New value…", attrs: { value: NEW_VALUE } })
     );
     byId(input).value = current || values[0] || NEW_VALUE;
     byId(`${input}-new`).value = "";
@@ -91,7 +91,7 @@ export class TechsTab {
   async setAccess(select) {
     try {
       const { access } = await admin.setTechsAccess(select.value);
-      this.notify(`Les techs sont maintenant ${ACCESS_LABELS[access]}.`);
+      this.notify(`Techs are now ${ACCESS_LABELS[access]}.`);
     } catch (err) {
       this.notify(err.message, true);
       await this.load();
@@ -103,42 +103,42 @@ export class TechsTab {
       ...Object.entries(today).map(([mode, { secret, stats }]) => {
         const input = el("input", {
           className: "bug-input",
-          attrs: { type: "text", list: "tech-names", placeholder: "Nom d'une tech", "aria-label": "Tech à imposer" }
+          attrs: { type: "text", list: "tech-names", placeholder: "Tech name", "aria-label": "Tech to set" }
         });
         const act = async (action) => {
           try {
             this.renderToday(await admin.setTechSecret(mode, action, input.value.trim()));
-            this.notify(`${MODE_LABELS[mode]} : nouvelle tech du jour. Les parties en cours repartent à zéro.`);
+            this.notify(`${MODE_LABELS[mode]}: new tech of the day. Games in progress start over.`);
           } catch (err) {
             this.notify(err.message, true);
           }
         };
         return el("div", { className: "admin-card mode-card" }, [
-          el("h3", { text: `Tech du jour · ${MODE_LABELS[mode]}` }),
+          el("h3", { text: `Tech of the day · ${MODE_LABELS[mode]}` }),
           el("div", { className: "mode-secret" }, [
             secret.hasMedia ? el("img", { attrs: { src: techMediaUrl({ nom: secret.nom }), alt: "" } }) : null,
             el("div", {}, [
               el("strong", { text: secret.nom }),
               el("p", {
                 className: "small-subtext",
-                text: `${secret.source === "admin" ? "Choisie par l'admin" : "Tirage automatique"} · version ${secret.version}`
+                text: `${secret.source === "admin" ? "Chosen by the admin" : "Automatic draw"} · version ${secret.version}`
               })
             ])
           ]),
           el("div", { className: "mode-stats" }, [
-            stat("joueurs", stats.players),
-            stat("victoires", stats.wins),
-            stat("abandons", stats.forfeits),
-            stat("défaites", stats.losses),
-            stat("en cours", stats.playing),
-            stat("essais moy.", formatNumber(stats.avgTries)),
-            stat("indices moy.", formatNumber(stats.avgHints)),
-            stat("temps moy.", formatDuration(stats.avgSeconds))
+            stat("players", stats.players),
+            stat("wins", stats.wins),
+            stat("forfeits", stats.forfeits),
+            stat("losses", stats.losses),
+            stat("in progress", stats.playing),
+            stat("avg. tries", formatNumber(stats.avgTries)),
+            stat("avg. hints", formatNumber(stats.avgHints)),
+            stat("avg. time", formatDuration(stats.avgSeconds))
           ]),
           el("div", { className: "mode-actions" }, [
-            el("button", { className: "btn-secondary", text: "Tirer une autre tech", attrs: { type: "button" }, on: { click: () => act("random") } }),
+            el("button", { className: "btn-secondary", text: "Draw another tech", attrs: { type: "button" }, on: { click: () => act("random") } }),
             input,
-            el("button", { className: "btn-primary", text: "Imposer cette tech", attrs: { type: "button" }, on: { click: () => act("set") } })
+            el("button", { className: "btn-primary", text: "Set this tech", attrs: { type: "button" }, on: { click: () => act("set") } })
           ])
         ]);
       }),
@@ -176,7 +176,7 @@ export class TechsTab {
   edit(tech) {
     this.editing = tech;
     this.removeMedia = false;
-    byId("tech-form-title").textContent = tech ? `Modifier « ${tech.nom} »` : "Nouvelle tech";
+    byId("tech-form-title").textContent = tech ? `Edit "${tech.nom}"` : "New tech";
     byId("tech-name").value = tech?.nom ?? "";
     byId("tech-aliases").value = tech?.aliases.join(", ") ?? "";
     byId("tech-difficulty").value = tech?.difficulty ?? "Beginner";
@@ -208,7 +208,7 @@ export class TechsTab {
     const file = byId("tech-media-file").files[0];
     if (!file) return;
     if (file.size > MAX_MEDIA_BYTES) {
-      this.notify("L'image doit faire 3 Mo au plus.", true);
+      this.notify("The image must be 3 MB at most.", true);
       byId("tech-media-file").value = "";
       return;
     }
@@ -219,10 +219,10 @@ export class TechsTab {
 
   async remove() {
     const tech = this.editing;
-    if (!tech || !window.confirm(`Supprimer « ${tech.nom} » ? Ça ne peut pas être annulé.`)) return;
+    if (!tech || !window.confirm(`Delete "${tech.nom}"? This can't be undone.`)) return;
     try {
       await admin.deleteTech(tech.id);
-      this.notify(`« ${tech.nom} » supprimée.`);
+      this.notify(`"${tech.nom}" deleted.`);
       this.closeForm();
       await this.load();
     } catch (err) {
@@ -244,7 +244,7 @@ export class TechsTab {
       const file = byId("tech-media-file").files[0];
       if (file) saved = await admin.uploadTechMedia(saved.id, file);
       else if (this.removeMedia && saved.media) saved = await admin.deleteTechMedia(saved.id);
-      this.notify(`« ${saved.nom} » enregistrée.`);
+      this.notify(`"${saved.nom}" saved.`);
       await this.load();
       this.edit(this.techs.find((t) => t.id === saved.id));
     } catch (err) {

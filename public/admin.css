@@ -322,6 +322,11 @@
   text-transform: capitalize;
 }
 
+/* Réglages : de vraies phrases, pas des valeurs à capitaliser */
+.settings-group label {
+  text-transform: none;
+}
+
 .settings-form {
   max-width: 480px;
   display: flex;

@@ -83,7 +83,7 @@ export class ElementsTab {
   edit(element) {
     this.editing = element;
     const v = this.vocabulary;
-    byId("element-form-title").textContent = element ? `Modifier « ${element.nom} »` : "Nouvel élément";
+    byId("element-form-title").textContent = element ? `Edit "${element.nom}"` : "New element";
     byId("element-name").value = element?.nom ?? "";
     this.options(byId("element-type"), v.types, element?.type);
     this.options(byId("element-shape"), v.shapes, element?.shape);
@@ -110,7 +110,7 @@ export class ElementsTab {
     const file = byId("element-sprite-file").files[0];
     if (!file) return;
     if (file.size > 1024 * 1024) {
-      this.notify("L'image doit faire 1 Mo au plus.", true);
+      this.notify("The image must be 1 MB at most.", true);
       byId("element-sprite-file").value = "";
       return;
     }
@@ -146,7 +146,7 @@ export class ElementsTab {
       // L'image part après l'élément : il faut son identifiant
       const file = byId("element-sprite-file").files[0];
       if (file) saved = await admin.uploadSprite(saved.id, file);
-      this.notify(`« ${saved.nom} » enregistré.`);
+      this.notify(`"${saved.nom}" saved.`);
       await this.load();
       this.edit(this.elements.find((e) => e.id === saved.id));
     } catch (err) {

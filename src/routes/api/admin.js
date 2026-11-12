@@ -92,7 +92,7 @@ router.post("/admin/secret", limitedAction("set_secret", (req) => `${req.body?.m
     daily.drawRandomSecret(mode);
   } else if (action === "set") {
     const element = elementsRepo.findByName(elementName);
-    if (!element || !element.isActive) throw new HttpError(404, "Élément introuvable");
+    if (!element || !element.isActive) throw new HttpError(404, "Unknown element.");
     daily.setSecret(mode, element);
   } else {
     throw new HttpError(400, 'action must be "random" or "set"');
@@ -163,7 +163,7 @@ router.patch("/admin/elements/:id", limitedAction("edit_element", (req) => req.p
   const input = validateElementInput(req.body || {}, { partial: true });
   const before = elementsRepo.findById(Number(req.params.id));
   const element = saveElement(() => elementsRepo.update(Number(req.params.id), input));
-  if (!element) throw new HttpError(404, "Élément introuvable");
+  if (!element) throw new HttpError(404, "Unknown element.");
   // Image envoyée remplacée par un autre chemin : le fichier ne sert plus
   if (before.sprite !== element.sprite) sprites.removeUpload(before.sprite);
   res.json(element);
@@ -176,7 +176,7 @@ router.post(
   express.raw({ type: () => true, limit: sprites.MAX_BYTES }),
   (req, res) => {
     const element = elementsRepo.findById(Number(req.params.id));
-    if (!element) throw new HttpError(404, "Élément introuvable");
+    if (!element) throw new HttpError(404, "Unknown element.");
     const sprite = sprites.saveUpload(element, req.body);
     const updated = elementsRepo.update(element.id, { sprite });
     sprites.removeUpload(element.sprite);
