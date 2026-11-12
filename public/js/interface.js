@@ -1,10 +1,22 @@
-// Interface « Modern » des pages de jeu : décor et style des menus du jeu
-// (modern.css), par-dessus la page Classic. Tout le style est rangé sous
-// html.ui-modern : sans la classe, la page reste exactement la Classic.
-// La classe est posée dès le <head> par un petit script (pas d'éclair au
-// chargement) ; ce module l'ajoute ou la retire quand l'option change et
-// construit le décor (ciel, lune, montagne) et le lien de retour au menu.
-import { el } from "./dom.js";
+// Interface « Modern » des pages de jeu (voir REDESIGN.md).
+// En Modern, la page ne garde que le jeu : tout le reste (profil,
+// classements, options, communauté) vit dans le menu (menu.html). On garde
+// sous la main, via un menu pause façon Celeste (Échap ou ❚❚) : les règles,
+// les options, le changement de côté et le retour au menu.
+//
+// Tout le style est rangé sous html.ui-modern (modern.css) : sans la classe,
+// la page reste exactement la Classic. La classe est posée dès le <head> par
+// un petit script (pas d'éclair au chargement) ; ce module l'ajoute ou la
+// retire quand l'option change et construit le décor et le menu pause.
+import { el, clear } from "./dom.js";
+import { storage, KEYS } from "./storage.js";
+
+const SIDES = { normal: "A-Side · Normal", hard: "B-Side · Hard" };
+let pause = null;
+
+function currentMode() {
+  return document.querySelector("#mode-switch [aria-pressed='true']")?.dataset.mode ?? "normal";
+}
 
 function buildDecor() {
   const scene = el("div", { attrs: { id: "modern-scene", "aria-hidden": "true" } }, [
@@ -12,11 +24,115 @@ function buildDecor() {
     el("div", { className: "m-moon" }, [el("span", { className: "m-moon-glow" }), el("span", { className: "m-moon-body" })]),
     el("img", { className: "m-mountain", attrs: { src: "assets/menu/mountain.png", alt: "", decoding: "async" } })
   ]);
-  const back = el("a", { attrs: { id: "modern-back", href: "menu.html" } }, [el("span", { className: "m-back-arrow", text: "◂" }), "Menu"]);
-  document.body.prepend(scene, back);
+  const nav = el("nav", { attrs: { id: "modern-nav", "aria-label": "Menu" } }, [
+    el("a", { attrs: { href: "menu.html" } }, [el("span", { className: "m-arrow", text: "◂" }), "Menu"]),
+    el("button", { attrs: { type: "button", "aria-label": "Pause" }, on: { click: openPause } }, [el("span", { className: "m-pause-icon", text: "❚❚" }), "Pause"])
+  ]);
+  const hint = el("div", { attrs: { id: "modern-hint", "aria-hidden": "true" } }, [el("b", { text: "Esc" }), "Pause"]);
+  document.body.prepend(scene, nav);
+  document.body.append(hint);
+
+  // Côté joué (A-Side / B-Side) sous le titre, tenu à jour
+  const title = document.querySelector("#main-content-column h1");
+  if (title) {
+    const side = el("p", { attrs: { id: "modern-side" } });
+    title.after(side);
+    const update = () => {
+      const mode = currentMode();
+      side.textContent = SIDES[mode] ?? mode;
+      side.dataset.mode = mode;
+    };
+    update();
+    const switcher = document.getElementById("mode-switch");
+    if (switcher) new MutationObserver(update).observe(switcher, { attributes: true, subtree: true, attributeFilter: ["aria-pressed"] });
+  }
+  document.addEventListener("keydown", onKey, true);
+}
+
+// ===== Menu pause =====
+function pauseItems() {
+  const other = currentMode() === "hard" ? "normal" : "hard";
+  const click = (id) => () => {
+    closePause();
+    document.getElementById(id)?.click();
+  };
+  return [
+    { label: "Resume", run: closePause },
+    { label: "Rules", run: click("rules-btn") },
+    { label: "Options", run: click("options-btn") },
+    {
+      label: `Switch to ${other === "hard" ? "B-Side" : "A-Side"}`,
+      run: () => {
+        closePause();
+        document.querySelector(`#mode-switch [data-mode='${other}']`)?.click();
+      }
+    },
+    { label: "Return to menu", run: () => (location.href = "menu.html") }
+  ];
+}
+
+function renderPause() {
+  const list = pause.querySelector("ul");
+  clear(list);
+  pauseItems().forEach((item, i) => {
+    const li = el("li", { className: i === pause.index ? "selected" : "", text: item.label });
+    li.addEventListener("click", () => item.run());
+    li.addEventListener("mouseenter", () => {
+      pause.index = i;
+      renderPause();
+    });
+    list.append(li);
+  });
+}
+
+function openPause() {
+  if (!pause) {
+    pause = el("div", { attrs: { id: "modern-pause", role: "dialog", "aria-modal": "true", "aria-label": "Pause" } }, [
+      el("h2", { text: "Paused" }),
+      el("ul")
+    ]);
+    pause.addEventListener("click", (e) => {
+      if (e.target === pause) closePause();
+    });
+    document.body.append(pause);
+  }
+  document.activeElement?.blur?.();
+  pause.index = 0;
+  pause.hidden = false;
+  renderPause();
+}
+
+function closePause() {
+  if (pause) pause.hidden = true;
+}
+
+const isOpen = () => pause && !pause.hidden;
+
+function onKey(event) {
+  if (!document.documentElement.classList.contains("ui-modern")) return;
+  if (isOpen()) {
+    const items = pauseItems();
+    const moves = { ArrowUp: -1, ArrowDown: 1 };
+    if (event.key in moves) pause.index = (pause.index + moves[event.key] + items.length) % items.length;
+    else if (event.key === "Enter") items[pause.index].run();
+    else if (event.key === "Escape") closePause();
+    else return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (isOpen()) renderPause();
+    return;
+  }
+  if (event.key !== "Escape") return;
+  // Échap ferme d'abord une fenêtre ouverte ou la liste de suggestions
+  if (document.querySelector(".rules-modal:not(.hidden)")) return;
+  if ([...document.querySelectorAll(".suggestions-box")].some((box) => box.style.display === "block")) return;
+  event.preventDefault();
+  openPause();
 }
 
 export function applyInterface(on) {
   document.documentElement.classList.toggle("ui-modern", on);
+  document.documentElement.classList.toggle("no-key-hints", !storage.getBool(KEYS.keyHints, true));
   if (on && !document.getElementById("modern-scene")) buildDecor();
+  if (!on) closePause();
 }

@@ -175,6 +175,8 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 .book h3 { font-size: 40px; margin: 4px 0 10px; }
 .book .desc { font-size: 15px; line-height: 1.45; opacity: .85; min-height: 44px; }
 .book .today { margin-top: 12px; font-size: 15px; min-height: 20px; }
+.book .next { margin-top: 4px; font-size: 13px; opacity: .7; }
+.book .next span { font-variant-numeric: tabular-nums; }
 .book .today.won { color: #7fe08a; }
 .book .today.lost { color: #ff7aa8; }
 .tabs { position: absolute; top: -34px; right: 24px; display: flex; gap: 6px; }
@@ -203,6 +205,8 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 .menu .value::after { content: " ▸"; opacity: .5; }
 .menu li.selected .value::before, .menu li.selected .value::after { opacity: 1; }
 .menu li.sep { height: 18px; padding: 0; pointer-events: none; }
+/* Longue liste : elle défile sur les petits écrans */
+#options { overflow-y: auto; }
 
 /* ===== Journal ===== */
 .journal-wrap { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(5, 4, 20, .6); }

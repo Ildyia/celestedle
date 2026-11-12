@@ -60,9 +60,21 @@ npm test
 
 ## Pages de jeu : interface Modern
 
-Option « Modern Interface (beta) » (options de la page de jeu) ou « Modern game pages » (options du menu), clé `celestedle_modern_ui`, éteinte par défaut tant que la refonte n'est pas finie.
+Option « Modern Interface (beta) » (options de la page de jeu) ou « Modern game pages » (options du menu), clé `celestedle_modern_ui`, éteinte par défaut tant que la refonte n'est pas finie. La Classic reste la page complète d'avant.
+
+**En Modern, la page ne garde que le jeu ; tout le reste vit dans le menu :**
+
+| Sur la page Classic | En Modern |
+|---|---|
+| Profil | ticket du menu (Rename, Edit profile → `index.html#profile`) |
+| Rankings | journal du menu (→ `index.html#leaderboard`) |
+| Options, règles | menu pause (Échap ou ❚❚) |
+| Normal / Hard | menu pause (« Switch to B-Side ») ou le livre du menu |
+| Community Stats, Next Word in | livre du menu (« Today on the mountain », « Next climb in ») |
+| Found a bug?, Discord, GitHub, Ko-fi, Credits | options du menu (`index.html#bug` pour le signalement) |
+| Onglets des jeux | icônes du menu |
 
 - `modern.css` : tout est rangé sous `html.ui-modern`. Sans la classe, la page reste exactement la Classic.
-- La classe est posée dès le `<head>` par un petit script (pas d'éclair au chargement). `js/interface.js` l'ajoute ou la retire quand l'option change, et construit le décor (ciel, lune, montagne du menu) et le lien « ◂ Menu ».
-- Principe : textes blancs à contour noir pour ce qui est posé sur le décor, cartes « papier » à contour d'encre pour ce qu'on lit ou remplit. Sur le papier, on change les variables de `style.css` (`--text-main`, `--bg-card`…) et le contenu suit.
+- La classe est posée dès le `<head>` par un petit script (pas d'éclair au chargement). `js/interface.js` l'ajoute ou la retire quand l'option change, et construit le décor, « ◂ Menu  ❚❚ Pause », le côté joué sous le titre et le menu pause (Resume, Rules, Options, Switch side, Return to menu).
+- Couleurs : cartes sombres « papier de nuit », chaque carte teintée de sa couleur (discrètement).
 - Fait : Celestedle (`index.html`). À faire : Connections, Techs, l'écran de fin façon « chapitre terminé ».

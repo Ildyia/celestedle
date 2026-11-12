@@ -11,6 +11,7 @@ import { formatDuration } from "./format.js";
 import { rulesSentence } from "./rules-text.js";
 import { CELESTEDLE, TECHS } from "./catalogs.js";
 import { showToast } from "./toast.js";
+import { initNextWordTimer } from "./timer.js";
 import { STAMPS, earnedStamps, stampIcon } from "./stamps.js";
 
 const LAST_GAME_KEY = "celestedle_menu_game";
@@ -60,6 +61,8 @@ function slotActions() {
   return [
     { label: "Begin", run: () => go("modes") },
     { label: "Rename", run: () => startEditing("rename") },
+    // Avatar, couleur, Discord, visibilité : la fenêtre de profil complète
+    { label: "Edit profile", run: () => (location.href = "index.html#profile") },
     { label: editing === "code" ? "Hide recovery code" : "Recovery code", run: () => startEditing(editing === "code" ? null : "code") }
   ];
 }
@@ -322,7 +325,8 @@ const GAMES = [
     state: (mode) => api.game(mode),
     rules: () => api.modes(),
     hintNames: CELESTEDLE.hintNames,
-    stats: (mode) => api.myStats(mode)
+    stats: (mode) => api.myStats(mode),
+    community: (mode) => api.communityStats(mode)
   },
   {
     id: "connections",
@@ -429,10 +433,10 @@ function renderModes() {
 // Partie du jour, règles et record : chargés à part, l'écran s'affiche avant
 async function fillBook(game, mode) {
   const request = ++bookRequest;
-  const [state, rules, record] = await Promise.all([
+  const [state, rules, records] = await Promise.all([
     game.state(mode).catch(() => null),
     loadRules(game, mode),
-    loadRecord(game, mode)
+    loadRecords(game, mode)
   ]);
   if (request !== bookRequest) return;
 
@@ -457,7 +461,7 @@ async function fillBook(game, mode) {
 
   const box = byId("book-record");
   clear(box);
-  if (record) box.append(el("div", { className: "record-title", text: record.title }), ...record.tiles);
+  for (const record of records) box.append(el("div", { className: "record-title", text: record.title }), ...record.tiles);
 }
 
 async function loadRules(game, mode) {
@@ -470,24 +474,27 @@ async function loadRules(game, mode) {
 
 const tile = (value, label) => el("div", {}, [el("strong", { text: String(value) }), label]);
 
-async function loadRecord(game, mode) {
-  try {
-    // Statistiques personnelles quand le jeu les fournit, sinon celles du jour
-    if (game.stats && player.profile) {
-      const s = await game.stats(mode);
-      return { title: "YOUR RECORD", tiles: [tile(s.wins, "Wins"), tile(s.streak.current, "Streak"), tile(formatDuration(s.bestSeconds), "Best time")] };
-    }
-    if (game.community) {
-      const s = await game.community(mode);
-      return {
-        title: "TODAY ON THE MOUNTAIN",
-        tiles: [tile(s.wins, "Climbers"), tile(s.winRate === null ? "–" : `${s.winRate}%`, "Success"), tile(formatDuration(s.avgSeconds), "Avg. time")]
-      };
-    }
-  } catch {
-    // Pas de record : l'encart reste vide
+// Record perso (si le jeu le fournit) puis les chiffres du jour de tous
+async function loadRecords(game, mode) {
+  const [mine, community] = await Promise.all([
+    game.stats && player.profile ? game.stats(mode).catch(() => null) : null,
+    game.community ? game.community(mode).catch(() => null) : null
+  ]);
+  const records = [];
+  if (mine) {
+    records.push({ title: "YOUR RECORD", tiles: [tile(mine.wins, "Wins"), tile(mine.streak.current, "Streak"), tile(formatDuration(mine.bestSeconds), "Best time")] });
   }
-  return null;
+  if (community) {
+    records.push({
+      title: "TODAY ON THE MOUNTAIN",
+      tiles: [
+        tile(community.wins ?? 0, "Climbers"),
+        tile(community.winRate === null || community.winRate === undefined ? "–" : `${community.winRate}%`, "Success"),
+        tile(community.wins ? formatDuration(community.avgSeconds) : "–", "Avg. time")
+      ]
+    });
+  }
+  return records;
 }
 
 function climb() {
@@ -554,6 +561,11 @@ const OPTION_ROWS = [
   { label: "Keyboard hints", key: KEYS.keyHints, fallback: true, apply: renderHints },
   { label: "Performance mode", key: KEYS.performance, fallback: false, apply: applyPerformance },
   { sep: true },
+  { label: "Report a bug", link: "index.html#bug" },
+  { label: "Discord", link: "https://discord.gg/3yqgMbuMbX", external: true },
+  { label: "GitHub", link: "https://github.com/Ildyia/celestedle", external: true },
+  { label: "Support on Ko-fi", link: "https://ko-fi.com/ildyia", external: true },
+  { sep: true },
   { label: "Credits", link: "credits.html" },
   { label: "Legal notice", link: "legal-notice.html" },
   { label: "Back", back: true }
@@ -589,6 +601,10 @@ function moveOption(step) {
 function activateOption() {
   const row = OPTION_ROWS[optionIndex];
   if (row.back) return go(optionsReturn);
+  if (row.external) {
+    window.open(row.link, "_blank", "noopener");
+    return;
+  }
   if (row.link) {
     location.href = row.link;
     return;
@@ -749,6 +765,11 @@ async function start() {
   applyPerformance(storage.getBool(KEYS.performance, false));
   letItSnow();
   renderHints();
+  // Prochaine partie : compte à rebours dans le livre ; à minuit, on recharge
+  initNextWordTimer(byId("book-next-time"), () => {
+    loadTodayMarks();
+    if (screen === "modes") renderModes();
+  });
   api.version().then(({ version }) => (byId("version").textContent = `v${version}`)).catch(() => {});
   player.onChange(() => {
     loadProfileStats();

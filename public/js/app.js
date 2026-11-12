@@ -90,11 +90,9 @@ async function init() {
     hintPicker,
     onFinished: (state) => refreshCommunityStats(state.mode)
   });
-  new ReportsPanel({ getElements });
-  new ProfilePanel();
+  const reports = new ReportsPanel({ getElements });
+  const profile = new ProfilePanel();
   const leaderboard = new LeaderboardPanel({ getMode: () => game.mode });
-  // Lien « Leaderboards » du journal du menu : index.html#leaderboard
-  if (location.hash === "#leaderboard") leaderboard.open();
 
   byId("rules-btn")?.addEventListener("click", () => openModal("rules-modal"));
   document.querySelectorAll("[data-mode]").forEach((btn) =>
@@ -114,6 +112,12 @@ async function init() {
     player.load()
   ]);
   elements = loadedElements;
+  // Liens du menu vers ces fenêtres : index.html#leaderboard, #bug, #profile
+  const fromMenu = { "#leaderboard": leaderboard, "#bug": reports, "#profile": profile }[location.hash];
+  if (fromMenu) {
+    history.replaceState(null, "", location.pathname + location.search);
+    fromMenu.open();
+  }
   // Onglet Connections : visible de qui peut y jouer (réglage d'accès de l'admin)
   initGameTabs("celestedle");
   player.onChange(() => initGameTabs("celestedle"));
