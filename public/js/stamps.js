@@ -23,19 +23,21 @@ export const STAMPS = [
 ];
 
 // Emplacements sur le ticket, en % du ticket (800 × 300) : tout autour du
-// nom et du compteur de fraises, un par tampon. Le plus rare des tampons
-// gagnés prend le premier. Au survol, un tampon grossit pour qu'on le lise.
+// nom et du compteur de fraises, un par tampon, entièrement sur le papier et
+// à l'écart des encoches (la hauteur d'un tampon vaut size × 8/3 % du ticket).
+// Le plus rare des tampons gagnés prend le premier. Au survol, un tampon
+// montre sa version complète, avec son nom.
 export const TICKET_SLOTS = [
-  { x: 78, y: 0, size: 15, rotate: 10 },
-  { x: 33, y: 56, size: 14, rotate: -14 },
-  { x: 80, y: 54, size: 14, rotate: -6 },
-  { x: 35, y: -3, size: 13, rotate: -10 },
-  { x: 64, y: -4, size: 12, rotate: 16 },
-  { x: 47, y: 66, size: 12, rotate: 8 },
-  { x: 89, y: 30, size: 11, rotate: -18 },
-  { x: 67, y: 70, size: 11, rotate: 12 },
-  { x: 50, y: -6, size: 11, rotate: -4 },
-  { x: 91, y: 2, size: 9, rotate: 22 }
+  { x: 78, y: 6, size: 14, rotate: 10 },
+  { x: 34, y: 60, size: 13, rotate: -14 },
+  { x: 80, y: 56, size: 13, rotate: -6 },
+  { x: 36, y: 5, size: 11, rotate: -10 },
+  { x: 63, y: 4, size: 10, rotate: 16 },
+  { x: 48, y: 67, size: 10, rotate: 8 },
+  { x: 66, y: 67, size: 10, rotate: 12 },
+  { x: 50, y: 4, size: 10, rotate: -4 },
+  { x: 70, y: 36, size: 8, rotate: -18 },
+  { x: 88, y: 41, size: 7, rotate: 22 }
 ];
 
 const PREVIEW_ALL = new URLSearchParams(location.search).get("stamps") === "all";

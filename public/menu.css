@@ -100,8 +100,7 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
     repeating-linear-gradient(90deg, var(--mark) 0 1px, transparent 1px 5px, var(--mark) 5px 7px, transparent 7px 12px) right bottom / 1.3em .3em no-repeat; }
 
 /* Tampons (dessin SVG de js/stamps.js), un peu de travers, fondus dans le papier */
-.card .stamps { position: absolute; inset: 0; clip-path: inset(0 round 3px); }
-.card:has(.stamp:hover) .stamps { clip-path: none; }
+.card .stamps { position: absolute; inset: 0; }
 /* Au survol, un tampon passe devant et grossit pour qu'on le lise */
 .card:has(.stamp:hover) .stamps { z-index: 3; }
 /* Le texte du ticket laisse passer la souris jusqu'aux tampons (sauf le champ du renommage) */
