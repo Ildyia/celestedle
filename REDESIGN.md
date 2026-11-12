@@ -16,7 +16,8 @@ Récupérer main régulièrement : `git fetch origin && git merge origin/main`.
 
 Déjà en place :
 - **Titre** : lune en croissant entourée d'étoiles, drapeau rectangulaire qui flotte au sommet, neige, touche « C » qui clignote en bas à droite.
-- **Fichier** : tickets empilés, ceux qu'on ne regarde pas repoussés à droite. Entrée ouvre le ticket, qui reste seul avec ses actions en texte blanc dessous (Begin, Rename, Recovery code). Le ticket montre fraises = victoires, crâne = défaites, meilleur temps, série, et une case par jeu pour la partie du jour (✓ gagnée, ✗ ratée). New file et Restore sans profil.
+- **Fichier** : tickets du jeu (images de l'atlas FileSelect dans `assets/game/fileselect/`, icônes dans `assets/game/gui/`). Le ticket montre portrait + scotch, nom, dernier jeu choisi, fraises = victoires. Le ticket choisi glisse à gauche et son talon sort : un cœur par partie gagnée aujourd'hui (colonnes = jeux, bleu = A-Side, rouge = B-Side), crâne = défaites, série, meilleur temps. Entrée ouvre le ticket (Begin, Rename, Recovery code ; le code s'affiche dans le talon).
+- **Tampons** : calques 800 × 300 empilés sur le ticket, listés dans `js/stamps.js`. `earnedStamps()` renvoie [] en attendant les achievements ; `menu.html?stamps=all` les montre tous.
 - **Modes** : un endroit de la montagne par jeu (la caméra « monte » jusqu'au sommet pour Techs), A-Side et B-Side, règles du mode, état de la partie du jour, record perso (Celestedle) ou chiffres du jour (Connections, Techs). Connections et Techs n'apparaissent qu'avec l'accès.
 - **Journal** (J) : stats perso et lien vers les classements (`index.html#leaderboard`).
 - **Options** : mêmes préférences que les pages de jeu, mode performance (`body.perf` : sans neige ni scintillements, contours allégés, cadrage sans zoom), Credits, Legal notice. Tant que le joueur n'a pas choisi, il s'active tout seul si les premiers changements d'écran tournent sous 30 images/s.

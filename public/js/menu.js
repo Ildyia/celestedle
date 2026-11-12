@@ -11,6 +11,7 @@ import { formatDuration } from "./format.js";
 import { rulesSentence } from "./rules-text.js";
 import { CELESTEDLE, TECHS } from "./catalogs.js";
 import { showToast } from "./toast.js";
+import { STAMPS, earnedStamps, stampUrl } from "./stamps.js";
 
 const LAST_GAME_KEY = "celestedle_menu_game";
 
@@ -118,7 +119,7 @@ async function loadProfileStats() {
   if (screen === "files") renderFiles();
 }
 
-// Une partie gagnée dans l'un des deux côtés suffit pour marquer le jeu
+// Partie du jour de chaque jeu et de chaque côté : { celestedle: { a, b } }
 async function loadTodayMarks() {
   if (!player.profile) {
     todayMarks = {};
@@ -126,81 +127,101 @@ async function loadTodayMarks() {
   }
   const entries = await Promise.all(
     games.map(async (game) => {
-      const states = await Promise.all(Object.values(game.modes).map((mode) => game.state(mode).catch(() => null)));
-      const statuses = states.map((s) => s?.status);
-      if (statuses.includes("won")) return [game.id, "won"];
-      if (statuses.some((st) => st === "lost" || st === "forfeit")) return [game.id, "lost"];
-      return [game.id, null];
+      const [a, b] = await Promise.all(["a", "b"].map((k) => game.state(game.modes[k]).catch(() => null)));
+      return [game.id, { a: a?.status ?? null, b: b?.status ?? null }];
     })
   );
   todayMarks = Object.fromEntries(entries);
   if (screen === "files") renderFiles();
 }
 
-function statItem(icon, text, title) {
-  return el("span", { attrs: { title } }, [el("img", { attrs: { src: `assets/illustration/${icon}.png`, alt: "" } }), text]);
-}
+const FS = "assets/game/fileselect";
+const GUI = "assets/game/gui";
+const img = (src, className = "") => el("img", { className, attrs: { src, alt: "", draggable: "false" } });
+// « × 176 » en chiffres blancs à contour, comme les compteurs du jeu
+const counter = (icon, value, title) =>
+  el("span", { className: "counter", attrs: { title } }, [img(icon), el("span", { className: "times", text: "×" }), String(value)]);
 
-const MARK_TITLES = { won: "summit reached today", lost: "fell today", null: "not climbed yet today" };
-
-function todayRow() {
-  return el(
+// Talon qui sort de derrière le ticket : un cœur par partie gagnée
+// aujourd'hui (bleu = A-Side, rouge = B-Side), un point sinon.
+function profileStub() {
+  if (editing === "code") {
+    return [
+      el("div", { className: "stub-note", text: "Recovery code: keep it private, it opens your file on another device." }),
+      el("span", { className: "code", text: player.token })
+    ];
+  }
+  const s = profileStats;
+  const gems = el(
     "div",
-    { className: "marks" },
-    games.map((g) => {
-      const mark = todayMarks[g.id] ?? null;
-      return el("span", { className: `mark ${mark ?? "none"}`, attrs: { title: `${g.title}: ${MARK_TITLES[mark]}` } }, [
-        el("img", { attrs: { src: g.icon, alt: g.title } })
-      ]);
-    })
+    { className: "gems" },
+    games.flatMap((g) =>
+      ["a", "b"].map((k, row) => {
+        const won = todayMarks[g.id]?.[k] === "won";
+        const side = k === "a" ? "A-Side" : "B-Side";
+        return el("span", {
+          className: "gem",
+          attrs: { title: `${g.title} ${side}: ${won ? "won today" : "not won today"}`, style: `grid-row: ${row + 1}` }
+        }, [img(won ? `${FS}/heartgem${row}.png` : `${FS}/dot.png`, won ? "heart" : "dot")]);
+      })
+    )
   );
+  return [
+    gems,
+    el("div", { className: "streak", attrs: { title: "Current streak" } }, [img("assets/illustration/goldflag.png"), s ? String(s.streak) : "…"]),
+    el("div", { className: "stub-bottom" }, [
+      counter(`${GUI}/skullBlue.png`, s ? s.falls : "…", "Losses and forfeits"),
+      el("span", { className: "best", attrs: { title: "Best time" }, text: s && s.bestTime !== null ? formatDuration(s.bestTime) : "--:--" })
+    ])
+  ];
 }
 
 function profileSlot() {
   const profile = player.profile;
   const s = profileStats;
-  const body = [el("div", { className: "name" }, [profile.name, el("small", { text: `#${profile.id.slice(0, 4)}` })])];
+  const lastGame = GAMES.find((g) => g.id === storage.get(LAST_GAME_KEY)) ?? GAMES[0];
+  const body = [el("div", { className: "name", text: profile.name })];
   if (editing === "rename") {
     body.push(el("input", { attrs: { id: "slot-input", value: profile.name, maxlength: "24", "aria-label": "New name" } }));
-  } else if (editing === "code") {
-    body.push(el("div", { className: "sub", text: "Keep this code private: it opens your profile on another device." }));
-    body.push(el("span", { className: "code", text: player.token }));
   } else {
-    body.push(
-      el("div", { className: "stats" }, [
-        statItem("strawberry", s ? String(s.wins) : "…", "Wins"),
-        statItem("skull", s ? String(s.falls) : "…", "Losses and forfeits"),
-        statItem("time", s && s.bestTime !== null ? formatDuration(s.bestTime) : "--:--", "Best time"),
-        statItem("goldflag", s ? String(s.streak) : "…", "Current streak")
-      ]),
-      todayRow()
-    );
+    body.push(el("div", { className: "sub", text: lastGame.title }), counter(`${GUI}/strawberry.png`, s ? s.wins : "…", "Wins"));
   }
+  const earned = new Set(earnedStamps(profile));
   return {
-    portrait: el("div", { className: "portrait", attrs: { style: `--player-color: ${profile.color}` } }, [
-      el("img", { attrs: { src: avatarUrl(profile.avatar), alt: "" } })
-    ]),
-    body
+    color: profile.color,
+    portrait: avatarUrl(profile.avatar),
+    stamps: STAMPS.filter((st) => earned.has(st.id)),
+    body,
+    stub: profileStub()
   };
 }
 
 function emptySlot(kind) {
   if (kind === "new") {
     return {
-      portrait: el("div", { className: "portrait" }, [el("img", { attrs: { src: "assets/illustration/start.png", alt: "" } })]),
-      body: [el("div", { className: "name", text: "New file" }), el("div", { className: "sub", text: "Start climbing: your profile is created on this device." })]
+      portrait: "assets/illustration/start.png",
+      body: [el("div", { className: "name", text: "New file" }), el("div", { className: "sub small", text: "Your profile is created on this device." })]
     };
   }
-  const body = [el("div", { className: "name", text: "Restore a file" })];
+  const body = [el("div", { className: "name", text: "Restore" })];
   if (editing === "restore") {
     body.push(el("input", { attrs: { id: "slot-input", placeholder: "Paste your recovery code", "aria-label": "Recovery code", autocomplete: "off" } }));
   } else {
-    body.push(el("div", { className: "sub", text: "Already climbing on another device? Use your recovery code." }));
+    body.push(el("div", { className: "sub small", text: "Climbing on another device? Use your recovery code." }));
   }
-  return {
-    portrait: el("div", { className: "portrait" }, [el("img", { attrs: { src: "assets/illustration/backpack.png", alt: "" } })]),
-    body
-  };
+  return { portrait: "assets/illustration/backpack.png", body };
+}
+
+function slotElement(kind, selected) {
+  const t = kind === "profile" ? profileSlot() : emptySlot(kind);
+  const card = el("div", { className: "card" }, [
+    el("div", { className: "stamps" }, (t.stamps ?? []).map((st) => el("img", { attrs: { src: stampUrl(st), alt: "", title: st.label, draggable: "false" } }))),
+    el("div", { className: "portrait", attrs: { style: `--player-color: ${t.color ?? "#cfd8ef"}` } }, [img(t.portrait)]),
+    img(`${FS}/portraitOverlay.png`, "tape"),
+    el("div", { className: "body" }, t.body)
+  ]);
+  const children = t.stub ? [el("div", { className: "stub" }, t.stub), card] : [card];
+  return el("div", { className: `slot${selected ? " selected" : ""}${t.stub ? " has-stub" : ""}${kind === "profile" ? "" : " empty"}` }, children);
 }
 
 function renderFiles() {
@@ -212,12 +233,7 @@ function renderFiles() {
   list.forEach((kind, i) => {
     // Ticket ouvert : il reste seul à l'écran
     if (fileOpen && i !== slotIndex) return;
-    const { portrait, body } = kind === "profile" ? profileSlot() : emptySlot(kind);
-    const slot = el(
-      "div",
-      { className: `slot paper${i === slotIndex ? " selected" : ""}${kind === "profile" ? "" : " empty"}` },
-      [portrait, el("div", { className: "body" }, body)]
-    );
+    const slot = slotElement(kind, i === slotIndex);
     slot.addEventListener("click", () => {
       if (fileOpen) return;
       if (i === slotIndex) return openSlot();
