@@ -118,11 +118,13 @@ button { font: inherit; color: inherit; }
 .paper { background: var(--paper); color: var(--ink); border-radius: 6px; box-shadow: 0 6px 0 var(--paper-dark), 0 10px 22px rgba(0,0,0,.5); }
 
 /* Mode performance (option du menu, body.perf) : plus de neige ni de
-   scintillements, halo et contours allégés, mouvements de caméra courts */
+   scintillements, halo et contours allégés, et la caméra change de cadrage
+   d'un coup au lieu de zoomer (le zoom est ce qui coûte le plus) */
 body.perf .snow, body.perf .moon-glow { display: none; }
 body.perf #stars, body.perf .moon-star, body.perf #summit-flag .cloth { animation: none !important; }
-body.perf #mountain, body.perf #moon, body.perf #dim { transition-duration: .45s !important; }
+body.perf #mountain, body.perf #moon, body.perf #dim { transition: none !important; }
 body.perf #mountain, body.perf #moon, body.perf #summit-flag { will-change: auto; }
+body.perf .paper { box-shadow: 0 6px 0 var(--paper-dark); }
 body.perf .outlined { text-shadow: 2px 2px 0 var(--shadow), -2px -2px 0 var(--shadow), 2px -2px 0 var(--shadow), -2px 2px 0 var(--shadow); }
 
 /* Moins d'animations si le système le demande */
