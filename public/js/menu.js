@@ -11,7 +11,7 @@ import { formatDuration } from "./format.js";
 import { rulesSentence } from "./rules-text.js";
 import { CELESTEDLE, TECHS } from "./catalogs.js";
 import { showToast } from "./toast.js";
-import { STAMPS, earnedStamps, stampUrl } from "./stamps.js";
+import { STAMPS, earnedStamps, stampIcon } from "./stamps.js";
 
 const LAST_GAME_KEY = "celestedle_menu_game";
 
@@ -135,8 +135,7 @@ async function loadTodayMarks() {
   if (screen === "files") renderFiles();
 }
 
-const FS = "assets/game/fileselect";
-const GUI = "assets/game/gui";
+const ICON = "assets/illustration";
 const img = (src, className = "") => el("img", { className, attrs: { src, alt: "", draggable: "false" } });
 // « × 176 » en chiffres blancs à contour, comme les compteurs du jeu
 const counter = (icon, value, title) =>
@@ -162,7 +161,7 @@ function profileStub() {
         return el("span", {
           className: "gem",
           attrs: { title: `${g.title} ${side}: ${won ? "won today" : "not won today"}`, style: `grid-row: ${row + 1}` }
-        }, [img(won ? `${FS}/heartgem${row}.png` : `${FS}/dot.png`, won ? "heart" : "dot")]);
+        }, [el("span", { className: won ? `heart ${k}` : "dot" })]);
       })
     )
   );
@@ -170,7 +169,7 @@ function profileStub() {
     gems,
     el("div", { className: "streak", attrs: { title: "Current streak" } }, [img("assets/illustration/goldflag.png"), s ? String(s.streak) : "…"]),
     el("div", { className: "stub-bottom" }, [
-      counter(`${GUI}/skullBlue.png`, s ? s.falls : "…", "Losses and forfeits"),
+      counter(`${ICON}/skull.png`, s ? s.falls : "…", "Losses and forfeits"),
       el("span", { className: "best", attrs: { title: "Best time" }, text: s && s.bestTime !== null ? formatDuration(s.bestTime) : "--:--" })
     ])
   ];
@@ -184,7 +183,7 @@ function profileSlot() {
   if (editing === "rename") {
     body.push(el("input", { attrs: { id: "slot-input", value: profile.name, maxlength: "24", "aria-label": "New name" } }));
   } else {
-    body.push(el("div", { className: "sub", text: lastGame.title }), counter(`${GUI}/strawberry.png`, s ? s.wins : "…", "Wins"));
+    body.push(el("div", { className: "sub", text: lastGame.title }), counter(`${ICON}/strawberry.png`, s ? s.wins : "…", "Wins"));
   }
   const earned = new Set(earnedStamps(profile));
   return {
@@ -212,15 +211,29 @@ function emptySlot(kind) {
   return { portrait: "assets/illustration/backpack.png", body };
 }
 
+function stampElement(stamp) {
+  const style = [
+    `--stamp-color: ${stamp.color}`,
+    `--stamp-icon: url("${stampIcon(stamp)}")`,
+    `left: ${stamp.x}%`,
+    `top: ${stamp.y}%`,
+    `width: ${stamp.size}%`,
+    `rotate: ${stamp.rotate}deg`
+  ].join("; ");
+  return el("span", { className: `stamp${stamp.ring ? " ring" : ""}`, attrs: { style, title: stamp.label } });
+}
+
 function slotElement(kind, selected) {
   const t = kind === "profile" ? profileSlot() : emptySlot(kind);
   const card = el("div", { className: "card" }, [
-    el("div", { className: "stamps" }, (t.stamps ?? []).map((st) => el("img", { attrs: { src: stampUrl(st), alt: "", title: st.label, draggable: "false" } }))),
+    el("div", { className: "shape" }),
+    el("div", { className: "stamps" }, (t.stamps ?? []).map(stampElement)),
     el("div", { className: "portrait", attrs: { style: `--player-color: ${t.color ?? "#cfd8ef"}` } }, [img(t.portrait)]),
-    img(`${FS}/portraitOverlay.png`, "tape"),
+    el("span", { className: "tape tl" }),
+    el("span", { className: "tape br" }),
     el("div", { className: "body" }, t.body)
   ]);
-  const children = t.stub ? [el("div", { className: "stub" }, t.stub), card] : [card];
+  const children = t.stub ? [el("div", { className: "stub" }, [el("div", { className: "shape" }), ...t.stub]), card] : [card];
   return el("div", { className: `slot${selected ? " selected" : ""}${t.stub ? " has-stub" : ""}${kind === "profile" ? "" : " empty"}` }, children);
 }
 
