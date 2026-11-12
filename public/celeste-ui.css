@@ -101,6 +101,13 @@ button { font: inherit; color: inherit; }
    Placé avant la neige, pour ne pas recouvrir les flocons animés. */
 #dim { position: absolute; inset: 0; background: #05040f; opacity: 0; transition: opacity 1.2s; }
 
+/* Petits drapeaux des jeux (menu.html), placés en % du dessin par --x / --y.
+   Un jeu auquel le joueur n'a pas accès n'a pas de drapeau (body[data-games]). */
+.game-flag { position: absolute; left: calc(var(--x) / 1600 * 100%); top: calc(var(--y) / 700 * 100%); width: calc(38 / 1600 * 100%); height: calc(56 / 700 * 100%); overflow: visible; }
+.game-flag .cloth { fill: var(--flag-color); transform-box: fill-box; transform-origin: 0% 50%; animation: wave 1.2s ease-in-out infinite alternate; }
+body:not([data-games~="connections"]) .game-flag[data-game="connections"] { display: none; }
+body.perf .game-flag .cloth { animation: none !important; }
+
 /* Drapeau au sommet : il flotte au vent */
 #summit-flag .cloth { fill: var(--flag); transform-box: fill-box; transform-origin: 0% 50%; animation: wave 1.4s ease-in-out infinite alternate; }
 @keyframes wave {

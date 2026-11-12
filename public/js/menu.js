@@ -420,6 +420,8 @@ async function loadGames() {
     })
   );
   games = checks.filter((c) => c.canPlay).map((c) => ({ ...c.game, playtest: c.access !== "public" }));
+  // Drapeaux sur la montagne : seulement pour les jeux accessibles
+  document.body.dataset.games = games.map((g) => g.id).join(" ");
   const last = games.findIndex((g) => g.id === storage.get(LAST_GAME_KEY));
   gameIndex = last >= 0 ? last : 0;
   if (screen === "modes") renderModes();

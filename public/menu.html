@@ -52,7 +52,18 @@
       <div id="mountain">
         <div class="mountain-art">
           <img src="assets/menu/mountain.png" alt="" draggable="false" decoding="async" />
-          <svg id="summit-flag" viewBox="896 164 58 92">
+          <!-- Un drapeau par jeu, à l'endroit où la caméra s'arrête pour lui :
+               Celestedle sur le pic de devant, Connections sur le pic du fond,
+               Techs au sommet (le grand drapeau). -->
+          <svg class="game-flag" data-game="celestedle" viewBox="556 368 38 56" style="--x: 556; --y: 368; --flag-color: #5aa8e8">
+            <line x1="560" y1="420" x2="560" y2="372" stroke="#16142f" stroke-width="3" stroke-linecap="round" />
+            <rect class="cloth" x="561" y="373" width="28" height="17" />
+          </svg>
+          <svg class="game-flag" data-game="connections" viewBox="1036 128 38 56" style="--x: 1036; --y: 128; --flag-color: #f3c95a">
+            <line x1="1040" y1="180" x2="1040" y2="132" stroke="#16142f" stroke-width="3" stroke-linecap="round" />
+            <rect class="cloth" x="1041" y="133" width="28" height="17" />
+          </svg>
+          <svg id="summit-flag" data-game="techs" viewBox="896 164 58 92">
             <line x1="900" y1="252" x2="900" y2="168" stroke="#16142f" stroke-width="4" stroke-linecap="round" />
             <rect class="cloth" x="902" y="170" width="46" height="28" />
           </svg>

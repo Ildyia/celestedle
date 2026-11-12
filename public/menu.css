@@ -17,6 +17,13 @@ body[data-screen="options"] #mountain { transform: scale(1.3) translateX(4%); }
 body[data-screen="options"] #dim { opacity: .45; }
 body[data-screen="options"] #moon { opacity: .4; }
 
+/* Le drapeau du jeu choisi grandit un peu (depuis le pied de son mât) */
+.game-flag, #summit-flag { transition: transform .4s var(--ease-out); transform-origin: 10% 100%; }
+#summit-flag { transform-origin: 7% 96%; }
+body[data-screen="modes"][data-game="celestedle"] .game-flag[data-game="celestedle"],
+body[data-screen="modes"][data-game="connections"] .game-flag[data-game="connections"] { transform: scale(1.35); }
+body[data-screen="modes"][data-game="techs"] #summit-flag { transform: scale(1.15); }
+
 /* ===== Écrans ===== */
 .screen { position: fixed; inset: 0; display: none; padding: 32px; }
 body[data-screen="title"] #title,

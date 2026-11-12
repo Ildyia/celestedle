@@ -34,11 +34,11 @@ redessine les images SVG à chaque étape d'un zoom.
 
 ## Idées pour la suite
 
-- [ ] Stats perso de Connections et Techs dans le journal (il manque une route `…/me/stats` côté serveur).
+- [x] Stats perso de Connections et Techs dans le journal (`/connections/me/stats`, `/techs/me/stats`).
 - [x] Classement directement dans le journal (pages Today, This week, All time).
 - [x] Ciel selon l'heure locale (nuit, aube, jour, crépuscule) : `js/sky.js`, couleurs dans `modern.css`, option « Time of day sky ».
-- [ ] Petits drapeaux sur la montagne à l'endroit de chaque jeu.
-- [ ] Supprimer son profil depuis le ticket (aujourd'hui : dans l'ancienne fenêtre profil).
+- [x] Un drapeau par jeu sur la montagne (Celestedle bleu, Connections doré si accessible, Techs = drapeau du sommet) ; celui du jeu choisi grandit.
+- [x] Supprimer son fichier depuis le ticket (Delete, avec confirmation).
 
 ### 7. Bascule (≈ 1 h)
 - [ ] `index.html` → `celestedle.html` (et mettre à jour les liens : `game-tabs`, `menu.js`, `credits`, admin…).
