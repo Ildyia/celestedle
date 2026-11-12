@@ -12,12 +12,15 @@ html.ui-modern {
   --m-sky-top: #0b0a24;
   --m-sky-mid: #2a1a4f;
   --m-sky-low: #6a3a7a;
-  /* Papier volontairement terne : un crème vif éblouit sur le fond sombre */
-  --m-paper: #d9d0bb;
-  --m-paper-dark: #bdb196;
-  --m-paper-light: #e2dac8;
-  --m-ink: #2b2335;
-  --m-ink-soft: #6e6585;
+  /* « Papier de nuit » : cartes sombres à texte clair, pour rester dans
+     l'ambiance de nuit (un papier clair éblouit sur ce fond). --m-ink sert
+     aux contours, plus foncés que la carte ; --m-text au texte. */
+  --m-paper: #2c2546;
+  --m-paper-dark: #1c172f;
+  --m-paper-light: #3a3158;
+  --m-ink: #0e0b1c;
+  --m-text: #ebe5fa;
+  --m-ink-soft: #a99fc8;
   --m-hl-a: #84ff54;
   --m-hl-b: #fcff59;
   --m-side-a: #5aa8e8;
@@ -41,10 +44,10 @@ html.ui-modern {
   & .sidebar-block, & .bug-card, & .rules-content, & .bug-modal-content, & .suggestions-box {
     --bg-card: var(--m-paper);
     --bg-input: var(--m-paper-light);
-    --text-main: var(--m-ink);
+    --text-main: var(--m-text);
     --text-muted: var(--m-ink-soft);
     background: var(--m-paper) !important;
-    color: var(--m-ink);
+    color: var(--m-text);
     border: 3px solid var(--m-ink) !important;
     border-radius: 8px;
     box-shadow: 0 6px 0 rgba(0, 0, 0, .35);
@@ -120,8 +123,8 @@ html.ui-modern {
   }
   & .game-tab:hover { opacity: 1; transform: translateY(-2px); }
   & .game-tab[aria-current="page"] {
-    opacity: 1; background: var(--m-paper) !important; border-color: var(--m-ink) !important; border-radius: 8px;
-    color: var(--m-ink) !important; text-shadow: none; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
+    opacity: 1; background: var(--m-paper) !important; border-color: var(--m-text) !important; border-radius: 8px;
+    color: var(--m-text) !important; text-shadow: none; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
   }
   & .game-tab-badge { border: 2px solid var(--m-ink); text-shadow: none; }
 
@@ -142,13 +145,13 @@ html.ui-modern {
 html.ui-modern {
   & #game-status { background: none !important; border: none !important; box-shadow: none !important; }
   & #game-status button, & #game-status .tries-badge {
-    background: var(--m-paper) !important; color: var(--m-ink) !important;
+    background: var(--m-paper) !important; color: var(--m-text) !important;
     border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
     text-shadow: none; transition: transform .12s;
   }
   & #game-status button:hover:not(:disabled) { transform: translateY(-2px); }
-  & #hint-btn { background: #ded19f !important; }
-  & #giveup-btn { color: #a52d3e !important; }
+  & #hint-btn { background: #3b3322 !important; color: #f3d27a !important; }
+  & #giveup-btn { color: #ff8a98 !important; }
   & #game-status button:disabled { opacity: .55; }
 }
 
@@ -157,14 +160,14 @@ html.ui-modern {
   & #game-container { background: none !important; border-color: transparent !important; box-shadow: none !important; backdrop-filter: none !important; }
 
   & #element-input {
-    background: var(--m-paper-light) !important; color: var(--m-ink) !important;
+    background: var(--m-paper-light) !important; color: var(--m-text) !important;
     border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
   }
   & #element-input::placeholder { color: var(--m-ink-soft); }
-  & #element-input:focus { border-color: var(--m-ink) !important; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important; outline: 3px solid var(--m-hl-a); outline-offset: 2px; }
+  & #element-input:focus { border-color: var(--m-text) !important; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important; outline: 3px solid var(--m-hl-a); outline-offset: 2px; }
   & #guess-btn img { filter: drop-shadow(0 3px 0 rgba(0, 0, 0, .5)); }
-  & .suggestion-item { color: var(--m-ink); border-color: var(--m-paper-dark) !important; }
-  & .suggestion-item:hover, & .suggestion-item.selected { background: var(--m-paper-dark) !important; color: var(--m-ink) !important; }
+  & .suggestion-item { color: var(--m-text); border-color: var(--m-paper-dark) !important; }
+  & .suggestion-item:hover, & .suggestion-item.selected { background: var(--m-paper-dark) !important; color: var(--m-text) !important; }
 
   /* Tableau : en-têtes blancs à contour, cases à contour d'encre */
   & #guesses-table th { color: #fff; text-shadow: var(--m-outline); border-bottom-color: transparent !important; }
@@ -179,29 +182,29 @@ html.ui-modern {
 /* ===== Messages de fin, indices actifs ===== */
 html.ui-modern {
   & .win-message, & .lose-message, & .memorial-message {
-    background: var(--m-paper) !important; color: var(--m-ink) !important;
+    background: var(--m-paper) !important; color: var(--m-text) !important;
     border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 6px 0 rgba(0, 0, 0, .35) !important;
-    --text-main: var(--m-ink); --text-muted: var(--m-ink-soft);
+    --text-main: var(--m-text); --text-muted: var(--m-ink-soft);
   }
-  & .win-message h2, & .win-message h3, & .lose-message h2, & .lose-message h3 { color: var(--m-ink) !important; -webkit-text-fill-color: currentColor; background: none; }
+  & .win-message h2, & .win-message h3, & .lose-message h2, & .lose-message h3 { color: var(--m-text) !important; -webkit-text-fill-color: currentColor; background: none; }
   & #active-hints-container > * {
-    background: var(--m-paper) !important; color: var(--m-ink) !important;
+    background: var(--m-paper) !important; color: var(--m-text) !important;
     border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
   }
 }
 
 /* ===== Colonnes de côté ===== */
 html.ui-modern {
-  & .sidebar-block h3, & .sidebar-block h2, & .bug-card h3, & .sidebar-header h3 { color: var(--m-ink) !important; -webkit-text-fill-color: currentColor; background: none; }
-  & .sidebar-block p, & .bug-card p, & .stats-list p { color: var(--m-ink); }
-  & #next-word-timer { color: var(--m-accent) !important; }
+  & .sidebar-block h3, & .sidebar-block h2, & .bug-card h3, & .sidebar-header h3 { color: var(--m-text) !important; -webkit-text-fill-color: currentColor; background: none; }
+  & .sidebar-block p, & .bug-card p, & .stats-list p { color: var(--m-text); }
+  & #next-word-timer { color: #ff7aa8 !important; }
   & #report-bug-btn {
-    background: var(--m-paper-light) !important; color: var(--m-ink) !important;
+    background: var(--m-paper-light) !important; color: var(--m-text) !important;
     border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .25) !important;
   }
   & .social-sidebar-link { border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .25); }
-  & .github-sidebar-link { background: #2b2335 !important; color: #fff !important; }
-  & .kofi-sidebar-link { background: var(--m-paper-light) !important; color: var(--m-accent) !important; }
+  & .github-sidebar-link { background: #15111f !important; color: #fff !important; }
+  & .kofi-sidebar-link { background: var(--m-paper-light) !important; color: #ff7aa8 !important; }
   & #site-footer, & #site-footer a { color: #fff; text-shadow: var(--m-outline); opacity: .9; }
 }
 
@@ -209,15 +212,15 @@ html.ui-modern {
 html.ui-modern {
   & .rules-modal { background: rgba(5, 4, 15, .7); backdrop-filter: none; }
   & .rules-content h2, & .rules-content h3, & .rules-content h4, & .modal-title {
-    color: var(--m-ink) !important; -webkit-text-fill-color: currentColor; background: none; text-shadow: none;
+    color: var(--m-text) !important; -webkit-text-fill-color: currentColor; background: none; text-shadow: none;
   }
-  & .rules-content p, & .rules-content li, & .rules-content label, & .rules-content td, & .rules-content th { color: var(--m-ink); }
+  & .rules-content p, & .rules-content li, & .rules-content label, & .rules-content td, & .rules-content th { color: var(--m-text); }
   & .rules-content hr, & .options-separator { border-color: var(--m-paper-dark) !important; background: var(--m-paper-dark); }
   & .rules-content input, & .rules-content select, & .rules-content textarea {
-    background: var(--m-paper-light) !important; color: var(--m-ink) !important; border: 2px solid var(--m-ink-soft) !important; border-radius: 6px;
+    background: var(--m-paper-light) !important; color: var(--m-text) !important; border: 2px solid var(--m-ink-soft) !important; border-radius: 6px;
   }
-  & .close-modal-btn { color: var(--m-ink) !important; }
-  & .close-modal-btn:hover { color: var(--m-accent) !important; }
+  & .close-modal-btn { color: var(--m-text) !important; }
+  & .close-modal-btn:hover { color: #ff7aa8 !important; }
   /* L'option Celeste Theme ne concerne que l'interface Classic */
   & .option-classic-only, & .option-classic-only + .options-separator { display: none; }
 
@@ -226,7 +229,7 @@ html.ui-modern {
     text-shadow: none; transition: transform .12s;
   }
   & .btn-primary { background: var(--m-accent) !important; color: #fff !important; }
-  & .btn-secondary { background: var(--m-paper-light) !important; color: var(--m-ink) !important; }
+  & .btn-secondary { background: var(--m-paper-light) !important; color: var(--m-text) !important; }
   & .btn-primary:hover, & .btn-secondary:hover { transform: translateY(-2px); }
 }
 
