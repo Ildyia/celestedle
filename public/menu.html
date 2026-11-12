@@ -10,9 +10,12 @@
     <link rel="stylesheet" href="celeste-ui.css" />
     <link rel="stylesheet" href="menu.css" />
     <link rel="stylesheet" href="modern.css" />
-    <!-- Ciel selon l'heure, posé avant l'affichage (voir js/sky.js) -->
+    <!-- Ciel selon l'heure, posé avant l'affichage (voir js/sky.js).
+         Qui a choisi l'interface Classic arrive directement sur le jeu,
+         comme avant le menu. -->
     <script>
       try {
+        if (localStorage.getItem("celestedle_modern_ui") === "false") location.replace("index.html");
         var on = localStorage.getItem("celestedle_time_sky") !== "false", h = new Date().getHours();
         document.documentElement.dataset.sky = !on || h >= 21 || h < 5 ? "night" : h < 8 ? "dawn" : h < 17 ? "day" : "dusk";
       } catch {}
@@ -113,6 +116,44 @@
           <span id="journal-count"></span>
           <button type="button" id="journal-next" aria-label="Next page">▸</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Carte postale d'accueil, comme celles qui ouvrent les chapitres du jeu.
+         Affichée une fois, en quittant l'écran titre (clé celestedle_welcome_v3).
+         Texte à modifier librement ici. -->
+    <div id="postcard" class="postcard-wrap" hidden>
+      <div class="postcard" role="dialog" aria-modal="true" aria-labelledby="postcard-title">
+        <div class="postcard-stamp"><img src="assets/illustration/start.png" alt="" /></div>
+        <div class="postcard-postmark" aria-hidden="true"></div>
+        <div class="postcard-text">
+          <h2 id="postcard-title">A new look for Celestedle!</h2>
+          <p>Hey everyone!</p>
+          <p>Celestedle now opens like Celeste itself:</p>
+          <ul>
+            <li><strong>Files</strong>: your profile is a save ticket, with today's hearts on its stub.</li>
+            <li><strong>Chapter select</strong>: pick a game on the mountain, A-Side for Normal, B-Side for Hard.</li>
+            <li><strong>Journal</strong>: your progress and every ranking, page by page.</li>
+            <li><strong>In game</strong>: just the game. Press Esc for the pause menu.</li>
+          </ul>
+          <p>The sky follows your time of day, and the old look is still there: Options, Modern game pages.</p>
+          <p class="postcard-sign">Thanks for climbing with me!<br />— Amélia / Ildyia</p>
+        </div>
+        <button type="button" class="postcard-btn" id="postcard-close"><span class="press-disc"></span>Let's climb!</button>
+      </div>
+    </div>
+
+    <!-- API injoignable : même carte postale, autre message -->
+    <div id="api-down" class="postcard-wrap" hidden>
+      <div class="postcard down" role="alertdialog" aria-modal="true" aria-labelledby="api-down-title">
+        <div class="postcard-stamp"><img src="assets/illustration/madeline-upset.png" alt="" /></div>
+        <div class="postcard-postmark" aria-hidden="true"></div>
+        <div class="postcard-text">
+          <h2 id="api-down-title">The mountain is closed for now</h2>
+          <p>The game's server isn't answering right now, so your files and today's climbs can't be loaded.</p>
+          <p>Try again in a few minutes. If it lasts, please tell us on the Discord server!</p>
+        </div>
+        <button type="button" class="postcard-btn" id="api-down-retry"><span class="press-disc"></span>Try again</button>
       </div>
     </div>
 

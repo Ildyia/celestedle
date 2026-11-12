@@ -35,6 +35,8 @@ async function refreshCommunityStats(mode) {
 }
 
 function showDisclaimerOnce() {
+  // En Modern, l'accueil se fait sur le menu (carte postale)
+  if (document.documentElement.classList.contains("ui-modern")) return;
   if (storage.get(KEYS.disclaimerSeen)) return;
   openModal("disclaimer-modal");
   const markSeen = () => storage.set(KEYS.disclaimerSeen, "true");

@@ -8,7 +8,8 @@ const OPTIONS = [
     // Interface « Modern » (façon menus du jeu) ou « Classic »
     checkbox: "toggle-modern-checkbox",
     key: KEYS.modernUi,
-    fallback: false,
+    // Modern par défaut ; Classic seulement si le joueur l'a choisi
+    fallback: true,
     apply: applyInterface
   },
   {

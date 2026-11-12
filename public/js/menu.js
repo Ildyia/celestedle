@@ -2,7 +2,7 @@
 // Ce fichier AFFICHE et ne réinvente rien : les appels au serveur passent par
 // api.js, le profil par player.js, les préférences par storage.js.
 
-import { api } from "./api.js";
+import { api, setUnavailableHandler } from "./api.js";
 import { player } from "./player.js";
 import { avatarUrl } from "./profile.js";
 import { storage, KEYS } from "./storage.js";
@@ -507,6 +507,29 @@ function climb() {
   location.href = games[gameIndex].page;
 }
 
+// ===== Carte postale d'accueil =====
+// Comme les cartes postales qui ouvrent les chapitres du jeu : montrée une
+// fois, en quittant l'écran titre, puis on arrive sur les fichiers.
+function leaveTitle() {
+  if (storage.get(KEYS.welcomeSeen)) return go("files");
+  byId("postcard").hidden = false;
+  byId("postcard-close").focus();
+}
+
+function closePostcard() {
+  storage.set(KEYS.welcomeSeen, "true");
+  byId("postcard").hidden = true;
+  go("files");
+}
+
+const postcardOpen = () => !byId("postcard").hidden;
+
+// API injoignable : même carte postale, avec un bouton pour réessayer
+setUnavailableHandler(() => {
+  byId("api-down").hidden = false;
+  byId("api-down-retry").focus();
+});
+
 // ===== Signalement de bug (fenêtre de la page de jeu, ouverte ici) =====
 function openReport() {
   openPanel("reports").catch((err) => showToast(err.message));
@@ -522,7 +545,7 @@ const journalOpen = () => journal.isOpen();
 // Chaque préférence : un libellé et une valeur qu'on fait défiler avec ◂ ▸.
 // Mêmes clés que options.js : le choix fait ici vaut aussi dans les jeux.
 const OPTION_ROWS = [
-  { label: "Modern game pages", key: KEYS.modernUi, fallback: false },
+  { label: "Modern game pages", key: KEYS.modernUi, fallback: true },
   { label: "Celeste theme", key: KEYS.celesteTheme, fallback: true },
   { label: "Show timer", key: KEYS.showTimer, fallback: true },
   { label: "Bird cursor", key: KEYS.customCursor, fallback: true, apply: applyCursor },
@@ -619,7 +642,7 @@ function renderHints() {
 
 // ===== Clavier =====
 const KEY_HANDLERS = {
-  title: { Enter: () => go("files"), " ": () => go("files") },
+  title: { Enter: leaveTitle, " ": leaveTitle },
   files: {
     ArrowUp: () => (fileOpen ? moveAction(-1) : moveSlot(-1)),
     ArrowDown: () => (fileOpen ? moveAction(1) : moveSlot(1)),
@@ -668,6 +691,14 @@ document.addEventListener("keydown", (event) => {
   if (event.target.matches("input, textarea, select")) return;
   // Fenêtre ouverte (profil, classements, bug) : elle gère son clavier
   if (panelOpen()) return;
+  if (!byId("api-down").hidden) return;
+  if (postcardOpen()) {
+    if (["Enter", " ", "Escape"].includes(event.key)) {
+      event.preventDefault();
+      closePostcard();
+    }
+    return;
+  }
   if (journalOpen()) {
     if (event.key === "Escape" || event.key === "j") closeJournal();
     if (event.key === "ArrowLeft") journal.flip(-1);
@@ -683,7 +714,9 @@ document.addEventListener("keydown", (event) => {
 });
 
 // ===== Souris et toucher =====
-byId("title").addEventListener("click", () => go("files"));
+byId("title").addEventListener("click", leaveTitle);
+byId("postcard-close").addEventListener("click", closePostcard);
+byId("api-down-retry").addEventListener("click", () => location.reload());
 byId("climb").addEventListener("click", climb);
 byId("to-options").addEventListener("click", openOptions);
 byId("to-report").addEventListener("click", openReport);

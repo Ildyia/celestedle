@@ -310,3 +310,50 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
   .journal-table.board th:nth-child(4), .journal-table.board td:nth-child(4) { display: none; }
   .journal-table.board th:nth-child(6), .journal-table.board td:nth-child(6) { display: table-cell; }
 }
+
+/* ===== Carte postale (accueil, API en panne) =====
+   Comme les cartes postales qui ouvrent les chapitres du jeu : papier
+   clair, timbre dentelé, cachet de la poste, texte à gauche. */
+.postcard-wrap { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 16px; background: rgba(5, 4, 20, .7); }
+.postcard-wrap[hidden] { display: none; }
+.postcard {
+  position: relative; width: min(680px, 100%); max-height: 92vh; overflow: auto; padding: 30px 36px 24px; color: #3a3350;
+  background: linear-gradient(160deg, #f7f0de, #eee2c6); border-radius: 6px;
+  box-shadow: 0 0 0 6px #fbf6ea, 0 0 0 7px rgba(58, 51, 80, .25), 0 22px 50px rgba(0, 0, 0, .6);
+  transform: rotate(-1.5deg); animation: postcard-in .5s cubic-bezier(.2, .9, .3, 1.15);
+}
+@keyframes postcard-in { from { opacity: 0; transform: translateY(40px) rotate(-6deg) scale(.95); } }
+/* Timbre : bord dentelé par un masque de petits ronds */
+.postcard-stamp {
+  float: right; width: 92px; height: 108px; margin: -6px -8px 10px 18px; padding: 10px; display: grid; place-items: center;
+  background: #d1566a; transform: rotate(4deg);
+  -webkit-mask: radial-gradient(circle 5px at 50% 50%, transparent 98%, #000) -5px -5px / 12px 12px, linear-gradient(#000 0 0) center / calc(100% - 10px) calc(100% - 10px) no-repeat;
+  mask: radial-gradient(circle 5px at 50% 50%, transparent 98%, #000) -5px -5px / 12px 12px, linear-gradient(#000 0 0) center / calc(100% - 10px) calc(100% - 10px) no-repeat;
+}
+.postcard.down .postcard-stamp { background: #4f9fdc; }
+.postcard-stamp img { width: 64px; height: 64px; object-fit: contain; image-rendering: pixelated; }
+/* Cachet : cercle et lignes ondulées à l'encre, par-dessus le coin du timbre */
+.postcard-postmark {
+  position: absolute; top: 74px; right: 92px; width: 110px; height: 56px; opacity: .35; pointer-events: none; transform: rotate(-12deg);
+  background:
+    radial-gradient(circle at 26px 28px, transparent 20px, #3a3350 21px 23px, transparent 24px),
+    repeating-linear-gradient(180deg, transparent 0 9px, #3a3350 9px 11px) 56px 8px / 54px 40px no-repeat;
+}
+.postcard-text h2 { font-size: 28px; margin-bottom: 12px; color: #3a3350; }
+.postcard-text p, .postcard-text li { font-size: 15px; line-height: 1.55; }
+.postcard-text p + p, .postcard-text ul + p { margin-top: 10px; }
+.postcard-text ul { margin: 8px 0 0 18px; display: grid; gap: 4px; }
+.postcard-sign { text-align: right; font-style: italic; }
+.postcard-btn {
+  display: inline-flex; align-items: center; gap: 4px; margin-top: 18px; padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer;
+  font-size: 17px; color: #fff; background: #3a3350;
+}
+.postcard-btn .press-disc { width: 20px; height: 20px; }
+.postcard-btn:hover { background: #52496e; }
+@media (max-width: 700px) {
+  .postcard { padding: 22px 20px 18px; transform: none; }
+  .postcard-stamp { width: 70px; height: 84px; }
+  .postcard-stamp img { width: 48px; height: 48px; }
+  .postcard-postmark { display: none; }
+  .postcard-text h2 { font-size: 22px; }
+}
