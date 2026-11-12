@@ -106,7 +106,7 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 /* Le texte du ticket laisse passer la souris jusqu'aux tampons (sauf le champ du renommage) */
 .card .body { pointer-events: none; }
 .card .body input { pointer-events: auto; }
-.stamp { position: absolute; aspect-ratio: 1; opacity: .72; mix-blend-mode: multiply; transition: transform .15s, opacity .15s; }
+.stamp { position: absolute; aspect-ratio: 1; opacity: .88; mix-blend-mode: multiply; transition: transform .15s, opacity .15s; }
 .stamp:hover { transform: scale(1.9); opacity: 1; mix-blend-mode: normal; z-index: 2; }
 .stamp > span { position: absolute; inset: 0; }
 .stamp-full { opacity: 0; }
