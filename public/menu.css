@@ -99,6 +99,30 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
     repeating-linear-gradient(90deg, var(--mark) 0 2px, transparent 2px 8px, var(--mark) 8px 9px, transparent 9px 14px) left bottom / 1.9em .45em no-repeat,
     repeating-linear-gradient(90deg, var(--mark) 0 1px, transparent 1px 5px, var(--mark) 5px 7px, transparent 7px 12px) right bottom / 1.3em .3em no-repeat; }
 
+/* Ticket doré : tous les tampons gagnés, comme une sauvegarde complète du jeu.
+   Papier doré, contour bronze, et un reflet qui passe de temps en temps. */
+.slot.golden { --ink-line: #7a5512; --mark: #7a5512; }
+.slot.golden .card { color: #4a3208; }
+.slot.golden .card .shape::before {
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(255, 250, 220, .8), transparent 55%),
+    linear-gradient(105deg, #f7dd8a 0%, #eec85a 45%, #f5d97a 70%, #dcae3c 100%);
+}
+.slot.golden .card .sub { color: #7a5512; }
+.slot.golden .stub > .shape::before {
+  background: radial-gradient(ellipse at 70% 20%, #fff6d0, transparent 60%), linear-gradient(170deg, #f8e6a8, #efd27a 60%, #f4dc8e);
+}
+.slot.golden .card::after {
+  content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 240, .75) 48%, transparent 60%) -150% 0 / 60% 100% no-repeat;
+  -webkit-mask: radial-gradient(circle 1.05em at 0 50%, #0000 97%, #000) left / 51% 100% no-repeat, radial-gradient(circle 1.05em at 100% 50%, #0000 97%, #000) right / 51% 100% no-repeat;
+  mask: radial-gradient(circle 1.05em at 0 50%, #0000 97%, #000) left / 51% 100% no-repeat, radial-gradient(circle 1.05em at 100% 50%, #0000 97%, #000) right / 51% 100% no-repeat;
+  animation: golden-shine 4s ease-in-out infinite;
+}
+@keyframes golden-shine { 0%, 60% { background-position: -150% 0; } 100% { background-position: 250% 0; } }
+body.perf .slot.golden .card::after { animation: none; display: none; }
+@media (prefers-reduced-motion: reduce) { .slot.golden .card::after { display: none; } }
+
 /* Tampons (dessin SVG de js/stamps.js), un peu de travers, fondus dans le papier */
 .card .stamps { position: absolute; inset: 0; }
 /* Au survol, un tampon passe devant et grossit pour qu'on le lise */

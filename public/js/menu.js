@@ -15,7 +15,7 @@ import { initNextWordTimer } from "./timer.js";
 import { openPanel, panelOpen } from "./menu-panels.js";
 import { createJournal } from "./journal.js";
 import { applySky, startSky } from "./sky.js";
-import { TICKET_SLOTS, earnedStamps, stampSvg, setAchievements } from "./stamps.js";
+import { STAMPS, TICKET_SLOTS, earnedStamps, stampSvg, setAchievements } from "./stamps.js";
 
 const LAST_GAME_KEY = "celestedle_menu_game";
 
@@ -300,7 +300,13 @@ function slotElement(kind, selected) {
     el("div", { className: "body" }, t.body)
   ]);
   const children = t.stub ? [el("div", { className: "stub" }, [el("div", { className: "shape" }), ...t.stub]), card] : [card];
-  return el("div", { className: `slot${selected ? " selected" : ""}${t.stub ? " has-stub" : ""}${kind === "profile" ? "" : " empty"}` }, children);
+  // Tous les tampons : le ticket devient doré, comme une sauvegarde à 100 % dans le jeu
+  const golden = kind === "profile" && earnedStamps().length === STAMPS.length;
+  return el(
+    "div",
+    { className: `slot${selected ? " selected" : ""}${t.stub ? " has-stub" : ""}${kind === "profile" ? "" : " empty"}${golden ? " golden" : ""}` },
+    children
+  );
 }
 
 function renderFiles() {
