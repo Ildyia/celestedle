@@ -232,7 +232,7 @@ function slotElement(kind, selected) {
   const card = el("div", { className: "card" }, [
     el("div", { className: "shape" }),
     el("div", { className: "stamps" }, (t.stamps ?? []).map(stampElement)),
-    el("div", { className: "portrait", attrs: { style: `--player-color: ${t.color ?? "#3a3158"}` } }, [img(t.portrait)]),
+    el("div", { className: "portrait", attrs: { style: `--player-color: ${t.color ?? "#cfd8ef"}` } }, [img(t.portrait)]),
     el("span", { className: "tape tl" }),
     el("span", { className: "tape br" }),
     el("div", { className: "body" }, t.body)

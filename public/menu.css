@@ -56,10 +56,14 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 /* Tickets dans le style de l'écran de fichiers de Celeste, tout en CSS :
    papier à encoches, contour à l'encre, scotch, talon perforé, tampons.
    Tailles en % ou en em de la largeur du ticket (--card-w). */
-.slots { --card-w: min(640px, 62vw); --ink-line: #6c5a99; --mark: #a99fc8; display: flex; flex-direction: column; align-items: center; gap: calc(var(--card-w) * .05); }
+.slots { --card-w: min(640px, 62vw); --ink-line: #2f2b45; --mark: #2f2b45; display: flex; flex-direction: column; align-items: center; gap: calc(var(--card-w) * .05); }
 .slot { position: relative; width: var(--card-w); font-size: calc(var(--card-w) / 25); transition: transform .3s var(--ease-out); cursor: pointer; }
 /* Ticket choisi : il glisse à gauche et son talon sort de derrière */
-.slot.selected.has-stub { transform: translateX(-42%); }
+/* Ticket choisi : il grossit un peu ; s'il a un talon, il glisse aussi à gauche */
+.slot.selected { transform: scale(1.05); }
+.slot.selected.has-stub { transform: translateX(-42%) scale(1.03); }
+/* Tickets en retrait : un peu assombris (une opacité laisserait voir le décor au travers) */
+.slot:not(.selected) .card { filter: brightness(.82); }
 #files.open .slot { cursor: default; }
 #files.open .slot.selected { animation: lift .3s var(--ease-out); }
 @keyframes lift { from { translate: 0 1.2em; } }
@@ -70,17 +74,18 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
   filter: drop-shadow(2px 0 0 var(--ink-line)) drop-shadow(-2px 0 0 var(--ink-line)) drop-shadow(0 2px 0 var(--ink-line)) drop-shadow(0 -2px 0 var(--ink-line)) drop-shadow(0 .3em .4em rgba(0,0,0,.35)); }
 .shape::before { content: ""; position: absolute; inset: 0; border-radius: 3px; }
 
-.card { position: relative; z-index: 1; aspect-ratio: 800 / 300; color: #ebe5fa; isolation: isolate; }
+/* Les tickets restent en papier clair : c'est la référence directe à l'écran de fichiers du jeu */
+.card { position: relative; z-index: 1; aspect-ratio: 800 / 300; color: #3d3a58; isolation: isolate; }
 .card > * { z-index: 1; }
 .card > .shape { z-index: 0; }
 .card .shape::before {
   background:
-    radial-gradient(ellipse at 20% 0%, rgba(255,255,255,.08), transparent 55%),
-    linear-gradient(105deg, #2a3157 0%, #332a58 48%, #432a52 100%);
+    radial-gradient(ellipse at 20% 0%, rgba(255,255,255,.6), transparent 55%),
+    linear-gradient(105deg, #e3e8f5 0%, #e9e4f4 45%, #f2e1eb 100%);
   -webkit-mask: radial-gradient(circle 1.05em at 0 50%, #0000 97%, #000) left / 51% 100% no-repeat, radial-gradient(circle 1.05em at 100% 50%, #0000 97%, #000) right / 51% 100% no-repeat;
   mask: radial-gradient(circle 1.05em at 0 50%, #0000 97%, #000) left / 51% 100% no-repeat, radial-gradient(circle 1.05em at 100% 50%, #0000 97%, #000) right / 51% 100% no-repeat; }
 /* Petits traits à l'encre dans les coins, comme sur le ticket du jeu */
-.card .shape::after { content: ""; position: absolute; inset: 6% 5%; opacity: .45; transform: skewX(-18deg);
+.card .shape::after { content: ""; position: absolute; inset: 6% 5%; opacity: .7; transform: skewX(-18deg);
   background:
     repeating-linear-gradient(90deg, var(--mark) 0 2px, transparent 2px 6px, var(--mark) 6px 7px, transparent 7px 13px) left top / 1.4em .4em no-repeat,
     repeating-linear-gradient(90deg, var(--mark) 0 1px, transparent 1px 7px, var(--mark) 7px 9px, transparent 9px 12px) right top / 1.7em .3em no-repeat,
@@ -89,7 +94,7 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 
 /* Tampons : icône teintée à l'encre, un peu de travers, fondue dans le papier */
 .card .stamps { position: absolute; inset: 0; overflow: hidden; }
-.stamp { position: absolute; aspect-ratio: 1; opacity: .5; }
+.stamp { position: absolute; aspect-ratio: 1; opacity: .7; mix-blend-mode: multiply; }
 .stamp::before { content: ""; position: absolute; inset: 0; background: var(--stamp-color);
   -webkit-mask: var(--stamp-icon) center / 90% no-repeat; mask: var(--stamp-icon) center / 90% no-repeat; }
 .stamp.ring::before { -webkit-mask-size: 62%; mask-size: 62%; }
@@ -109,9 +114,9 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 
 .card .body { position: absolute; left: 35%; right: 9%; top: 8%; bottom: 8%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .1em; text-align: center; }
 .card .name { max-width: 100%; font-size: 1.75em; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.card .sub { font-size: 1.2em; color: #a99fc8; }
+.card .sub { font-size: 1.2em; color: #6e6a8a; }
 .card .sub.small { font-size: .8em; line-height: 1.3; max-width: 22em; }
-.card input { font: inherit; font-size: .85em; width: 100%; max-width: 18em; margin-top: .4em; padding: .3em .5em; border: 2px solid #5b5180; border-radius: 6px; background: #1c172f; color: #ebe5fa; user-select: text; }
+.card input { font: inherit; font-size: .85em; width: 100%; max-width: 18em; margin-top: .4em; padding: .3em .5em; border: 2px solid #b8b2cc; border-radius: 6px; background: #fff; color: #2b2335; user-select: text; }
 
 /* « 🍓 × 176 » : chiffres blancs à contour sombre */
 .counter { display: inline-flex; align-items: center; gap: .1em; font-size: 1.9em; line-height: 1; color: #fff;
@@ -121,20 +126,20 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 
 /* Talon : papier blanc perforé à droite, derrière le ticket. Caché sous le
    ticket tant qu'il n'est pas choisi. */
-.stub { position: absolute; z-index: 0; left: 94%; top: 8%; height: 84%; aspect-ratio: 840 / 300; color: #ebe5fa;
+.stub { position: absolute; z-index: 0; left: 94%; top: 8%; height: 84%; aspect-ratio: 840 / 300; color: #3d3a58;
   padding: 4% 6% 4% 13%; display: grid; grid-template-columns: 1fr auto; grid-template-rows: 1fr auto; align-items: start;
   transform: translateX(-90%); opacity: 0; transition: transform .3s var(--ease-out), opacity .2s; pointer-events: none; }
 .slot.selected .stub { transform: none; opacity: 1; pointer-events: auto; }
 .stub > .shape { filter: drop-shadow(0 .25em .35em rgba(0,0,0,.3)); }
 .stub > .shape::before { border-radius: 0;
-  background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,.06), transparent 60%), linear-gradient(170deg, #2b2a5a, #262049 60%, #33224e);
+  background: radial-gradient(ellipse at 70% 20%, #fff, transparent 60%), linear-gradient(170deg, #f3f3f7, #e9e8ef 60%, #efecf2);
   -webkit-mask: linear-gradient(#000 0 0) left / calc(100% - .3em) 100% no-repeat, radial-gradient(circle .17em at 100% 50%, #0000 95%, #000) right / .3em .42em repeat-y;
   mask: linear-gradient(#000 0 0) left / calc(100% - .3em) 100% no-repeat, radial-gradient(circle .17em at 100% 50%, #0000 95%, #000) right / .3em .42em repeat-y; }
 .stub > :not(.shape) { position: relative; }
 .stub .gems { display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, 1.7em); gap: .35em 1.1em; justify-content: start; align-content: center; height: 100%; }
 .stub .gem { width: 1.7em; height: 1.7em; display: grid; place-items: center;
   filter: drop-shadow(1px 0 0 var(--ink-line)) drop-shadow(-1px 0 0 var(--ink-line)) drop-shadow(0 1px 0 var(--ink-line)) drop-shadow(0 -1px 0 var(--ink-line)); }
-.stub .dot { width: 32%; aspect-ratio: 1; border-radius: 50%; background: #6d6490; }
+.stub .dot { width: 32%; aspect-ratio: 1; border-radius: 50%; background: #4a4760; }
 .stub .gem:has(.dot) { filter: none; }
 /* Cœur de cristal : bleu en A-Side, rouge en B-Side */
 .stub .heart { width: 100%; aspect-ratio: 1;
@@ -147,9 +152,9 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 .stub .streak img { height: 1.3em; image-rendering: pixelated; }
 .stub-bottom { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; }
 .stub-bottom .counter { font-size: 1.6em; }
-.stub .best { font-size: 1.3em; color: #a99fc8; }
+.stub .best { font-size: 1.3em; color: #8a87a3; }
 .stub-note { grid-column: 1 / -1; font-size: .8em; line-height: 1.3; }
-.stub .code { grid-column: 1 / -1; align-self: end; padding: .3em .5em; border-radius: 4px; background: rgba(0,0,0,.3); font-family: ui-monospace, monospace; font-size: .7em; user-select: all; word-break: break-all; }
+.stub .code { grid-column: 1 / -1; align-self: end; padding: .3em .5em; border-radius: 4px; background: rgba(61,58,88,.08); font-family: ui-monospace, monospace; font-size: .7em; user-select: all; word-break: break-all; }
 
 #files .file-actions { width: min(780px, 100%); margin-top: 30px; font-size: 30px; }
 #files .file-actions li { justify-content: center; }
@@ -233,7 +238,7 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
   .screen { padding: 18px; }
   /* Téléphone : le talon passe sous le ticket au lieu de sortir à droite */
   .slots { --card-w: 92vw; }
-  .slot.selected.has-stub { transform: none; }
+  .slot.selected.has-stub { transform: scale(1.03); }
   .stub { position: relative; left: auto; top: auto; height: auto; width: 92%; margin: -3% auto 0; transform: none; display: none; }
   .slot.selected .stub { display: grid; }
   .slot.has-stub { display: flex; flex-direction: column-reverse; }
