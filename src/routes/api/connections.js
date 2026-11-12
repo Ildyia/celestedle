@@ -4,6 +4,8 @@ const { requireStaff, requirePlaytester, limitedAction } = require("../../middle
 const { rateLimit } = require("../../middleware/rate-limit");
 const { requirePlayer } = require("../../middleware/player");
 const staff = require("../../services/staff");
+const players = require("../../services/players");
+const statsRepo = require("../../repositories/stats");
 const { HttpError } = require("../../utils/http-error");
 const { todayParis, addDays, msUntilNextDay } = require("../../utils/dates");
 
@@ -49,6 +51,13 @@ const practiceLimit = rateLimit({ name: "connections-practice", windowMs: 60 * 1
 router.post("/connections/practice", requirePlayer, practiceLimit, (req, res) => {
   checkPractice(req, true);
   res.json(connections.newPracticePuzzle(req.player, req.body?.mode ?? "normal"));
+});
+
+// Statistiques du joueur sur les grilles du jour (journal du menu) ;
+// « tries » compte les erreurs
+router.get("/connections/me/stats", requirePlayer, (req, res) => {
+  const mode = req.query.mode === "hard" ? "hard" : "normal";
+  res.json({ mode, ...players.summarizeGames(statsRepo.playerConnectionGames(req.player.id, mode)) });
 });
 
 router.get("/connections/stats", (req, res) => {

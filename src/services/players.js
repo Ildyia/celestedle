@@ -136,20 +136,24 @@ function streaks(winDates) {
 
 function playerStats(player, modeId) {
   const mode = getMode(modeId);
-  const games = statsRepo.playerGames(player.id, mode.id);
+  return { mode: mode.id, ...summarizeGames(statsRepo.playerGames(player.id, mode.id)) };
+}
+
+// Bilan d'une liste de parties terminées ({ date, status, tries, seconds }),
+// commun aux trois jeux (pour Connections, « tries » = erreurs)
+function summarizeGames(games) {
   const wins = games.filter((g) => g.status === "won");
 
   const distribution = Array.from({ length: 10 }, (_, i) => ({
     label: i === 9 ? "10+" : String(i + 1),
     count: 0
   }));
-  for (const win of wins) distribution[Math.min(win.tries, 10) - 1].count++;
+  for (const win of wins) distribution[Math.max(1, Math.min(win.tries, 10)) - 1].count++;
 
   const average = (values) =>
     values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
 
   return {
-    mode: mode.id,
     played: games.length,
     wins: wins.length,
     forfeits: games.filter((g) => g.status === "forfeit").length,
@@ -174,5 +178,6 @@ module.exports = {
   findByToken,
   updateProfile,
   playerStats,
+  summarizeGames,
   streaks
 };

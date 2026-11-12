@@ -75,6 +75,8 @@ export const api = {
   updateMe: (changes) => request("PATCH", "/players/me", { body: changes }),
   deleteMe: () => request("DELETE", "/players/me"),
   myStats: (mode) => request("GET", `/players/me/stats?mode=${mode}`),
+  myTechStats: (mode) => request("GET", `/techs/me/stats?mode=${mode}`),
+  myConnectionsStats: (mode) => request("GET", `/connections/me/stats?mode=${mode}`),
   profileOptions: () => request("GET", "/players/options", { auth: false }),
 
   leaderboard: (period, mode) => request("GET", `/leaderboard?period=${period}&mode=${mode}`),

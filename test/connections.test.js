@@ -150,6 +150,16 @@ test("partie : erreur, « à une case près », doublon, groupe trouvé puis vic
   assert.equal(daily.data.me.mistakes, 2);
   const global = await api.request("GET", "/api/leaderboard?period=global", { token });
   assert.ok(global.data.me.games >= 1);
+
+  // Journal du menu : statistiques perso, Normal seulement
+  const mine = await api.request("GET", "/api/connections/me/stats?mode=normal", { token });
+  assert.equal(mine.status, 200);
+  assert.equal(mine.data.played, 1);
+  assert.equal(mine.data.wins, 1);
+  assert.equal(mine.data.avgTries, 2, "les erreurs tiennent lieu d'essais");
+  assert.equal(mine.data.streak.current, 1);
+  const mineHard = await api.request("GET", "/api/connections/me/stats?mode=hard", { token });
+  assert.equal(mineHard.data.played, 0);
 });
 
 test("partie : perdue à la 4e erreur", async () => {
@@ -170,6 +180,8 @@ test("partie : perdue à la 4e erreur", async () => {
   assert.equal(state.solution.length, 4);
   const after = await api.request("POST", "/api/connections/guess", { token, body: { names: g0 } });
   assert.equal(after.status, 409);
+  const mine = await api.request("GET", "/api/connections/me/stats", { token });
+  assert.deepEqual([mine.data.played, mine.data.wins, mine.data.losses], [1, 0, 1]);
 });
 
 test("admin : tags, éléments à classer, aperçu et régénération des grilles", async () => {

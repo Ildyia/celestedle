@@ -106,6 +106,24 @@ const stmts = {
     WHERE player_id = ? AND mode = ? AND status <> 'playing'
     ORDER BY date
   `),
+  playerTechGames: db.prepare(`
+    SELECT date, status, tries, seconds FROM tech_game_summaries
+    WHERE player_id = ? AND mode = ? AND status <> 'playing'
+    ORDER BY date
+  `),
+  // Grilles du jour de Connections (pas les grilles d'entraînement) : la date
+  // est « AAAA-MM-JJ » en Normal, « hard:AAAA-MM-JJ » en Hard. Les erreurs
+  // tiennent lieu d'essais.
+  playerConnectionGames: db.prepare(`
+    SELECT CASE WHEN g.date LIKE 'hard:%' THEN substr(g.date, 6) ELSE g.date END AS date,
+           g.status,
+           (SELECT COUNT(*) FROM connection_attempts a WHERE a.game_id = g.id AND a.group_index IS NULL) AS tries,
+           CAST(ROUND((julianday(g.finished_at) - julianday(g.started_at)) * 86400) AS INTEGER) AS seconds
+    FROM connection_games g
+    WHERE g.player_id = @playerId AND g.status <> 'playing'
+      AND CASE WHEN @mode = 'hard' THEN g.date LIKE 'hard:%' ELSE g.date NOT LIKE '%:%' END
+    ORDER BY 1
+  `),
 
   history: db.prepare(`
     SELECT d.date, d.mode, d.source, d.version, e.name AS word,
@@ -185,8 +203,14 @@ function listedPlayers() {
   return stmts.listedPlayers.all();
 }
 
+// Parties terminées d'un joueur dans un mode (Celestedle ou techs)
 function playerGames(playerId, mode) {
-  return stmts.playerGames.all(playerId, mode);
+  const stmt = String(mode).startsWith("tech") ? stmts.playerTechGames : stmts.playerGames;
+  return stmt.all(playerId, mode);
+}
+
+function playerConnectionGames(playerId, mode) {
+  return stmts.playerConnectionGames.all({ playerId, mode });
 }
 
 // Chiffres du jour par mode, pour Celestedle ou pour les techs
@@ -207,6 +231,7 @@ function wordStats() {
 }
 
 module.exports = {
+  playerConnectionGames,
   communityStats,
   dailyLeaderboard,
   dailyOneShots,

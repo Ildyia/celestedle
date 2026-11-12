@@ -2,6 +2,7 @@ const express = require("express");
 const techs = require("../../services/techs");
 const techsRepo = require("../../repositories/techs");
 const statsRepo = require("../../repositories/stats");
+const players = require("../../services/players");
 const staff = require("../../services/staff");
 const { requireAccess } = require("../../middleware/admin-auth");
 const { requirePlayer } = require("../../middleware/player");
@@ -57,6 +58,13 @@ router.get("/techs/stats", (req, res) => {
   const mode = techs.getRules(req.query.mode ?? "tech");
   techs.games.expireOverdueGames();
   res.json({ mode: mode.id, ...statsRepo.communityStats(todayParis(), mode.id) });
+});
+
+// Statistiques du joueur dans un mode des techs (journal du menu)
+router.get("/techs/me/stats", requirePlayer, (req, res) => {
+  const mode = techs.getRules(req.query.mode ?? "tech");
+  techs.games.expireOverdueGames();
+  res.json({ mode: mode.id, ...players.summarizeGames(statsRepo.playerGames(req.player.id, mode.id)) });
 });
 
 module.exports = router;

@@ -257,6 +257,7 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 .journal-table td:first-child, .journal-table th:first-child { text-align: left; white-space: nowrap; }
 .journal-table .side { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 8px; background: var(--side-a); }
 .journal-table .side.b { background: var(--side-b); }
+.journal-table .game-icon { width: 20px; height: 20px; object-fit: contain; image-rendering: pixelated; vertical-align: -5px; margin-right: 6px; }
 .journal-table.board td.rank { width: 44px; color: var(--j-soft); }
 .journal-table.board th:nth-child(2), .journal-table.board td.who { text-align: left; }
 .journal-table .who { display: flex; align-items: center; gap: 8px; height: 32px; }
@@ -302,13 +303,15 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
   .hints { display: none; }
   body[data-screen="title"] .hints { display: flex; left: 0; right: 0; justify-content: center; bottom: 8vh; }
   .menu { font-size: 20px; }
-  .journal { padding: 22px 16px 14px 46px; }
-  .journal-tabs { right: -30px; }
-  .journal-tab { width: 34px; font-size: 11px; }
+  /* Carnet sur téléphone : onglets en haut, à l'horizontale, et moins de colonnes */
+  .journal { width: 100%; padding: 16px 12px 12px 40px; transform: none; }
+  .journal-tabs { position: static; flex-direction: row; flex-wrap: wrap; gap: 4px; margin: 0 34px 10px 0; }
+  .journal-tab { width: auto; padding: 5px 9px; writing-mode: horizontal-tb; border-radius: 6px; font-size: 12px; transform: none; }
+  .journal-page h3 { font-size: 22px; }
   .journal-table { font-size: 13px; }
-  .journal-table th:nth-child(6), .journal-table td:nth-child(6) { display: none; }
-  .journal-table.board th:nth-child(4), .journal-table.board td:nth-child(4) { display: none; }
-  .journal-table.board th:nth-child(6), .journal-table.board td:nth-child(6) { display: table-cell; }
+  .journal-table .game-icon { display: none; }
+  .journal-table:not(.board) :is(th, td):is(:nth-child(2), :nth-child(6)) { display: none; }
+  .journal-table.board :is(th, td):nth-child(4) { display: none; }
 }
 
 /* ===== Carte postale (accueil, API en panne) =====

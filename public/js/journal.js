@@ -11,6 +11,13 @@ import { player } from "./player.js";
 
 const ICON = (name) => `assets/illustration/${name}.png`;
 
+// Statistiques perso de chaque jeu, pour la page Progress
+const MY_STATS = {
+  celestedle: (mode) => api.myStats(mode),
+  connections: (mode) => api.myConnectionsStats(mode),
+  techs: (mode) => api.myTechStats(mode)
+};
+
 const PAGES = [
   { id: "progress", tab: "Progress" },
   { id: "daily", tab: "Today" },
@@ -113,18 +120,23 @@ export function createJournal({ getContext }) {
     ]);
     const body = el("tbody");
     box.append(el("table", { className: "journal-table" }, [el("thead", {}, [head]), body]));
-    const sides = [
-      { mode: "normal", label: "A-Side", side: "a" },
-      { mode: "hard", label: "B-Side", side: "b" }
-    ];
-    const stats = await Promise.all(sides.map((s) => api.myStats(s.mode).catch(() => null)));
+    // Une ligne par jeu accessible et par côté (Connections : chutes = grilles perdues)
+    const { games } = getContext();
+    const rows = games.flatMap((game) =>
+      ["a", "b"].filter(() => MY_STATS[game.id]).map((side) => ({ game, side, mode: game.modes[side] }))
+    );
+    const stats = await Promise.all(rows.map((r) => MY_STATS[r.game.id](r.mode).catch(() => null)));
     if (current !== request) return;
-    sides.forEach((s, i) => {
+    rows.forEach((r, i) => {
       const st = stats[i];
       if (!st) return;
       body.append(
         el("tr", {}, [
-          el("td", {}, [el("span", { className: `side ${s.side}` }), `Celestedle ${s.label}`]),
+          el("td", {}, [
+            el("span", { className: `side ${r.side}` }),
+            el("img", { className: "game-icon", attrs: { src: r.game.icon, alt: "" } }),
+            `${r.game.title} ${r.side.toUpperCase()}`
+          ]),
           el("td", { text: String(st.played) }),
           el("td", { text: String(st.wins) }),
           el("td", { text: String(st.losses + st.forfeits) }),
@@ -134,7 +146,6 @@ export function createJournal({ getContext }) {
         ])
       );
     });
-    box.append(el("p", { className: "journal-note", text: "Connections and Techs will get their own lines here soon." }));
   }
 
   // ===== Pages de classement =====
