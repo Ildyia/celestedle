@@ -551,3 +551,29 @@
   gap: 6px;
   margin: 8px 0;
 }
+
+/* ==========================================================================
+   Habillage dans le style du menu : ciel selon l'heure (<html data-sky>),
+   montagne en bas, panneaux sombres unis, bleu du A-Side comme accent.
+   On change surtout les variables de style.css : le reste suit.
+   ========================================================================== */
+:root {
+  --sky-top: #0b0a24; --sky-mid: #2a1a4f; --sky-low: #6a3a7a;
+  --bg-main: #0b0a24; --bg-card: #1b1730; --bg-input: #120f24; --text-main: #f1edfb; --text-muted: #a9a3c4;
+  --color-indigo: #5aa8e8; --color-indigo-hover: #4b92cf;
+  min-height: 100%;
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 55%, var(--sky-low) 100%) fixed var(--sky-top);
+}
+html[data-sky="dawn"]:root { --sky-top: #232a63; --sky-mid: #8c4f8a; --sky-low: #f0a07a; }
+html[data-sky="day"]:root { --sky-top: #3a6db5; --sky-mid: #6f9fd8; --sky-low: #bcd3ee; }
+html[data-sky="dusk"]:root { --sky-top: #1f1c55; --sky-mid: #7f3c76; --sky-low: #ee8a5c; }
+body { background: none; display: block; }
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .45;
+  background: url("assets/menu/mountain.png") center bottom / max(100%, calc(55vh * 1600 / 700)) auto no-repeat;
+}
+.admin-container :is(h1, h2, h3, h4) { background: none; -webkit-text-fill-color: currentColor; color: #a9d4f5; text-shadow: none; }
+.admin-header h1 { color: #fff; font-size: 1.9rem; letter-spacing: 1px; text-shadow: 2px 0 #000, -2px 0 #000, 0 2px #000, 0 -2px #000, 2px 2px #000, -2px -2px #000, 2px -2px #000, -2px 2px #000; }
+.admin-back { align-self: center; padding: 6px 12px; border-radius: 8px; background: rgba(0, 0, 0, .5); color: #fff; text-decoration: none; font-size: 15px; }
+.admin-back:hover, .admin-back:focus-visible { background: rgba(255, 255, 255, .16); }
+.admin-container .sidebar-block { border: 1px solid rgba(255, 255, 255, .1); box-shadow: 0 12px 30px rgba(0, 0, 0, .35); }

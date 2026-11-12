@@ -6,6 +6,14 @@
     <title>Legal Notice - Celestedle</title>
     <!-- Inclusion du CSS dédié -->
     <link rel="stylesheet" href="legal.css" />
+    <link rel="icon" href="assets/berrywinged.png" type="image/png" />
+    <script>
+      // Ciel selon l'heure, posé avant l'affichage (même calcul que js/sky.js)
+      try {
+        var v = localStorage.getItem("celestedle_time_sky"), h = new Date().getHours();
+        document.documentElement.dataset.sky = v === "false" ? "night" : /^(night|dawn|day|dusk)$/.test(v) ? v : h >= 21 || h < 5 ? "night" : h < 8 ? "dawn" : h < 17 ? "day" : "dusk";
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="layout-wrapper">
@@ -104,7 +112,7 @@
         </section>
 
         <div class="navigation-footer">
-          <a href="index.html" class="status-link-btn">← Back to home</a>
+          <a href="menu.html#modes" class="status-link-btn" onclick="if (document.referrer &amp;&amp; history.length > 1) { history.back(); return false; }">◂ Back</a>
         </div>
       </div>
     </div>

@@ -5,12 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Celestedle - Administration</title>
     <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="theme-celeste.css" />
     <link rel="stylesheet" href="admin.css" />
+    <script>
+      // Ciel selon l'heure, posé avant l'affichage (même calcul que js/sky.js)
+      try {
+        var v = localStorage.getItem("celestedle_time_sky"), h = new Date().getHours();
+        document.documentElement.dataset.sky = v === "false" ? "night" : /^(night|dawn|day|dusk)$/.test(v) ? v : h >= 21 || h < 5 ? "night" : h < 8 ? "dawn" : h < 17 ? "day" : "dusk";
+      } catch (e) {}
+    </script>
     <link rel="icon" href="assets/berrywinged.png" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   </head>
-  <body class="theme-celeste no-custom-cursor">
+  <body class="no-custom-cursor">
     <div class="admin-container">
       <div id="admin-access" class="sidebar-block admin-login" hidden>
         <h3>Admin access</h3>
@@ -38,6 +44,7 @@
 
       <div id="admin-dashboard" hidden>
         <header class="admin-header">
+          <a href="menu.html#modes" class="admin-back">◂ Menu</a>
           <h1>Celestedle admin</h1>
           <span id="admin-version" class="small-subtext"></span>
           <span id="admin-identity" class="admin-identity"></span>

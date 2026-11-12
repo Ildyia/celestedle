@@ -1,147 +1,66 @@
+/* Pages de texte (crédits, mentions légales), dans le style du menu :
+   ciel selon l'heure (<html data-sky>, posé par un script du <head>),
+   montagne du menu en bas, panneau sombre et police du jeu. */
+@font-face {
+  font-family: "Renogare";
+  src: url("assets/fonts/renogare-regular.otf") format("opentype");
+  font-display: swap;
+}
+
+html {
+  --sky-top: #0b0a24; --sky-mid: #2a1a4f; --sky-low: #6a3a7a;
+  --panel: #1b1730; --line: rgba(255, 255, 255, .1); --text: #f1edfb; --muted: #a9a3c4; --accent: #5aa8e8;
+  min-height: 100%;
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 55%, var(--sky-low) 100%) fixed var(--sky-top);
+}
+html[data-sky="dawn"] { --sky-top: #232a63; --sky-mid: #8c4f8a; --sky-low: #f0a07a; }
+html[data-sky="day"] { --sky-top: #3a6db5; --sky-mid: #6f9fd8; --sky-low: #bcd3ee; }
+html[data-sky="dusk"] { --sky-top: #1f1c55; --sky-mid: #7f3c76; --sky-low: #ee8a5c; }
+
 body {
   margin: 0;
   padding: 0;
-  background-color: #1a192d; /* Fond foncé type Celeste */
-  color: #e2e8f0;
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
-    sans-serif;
+  color: var(--text);
+  font-family: "Renogare", "Segoe UI", sans-serif;
   line-height: 1.6;
 }
-
-#layout-wrapper {
-  display: flex;
-  justify-content: center;
-  padding: 40px 20px;
-  min-height: 100vh;
-  box-sizing: border-box;
+/* Montagne du menu, fixe en bas de l'écran, derrière le texte */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .6;
+  background: url("assets/menu/mountain.png") center bottom / max(100%, calc(55vh * 1600 / 700)) auto no-repeat;
 }
 
-#main-content-column {
-  width: 100%;
-  max-width: 760px;
-}
+#layout-wrapper { display: flex; justify-content: center; padding: 40px 20px; min-height: 100vh; box-sizing: border-box; }
+#main-content-column { width: 100%; max-width: 760px; }
 
 h1 {
-  font-size: 2.2rem;
-  color: #ffffff;
-  margin-bottom: 24px;
-  text-align: center;
-  letter-spacing: 0.5px;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  margin: 0 0 24px; text-align: center; font-size: clamp(30px, 5vw, 46px); font-weight: normal; letter-spacing: 1px; color: #fff;
+  text-shadow: 3px 0 #000, -3px 0 #000, 0 3px #000, 0 -3px #000, 2px 2px #000, -2px -2px #000, 2px -2px #000, -2px 2px #000;
 }
 
-.legal-page-block {
-  background: rgba(30, 29, 50, 0.85);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 32px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-}
-
+.legal-page-block { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 32px; box-shadow: 0 20px 50px rgba(0, 0, 0, .45); }
 .legal-page-block h2 {
-  font-size: 1.25rem;
-  color: #a78bfa; /* Violet pastel style Celeste */
-  margin-top: 28px;
-  margin-bottom: 12px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid rgba(167, 139, 250, 0.2);
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line);
+  font-size: 15px; font-weight: normal; letter-spacing: 3px; text-transform: uppercase; color: #a9d4f5;
 }
+.legal-page-block h2:first-of-type { margin-top: 0; }
+.legal-page-block p { margin: 0 0 16px; font-size: 15px; color: #d6d0ea; }
+.legal-page-block strong { color: #fff; font-weight: normal; }
+.legal-page-block hr { border: 0; height: 1px; background: var(--line); margin: 32px 0; }
+.legal-page-block a { color: var(--accent); text-decoration: none; word-break: break-all; }
+.legal-page-block a:hover { text-decoration: underline; }
 
-.legal-page-block h2:first-of-type {
-  margin-top: 0;
-}
+.host-info-card { background: rgba(0, 0, 0, .3); border-left: 4px solid #e0475b; border-radius: 0 8px 8px 0; padding: 16px 20px; margin: 16px 0 24px; font-size: 14px; color: var(--muted); }
+.host-info-card strong { color: #ff8a98; font-size: 16px; }
 
-.legal-page-block p {
-  margin: 0 0 16px 0;
-  font-size: 0.98rem;
-  color: #cbd5e1;
-}
-
-.legal-page-block strong {
-  color: #f8fafc;
-}
-
-.host-info-card {
-  background: rgba(15, 14, 28, 0.6);
-  border-left: 4px solid #ff4757;
-  border-radius: 0 8px 8px 0;
-  padding: 16px 20px;
-  margin: 16px 0 24px 0;
-  font-size: 0.92rem;
-  color: #94a3b8;
-}
-
-.host-info-card strong {
-  color: #ff6b81;
-  font-size: 1rem;
-}
-
-.legal-page-block hr {
-  border: 0;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.08);
-  margin: 32px 0;
-}
-
-.legal-page-block a {
-  color: #38bdf8;
-  text-decoration: none;
-  font-weight: 500;
-  transition:
-    color 0.2s ease,
-    text-decoration 0.2s ease;
-  word-break: break-all;
-}
-
-.legal-page-block a:hover {
-  color: #7dd3fc;
-  text-decoration: underline;
-}
-
-.navigation-footer {
-  margin-top: 32px;
-  text-align: center;
-}
-
-.status-link-btn {
-  display: inline-block;
-  background: #4c1d95;
-  color: #ffffff;
-  padding: 12px 24px;
-  border-radius: 8px;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.95rem;
-  transition:
-    background-color 0.2s ease,
-    transform 0.1s ease;
-  box-shadow: 0 4px 12px rgba(76, 29, 149, 0.3);
-}
-
-.status-link-btn:hover {
-  background: #5b21b6;
-  transform: translateY(-1px);
-}
-
-.status-link-btn:active {
-  transform: translateY(0);
-}
+.navigation-footer { margin-top: 28px; text-align: center; }
+/* Bouton retour, comme le bouton Climb du menu */
+.status-link-btn { display: inline-block; padding: 10px 26px; border-radius: 6px; background: var(--accent); color: #fff; text-decoration: none; font-size: 18px; box-shadow: 0 5px 0 #3b7bb3; }
+.status-link-btn:hover { filter: brightness(1.08); }
+.status-link-btn:active { transform: translateY(3px); box-shadow: none; }
+.status-link-btn:focus-visible { outline: 3px solid #fcff59; outline-offset: 3px; }
 
 @media (max-width: 600px) {
-  #layout-wrapper {
-    padding: 20px 12px;
-  }
-
-  .legal-page-block {
-    padding: 20px;
-  }
-
-  h1 {
-    font-size: 1.75rem;
-  }
+  #layout-wrapper { padding: 20px 12px; }
+  .legal-page-block { padding: 20px; }
 }

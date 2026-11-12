@@ -10,7 +10,7 @@
 // retire quand l'option change et construit le décor et le menu pause.
 import { el, clear } from "./dom.js";
 import { storage, KEYS } from "./storage.js";
-import { startSky } from "./sky.js";
+import { SKY_CHOICES, applySky, skySetting, startSky } from "./sky.js";
 import { player } from "./player.js";
 import { initNextWordTimer } from "./timer.js";
 
@@ -157,7 +157,74 @@ function buildDecor() {
 }
 
 // ===== Menu pause =====
+// ===== Options du menu pause : les mêmes que dans le menu (menu.js) =====
+// Chaque réglage s'applique tout de suite à la page et se retient dans le
+// navigateur. Les cases de la fenêtre Options du Classic suivent.
+function syncCheckbox(id, on) {
+  const box = document.getElementById(id);
+  if (box) box.checked = on;
+}
+const GAME_OPTIONS = [
+  { label: "Modern game pages", key: KEYS.modernUi, fallback: true, apply: (on) => (syncCheckbox("toggle-modern-checkbox", on), applyInterface(on)) },
+  { label: "Celeste theme", key: KEYS.celesteTheme, fallback: true, apply: (on) => (syncCheckbox("toggle-theme-checkbox", on), document.body.classList.toggle("theme-celeste", on)) },
+  {
+    label: "Show timer",
+    key: KEYS.showTimer,
+    fallback: true,
+    apply: (on) => (syncCheckbox("toggle-timer-checkbox", on), document.getElementById("game-timer-badge")?.toggleAttribute("hidden", !on))
+  },
+  {
+    label: "Bird cursor",
+    key: KEYS.customCursor,
+    fallback: true,
+    apply: (on) => {
+      syncCheckbox("toggle-cursor-checkbox", on);
+      document.body.classList.toggle("no-custom-cursor", !on);
+      const cursor = document.getElementById("custom-cursor");
+      if (cursor) cursor.style.display = on ? "block" : "none";
+    }
+  },
+  { label: "Colorblind mode", key: KEYS.colorblind, fallback: false, apply: (on) => (syncCheckbox("toggle-colorblind-checkbox", on), document.body.classList.toggle("colorblind", on)) },
+  { label: "Sky", key: KEYS.timeSky, choices: SKY_CHOICES, current: skySetting, apply: applySky },
+  { label: "Keyboard hints", key: KEYS.keyHints, fallback: true, apply: (on) => document.documentElement.classList.toggle("no-key-hints", !on) },
+  { label: "Performance mode", key: KEYS.performance, fallback: false, apply: (on) => document.documentElement.classList.toggle("perf", on) }
+];
+
+function optionItems() {
+  const rows = GAME_OPTIONS.map((row) => {
+    if (row.choices) {
+      return {
+        label: row.label,
+        value: row.choices.find(([id]) => id === row.current())[1],
+        run: (step = 1) => {
+          const at = row.choices.findIndex(([id]) => id === row.current());
+          storage.set(row.key, row.choices[(at + step + row.choices.length) % row.choices.length][0]);
+          row.apply();
+        }
+      };
+    }
+    const on = storage.getBool(row.key, row.fallback);
+    return {
+      label: row.label,
+      value: on ? "On" : "Off",
+      run: () => {
+        storage.set(row.key, String(!on));
+        row.apply(!on);
+      }
+    };
+  });
+  return [...rows, { label: "Back", run: () => showPauseView("main") }];
+}
+
+function showPauseView(view) {
+  pause.view = view;
+  pause.index = 0;
+  pause.querySelector("h2").textContent = view === "options" ? "Options" : "Paused";
+  renderPause();
+}
+
 function pauseItems() {
+  if (pause?.view === "options") return optionItems();
   const other = currentMode() === "hard" ? "normal" : "hard";
   const item = (label, action) => {
     const run = findAction(action);
@@ -167,7 +234,7 @@ function pauseItems() {
     { label: "Resume", run: closePause },
     item("Rules", "rules"),
     item("Rankings", "rankings"),
-    item("Options", "options"),
+    { label: "Options", run: () => showPauseView("options") },
     {
       label: `Switch to ${other === "hard" ? "B-Side" : "A-Side"}`,
       run: () => {
@@ -183,8 +250,16 @@ function renderPause() {
   const list = pause.querySelector("ul");
   clear(list);
   pauseItems().forEach((item, i) => {
-    const li = el("li", { className: i === pause.index ? "selected" : "", text: item.label });
-    li.addEventListener("click", () => item.run());
+    const li = el("li", { className: i === pause.index ? "selected" : "" }, [
+      el("span", { text: item.label }),
+      item.value === undefined ? null : el("span", { className: "value", text: item.value })
+    ]);
+    li.addEventListener("click", () => {
+      pause.index = i;
+      item.run();
+      // Un réglage vient de changer : on réaffiche sa valeur
+      if (isOpen()) renderPause();
+    });
     // Survol : on déplace seulement la sélection (reconstruire la liste ici
     // ferait rater le clic en cours)
     li.addEventListener("mouseenter", () => {
@@ -207,9 +282,8 @@ function openPause() {
     document.body.append(pause);
   }
   document.activeElement?.blur?.();
-  pause.index = 0;
   pause.hidden = false;
-  renderPause();
+  showPauseView("main");
 }
 
 function closePause() {
@@ -225,7 +299,8 @@ function onKey(event) {
     const moves = { ArrowUp: -1, ArrowDown: 1 };
     if (event.key in moves) pause.index = (pause.index + moves[event.key] + items.length) % items.length;
     else if (event.key === "Enter") items[pause.index].run();
-    else if (event.key === "Escape") closePause();
+    else if ((event.key === "ArrowLeft" || event.key === "ArrowRight") && items[pause.index].value !== undefined) items[pause.index].run(event.key === "ArrowLeft" ? -1 : 1);
+    else if (event.key === "Escape") pause.view === "options" ? showPauseView("main") : closePause();
     else return;
     event.preventDefault();
     event.stopPropagation();

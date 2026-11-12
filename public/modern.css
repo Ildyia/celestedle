@@ -233,6 +233,14 @@ html.ui-modern {
   & #modern-pause ul { list-style: none; padding: 0; margin: 0; }
   & #modern-pause li { width: fit-content; padding: 7px 0; font-size: clamp(22px, 3vw, 34px); cursor: pointer; color: #fff; text-shadow: var(--m-outline-big); transition: transform .1s; }
   & #modern-pause li.selected { transform: translateX(14px); animation: m-hl .25s steps(1) infinite; }
+  /* Options : le réglage à gauche, sa valeur à droite, comme dans le menu */
+  & #modern-pause li:has(.value) { display: flex; justify-content: space-between; gap: 24px; width: min(600px, 84vw); }
+  & #modern-pause .value { white-space: nowrap; flex-shrink: 0; }
+  & #modern-pause li:has(.value), & #modern-pause li:has(.value) ~ li { font-size: clamp(18px, 2.6vw, 30px); }
+  & #modern-pause .value::before { content: "◂ "; opacity: .5; }
+  & #modern-pause .value::after { content: " ▸"; opacity: .5; }
+  & #modern-pause li.selected .value::before, & #modern-pause li.selected .value::after { opacity: 1; }
+  & #modern-pause ul { max-height: 80vh; overflow-y: auto; padding-right: 20px; }
 }
 @keyframes m-fade { from { opacity: 0; } }
 @keyframes m-wave { 0% { transform: skewY(-6deg) scaleX(1); } 100% { transform: skewY(5deg) scaleX(.86); } }
