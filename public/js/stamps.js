@@ -22,14 +22,20 @@ export const STAMPS = [
   { id: "strawberry", top: "FIRST BERRY", bottom: "1ST WIN", icon: "illustration/strawberry.png", color: "#c45a50", label: "First Strawberry" }
 ];
 
-// Emplacements sur le ticket, en % du ticket (800 × 300) : autour du nom et du
-// compteur de fraises. Le plus rare des tampons gagnés prend le premier.
+// Emplacements sur le ticket, en % du ticket (800 × 300) : tout autour du
+// nom et du compteur de fraises, un par tampon. Le plus rare des tampons
+// gagnés prend le premier. Au survol, un tampon grossit pour qu'on le lise.
 export const TICKET_SLOTS = [
-  { x: 77, y: 2, size: 18, rotate: 10 },
-  { x: 33, y: 52, size: 16, rotate: -14 },
-  { x: 81, y: 50, size: 15, rotate: -6 },
-  { x: 36, y: -4, size: 13, rotate: -10 },
-  { x: 64, y: -6, size: 12, rotate: 16 }
+  { x: 79, y: 2, size: 12, rotate: 10 },
+  { x: 35, y: 61, size: 11, rotate: -14 },
+  { x: 82, y: 58, size: 11, rotate: -6 },
+  { x: 36, y: 1, size: 10, rotate: -10 },
+  { x: 66, y: 1, size: 9, rotate: 16 },
+  { x: 90, y: 30, size: 8, rotate: -18 },
+  { x: 49, y: 70, size: 9, rotate: 8 },
+  { x: 51, y: -3, size: 9, rotate: -4 },
+  { x: 72, y: 70, size: 9, rotate: 12 },
+  { x: 92, y: 4, size: 7, rotate: 22 }
 ];
 
 const PREVIEW_ALL = new URLSearchParams(location.search).get("stamps") === "all";
