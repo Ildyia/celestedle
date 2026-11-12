@@ -25,7 +25,7 @@ body[data-screen="modes"] #modes,
 body[data-screen="options"] #options { display: block; animation: fade .4s ease-out; }
 body.perf .screen { animation-duration: .15s !important; }
 body.perf .book { box-shadow: 0 8px 0 var(--paper-dark); }
-body.perf .slot { transition: none; }
+body.perf .slot { transition: none; animation: none !important; }
 /* Fondu seul (sans déplacement) : moins de travail pendant le zoom de la montagne */
 @keyframes fade { from { opacity: 0; } }
 
@@ -53,27 +53,45 @@ body.perf .slot { transition: none; }
 
 /* ===== Sélection de fichier (profil) ===== */
 #files h2, #options h2 { font-size: 34px; margin-bottom: 26px; }
-.slots { display: flex; flex-direction: column; gap: 18px; max-width: 760px; margin-left: auto; }
-.slot { position: relative; display: flex; align-items: center; gap: 18px; padding: 14px 22px 14px 14px; min-height: 112px;
-  transform: translateX(48px) rotate(-1deg); transition: transform .25s var(--ease-out); cursor: pointer; }
-.slot::before { /* perforation du ticket */ content: ""; position: absolute; left: 112px; top: 8px; bottom: 8px; border-left: 3px dashed var(--paper-dark); }
-.slot.selected { transform: translateX(0) rotate(0deg) scale(1.03); }
-.slot .portrait { width: 84px; height: 84px; border-radius: 4px; background: var(--player-color, #c6d9f0); display: grid; place-items: center; flex: none; }
-.slot .portrait img { width: 64px; height: 64px; object-fit: contain; image-rendering: pixelated; }
-.slot .body { flex: 1; min-width: 0; padding-left: 14px; }
-.slot .name { font-size: 26px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.slot .name small { font-size: 13px; opacity: .55; margin-left: 8px; }
-.slot .stats { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 8px; font-size: 17px; }
-.slot .stats img { width: 22px; height: 22px; vertical-align: -5px; margin-right: 4px; image-rendering: pixelated; }
+/* Tickets empilés au centre ; ceux qu'on ne regarde pas sont repoussés à
+   droite, comme dans le jeu. Le ticket ouvert reste seul, actions dessous. */
+.slots { display: flex; flex-direction: column; gap: 18px; width: min(780px, 100%); margin: 0 auto; }
+.slot { position: relative; display: flex; align-items: center; gap: 22px; padding: 14px 24px 14px 16px; min-height: 128px;
+  border: 4px solid var(--paper-dark);
+  background: linear-gradient(90deg, var(--paper-dark) 0 118px, var(--paper) 118px);
+  transform: translateX(22%); transition: transform .25s var(--ease-out); cursor: pointer; }
+/* Ticket en retrait : assombri par un voile (une opacité laisserait voir le décor au travers) */
+.slot::after { content: ""; position: absolute; inset: -4px; border-radius: 6px; background: rgba(15, 10, 40, .35); transition: opacity .25s; pointer-events: none; }
+.slot::before { /* perforation du ticket */ content: ""; position: absolute; left: 118px; top: 6px; bottom: 6px; border-left: 4px dotted var(--paper); }
+.slot.selected { transform: none; }
+.slot.selected::after { opacity: 0; }
+#files.open .slot { animation: lift .3s var(--ease-out); cursor: default; }
+@keyframes lift { from { transform: translateY(24px); } }
+.slot .portrait { width: 88px; height: 88px; border: 4px solid var(--ink); border-radius: 8px; background: var(--player-color, #c6d9f0); display: grid; place-items: center; flex: none; }
+.slot .portrait img { width: 66px; height: 66px; object-fit: contain; image-rendering: pixelated; }
+.slot .body { flex: 1; min-width: 0; padding-left: 8px; }
+.slot .name { font-size: 30px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.slot .name small { font-size: 13px; opacity: .5; margin-left: 8px; }
+.slot .stats { display: flex; flex-wrap: wrap; gap: 6px 26px; margin-top: 6px; font-size: 19px; }
+.slot .stats img { width: 24px; height: 24px; vertical-align: -5px; margin-right: 6px; image-rendering: pixelated; }
+/* Parties du jour, comme les chapitres terminés en bas du ticket du jeu */
+.slot .marks { display: flex; gap: 8px; margin-top: 10px; padding-top: 8px; border-top: 2px solid var(--paper-dark); }
+.slot .mark { position: relative; width: 34px; height: 34px; border-radius: 6px; background: rgba(43,35,53,.1); display: grid; place-items: center; }
+.slot .mark img { width: 26px; height: 26px; object-fit: contain; image-rendering: pixelated; }
+.slot .mark.none img { opacity: .3; }
+.slot .mark.won { background: #f6c94c; }
+.slot .mark.lost { background: rgba(43,35,53,.25); }
+.slot .mark.won::after, .slot .mark.lost::after { position: absolute; right: -5px; bottom: -5px; font-size: 13px; line-height: 16px; width: 16px; text-align: center; border-radius: 50%; color: #fff; }
+.slot .mark.won::after { content: "✓"; background: #3f9a4d; }
+.slot .mark.lost::after { content: "✗"; background: var(--side-b); }
 .slot .sub { margin-top: 6px; font-size: 14px; opacity: .65; }
 .slot.empty .name { opacity: .6; }
-.slot input { font: inherit; font-size: 18px; width: 100%; max-width: 360px; margin-top: 8px; padding: 6px 10px; border: 2px solid var(--paper-dark); border-radius: 6px; background: #fff; color: var(--ink); user-select: text; }
+.slot input { font: inherit; font-size: 18px; width: 100%; max-width: 380px; margin-top: 8px; padding: 6px 10px; border: 2px solid var(--paper-dark); border-radius: 6px; background: #fff; color: var(--ink); user-select: text; }
 .slot .code { display: inline-block; margin-top: 8px; padding: 4px 8px; border-radius: 4px; background: rgba(43,35,53,.08); font-family: ui-monospace, monospace; font-size: 14px; user-select: all; word-break: break-all; }
-.slot .actions { display: none; flex-direction: column; gap: 6px; margin-left: 10px; font-size: 18px; flex: none; }
-.slot.selected .actions { display: flex; }
-.slot .actions button { border: none; background: none; color: var(--ink); text-align: left; cursor: pointer; padding: 0; }
-.slot .actions button.active { color: var(--accent); }
-.slot .actions button.active::before { content: "▸ "; }
+#files .file-actions { width: min(780px, 100%); margin-top: 30px; font-size: 30px; }
+#files .file-actions li { justify-content: center; }
+#files .file-actions li.selected { transform: scale(1.08); }
+.file-actions:empty { display: none; }
 
 /* ===== Sélection des modes (sélection de chapitre) ===== */
 .icons { position: absolute; left: 4vw; top: 6vh; display: flex; gap: 22px; align-items: flex-end; }
@@ -140,11 +158,14 @@ body.perf .slot { transition: none; }
   #title h1 { margin-top: 20vh; }
   #moon { top: 3vh; }
   .screen { padding: 18px; }
-  .slot { transform: none; flex-wrap: wrap; }
-  .slot::before { left: 98px; bottom: auto; height: 76px; }
-  .slot .portrait { width: 70px; height: 70px; }
-  .slot .stats { gap: 4px 12px; font-size: 14px; }
-  .slot .actions { flex-direction: row; flex-wrap: wrap; gap: 14px; width: 100%; margin: 6px 0 0 88px; font-size: 15px; }
+  .slot { transform: translateX(8%); gap: 14px; padding: 10px 14px 10px 10px; background: linear-gradient(90deg, var(--paper-dark) 0 86px, var(--paper) 86px); }
+  .slot::before { left: 86px; }
+  .slot .portrait { width: 64px; height: 64px; }
+  .slot .portrait img { width: 48px; height: 48px; }
+  .slot .name { font-size: 22px; }
+  .slot .stats { gap: 4px 14px; font-size: 15px; }
+  .slot .stats img { width: 18px; height: 18px; }
+  .file-actions { font-size: 22px; }
   .icons { gap: 10px; }
   .icon { width: 64px; height: 64px; }
   .icon.selected { width: 84px; height: 84px; }

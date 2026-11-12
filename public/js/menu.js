@@ -21,6 +21,7 @@ let screen = "title";
 let optionsReturn = "modes";
 
 function go(next) {
+  if (next !== screen) watchTransition();
   screen = next;
   document.body.dataset.screen = next;
   render();
@@ -34,32 +35,51 @@ function render() {
 }
 
 // ===== Fichier (profil) =====
+// Comme l'écran de fichiers du jeu : on parcourt les tickets (↑↓), Entrée
+// ouvre le ticket choisi, qui monte seul à l'écran avec ses actions dessous.
 // Avec un profil : [profil, restaurer]. Sans : [nouveau, restaurer].
 // On ne propose pas « New file » à côté d'un profil : le nouveau jeton
 // remplacerait l'ancien dans ce navigateur.
 let slotIndex = 0;
 let actionIndex = 0;
+// Ticket ouvert (ses actions sont affichées)
+let fileOpen = false;
 // Saisie en cours dans un ticket : "rename", "code" ou "restore"
 let editing = null;
 let profileStats = null;
+// Partie du jour pour chaque jeu, affichée en bas du ticket comme les
+// chapitres terminés du jeu : { celestedle: "won" | "lost" | null, … }
+let todayMarks = {};
 
 function slotList() {
   return player.profile ? ["profile", "restore"] : ["new", "restore"];
 }
 
-function slotActions(kind) {
-  if (kind === "profile") return [
+function slotActions() {
+  return [
     { label: "Begin", run: () => go("modes") },
     { label: "Rename", run: () => startEditing("rename") },
-    { label: editing === "code" ? "Hide code" : "Recovery code", run: () => startEditing(editing === "code" ? null : "code") }
+    { label: editing === "code" ? "Hide recovery code" : "Recovery code", run: () => startEditing(editing === "code" ? null : "code") }
   ];
-  if (kind === "new") return [{ label: "Begin", run: createFile }];
-  return [{ label: "Enter code", run: () => startEditing("restore") }];
+}
+
+function openSlot() {
+  const kind = slotList()[slotIndex];
+  if (kind === "new") return createFile();
+  fileOpen = true;
+  actionIndex = 0;
+  if (kind === "restore") return startEditing("restore");
+  renderFiles();
+}
+
+function closeSlot() {
+  fileOpen = false;
+  editing = null;
+  renderFiles();
 }
 
 function startEditing(mode) {
   editing = mode;
-  actionIndex = 0;
   renderFiles();
   // Champ de saisie : focus direct pour taper tout de suite
   const input = byId("slot-input");
@@ -87,8 +107,6 @@ async function loadProfileStats() {
     const [normal, hard] = await Promise.all([api.myStats("normal"), api.myStats("hard")]);
     const times = [normal.bestSeconds, hard.bestSeconds].filter((t) => t !== null && t !== undefined);
     profileStats = {
-      normal,
-      hard,
       wins: normal.wins + hard.wins,
       falls: normal.losses + normal.forfeits + hard.losses + hard.forfeits,
       bestTime: times.length ? Math.min(...times) : null,
@@ -100,8 +118,42 @@ async function loadProfileStats() {
   if (screen === "files") renderFiles();
 }
 
+// Une partie gagnée dans l'un des deux côtés suffit pour marquer le jeu
+async function loadTodayMarks() {
+  if (!player.profile) {
+    todayMarks = {};
+    return;
+  }
+  const entries = await Promise.all(
+    games.map(async (game) => {
+      const states = await Promise.all(Object.values(game.modes).map((mode) => game.state(mode).catch(() => null)));
+      const statuses = states.map((s) => s?.status);
+      if (statuses.includes("won")) return [game.id, "won"];
+      if (statuses.some((st) => st === "lost" || st === "forfeit")) return [game.id, "lost"];
+      return [game.id, null];
+    })
+  );
+  todayMarks = Object.fromEntries(entries);
+  if (screen === "files") renderFiles();
+}
+
 function statItem(icon, text, title) {
   return el("span", { attrs: { title } }, [el("img", { attrs: { src: `assets/illustration/${icon}.png`, alt: "" } }), text]);
+}
+
+const MARK_TITLES = { won: "summit reached today", lost: "fell today", null: "not climbed yet today" };
+
+function todayRow() {
+  return el(
+    "div",
+    { className: "marks" },
+    games.map((g) => {
+      const mark = todayMarks[g.id] ?? null;
+      return el("span", { className: `mark ${mark ?? "none"}`, attrs: { title: `${g.title}: ${MARK_TITLES[mark]}` } }, [
+        el("img", { attrs: { src: g.icon, alt: g.title } })
+      ]);
+    })
+  );
 }
 
 function profileSlot() {
@@ -120,7 +172,8 @@ function profileSlot() {
         statItem("skull", s ? String(s.falls) : "…", "Losses and forfeits"),
         statItem("time", s && s.bestTime !== null ? formatDuration(s.bestTime) : "--:--", "Best time"),
         statItem("goldflag", s ? String(s.streak) : "…", "Current streak")
-      ])
+      ]),
+      todayRow()
     );
   }
   return {
@@ -153,35 +206,40 @@ function emptySlot(kind) {
 function renderFiles() {
   const list = slotList();
   slotIndex = Math.min(slotIndex, list.length - 1);
+  byId("files").classList.toggle("open", fileOpen);
   const slots = byId("slots");
   clear(slots);
   list.forEach((kind, i) => {
-    const selected = i === slotIndex;
+    // Ticket ouvert : il reste seul à l'écran
+    if (fileOpen && i !== slotIndex) return;
     const { portrait, body } = kind === "profile" ? profileSlot() : emptySlot(kind);
-    const actions = selected && !isTyping()
-      ? slotActions(kind).map((action, a) =>
-          el("button", {
-            className: a === actionIndex ? "active" : "",
-            text: action.label,
-            attrs: { type: "button" },
-            on: { click: (e) => { e.stopPropagation(); actionIndex = a; action.run(); } }
-          })
-        )
-      : [];
     const slot = el(
       "div",
-      { className: `slot paper${selected ? " selected" : ""}${kind === "profile" ? "" : " empty"}` },
-      [portrait, el("div", { className: "body" }, body), el("div", { className: "actions" }, actions)]
+      { className: `slot paper${i === slotIndex ? " selected" : ""}${kind === "profile" ? "" : " empty"}` },
+      [portrait, el("div", { className: "body" }, body)]
     );
     slot.addEventListener("click", () => {
-      if (i === slotIndex) return;
+      if (fileOpen) return;
+      if (i === slotIndex) return openSlot();
       slotIndex = i;
-      actionIndex = 0;
-      editing = null;
       renderFiles();
     });
     slots.append(slot);
   });
+
+  // Actions du ticket ouvert, en texte blanc comme dans le jeu
+  const actions = byId("file-actions");
+  clear(actions);
+  if (fileOpen && list[slotIndex] === "profile" && !isTyping()) {
+    slotActions().forEach((action, a) => {
+      const li = el("li", { className: a === actionIndex ? "selected hl" : "", text: action.label });
+      li.addEventListener("click", () => {
+        actionIndex = a;
+        action.run();
+      });
+      actions.append(li);
+    });
+  }
   const input = byId("slot-input");
   input?.addEventListener("keydown", onSlotInputKey);
 }
@@ -193,6 +251,7 @@ function isTyping() {
 async function onSlotInputKey(event) {
   event.stopPropagation();
   if (event.key === "Escape") {
+    if (editing === "restore") fileOpen = false;
     editing = null;
     renderFiles();
     return;
@@ -207,6 +266,7 @@ async function onSlotInputKey(event) {
     } else {
       await player.restore(value);
       slotIndex = 0;
+      actionIndex = 0;
       showToast(`Welcome back, ${player.profile.name}!`);
       loadProfileStats();
     }
@@ -290,6 +350,7 @@ async function loadGames() {
   const last = games.findIndex((g) => g.id === storage.get(LAST_GAME_KEY));
   gameIndex = last >= 0 ? last : 0;
   if (screen === "modes") renderModes();
+  loadTodayMarks();
 }
 
 function selectGame(index) {
@@ -517,7 +578,7 @@ function openOptions() {
 const HINTS = {
   // Écran titre : le rond « C » remplace la touche, et clignote
   title: [[null, "Start"]],
-  files: [["↑↓", "File"], ["←→", "Action"], ["Enter", "Confirm"], ["Esc", "Back"]],
+  files: [["↑↓", "Move"], ["Enter", "Confirm"], ["Esc", "Back"]],
   modes: [["←→", "Game"], ["↑↓", "Side"], ["Enter", "Climb"], ["J", "Journal"], ["O", "Options"], ["Esc", "Back"]],
   options: [["↑↓", "Move"], ["Enter", "Change"], ["Esc", "Back"]]
 };
@@ -534,12 +595,14 @@ function renderHints() {
 const KEY_HANDLERS = {
   title: { Enter: () => go("files"), " ": () => go("files") },
   files: {
-    ArrowUp: () => moveSlot(-1),
-    ArrowDown: () => moveSlot(1),
-    ArrowLeft: () => moveAction(-1),
-    ArrowRight: () => moveAction(1),
-    Enter: () => slotActions(slotList()[slotIndex])[actionIndex]?.run(),
-    Escape: () => (editing ? startEditing(null) : go("title"))
+    ArrowUp: () => (fileOpen ? moveAction(-1) : moveSlot(-1)),
+    ArrowDown: () => (fileOpen ? moveAction(1) : moveSlot(1)),
+    Enter: () => (fileOpen ? slotActions()[actionIndex]?.run() : openSlot()),
+    Escape: () => {
+      if (editing) return startEditing(null);
+      if (fileOpen) return closeSlot();
+      go("title");
+    }
   },
   modes: {
     ArrowLeft: () => selectGame(gameIndex - 1),
@@ -565,13 +628,11 @@ const KEY_HANDLERS = {
 function moveSlot(step) {
   const count = slotList().length;
   slotIndex = (slotIndex + step + count) % count;
-  actionIndex = 0;
-  editing = null;
   renderFiles();
 }
 
 function moveAction(step) {
-  const count = slotActions(slotList()[slotIndex]).length;
+  const count = slotActions().length;
   actionIndex = (actionIndex + step + count) % count;
   renderFiles();
 }
@@ -622,6 +683,31 @@ function letItSnow(count = 40) {
 // ===== Mode performance =====
 function applyPerformance(on) {
   document.body.classList.toggle("perf", on);
+}
+
+// Tant que le joueur n'a pas choisi lui-même dans les options, on mesure la
+// fluidité des premiers changements d'écran (le zoom de la montagne). Si le
+// navigateur tombe sous ~30 images/s (souvent : accélération graphique
+// coupée), on passe en mode performance et on s'en souvient.
+const SLOW_FPS = 30;
+let transitionChecks = 0;
+
+function watchTransition() {
+  if (storage.get(KEYS.performance) !== null || transitionChecks >= 3 || document.hidden) return;
+  transitionChecks++;
+  const startedAt = performance.now();
+  let frames = 0;
+  const tick = (now) => {
+    frames++;
+    if (now - startedAt < 1000) return requestAnimationFrame(tick);
+    const fps = (frames * 1000) / (now - startedAt);
+    if (fps >= SLOW_FPS || document.hidden || storage.get(KEYS.performance) !== null) return;
+    storage.set(KEYS.performance, "true");
+    applyPerformance(true);
+    if (screen === "options") renderOptions();
+    showToast("Slow animations detected: performance mode is on (see Options).");
+  };
+  requestAnimationFrame(tick);
 }
 
 // ===== Démarrage =====

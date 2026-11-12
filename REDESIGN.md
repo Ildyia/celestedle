@@ -16,10 +16,10 @@ Récupérer main régulièrement : `git fetch origin && git merge origin/main`.
 
 Déjà en place :
 - **Titre** : lune en croissant entourée d'étoiles, drapeau rectangulaire qui flotte au sommet, neige, touche « C » qui clignote en bas à droite.
-- **Fichier** : ticket du profil (fraises = victoires, crâne = défaites, meilleur temps, série), Begin, Rename, Recovery code ; New file et Restore sans profil.
+- **Fichier** : tickets empilés, ceux qu'on ne regarde pas repoussés à droite. Entrée ouvre le ticket, qui reste seul avec ses actions en texte blanc dessous (Begin, Rename, Recovery code). Le ticket montre fraises = victoires, crâne = défaites, meilleur temps, série, et une case par jeu pour la partie du jour (✓ gagnée, ✗ ratée). New file et Restore sans profil.
 - **Modes** : un endroit de la montagne par jeu (la caméra « monte » jusqu'au sommet pour Techs), A-Side et B-Side, règles du mode, état de la partie du jour, record perso (Celestedle) ou chiffres du jour (Connections, Techs). Connections et Techs n'apparaissent qu'avec l'accès.
 - **Journal** (J) : stats perso et lien vers les classements (`index.html#leaderboard`).
-- **Options** : mêmes préférences que les pages de jeu, mode performance (`body.perf` : sans neige ni scintillements, contours allégés, mouvements courts), Credits, Legal notice.
+- **Options** : mêmes préférences que les pages de jeu, mode performance (`body.perf` : sans neige ni scintillements, contours allégés, cadrage sans zoom), Credits, Legal notice. Tant que le joueur n'a pas choisi, il s'active tout seul si les premiers changements d'écran tournent sous 30 images/s.
 - Clavier partout, aide en bas à droite, mobile, `prefers-reduced-motion`.
 
 ## Montagne
