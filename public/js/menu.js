@@ -381,7 +381,7 @@ const GAMES = [
   {
     id: "celestedle",
     title: "Celestedle",
-    icon: "assets/entities/madeline.png",
+    icon: "assets/entities/winged-strawberry.png",
     page: "index.html",
     modes: { a: "normal", b: "hard" },
     desc: {
@@ -397,7 +397,7 @@ const GAMES = [
   {
     id: "connections",
     title: "Connections",
-    icon: "assets/illustration/strawberry.png",
+    icon: "assets/entities/summit-gems.png",
     page: "connections.html",
     modes: { a: "normal", b: "hard" },
     desc: {
@@ -411,7 +411,7 @@ const GAMES = [
   {
     id: "techs",
     title: "Techs",
-    icon: "assets/illustration/feather.png",
+    icon: "assets/entities/refill.png",
     page: "techs.html",
     modes: { a: "tech", b: "tech-hard" },
     desc: {

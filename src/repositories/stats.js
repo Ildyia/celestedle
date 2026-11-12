@@ -107,12 +107,17 @@ const stmts = {
     ORDER BY date
   `),
   // Toutes les parties terminées d'un joueur, Celestedle et techs (achievements)
+  // regularHints : sans l'indice Element Info, qui ne compte pas dans maxHints
   playerAllGames: db.prepare(`
-    SELECT mode, date, status, tries, hints FROM game_summaries
-    WHERE player_id = @playerId AND status <> 'playing'
+    SELECT s.mode, s.date, s.status, s.tries, s.hints, s.wasted_tries AS wastedTries, s.finished_at AS finishedAt,
+           (SELECT COUNT(*) FROM game_hints h WHERE h.game_id = s.id AND h.type <> 'info') AS regularHints
+    FROM game_summaries s
+    WHERE s.player_id = @playerId AND s.status <> 'playing'
     UNION ALL
-    SELECT mode, date, status, tries, hints FROM tech_game_summaries
-    WHERE player_id = @playerId AND status <> 'playing'
+    SELECT s.mode, s.date, s.status, s.tries, s.hints, s.wasted_tries, s.finished_at,
+           (SELECT COUNT(*) FROM tech_hints h WHERE h.game_id = s.id AND h.type <> 'info')
+    FROM tech_game_summaries s
+    WHERE s.player_id = @playerId AND s.status <> 'playing'
   `),
   playerTechGames: db.prepare(`
     SELECT date, status, tries, seconds FROM tech_game_summaries
@@ -127,6 +132,7 @@ const stmts = {
            g.status,
            (SELECT COUNT(*) FROM connection_attempts a WHERE a.game_id = g.id AND a.group_index IS NULL) AS tries,
            (SELECT COUNT(*) FROM connection_hints h WHERE h.game_id = g.id) AS hints,
+           g.finished_at AS finishedAt,
            CAST(ROUND((julianday(g.finished_at) - julianday(g.started_at)) * 86400) AS INTEGER) AS seconds
     FROM connection_games g
     WHERE g.player_id = @playerId AND g.status <> 'playing'

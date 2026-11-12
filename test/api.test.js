@@ -100,26 +100,30 @@ test("achievements : rien au départ, tampons gagnés par les victoires", async 
     return Object.fromEntries(res.data.achievements.map((a) => [a.id, a]));
   };
   let list = await earned();
-  assert.equal(Object.keys(list).length, 6);
+  assert.equal(Object.keys(list).length, 10);
   assert.ok(Object.values(list).every((a) => !a.earned && a.current === 0));
 
-  // Victoire au premier essai en Normal : première fraise et one-shot
+  // Victoire en Normal au premier essai : première fraise seulement
   const secret = daily.getTodaySecret("normal").element.nom;
   await api.request("POST", "/api/game/guess", { token, body: { mode: "normal", guess: secret } });
   list = await earned();
   assert.equal(list.strawberry.earned, true);
-  assert.equal(list.winged.earned, true);
-  assert.equal(list.skull.earned, false);
-  assert.equal(list.heart.earned, false);
+  assert.equal(list.lucky.earned, false, "Lucky Guess demande un B-Side");
+  assert.equal(list.perfect.earned, false);
+  assert.deepEqual([list.hundred.current, list.hundred.goal], [1, 175]);
+  assert.deepEqual([list.max.current, list.max.goal], [1, 202]);
   assert.deepEqual([list.summit.current, list.summit.goal], [1, 7]);
-  assert.deepEqual([list.feather.current, list.feather.goal], [1, 25]);
 
-  // Puis le B-Side du même jour : B-Side et cœur de cristal
+  // B-Side au premier essai, sans indice : Lucky Guess, Golden, et les deux
+  // modes publics de Celestedle gagnés le même jour : Perfectionist
   const hard = daily.getTodaySecret("hard").element.nom;
   await api.request("POST", "/api/game/guess", { token, body: { mode: "hard", guess: hard } });
   list = await earned();
-  assert.equal(list.skull.earned, true);
-  assert.equal(list.heart.earned, true);
+  assert.equal(list.lucky.earned, true);
+  assert.equal(list.golden.earned, true);
+  assert.equal(list.perfect.earned, true);
+  assert.equal(list.badday.earned, false);
+  assert.equal(list.assist.earned, false);
 });
 
 test("les synonymes officiels sont acceptés", async () => {

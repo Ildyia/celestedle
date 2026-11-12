@@ -105,7 +105,8 @@ button { font: inherit; color: inherit; }
    Un jeu auquel le joueur n'a pas accès n'a pas de drapeau (body[data-games]). */
 .game-flag { position: absolute; left: calc(var(--x) / 1600 * 100%); top: calc(var(--y) / 700 * 100%); width: calc(38 / 1600 * 100%); height: calc(56 / 700 * 100%); overflow: visible; }
 .game-flag .cloth { fill: var(--flag-color); transform-box: fill-box; transform-origin: 0% 50%; animation: wave 1.2s ease-in-out infinite alternate; }
-body:not([data-games~="connections"]) .game-flag[data-game="connections"] { display: none; }
+body:not([data-games~="connections"]) .game-flag[data-game="connections"],
+body:not([data-games~="techs"]) .game-flag[data-game="techs"] { display: none; }
 body.perf .game-flag .cloth { animation: none !important; }
 
 /* Drapeau au sommet : il flotte au vent */
