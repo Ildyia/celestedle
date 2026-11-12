@@ -46,14 +46,34 @@ html.ui-modern {
     --bg-input: var(--m-paper-light);
     --text-main: var(--m-text);
     --text-muted: var(--m-ink-soft);
-    background: var(--m-paper) !important;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--m-tint) 26%, var(--m-paper)), var(--m-paper) 65%) !important;
     color: var(--m-text);
-    border: 3px solid var(--m-ink) !important;
+    border: 3px solid color-mix(in srgb, var(--m-tint) 70%, var(--m-ink)) !important;
     border-radius: 8px;
-    box-shadow: 0 6px 0 rgba(0, 0, 0, .35);
+    box-shadow: 0 6px 0 rgba(0, 0, 0, .35), 0 0 18px color-mix(in srgb, var(--m-tint) 22%, transparent);
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
+
+  /* Chaque carte a sa couleur : liseré, teinte du fond et titre.
+     Par défaut, le lavande du menu. */
+  & .sidebar-block, & .bug-card, & .rules-content, & .bug-modal-content, & .suggestions-box,
+  & #game-status button, & #game-status .tries-badge, & #element-input,
+  & .win-message, & .lose-message, & .memorial-message, & #active-hints-container > * { --m-tint: #b48cff; }
+  & #stats-sidebar { --m-tint: #4fd1c5; }
+  & .bug-card { --m-tint: #ff7aa8; }
+  & #timer-sidebar { --m-tint: #f3c95a; }
+  & #discord-sidebar { --m-tint: #7c8cff; }
+  & #game-status .tries-badge:first-child { --m-tint: #84e07a; }
+  & #game-status #game-timer-badge { --m-tint: #6fc3ff; }
+  & #game-status #hint-btn { --m-tint: #f3c95a; }
+  & #game-status #giveup-btn { --m-tint: #ff6b7d; }
+  & .win-message { --m-tint: #84e07a; }
+  & .lose-message { --m-tint: #ff6b7d; }
+  & .sidebar-block h3, & .sidebar-block h2, & .bug-card h3, & .sidebar-header h3, & .rules-content h2, & .modal-title {
+    color: color-mix(in srgb, var(--m-tint) 75%, #fff) !important;
+  }
+  & .sidebar-block h3, & .sidebar-block h2, & .bug-card h3 { border-color: color-mix(in srgb, var(--m-tint) 45%, transparent) !important; }
 }
 
 /* ===== Décor ===== */
@@ -123,8 +143,8 @@ html.ui-modern {
   }
   & .game-tab:hover { opacity: 1; transform: translateY(-2px); }
   & .game-tab[aria-current="page"] {
-    opacity: 1; background: var(--m-paper) !important; border-color: var(--m-text) !important; border-radius: 8px;
-    color: var(--m-text) !important; text-shadow: none; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
+    opacity: 1; background: linear-gradient(160deg, #6a2f66, var(--m-paper) 80%) !important; border-color: #ff7aa8 !important; border-radius: 8px;
+    color: #fff !important; text-shadow: none; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
   }
   & .game-tab-badge { border: 2px solid var(--m-ink); text-shadow: none; }
 
@@ -145,12 +165,12 @@ html.ui-modern {
 html.ui-modern {
   & #game-status { background: none !important; border: none !important; box-shadow: none !important; }
   & #game-status button, & #game-status .tries-badge {
-    background: var(--m-paper) !important; color: var(--m-text) !important;
-    border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--m-tint) 30%, var(--m-paper)), var(--m-paper) 75%) !important; color: var(--m-text) !important;
+    border: 3px solid color-mix(in srgb, var(--m-tint) 70%, var(--m-ink)) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
     text-shadow: none; transition: transform .12s;
   }
   & #game-status button:hover:not(:disabled) { transform: translateY(-2px); }
-  & #hint-btn { background: #3b3322 !important; color: #f3d27a !important; }
+  & #hint-btn { color: #f3d27a !important; }
   & #giveup-btn { color: #ff8a98 !important; }
   & #game-status button:disabled { opacity: .55; }
 }
@@ -161,10 +181,10 @@ html.ui-modern {
 
   & #element-input {
     background: var(--m-paper-light) !important; color: var(--m-text) !important;
-    border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
+    border: 3px solid color-mix(in srgb, var(--m-tint) 70%, var(--m-ink)) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
   }
   & #element-input::placeholder { color: var(--m-ink-soft); }
-  & #element-input:focus { border-color: var(--m-text) !important; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important; outline: 3px solid var(--m-hl-a); outline-offset: 2px; }
+  & #element-input:focus { box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important; outline: 3px solid var(--m-hl-a); outline-offset: 2px; }
   & #guess-btn img { filter: drop-shadow(0 3px 0 rgba(0, 0, 0, .5)); }
   & .suggestion-item { color: var(--m-text); border-color: var(--m-paper-dark) !important; }
   & .suggestion-item:hover, & .suggestion-item.selected { background: var(--m-paper-dark) !important; color: var(--m-text) !important; }
@@ -182,20 +202,20 @@ html.ui-modern {
 /* ===== Messages de fin, indices actifs ===== */
 html.ui-modern {
   & .win-message, & .lose-message, & .memorial-message {
-    background: var(--m-paper) !important; color: var(--m-text) !important;
-    border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 6px 0 rgba(0, 0, 0, .35) !important;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--m-tint) 26%, var(--m-paper)), var(--m-paper) 70%) !important; color: var(--m-text) !important;
+    border: 3px solid color-mix(in srgb, var(--m-tint) 70%, var(--m-ink)) !important; border-radius: 8px; box-shadow: 0 6px 0 rgba(0, 0, 0, .35) !important;
     --text-main: var(--m-text); --text-muted: var(--m-ink-soft);
   }
   & .win-message h2, & .win-message h3, & .lose-message h2, & .lose-message h3 { color: var(--m-text) !important; -webkit-text-fill-color: currentColor; background: none; }
   & #active-hints-container > * {
-    background: var(--m-paper) !important; color: var(--m-text) !important;
-    border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--m-tint) 26%, var(--m-paper)), var(--m-paper) 70%) !important; color: var(--m-text) !important;
+    border: 3px solid color-mix(in srgb, var(--m-tint) 70%, var(--m-ink)) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
   }
 }
 
 /* ===== Colonnes de côté ===== */
 html.ui-modern {
-  & .sidebar-block h3, & .sidebar-block h2, & .bug-card h3, & .sidebar-header h3 { color: var(--m-text) !important; -webkit-text-fill-color: currentColor; background: none; }
+  & .sidebar-block h3, & .sidebar-block h2, & .bug-card h3, & .sidebar-header h3 { color: color-mix(in srgb, var(--m-tint) 75%, #fff) !important; -webkit-text-fill-color: currentColor; background: none; }
   & .sidebar-block p, & .bug-card p, & .stats-list p { color: var(--m-text); }
   & #next-word-timer { color: #ff7aa8 !important; }
   & #report-bug-btn {
@@ -212,7 +232,7 @@ html.ui-modern {
 html.ui-modern {
   & .rules-modal { background: rgba(5, 4, 15, .7); backdrop-filter: none; }
   & .rules-content h2, & .rules-content h3, & .rules-content h4, & .modal-title {
-    color: var(--m-text) !important; -webkit-text-fill-color: currentColor; background: none; text-shadow: none;
+    color: color-mix(in srgb, var(--m-tint) 75%, #fff) !important; -webkit-text-fill-color: currentColor; background: none; text-shadow: none;
   }
   & .rules-content p, & .rules-content li, & .rules-content label, & .rules-content td, & .rules-content th { color: var(--m-text); }
   & .rules-content hr, & .options-separator { border-color: var(--m-paper-dark) !important; background: var(--m-paper-dark); }

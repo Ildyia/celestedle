@@ -56,7 +56,7 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 /* Tickets dans le style de l'écran de fichiers de Celeste, tout en CSS :
    papier à encoches, contour à l'encre, scotch, talon perforé, tampons.
    Tailles en % ou en em de la largeur du ticket (--card-w). */
-.slots { --card-w: min(640px, 62vw); --ink-line: #0e0b1c; --mark: #a99fc8; display: flex; flex-direction: column; align-items: center; gap: calc(var(--card-w) * .05); }
+.slots { --card-w: min(640px, 62vw); --ink-line: #b48cff; --mark: #c9b6ff; display: flex; flex-direction: column; align-items: center; gap: calc(var(--card-w) * .05); }
 .slot { position: relative; width: var(--card-w); font-size: calc(var(--card-w) / 25); transition: transform .3s var(--ease-out); cursor: pointer; }
 /* Ticket choisi : il glisse à gauche et son talon sort de derrière */
 .slot.selected.has-stub { transform: translateX(-42%); }
@@ -76,7 +76,7 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 .card .shape::before {
   background:
     radial-gradient(ellipse at 20% 0%, rgba(255,255,255,.08), transparent 55%),
-    linear-gradient(105deg, #2c2a4f 0%, #322a52 45%, #3b2a4c 100%);
+    linear-gradient(105deg, #23386a 0%, #3a2b6e 48%, #5e2a5f 100%);
   -webkit-mask: radial-gradient(circle 1.05em at 0 50%, #0000 97%, #000) left / 51% 100% no-repeat, radial-gradient(circle 1.05em at 100% 50%, #0000 97%, #000) right / 51% 100% no-repeat;
   mask: radial-gradient(circle 1.05em at 0 50%, #0000 97%, #000) left / 51% 100% no-repeat, radial-gradient(circle 1.05em at 100% 50%, #0000 97%, #000) right / 51% 100% no-repeat; }
 /* Petits traits à l'encre dans les coins, comme sur le ticket du jeu */
@@ -127,7 +127,7 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 .slot.selected .stub { transform: none; opacity: 1; pointer-events: auto; }
 .stub > .shape { filter: drop-shadow(0 .25em .35em rgba(0,0,0,.3)); }
 .stub > .shape::before { border-radius: 0;
-  background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,.06), transparent 60%), linear-gradient(170deg, #262040, #221c38 60%, #261f3a);
+  background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,.06), transparent 60%), linear-gradient(170deg, #2b2a5a, #262049 60%, #33224e);
   -webkit-mask: linear-gradient(#000 0 0) left / calc(100% - .3em) 100% no-repeat, radial-gradient(circle .17em at 100% 50%, #0000 95%, #000) right / .3em .42em repeat-y;
   mask: linear-gradient(#000 0 0) left / calc(100% - .3em) 100% no-repeat, radial-gradient(circle .17em at 100% 50%, #0000 95%, #000) right / .3em .42em repeat-y; }
 .stub > :not(.shape) { position: relative; }
@@ -166,6 +166,11 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 
 .book { position: absolute; right: 5vw; top: 12vh; width: min(460px, 90vw); background: var(--paper); color: var(--ink); border-radius: 8px;
   box-shadow: 0 8px 0 var(--paper-dark), 0 18px 40px rgba(0,0,0,.55); padding: 26px 28px 30px; transform: rotate(1.5deg); }
+/* Le livre prend la couleur du côté choisi (A bleu, B rouge) */
+.book { --tint: var(--side-a); border: 3px solid color-mix(in srgb, var(--tint) 75%, #000);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--tint) 30%, var(--paper)), var(--paper) 65%); }
+.book:has(.climb.b) { --tint: var(--side-b); }
+.book h3 { color: color-mix(in srgb, var(--tint) 45%, #fff); }
 .book .chapter { font-size: 15px; letter-spacing: 3px; opacity: .6; }
 .book h3 { font-size: 40px; margin: 4px 0 10px; }
 .book .desc { font-size: 15px; line-height: 1.45; opacity: .85; min-height: 44px; }
