@@ -15,7 +15,7 @@ Récupérer main régulièrement : `git fetch origin && git merge origin/main`.
 **Règle :** `menu.js` affiche et ne réinvente rien : il passe par `api.js`, `player.js`, `storage.js` et `profile.js`.
 
 Déjà en place :
-- **Titre** : lune, drapeau qui flotte au sommet, neige, rond « C » qui clignote.
+- **Titre** : lune en croissant entourée d'étoiles, drapeau rectangulaire qui flotte au sommet, neige, touche « C » qui clignote en bas à droite.
 - **Fichier** : ticket du profil (fraises = victoires, crâne = défaites, meilleur temps, série), Begin, Rename, Recovery code ; New file et Restore sans profil.
 - **Modes** : un endroit de la montagne par jeu (la caméra « monte » jusqu'au sommet pour Techs), A-Side et B-Side, règles du mode, état de la partie du jour, record perso (Celestedle) ou chiffres du jour (Connections, Techs). Connections et Techs n'apparaissent qu'avec l'accès.
 - **Journal** (J) : stats perso et lien vers les classements (`index.html#leaderboard`).

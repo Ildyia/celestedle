@@ -54,20 +54,30 @@ button { font: inherit; color: inherit; }
   opacity: .8; animation: twinkle 4s steps(2) infinite; }
 @keyframes twinkle { 50% { opacity: .5; } }
 
-/* Lune : grande, pâle, avec un halo et quelques cratères. Elle recule un peu
-   quand on avance dans les menus (parallaxe). */
+/* Lune en croissant, entourée de petites étoiles. Le halo est sur #moon
+   (drop-shadow suit la forme), la découpe sur .moon-body (masque) : sur un
+   seul élément, le masque couperait aussi le halo. Elle recule un peu quand
+   on avance dans les menus (parallaxe). */
 #moon {
-  position: absolute; top: 5vh; right: 7vw;
-  width: clamp(90px, 14vw, 190px); aspect-ratio: 1; border-radius: 50%;
-  background:
-    radial-gradient(circle at 30% 35%, rgba(170, 160, 210, .55) 0 9%, transparent 10%),
-    radial-gradient(circle at 62% 60%, rgba(170, 160, 210, .45) 0 13%, transparent 14%),
-    radial-gradient(circle at 70% 28%, rgba(170, 160, 210, .4) 0 6%, transparent 7%),
-    radial-gradient(circle at 38% 75%, rgba(170, 160, 210, .35) 0 5%, transparent 6%),
-    radial-gradient(circle at 40% 40%, #fff, var(--moon) 55%, #cfc6ef);
-  box-shadow: 0 0 40px 10px rgba(220, 210, 255, .35), 0 0 120px 40px rgba(160, 140, 230, .18);
+  position: absolute; top: 5vh; right: 6vw;
+  width: clamp(70px, 11vw, 150px); aspect-ratio: 1;
+  filter: drop-shadow(0 0 14px rgba(220, 210, 255, .55)) drop-shadow(0 0 40px rgba(150, 200, 255, .3));
   transition: transform 1.2s var(--ease-out), opacity 1.2s;
 }
+.moon-body {
+  position: absolute; inset: 0; border-radius: 50%;
+  background:
+    radial-gradient(circle at 26% 58%, rgba(150, 145, 200, .35) 0 6%, transparent 7%),
+    radial-gradient(circle at 42% 82%, rgba(150, 145, 200, .3) 0 4%, transparent 5%),
+    radial-gradient(circle at 35% 60%, #fff, var(--moon) 60%, #cfc6ef);
+  /* Le croissant : on retire un disque décalé vers le haut à droite */
+  -webkit-mask: radial-gradient(circle at 72% 28%, transparent 0 50%, #000 51%);
+  mask: radial-gradient(circle at 72% 28%, transparent 0 50%, #000 51%);
+}
+/* Étoiles autour de la lune, placées par --x / --y (en % de la lune) */
+.moon-star { position: absolute; left: var(--x); top: var(--y); font-size: var(--s, 14px); line-height: 1; color: var(--c, #ffd1f0);
+  transform: translate(-50%, -50%); animation: sparkle 2.4s ease-in-out infinite; animation-delay: var(--d, 0s); }
+@keyframes sparkle { 50% { opacity: .35; transform: translate(-50%, -50%) scale(.75); } }
 
 #mountain { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 75vh; transition: transform 1.2s var(--ease-out), filter 1.2s; transform-origin: 50% 100%; }
 
@@ -92,5 +102,6 @@ button { font: inherit; color: inherit; }
 /* Moins d'animations si le système le demande */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
+  .moon-star { opacity: .8; }
   .snow { display: none; }
 }

@@ -30,26 +30,20 @@ body[data-screen="options"] #options { display: block; animation: fade .4s ease-
 
 /* ===== Titre ===== */
 #title { text-align: center; cursor: pointer; }
-#title h1 { margin-top: 9vh; font-size: clamp(50px, 10vw, 120px); letter-spacing: 2px; }
+#title h1 { margin-top: 14vh; font-size: clamp(36px, 10.5vw, 104px); letter-spacing: 2px; }
 #title .tagline { margin-top: 10px; font-size: clamp(14px, 2vw, 20px); opacity: .9; }
 #title .ver { position: fixed; left: 24px; bottom: 18px; font-size: 14px; opacity: .6; }
 
-/* Bouton « appuyer pour commencer » : rond blanc percé d'un C */
-#title .press {
-  display: block; margin: 22vh auto 0; padding: 0; border: none; background: none; cursor: pointer;
-  /* le contour est sur le bouton, le masque sur le rond (voir REDESIGN.md) */
-  filter: drop-shadow(3px 0 0 #000) drop-shadow(-3px 0 0 #000) drop-shadow(0 3px 0 #000) drop-shadow(0 -3px 0 #000);
-  animation: blink 1.2s steps(2) infinite;
-}
-#title .press:focus-visible { outline: 3px solid var(--hl-a); outline-offset: 8px; border-radius: 50%; }
+/* Touche « C » de l'aide en bas à droite : rond blanc percé d'un C */
 .press-disc {
-  display: block; width: 64px; height: 64px; border-radius: 50%; background: #fff;
+  display: inline-block; width: 26px; height: 26px; margin-right: 8px; vertical-align: middle; border-radius: 50%; background: #fff;
   --c-mask:
     conic-gradient(from 45deg, #000 0 90deg, transparent 0),
     radial-gradient(circle closest-side, #000 30%, transparent 31% 58%, #000 59%);
   -webkit-mask: var(--c-mask);
   mask: var(--c-mask);
 }
+.hints .blink { display: flex; align-items: center; animation: blink 1.2s steps(2) infinite; }
 @keyframes blink { 50% { opacity: .25; } }
 
 /* ===== Sélection de fichier (profil) ===== */
@@ -138,8 +132,9 @@ body[data-screen="options"] #options { display: block; animation: fade .4s ease-
 .toast-notification { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 50; padding: 10px 18px; border-radius: 8px; background: rgba(0,0,0,.8); color: #fff; font-size: 16px; }
 
 @media (max-width: 700px) {
+  #title h1 { margin-top: 20vh; }
+  #moon { top: 3vh; }
   .screen { padding: 18px; }
-  #title .press { margin-top: 18vh; }
   .slot { transform: none; flex-wrap: wrap; }
   .slot::before { left: 98px; bottom: auto; height: 76px; }
   .slot .portrait { width: 70px; height: 70px; }
@@ -153,6 +148,7 @@ body[data-screen="options"] #options { display: block; animation: fade .4s ease-
   .book h3 { font-size: 30px; }
   .corner { bottom: 3vh; }
   .hints { display: none; }
+  body[data-screen="title"] .hints { display: flex; left: 0; right: 0; justify-content: center; bottom: 8vh; }
   .menu { font-size: 20px; }
   .journal-table th:nth-child(5), .journal-table td:nth-child(5) { display: none; }
 }

@@ -511,7 +511,8 @@ function openOptions() {
 
 // ===== Aide clavier en bas à droite =====
 const HINTS = {
-  title: [["Enter", "Start"]],
+  // Écran titre : le rond « C » remplace la touche, et clignote
+  title: [[null, "Start"]],
   files: [["↑↓", "File"], ["←→", "Action"], ["Enter", "Confirm"], ["Esc", "Back"]],
   modes: [["←→", "Game"], ["↑↓", "Side"], ["Enter", "Climb"], ["J", "Journal"], ["O", "Options"], ["Esc", "Back"]],
   options: [["↑↓", "Move"], ["Enter", "Change"], ["Esc", "Back"]]
@@ -520,7 +521,9 @@ const HINTS = {
 function renderHints() {
   const box = byId("hints");
   clear(box);
-  for (const [key, label] of HINTS[screen]) box.append(el("span", {}, [el("b", { text: key }), label]));
+  for (const [key, label] of HINTS[screen]) {
+    box.append(key ? el("span", {}, [el("b", { text: key }), label]) : el("span", { className: "blink" }, [el("span", { className: "press-disc" }), label]));
+  }
 }
 
 // ===== Clavier =====

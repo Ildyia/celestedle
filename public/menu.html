@@ -13,7 +13,23 @@
   <body data-screen="title" data-game="celestedle">
     <div id="scene" aria-hidden="true">
       <div id="stars"></div>
-      <div id="moon"></div>
+      <div id="moon">
+        <span class="moon-body"></span>
+        <span class="moon-star" style="--x: 39%; --y: -13%; --s: 15px; --c: #ffb3e6; --d: 0.00s">✦</span>
+        <span class="moon-star" style="--x: 69%; --y: -17%; --s: 10px; --c: #8fe3ff; --d: 0.17s">✦</span>
+        <span class="moon-star" style="--x: 92%; --y: 2%; --s: 12px; --c: #c9a8ff; --d: 0.34s">✦</span>
+        <span class="moon-star" style="--x: 115%; --y: 23%; --s: 15px; --c: #ffb3e6; --d: 0.51s">✦</span>
+        <span class="moon-star" style="--x: 114%; --y: 53%; --s: 10px; --c: #8fe3ff; --d: 0.68s">✦</span>
+        <span class="moon-star" style="--x: 111%; --y: 83%; --s: 12px; --c: #c9a8ff; --d: 0.85s">✦</span>
+        <span class="moon-star" style="--x: 87%; --y: 102%; --s: 15px; --c: #ffb3e6; --d: 1.02s">✦</span>
+        <span class="moon-star" style="--x: 62%; --y: 119%; --s: 10px; --c: #8fe3ff; --d: 1.19s">✦</span>
+        <span class="moon-star" style="--x: 33%; --y: 112%; --s: 12px; --c: #c9a8ff; --d: 1.36s">✦</span>
+        <span class="moon-star" style="--x: 4%; --y: 102%; --s: 15px; --c: #ffb3e6; --d: 1.53s">✦</span>
+        <span class="moon-star" style="--x: -9%; --y: 75%; --s: 10px; --c: #8fe3ff; --d: 1.70s">✦</span>
+        <span class="moon-star" style="--x: -20%; --y: 47%; --s: 12px; --c: #c9a8ff; --d: 1.87s">✦</span>
+        <span class="moon-star" style="--x: -6%; --y: 19%; --s: 15px; --c: #ffb3e6; --d: 2.04s">✦</span>
+        <span class="moon-star" style="--x: 9%; --y: -7%; --s: 10px; --c: #8fe3ff; --d: 2.21s">✦</span>
+      </div>
       <svg id="mountain" viewBox="0 0 1600 700" preserveAspectRatio="xMidYMax slice">
         <polygon fill="#3b2a66" points="0,700 0,520 180,430 320,470 470,330 600,390 760,210 900,300 1040,180 1180,330 1320,260 1460,380 1600,320 1600,700" />
         <polygon fill="#24204a" points="0,700 0,600 220,520 380,560 560,420 700,470 820,300 900,250 980,320 1120,420 1300,380 1460,470 1600,440 1600,700" />
@@ -21,7 +37,7 @@
         <!-- Drapeau du sommet -->
         <g id="summit-flag">
           <line x1="900" y1="252" x2="900" y2="168" stroke="#16142f" stroke-width="4" stroke-linecap="round" />
-          <polygon class="cloth" points="902,170 954,184 902,198" />
+          <rect class="cloth" x="902" y="170" width="46" height="28" />
         </g>
         <polygon fill="#16142f" points="0,700 0,650 260,600 520,640 760,560 1000,620 1260,580 1600,640 1600,700" />
       </svg>
@@ -31,9 +47,6 @@
     <section id="title" class="screen">
       <h1 class="outlined">CELESTEDLE</h1>
       <p class="tagline outlined">A daily Celeste guessing game</p>
-      <button type="button" class="press" id="press" aria-label="Press Enter to start">
-        <span class="press-disc"></span>
-      </button>
       <span class="ver outlined" id="version"></span>
     </section>
 
