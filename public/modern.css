@@ -122,7 +122,7 @@ html.ui-modern {
   }
   /* Côté joué, sous le titre : un point bleu (A-Side) ou rouge (B-Side) */
   & #modern-side {
-    display: flex; align-items: center; gap: 8px; margin: 0 0 14px; font-size: 14px; letter-spacing: 3px; text-transform: uppercase;
+    display: flex; align-items: center; justify-content: center; align-self: center; gap: 8px; margin: 0 0 14px; font-size: 14px; letter-spacing: 3px; text-transform: uppercase;
     color: var(--m-muted); text-shadow: var(--m-shadow);
   }
   & #modern-side::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--m-side-a); }
@@ -188,9 +188,9 @@ html.ui-modern {
 
 /* ===== Règles : des fiches par rubrique ===== */
 html.ui-modern {
-  & #rules-modal .rules-content { width: min(940px, 94vw); max-width: none; padding: 28px 30px; }
-  & #rules-modal .rules-content-static > h2 { font-size: 1.8rem; margin-bottom: 6px; }
-  & #rules-modal .rules-content-static > p { color: var(--m-muted); font-size: 1rem; margin-bottom: 18px; }
+  & :is(#rules-modal, #cx-rules-modal) .rules-content { width: min(940px, 94vw); max-width: none; padding: 28px 30px; }
+  & :is(#rules-modal, #cx-rules-modal) .rules-content-static > h2 { font-size: 1.8rem; margin-bottom: 6px; }
+  & :is(#rules-modal, #cx-rules-modal) .rules-content-static > p { color: var(--m-muted); font-size: 1rem; margin-bottom: 18px; }
   /* Deux colonnes de fiches, chacune d'un bloc */
   & .m-rules-grid { columns: 2 340px; column-gap: 14px; }
   & .m-rule {
@@ -234,9 +234,10 @@ html.ui-modern {
     & #modern-nav a, & #modern-nav button { padding: 6px 8px; font-size: 13px; }
     & #modern-nav .m-label { display: none; }
     & #modern-hint { display: none; }
-    & .m-moon { --size: 40px; top: 52px; right: 10px; opacity: .5; }
+    /* Sur téléphone, la lune gênerait les titres longs (« Connections ») */
+    & .m-moon { display: none; }
     & #guesses-table { border-spacing: 3px 5px; }
-    & #rules-modal .rules-content { padding: 22px 16px; }
+    & :is(#rules-modal, #cx-rules-modal) .rules-content { padding: 22px 16px; }
   }
 }
 
@@ -257,3 +258,27 @@ html[data-sky="day"] :is(.moon-body, .m-moon-body) { opacity: .55; }
    clair) et en-têtes du tableau en blanc */
 html.ui-modern[data-sky="day"] .m-mountain { opacity: .9; }
 html.ui-modern[data-sky="day"] #guesses-table th, html.ui-modern[data-sky="day"] #modern-side { color: #fff; }
+
+/* ===== Connections ===== */
+html.ui-modern {
+  & .cx-header { align-items: center; text-align: center; }
+  & .cx-header #modern-side { align-self: center; }
+  /* Rules est déjà en haut de la page ; reste « Suggest a new tag » */
+  & #cx-rules-btn { display: none !important; }
+  & .cx-subtitle, & .cx-note { color: var(--m-muted) !important; text-shadow: var(--m-shadow); }
+  & #main-content-column .action-btn, & .cx-mistakes, & .segmented {
+    background: var(--m-chip) !important; color: var(--m-text) !important; border: none !important; border-radius: 8px;
+    box-shadow: none !important; text-shadow: var(--m-shadow);
+  }
+  & #main-content-column .action-btn:hover:not(:disabled) { background: rgba(255, 255, 255, .14) !important; }
+  & .segmented button[aria-pressed="true"] { background: var(--m-side-a) !important; color: #fff !important; }
+  /* Tuiles : bandeaux sombres comme le HUD ; choisies en bleu (A-Side) */
+  & .cx-tile { border: 2px solid var(--m-line); border-radius: 10px; color: var(--m-text); text-shadow: var(--m-shadow); }
+  & .cx-tile:not([aria-pressed="true"]) { background: rgba(10, 8, 26, .62); }
+  & .cx-tile:hover { border-color: rgba(255, 255, 255, .35); }
+  & .cx-tile[aria-pressed="true"] { background: var(--m-side-a); border-color: #fff; }
+  & .cx-panel { background: var(--m-panel) !important; border: 1px solid var(--m-line) !important; border-radius: 12px; color: var(--m-text); }
+  & .cx-panel h2 { color: #fff !important; -webkit-text-fill-color: currentColor; background: none; }
+  & .cx-panel th { color: var(--m-muted) !important; border-color: var(--m-line) !important; }
+  & .cx-panel td { border-color: var(--m-line) !important; }
+}

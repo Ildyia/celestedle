@@ -81,4 +81,5 @@ Option « Modern Interface (beta) » (options de la page de jeu) ou « Modern ga
 - La classe est posée dès le `<head>` par un petit script (pas d'éclair au chargement). `js/interface.js` l'ajoute ou la retire quand l'option change, et construit le décor, « ◂ Menu  ❚❚ Pause », le côté joué sous le titre et le menu pause (Resume, Rules, Options, Switch side, Return to menu).
 - Style : HUD sobre comme le jeu en partie (bandeaux et panneaux noirs translucides, sans contour coloré) ; seules les couleurs du jeu ressortent. Le drapeau du sommet flotte aussi dans le décor.
 - Le menu ouvre lui-même profil, classements et signalement (`js/menu-panels.js`) : il va chercher leur HTML dans `index.html` au premier besoin (une seule source) et branche les mêmes modules que la page de jeu. Pour leur style, `menu.html` charge `style.css` et `modern.css` (classe `ui-modern` sur `<html>`).
-- Fait : Celestedle (`index.html`). À faire : Connections, Techs, l'écran de fin façon « chapitre terminé ».
+- Fait : Celestedle, Connections, Techs. `interface.js` ne propose que ce que la page a (Connections : pas d'Options, Rankings fait défiler jusqu'au classement de la page). Le titre devient le nom du jeu. Lien Admin dans la barre du haut pour l'équipe (et dans les options du menu).
+- À faire : l'écran de fin façon « chapitre terminé ».

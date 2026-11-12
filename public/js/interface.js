@@ -11,8 +11,37 @@
 import { el, clear } from "./dom.js";
 import { storage, KEYS } from "./storage.js";
 import { startSky } from "./sky.js";
+import { player } from "./player.js";
 
 const SIDES = { normal: "A-Side · Normal", hard: "B-Side · Hard" };
+
+// Actions de la page, selon ce qu'elle propose (Celestedle et Techs ont des
+// fenêtres Rankings et Options ; Connections a son classement dans la page)
+function findAction(name) {
+  const byIds = (...ids) => ids.map((id) => document.getElementById(id)).find(Boolean);
+  if (name === "rules") {
+    const btn = byIds("rules-btn", "cx-rules-btn");
+    return btn && (() => btn.click());
+  }
+  if (name === "rankings") {
+    const btn = byIds("leaderboard-btn");
+    if (btn) return () => btn.click();
+    const panel = byIds("cx-board-panel");
+    return panel && (() => panel.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
+  if (name === "options") {
+    const btn = byIds("options-btn");
+    return btn && (() => btn.click());
+  }
+  return null;
+}
+
+// Nom du jeu de la page : l'onglet courant (« Celestedle », « Connections »…)
+function gameName() {
+  return document.querySelector(".game-tab[aria-current='page'] span")?.textContent.trim() ?? "Celestedle";
+}
+
+const isAdmin = (profile) => ["owner", "administrator"].includes(profile?.role);
 let pause = null;
 
 function currentMode() {
@@ -43,11 +72,16 @@ const RULE_ICONS = {
   "colour indicators": "eye",
   hints: "assist",
   "hard mode": "skull",
-  rankings: "goldflag"
+  rankings: "goldflag",
+  columns: "backpack",
+  "normal and hard": "skull",
+  "normal or hard": "skull",
+  "what makes a group": "pico8",
+  "when it's not a group": "wtf"
 };
 
 function structureRules() {
-  const box = document.querySelector("#rules-modal .rules-content-static");
+  const box = document.querySelector("#rules-modal .rules-content-static, #cx-rules-modal .rules-content-static");
   if (!box || box.dataset.structured) return;
   box.dataset.structured = "true";
   const grid = el("div", { className: "m-rules-grid" });
@@ -72,11 +106,19 @@ function buildDecor() {
   ]);
   // Règles et classement restent à un clic : ils ouvrent les fenêtres de la
   // page (boutons Classic masqués, mais toujours là)
-  const shortcut = (id, icon, label) =>
-    el("button", { attrs: { type: "button", "aria-label": label }, on: { click: () => document.getElementById(id)?.click() } }, [
+  const shortcut = (action, icon, label) => {
+    const run = findAction(action);
+    if (!run) return null;
+    return el("button", { attrs: { type: "button", "aria-label": label }, on: { click: run } }, [
       el("img", { attrs: { src: `assets/illustration/${icon}.png`, alt: "" } }),
       el("span", { className: "m-label", text: label })
     ]);
+  };
+  // Lien Admin, visible de l'équipe seulement
+  const admin = el("a", { attrs: { href: "admin.html", hidden: "" } }, [el("span", { text: "🛠" }), el("span", { className: "m-label", text: "Admin" })]);
+  const showAdmin = (profile) => (admin.hidden = !isAdmin(profile));
+  showAdmin(player.profile);
+  player.onChange(showAdmin);
   const nav = el("nav", { attrs: { id: "modern-nav", "aria-label": "Menu" } }, [
     el("a", { attrs: { href: "menu.html" } }, [el("span", { text: "◂" }), el("span", { className: "m-label", text: "Menu" })]),
     el("button", { attrs: { type: "button", "aria-label": "Pause" }, on: { click: openPause } }, [
@@ -84,9 +126,10 @@ function buildDecor() {
       el("span", { className: "m-label", text: "Pause" })
     ]),
     el("span", { className: "m-gap" }),
-    shortcut("rules-btn", "journal", "Rules"),
-    shortcut("leaderboard-btn", "goldflag", "Rankings")
-  ]);
+    admin,
+    shortcut("rules", "journal", "Rules"),
+    shortcut("rankings", "goldflag", "Rankings")
+  ].filter(Boolean));
   const hint = el("div", { attrs: { id: "modern-hint", "aria-hidden": "true" } }, [el("b", { text: "Esc" }), "Pause"]);
   document.body.prepend(scene, nav);
   document.body.append(hint);
@@ -94,6 +137,9 @@ function buildDecor() {
   // Côté joué (A-Side / B-Side) sous le titre, tenu à jour
   const title = document.querySelector("#main-content-column h1");
   if (title) {
+    // Le titre devient le nom du jeu (le Classic affiche « Celestedle » partout)
+    title.dataset.classicTitle = title.textContent;
+    title.textContent = gameName();
     const side = el("p", { attrs: { id: "modern-side" } });
     title.after(side);
     const update = () => {
@@ -111,15 +157,15 @@ function buildDecor() {
 // ===== Menu pause =====
 function pauseItems() {
   const other = currentMode() === "hard" ? "normal" : "hard";
-  const click = (id) => () => {
-    closePause();
-    document.getElementById(id)?.click();
+  const item = (label, action) => {
+    const run = findAction(action);
+    return run && { label, run: () => (closePause(), run()) };
   };
   return [
     { label: "Resume", run: closePause },
-    { label: "Rules", run: click("rules-btn") },
-    { label: "Rankings", run: click("leaderboard-btn") },
-    { label: "Options", run: click("options-btn") },
+    item("Rules", "rules"),
+    item("Rankings", "rankings"),
+    item("Options", "options"),
     {
       label: `Switch to ${other === "hard" ? "B-Side" : "A-Side"}`,
       run: () => {
@@ -128,7 +174,7 @@ function pauseItems() {
       }
     },
     { label: "Return to menu", run: () => (location.href = "menu.html") }
-  ];
+  ].filter(Boolean);
 }
 
 function renderPause() {
@@ -197,4 +243,6 @@ export function applyInterface(on) {
   if (on) structureRules();
   if (on) startSky();
   if (!on) closePause();
+  const title = document.querySelector("#main-content-column h1");
+  if (title?.dataset.classicTitle) title.textContent = on ? gameName() : title.dataset.classicTitle;
 }

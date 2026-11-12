@@ -537,16 +537,20 @@ const OPTION_ROWS = [
   { label: "GitHub", link: "https://github.com/Ildyia/celestedle", external: true },
   { label: "Support on Ko-fi", link: "https://ko-fi.com/ildyia", external: true },
   { sep: true },
+  // Accès à l'administration : visible de l'équipe seulement
+  { label: "Admin", link: "admin.html", visible: () => ["owner", "administrator"].includes(player.profile?.role) },
   { label: "Credits", link: "credits.html" },
   { label: "Legal notice", link: "legal-notice.html" },
   { label: "Back", back: true }
 ];
 let optionIndex = 0;
+// Lignes affichées (certaines dépendent du profil) ; optionIndex s'y réfère
+const optionRows = () => OPTION_ROWS.filter((row) => !row.visible || row.visible());
 
 function renderOptions() {
   const menu = byId("menu");
   clear(menu);
-  OPTION_ROWS.forEach((row, i) => {
+  optionRows().forEach((row, i) => {
     if (row.sep) {
       menu.append(el("li", { className: "sep" }));
       return;
@@ -564,13 +568,13 @@ function renderOptions() {
 
 function moveOption(step) {
   do {
-    optionIndex = (optionIndex + step + OPTION_ROWS.length) % OPTION_ROWS.length;
-  } while (OPTION_ROWS[optionIndex].sep);
+    optionIndex = (optionIndex + step + optionRows().length) % optionRows().length;
+  } while (optionRows()[optionIndex].sep);
   renderOptions();
 }
 
 function activateOption() {
-  const row = OPTION_ROWS[optionIndex];
+  const row = optionRows()[optionIndex];
   if (row.back) return go(optionsReturn);
   if (row.run) return row.run();
   if (row.external) {
@@ -641,8 +645,8 @@ const KEY_HANDLERS = {
   options: {
     ArrowUp: () => moveOption(-1),
     ArrowDown: () => moveOption(1),
-    ArrowLeft: () => OPTION_ROWS[optionIndex].key && activateOption(),
-    ArrowRight: () => OPTION_ROWS[optionIndex].key && activateOption(),
+    ArrowLeft: () => optionRows()[optionIndex].key && activateOption(),
+    ArrowRight: () => optionRows()[optionIndex].key && activateOption(),
     Enter: activateOption,
     Escape: () => go(optionsReturn)
   }
