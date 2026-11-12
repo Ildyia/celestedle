@@ -180,8 +180,8 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
 /* Cœur de cristal : bleu en A-Side, rouge en B-Side */
 .stub :is(.heart, .dot) { width: 100%; aspect-ratio: 1;
   background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.85) 0 9%, transparent 10%), linear-gradient(160deg, var(--gem-light), var(--gem));
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21C5 15 0 11 0 6.2A6 6 0 0 1 12 4a6 6 0 0 1 12 2.2C24 11 19 15 12 21z'/%3E%3C/svg%3E") center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21C5 15 0 11 0 6.2A6 6 0 0 1 12 4a6 6 0 0 1 12 2.2C24 11 19 15 12 21z'/%3E%3C/svg%3E") center / contain no-repeat; }
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 -2.5 26 25'%3E%3Cpath d='M12 21C5 15 0 11 0 6.2A6 6 0 0 1 12 4a6 6 0 0 1 12 2.2C24 11 19 15 12 21z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 -2.5 26 25'%3E%3Cpath d='M12 21C5 15 0 11 0 6.2A6 6 0 0 1 12 4a6 6 0 0 1 12 2.2C24 11 19 15 12 21z'/%3E%3C/svg%3E") center / contain no-repeat; }
 /* Pas encore gagné aujourd'hui : cœur vide, pâle */
 .stub .dot { background: #e4e1ec; }
 .stub .gem:has(.dot) { opacity: .55; }
