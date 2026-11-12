@@ -18,8 +18,9 @@
   /* Couleur du texte sélectionné dans les menus du jeu : clignote vert / jaune */
   --hl-a: #84ff54;
   --hl-b: #fcff59;
-  --paper: #f3ecd9;
-  --paper-dark: #d9cfb4;
+  /* Papier terne : un crème vif éblouit sur le fond sombre */
+  --paper: #d9d0bb;
+  --paper-dark: #bdb196;
   --ink: #2b2335;
   --accent: #d1366a;
   --side-a: #5aa8e8;

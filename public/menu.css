@@ -75,8 +75,8 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 .card > .shape { z-index: 0; }
 .card .shape::before {
   background:
-    radial-gradient(ellipse at 20% 0%, rgba(255,255,255,.7), transparent 55%),
-    linear-gradient(105deg, #e9eefb 0%, #efeafa 45%, #f9e6f1 100%);
+    radial-gradient(ellipse at 20% 0%, rgba(255,255,255,.3), transparent 55%),
+    linear-gradient(105deg, #ccd2e3 0%, #d3cee0 45%, #ddcbd6 100%);
   -webkit-mask: radial-gradient(circle 1.05em at 0 50%, #0000 97%, #000) left / 51% 100% no-repeat, radial-gradient(circle 1.05em at 100% 50%, #0000 97%, #000) right / 51% 100% no-repeat;
   mask: radial-gradient(circle 1.05em at 0 50%, #0000 97%, #000) left / 51% 100% no-repeat, radial-gradient(circle 1.05em at 100% 50%, #0000 97%, #000) right / 51% 100% no-repeat; }
 /* Petits traits à l'encre dans les coins, comme sur le ticket du jeu */
@@ -127,7 +127,7 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 .slot.selected .stub { transform: none; opacity: 1; pointer-events: auto; }
 .stub > .shape { filter: drop-shadow(0 .25em .35em rgba(0,0,0,.3)); }
 .stub > .shape::before { border-radius: 0;
-  background: radial-gradient(ellipse at 70% 20%, #fff, transparent 60%), linear-gradient(170deg, #f8f8fb, #eeedf3 60%, #f4f1f6);
+  background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,.35), transparent 60%), linear-gradient(170deg, #dcdbe2, #d2d1d9 60%, #d8d4dc);
   -webkit-mask: linear-gradient(#000 0 0) left / calc(100% - .3em) 100% no-repeat, radial-gradient(circle .17em at 100% 50%, #0000 95%, #000) right / .3em .42em repeat-y;
   mask: linear-gradient(#000 0 0) left / calc(100% - .3em) 100% no-repeat, radial-gradient(circle .17em at 100% 50%, #0000 95%, #000) right / .3em .42em repeat-y; }
 .stub > :not(.shape) { position: relative; }

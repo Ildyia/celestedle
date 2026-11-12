@@ -551,6 +551,7 @@ const OPTION_ROWS = [
   { label: "Bird cursor", key: KEYS.customCursor, fallback: true },
   { label: "Colorblind mode", key: KEYS.colorblind, fallback: false },
   // Coupe les animations de décor et raccourcit les mouvements (celeste-ui.css)
+  { label: "Keyboard hints", key: KEYS.keyHints, fallback: true, apply: renderHints },
   { label: "Performance mode", key: KEYS.performance, fallback: false, apply: applyPerformance },
   { sep: true },
   { label: "Credits", link: "credits.html" },
@@ -616,6 +617,9 @@ const HINTS = {
 function renderHints() {
   const box = byId("hints");
   clear(box);
+  // Option « Keyboard hints » : l'écran titre garde son « Start », seule
+  // invitation à entrer dans le menu
+  if (screen !== "title" && !storage.getBool(KEYS.keyHints, true)) return;
   for (const [key, label] of HINTS[screen]) {
     box.append(key ? el("span", {}, [el("b", { text: key }), label]) : el("span", { className: "blink" }, [el("span", { className: "press-disc" }), label]));
   }

@@ -12,9 +12,10 @@ html.ui-modern {
   --m-sky-top: #0b0a24;
   --m-sky-mid: #2a1a4f;
   --m-sky-low: #6a3a7a;
-  --m-paper: #f3ecd9;
-  --m-paper-dark: #d9cfb4;
-  --m-paper-light: #fbf7ec;
+  /* Papier volontairement terne : un crème vif éblouit sur le fond sombre */
+  --m-paper: #d9d0bb;
+  --m-paper-dark: #bdb196;
+  --m-paper-light: #e2dac8;
   --m-ink: #2b2335;
   --m-ink-soft: #6e6585;
   --m-hl-a: #84ff54;
@@ -146,7 +147,7 @@ html.ui-modern {
     text-shadow: none; transition: transform .12s;
   }
   & #game-status button:hover:not(:disabled) { transform: translateY(-2px); }
-  & #hint-btn { background: #fff3c4 !important; }
+  & #hint-btn { background: #ded19f !important; }
   & #giveup-btn { color: #a52d3e !important; }
   & #game-status button:disabled { opacity: .55; }
 }
