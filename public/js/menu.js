@@ -15,7 +15,7 @@ import { initNextWordTimer } from "./timer.js";
 import { openPanel, panelOpen } from "./menu-panels.js";
 import { createJournal } from "./journal.js";
 import { applySky, startSky } from "./sky.js";
-import { STAMPS, earnedStamps, stampIcon, setAchievements } from "./stamps.js";
+import { TICKET_SLOTS, earnedStamps, stampSvg, setAchievements } from "./stamps.js";
 
 const LAST_GAME_KEY = "celestedle_menu_game";
 
@@ -254,11 +254,11 @@ function profileSlot() {
   } else {
     body.push(el("div", { className: "sub", text: lastGame.title }), counter(`${ICON}/strawberry.png`, s ? s.wins : "…", "Wins"));
   }
-  const earned = new Set(earnedStamps());
   return {
     color: profile.color,
     portrait: avatarUrl(profile.avatar),
-    stamps: STAMPS.filter((st) => earned.has(st.id)),
+    // Les plus rares d'abord, autant que d'emplacements sur le ticket
+    stamps: earnedStamps().slice(0, TICKET_SLOTS.length),
     body,
     stub: profileStub()
   };
@@ -280,16 +280,12 @@ function emptySlot(kind) {
   return { portrait: "assets/illustration/backpack.png", body };
 }
 
-function stampElement(stamp) {
-  const style = [
-    `--stamp-color: ${stamp.color}`,
-    `--stamp-icon: url("${stampIcon(stamp)}")`,
-    `left: ${stamp.x}%`,
-    `top: ${stamp.y}%`,
-    `width: ${stamp.size}%`,
-    `rotate: ${stamp.rotate}deg`
-  ].join("; ");
-  return el("span", { className: `stamp${stamp.ring ? " ring" : ""}`, attrs: { style, title: stamp.label } });
+function stampElement(stamp, i) {
+  const slot = TICKET_SLOTS[i];
+  const style = `left: ${slot.x}%; top: ${slot.y}%; width: ${slot.size}%; rotate: ${slot.rotate}deg`;
+  const node = el("span", { className: "stamp", attrs: { style, title: stamp.label } });
+  node.innerHTML = stampSvg(stamp);
+  return node;
 }
 
 function slotElement(kind, selected) {

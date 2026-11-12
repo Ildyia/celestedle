@@ -8,7 +8,7 @@ import { el, byId, clear } from "./dom.js";
 import { formatDuration } from "./format.js";
 import { avatarUrl } from "./profile.js";
 import { player } from "./player.js";
-import { STAMPS, stampIcon } from "./stamps.js";
+import { STAMPS, stampSvg } from "./stamps.js";
 
 const ICON = (name) => `assets/illustration/${name}.png`;
 
@@ -152,6 +152,12 @@ export function createJournal({ getContext }) {
   }
 
   // ===== Page Stamps : les achievements =====
+  function stampBadge(stamp) {
+    const node = el("span", { className: "stamp-badge" });
+    if (stamp) node.innerHTML = stampSvg(stamp);
+    return node;
+  }
+
   async function renderStamps(box, current) {
     box.append(el("h3", { text: "Stamps" }));
     if (!player.profile) {
@@ -175,10 +181,7 @@ export function createJournal({ getContext }) {
         list.map((a) => {
           const stamp = STAMPS.find((st) => st.id === a.id);
           return el("div", { className: `stamp-row${a.earned ? " earned" : ""}` }, [
-            el("span", {
-              className: `stamp-badge${stamp?.ring ? " ring" : ""}`,
-              attrs: { style: stamp ? `--stamp-color: ${stamp.color}; --stamp-icon: url("${stampIcon(stamp)}")` : "" }
-            }),
+            stampBadge(stamp),
             el("div", { className: "stamp-text" }, [
               el("strong", { text: a.name }),
               el("span", { text: a.description }),
