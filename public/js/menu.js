@@ -61,13 +61,41 @@ function slotList() {
 }
 
 function slotActions() {
+  // Suppression : on confirme, comme dans le jeu (« Keep » choisi d'office)
+  if (editing === "delete") {
+    return [
+      { label: "Keep my file", run: () => startEditing(null) },
+      { label: "Delete forever", danger: true, run: deleteFile }
+    ];
+  }
   return [
     { label: "Begin", run: () => go("modes") },
     { label: "Rename", run: () => startEditing("rename") },
     // Avatar, couleur, Discord, visibilité : la fenêtre de profil complète
     { label: "Edit profile", run: () => openPanel("profile").catch((err) => showToast(err.message)) },
-    { label: editing === "code" ? "Hide recovery code" : "Recovery code", run: () => startEditing(editing === "code" ? null : "code") }
+    { label: editing === "code" ? "Hide recovery code" : "Recovery code", run: () => startEditing(editing === "code" ? null : "code") },
+    {
+      label: "Delete",
+      run: () => {
+        actionIndex = 0;
+        startEditing("delete");
+      }
+    }
   ];
+}
+
+async function deleteFile() {
+  try {
+    await player.remove();
+    fileOpen = false;
+    editing = null;
+    slotIndex = 0;
+    actionIndex = 0;
+    showToast("Your file has been deleted.");
+    renderFiles();
+  } catch (err) {
+    showToast(err.message);
+  }
 }
 
 function openSlot() {
@@ -150,6 +178,15 @@ const counter = (icon, value, title) =>
 // Talon qui sort de derrière le ticket : un cœur par partie gagnée
 // aujourd'hui (bleu = A-Side, rouge = B-Side), un point sinon.
 function profileStub() {
+  if (editing === "delete") {
+    return [
+      el("div", { className: "stub-note warn" }, [
+        el("strong", { text: "Delete this file?" }),
+        el("br"),
+        "Your games, stats, rankings and recovery code will be erased for good."
+      ])
+    ];
+  }
   if (editing === "code") {
     return [
       el("div", { className: "stub-note", text: "Recovery code: keep it private, it opens your file on another device." }),
@@ -267,7 +304,7 @@ function renderFiles() {
   clear(actions);
   if (fileOpen && list[slotIndex] === "profile" && !isTyping()) {
     slotActions().forEach((action, a) => {
-      const li = el("li", { className: a === actionIndex ? "selected hl" : "", text: action.label });
+      const li = el("li", { className: `${a === actionIndex ? "selected hl" : ""}${action.danger ? " danger" : ""}`, text: action.label });
       li.addEventListener("click", () => {
         actionIndex = a;
         action.run();
