@@ -19,7 +19,7 @@ Déjà en place :
 - **Fichier** : ticket du profil (fraises = victoires, crâne = défaites, meilleur temps, série), Begin, Rename, Recovery code ; New file et Restore sans profil.
 - **Modes** : un endroit de la montagne par jeu (la caméra « monte » jusqu'au sommet pour Techs), A-Side et B-Side, règles du mode, état de la partie du jour, record perso (Celestedle) ou chiffres du jour (Connections, Techs). Connections et Techs n'apparaissent qu'avec l'accès.
 - **Journal** (J) : stats perso et lien vers les classements (`index.html#leaderboard`).
-- **Options** : mêmes préférences que les pages de jeu, Credits, Legal notice.
+- **Options** : mêmes préférences que les pages de jeu, mode performance (`body.perf` : sans neige ni scintillements, contours allégés, mouvements courts), Credits, Legal notice.
 - Clavier partout, aide en bas à droite, mobile, `prefers-reduced-motion`.
 
 ## Montagne

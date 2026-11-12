@@ -23,6 +23,7 @@ body[data-screen="title"] #title,
 body[data-screen="files"] #files,
 body[data-screen="modes"] #modes,
 body[data-screen="options"] #options { display: block; animation: fade .4s ease-out; }
+body.perf .screen { animation: none !important; }
 /* Fondu seul (sans déplacement) : moins de travail pendant le zoom de la montagne */
 @keyframes fade { from { opacity: 0; } }
 

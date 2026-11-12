@@ -60,25 +60,29 @@ button { font: inherit; color: inherit; }
    animations est recalculé à chaque image et fait ramer la page. Le halo est
    un simple dégradé fixe (::before). */
 #moon {
+  --moon-size: clamp(70px, 11vw, 150px);
+  /* Le croissant : on retire un disque décalé vers le haut à droite */
+  --crescent: radial-gradient(circle at 72% 28%, transparent 0 50%, #000 51%);
   position: absolute; top: 5vh; right: 6vw;
-  width: clamp(70px, 11vw, 150px); aspect-ratio: 1;
+  width: var(--moon-size); aspect-ratio: 1;
   transition: transform 1.2s var(--ease-out), opacity 1.2s;
   will-change: transform;
 }
-#moon::before {
-  content: ""; position: absolute; inset: -45%; border-radius: 50%;
-  /* Anneau : transparent sur la lune (le creux du croissant reste du ciel) */
-  background: radial-gradient(circle, transparent 0 25%, rgba(215, 205, 255, .35) 26.5%, rgba(150, 200, 255, .12) 40%, transparent 66%);
-}
+/* Halo : une copie floue du croissant, derrière lui. Le flou est sur
+   .moon-glow et la découpe sur son enfant (le flou s'applique après la
+   découpe, donc il suit la forme). Rien d'animé dedans : le navigateur le
+   calcule une fois. */
+.moon-glow { position: absolute; inset: 0; filter: blur(calc(var(--moon-size) * .1)); opacity: .75; }
+.moon-glow span { position: absolute; inset: 0; border-radius: 50%; background: #d9d0ff; transform: scale(1.06);
+  -webkit-mask: var(--crescent); mask: var(--crescent); }
 .moon-body {
   position: absolute; inset: 0; border-radius: 50%;
   background:
     radial-gradient(circle at 26% 58%, rgba(150, 145, 200, .35) 0 6%, transparent 7%),
     radial-gradient(circle at 42% 82%, rgba(150, 145, 200, .3) 0 4%, transparent 5%),
     radial-gradient(circle at 35% 60%, #fff, var(--moon) 60%, #cfc6ef);
-  /* Le croissant : on retire un disque décalé vers le haut à droite */
-  -webkit-mask: radial-gradient(circle at 72% 28%, transparent 0 50%, #000 51%);
-  mask: radial-gradient(circle at 72% 28%, transparent 0 50%, #000 51%);
+  -webkit-mask: var(--crescent);
+  mask: var(--crescent);
 }
 /* Étoiles autour de la lune, placées par --x / --y (en % de la lune) */
 .moon-star { position: absolute; left: var(--x); top: var(--y); font-size: var(--s, 14px); line-height: 1; color: var(--c, #ffd1f0);
@@ -112,6 +116,14 @@ button { font: inherit; color: inherit; }
 
 /* Carte papier (ticket de profil, journal…) */
 .paper { background: var(--paper); color: var(--ink); border-radius: 6px; box-shadow: 0 6px 0 var(--paper-dark), 0 10px 22px rgba(0,0,0,.5); }
+
+/* Mode performance (option du menu, body.perf) : plus de neige ni de
+   scintillements, halo et contours allégés, mouvements de caméra courts */
+body.perf .snow, body.perf .moon-glow { display: none; }
+body.perf #stars, body.perf .moon-star, body.perf #summit-flag .cloth { animation: none !important; }
+body.perf #mountain, body.perf #moon, body.perf #dim { transition-duration: .45s !important; }
+body.perf #mountain, body.perf #moon, body.perf #summit-flag { will-change: auto; }
+body.perf .outlined { text-shadow: 2px 2px 0 var(--shadow), -2px -2px 0 var(--shadow), 2px -2px 0 var(--shadow), -2px 2px 0 var(--shadow); }
 
 /* Moins d'animations si le système le demande */
 @media (prefers-reduced-motion: reduce) {

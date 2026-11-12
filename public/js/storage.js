@@ -9,7 +9,8 @@ export const KEYS = {
   colorblind: "celestedle_colorblind",
   customCursor: "celestedle_custom_cursor",
   celesteTheme: "celestedle_celeste_theme",
-  showTimer: "celestedle_show_timer"
+  showTimer: "celestedle_show_timer",
+  performance: "celestedle_performance"
 };
 
 // Clés de la v1, supprimées au premier chargement de la 2.0

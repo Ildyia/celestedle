@@ -459,6 +459,8 @@ const OPTION_ROWS = [
   { label: "Show timer", key: KEYS.showTimer, fallback: true },
   { label: "Bird cursor", key: KEYS.customCursor, fallback: true },
   { label: "Colorblind mode", key: KEYS.colorblind, fallback: false },
+  // Coupe les animations de décor et raccourcit les mouvements (celeste-ui.css)
+  { label: "Performance mode", key: KEYS.performance, fallback: false, apply: applyPerformance },
   { sep: true },
   { label: "Credits", link: "credits.html" },
   { label: "Legal notice", link: "legal-notice.html" },
@@ -499,7 +501,9 @@ function activateOption() {
     location.href = row.link;
     return;
   }
-  storage.set(row.key, String(!storage.getBool(row.key, row.fallback)));
+  const on = !storage.getBool(row.key, row.fallback);
+  storage.set(row.key, String(on));
+  row.apply?.(on);
   renderOptions();
 }
 
@@ -615,8 +619,14 @@ function letItSnow(count = 40) {
   }
 }
 
+// ===== Mode performance =====
+function applyPerformance(on) {
+  document.body.classList.toggle("perf", on);
+}
+
 // ===== Démarrage =====
 async function start() {
+  applyPerformance(storage.getBool(KEYS.performance, false));
   letItSnow();
   renderHints();
   api.version().then(({ version }) => (byId("version").textContent = `v${version}`)).catch(() => {});
