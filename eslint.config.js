@@ -6,7 +6,7 @@ module.exports = [
   js.configs.recommended,
   {
     // Serveur et tests : CommonJS sous Node
-    files: ["src/**/*.js", "test/**/*.js", "eslint.config.js"],
+    files: ["src/**/*.js", "test/**/*.js", "scripts/**/*.js", "eslint.config.js"],
     languageOptions: {
       ecmaVersion: 2024,
       sourceType: "commonjs",
