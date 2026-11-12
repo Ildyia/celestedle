@@ -19,7 +19,7 @@ Déjà en place :
 - **Fichier** : tickets dans le style du jeu, entièrement en CSS (aucune image du jeu) : papier à encoches et contour à l'encre, portrait tenu par du scotch, nom, dernier jeu choisi, fraises = victoires. Le ticket choisi glisse à gauche et son talon perforé sort : un cœur par partie gagnée aujourd'hui (colonnes = jeux, bleu = A-Side, rouge = B-Side), crâne = défaites, série, meilleur temps. Entrée ouvre le ticket (Begin, Rename, Recovery code ; le code s'affiche dans le talon).
 - **Tampons** : listés dans `js/stamps.js` (icône teintée par masque, couleur, position, taille, angle, cercle ou non). `earnedStamps()` renvoie [] en attendant les achievements ; `menu.html?stamps=all` les montre tous.
 - **Modes** : un endroit de la montagne par jeu (la caméra « monte » jusqu'au sommet pour Techs), A-Side et B-Side, règles du mode, état de la partie du jour, record perso (Celestedle) ou chiffres du jour (Connections, Techs). Connections et Techs n'apparaissent qu'avec l'accès.
-- **Journal** (J) : stats perso et lien vers les classements (`index.html#leaderboard`).
+- **Journal** (J) : stats perso et bouton Leaderboards (ouvre les classements dans le menu).
 - **Options** : mêmes préférences que les pages de jeu, mode performance (`body.perf` : sans neige ni scintillements, contours allégés, cadrage sans zoom), Credits, Legal notice. Tant que le joueur n'a pas choisi, il s'active tout seul si les premiers changements d'écran tournent sous 30 images/s.
 - Clavier partout, aide en bas à droite, mobile, `prefers-reduced-motion`.
 
@@ -66,15 +66,17 @@ Option « Modern Interface (beta) » (options de la page de jeu) ou « Modern ga
 
 | Sur la page Classic | En Modern |
 |---|---|
-| Profil | ticket du menu (Rename, Edit profile → `index.html#profile`) |
-| Rankings | journal du menu (→ `index.html#leaderboard`) |
-| Options, règles | menu pause (Échap ou ❚❚) |
+| Profil | ticket du menu (Rename, Edit profile) |
+| Rankings | bouton en haut de la page, menu pause, journal du menu |
+| Règles | bouton en haut de la page, menu pause (fiches par rubrique en Modern) |
+| Options | menu pause (Échap ou ❚❚) |
 | Normal / Hard | menu pause (« Switch to B-Side ») ou le livre du menu |
 | Community Stats, Next Word in | livre du menu (« Today on the mountain », « Next climb in ») |
-| Found a bug?, Discord, GitHub, Ko-fi, Credits | options du menu (`index.html#bug` pour le signalement) |
+| Found a bug?, Discord, GitHub, Ko-fi, Credits | options du menu |
 | Onglets des jeux | icônes du menu |
 
 - `modern.css` : tout est rangé sous `html.ui-modern`. Sans la classe, la page reste exactement la Classic.
 - La classe est posée dès le `<head>` par un petit script (pas d'éclair au chargement). `js/interface.js` l'ajoute ou la retire quand l'option change, et construit le décor, « ◂ Menu  ❚❚ Pause », le côté joué sous le titre et le menu pause (Resume, Rules, Options, Switch side, Return to menu).
-- Couleurs : cartes sombres « papier de nuit », chaque carte teintée de sa couleur (discrètement).
+- Style : HUD sobre comme le jeu en partie (bandeaux et panneaux noirs translucides, sans contour coloré) ; seules les couleurs du jeu ressortent. Le drapeau du sommet flotte aussi dans le décor.
+- Le menu ouvre lui-même profil, classements et signalement (`js/menu-panels.js`) : il va chercher leur HTML dans `index.html` au premier besoin (une seule source) et branche les mêmes modules que la page de jeu. Pour leur style, `menu.html` charge `style.css` et `modern.css` (classe `ui-modern` sur `<html>`).
 - Fait : Celestedle (`index.html`). À faire : Connections, Techs, l'écran de fin façon « chapitre terminé ».

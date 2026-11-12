@@ -12,6 +12,7 @@ import { rulesSentence } from "./rules-text.js";
 import { CELESTEDLE, TECHS } from "./catalogs.js";
 import { showToast } from "./toast.js";
 import { initNextWordTimer } from "./timer.js";
+import { openPanel, panelOpen } from "./menu-panels.js";
 import { STAMPS, earnedStamps, stampIcon } from "./stamps.js";
 
 const LAST_GAME_KEY = "celestedle_menu_game";
@@ -62,7 +63,7 @@ function slotActions() {
     { label: "Begin", run: () => go("modes") },
     { label: "Rename", run: () => startEditing("rename") },
     // Avatar, couleur, Discord, visibilité : la fenêtre de profil complète
-    { label: "Edit profile", run: () => (location.href = "index.html#profile") },
+    { label: "Edit profile", run: () => openPanel("profile").catch((err) => showToast(err.message)) },
     { label: editing === "code" ? "Hide recovery code" : "Recovery code", run: () => startEditing(editing === "code" ? null : "code") }
   ];
 }
@@ -555,13 +556,13 @@ const OPTION_ROWS = [
   { label: "Modern game pages", key: KEYS.modernUi, fallback: false },
   { label: "Celeste theme", key: KEYS.celesteTheme, fallback: true },
   { label: "Show timer", key: KEYS.showTimer, fallback: true },
-  { label: "Bird cursor", key: KEYS.customCursor, fallback: true },
+  { label: "Bird cursor", key: KEYS.customCursor, fallback: true, apply: applyCursor },
   { label: "Colorblind mode", key: KEYS.colorblind, fallback: false },
   // Coupe les animations de décor et raccourcit les mouvements (celeste-ui.css)
   { label: "Keyboard hints", key: KEYS.keyHints, fallback: true, apply: renderHints },
   { label: "Performance mode", key: KEYS.performance, fallback: false, apply: applyPerformance },
   { sep: true },
-  { label: "Report a bug", link: "index.html#bug" },
+  { label: "Report a bug", run: () => openPanel("reports").catch((err) => showToast(err.message)) },
   { label: "Discord", link: "https://discord.gg/3yqgMbuMbX", external: true },
   { label: "GitHub", link: "https://github.com/Ildyia/celestedle", external: true },
   { label: "Support on Ko-fi", link: "https://ko-fi.com/ildyia", external: true },
@@ -601,6 +602,7 @@ function moveOption(step) {
 function activateOption() {
   const row = OPTION_ROWS[optionIndex];
   if (row.back) return go(optionsReturn);
+  if (row.run) return row.run();
   if (row.external) {
     window.open(row.link, "_blank", "noopener");
     return;
@@ -688,7 +690,9 @@ function moveAction(step) {
 }
 
 document.addEventListener("keydown", (event) => {
-  if (event.target.matches("input")) return;
+  if (event.target.matches("input, textarea, select")) return;
+  // Fenêtre ouverte (profil, classements, bug) : elle gère son clavier
+  if (panelOpen()) return;
   if (journalOpen()) {
     if (event.key === "Escape" || event.key === "j") closeJournal();
     return;
@@ -707,6 +711,10 @@ byId("climb").addEventListener("click", climb);
 byId("to-options").addEventListener("click", openOptions);
 byId("to-journal").addEventListener("click", openJournal);
 byId("journal-close").addEventListener("click", closeJournal);
+byId("journal-leaderboard").addEventListener("click", () => {
+  closeJournal();
+  openPanel("leaderboard").catch((err) => showToast(err.message));
+});
 byId("journal").addEventListener("click", (e) => {
   if (e.target === e.currentTarget) closeJournal();
 });
@@ -728,6 +736,11 @@ function letItSnow(count = 40) {
     });
     scene.append(flake);
   }
+}
+
+// Curseur oiseau (style.css) : coupé si l'option est désactivée
+function applyCursor(on) {
+  document.body.classList.toggle("no-custom-cursor", !on);
 }
 
 // ===== Mode performance =====
@@ -763,6 +776,7 @@ function watchTransition() {
 // ===== Démarrage =====
 async function start() {
   applyPerformance(storage.getBool(KEYS.performance, false));
+  applyCursor(storage.getBool(KEYS.customCursor, true));
   letItSnow();
   renderHints();
   // Prochaine partie : compte à rebours dans le livre ; à minuit, on recharge

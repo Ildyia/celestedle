@@ -2,7 +2,7 @@
 
 /* Le menu tient sur un écran : pas de défilement ni de sélection de texte.
    (Pas dans celeste-ui.css : les pages de jeu, elles, doivent défiler.) */
-body { overflow: hidden; user-select: none; }
+body { overflow: hidden; user-select: none; padding: 0; display: block; min-height: 0; }
 
 /* ===== Mouvements du décor selon l'écran (et le jeu choisi) ===== */
 body[data-screen="title"] #mountain { transform: scale(1); }
@@ -219,7 +219,9 @@ body.perf .slot, body.perf .stub { transition: none; animation: none !important;
 .journal-table td { padding: 9px 6px; border-top: 2px dashed var(--paper-dark); text-align: center; }
 .journal-table td:first-child { text-align: left; white-space: nowrap; }
 .journal-table .side { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 8px; }
-.journal-link { display: inline-block; margin-top: 18px; color: var(--accent); font-size: 18px; text-decoration: none; }
+.journal-link { display: inline-block; margin-top: 18px; padding: 0; border: none; background: none; cursor: pointer; color: #ff7aa8; font-size: 18px; text-decoration: none; }
+/* Fenêtres de la page de jeu ouvertes dans le menu : au-dessus de tout */
+.rules-modal { user-select: text; }
 .journal-note { margin-top: 10px; font-size: 13px; opacity: .6; }
 
 /* Toasts de toast.js, à la façon du menu */

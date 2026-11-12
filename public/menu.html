@@ -1,11 +1,15 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="ui-modern">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Celestedle</title>
+    <!-- style.css + modern.css : pour les fenêtres de la page de jeu
+         (profil, classements, bug) ouvertes dans le menu -->
+    <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="celeste-ui.css" />
     <link rel="stylesheet" href="menu.css" />
+    <link rel="stylesheet" href="modern.css" />
     <link rel="icon" href="assets/berrywinged.png" type="image/png" />
   </head>
   <!-- Page d'accueil façon menus de Celeste (voir REDESIGN.md).
@@ -101,7 +105,7 @@
           </thead>
           <tbody id="journal-body"></tbody>
         </table>
-        <a class="journal-link" href="index.html#leaderboard">Leaderboards ▸</a>
+        <button type="button" class="journal-link" id="journal-leaderboard">Leaderboards ▸</button>
       </div>
     </div>
 

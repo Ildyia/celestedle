@@ -85,6 +85,10 @@ html.ui-modern {
     position: absolute; left: 50%; bottom: 0; translate: -50% 0;
     width: max(100%, calc(55vh * 1600 / 700)); aspect-ratio: 1600 / 700; opacity: .6;
   }
+  & .m-mountain img { display: block; width: 100%; height: 100%; }
+  /* Drapeau du sommet, placé en % du dessin (x 896 → 954, y 164 → 256) */
+  & .m-flag { position: absolute; left: calc(896 / 1600 * 100%); top: calc(164 / 700 * 100%); width: calc(58 / 1600 * 100%); height: calc(92 / 700 * 100%); overflow: visible; }
+  & .m-cloth { fill: #e0475b; transform-box: fill-box; transform-origin: 0% 50%; animation: m-wave 1.4s ease-in-out infinite alternate; }
   & #modern-scene::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgba(11, 10, 36, .6)); }
 }
 
@@ -182,6 +186,32 @@ html.ui-modern {
   & .btn-secondary { background: rgba(255, 255, 255, .08) !important; color: var(--m-text) !important; }
 }
 
+/* ===== Règles : des fiches par rubrique ===== */
+html.ui-modern {
+  & #rules-modal .rules-content { width: min(940px, 94vw); max-width: none; padding: 28px 30px; }
+  & #rules-modal .rules-content-static > h2 { font-size: 1.8rem; margin-bottom: 6px; }
+  & #rules-modal .rules-content-static > p { color: var(--m-muted); font-size: 1rem; margin-bottom: 18px; }
+  /* Deux colonnes de fiches, chacune d'un bloc */
+  & .m-rules-grid { columns: 2 340px; column-gap: 14px; }
+  & .m-rule {
+    break-inside: avoid; margin: 0 0 14px; padding: 14px 16px; border-radius: 10px;
+    background: rgba(255, 255, 255, .045); border: 1px solid var(--m-line);
+  }
+  & .m-rule h4 { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; font-size: 1.05rem; color: #fff; letter-spacing: 1px; text-transform: uppercase; }
+  & .m-rule h4 img { width: 26px; height: 26px; object-fit: contain; image-rendering: pixelated; }
+  & .m-rule p, & .m-rule li { font-size: .9rem; line-height: 1.5; color: var(--m-text); }
+  & .m-rule p + p { margin-top: 8px; }
+  & .m-rule ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+  & .m-rule li { position: relative; padding-left: 14px; }
+  & .m-rule li::before { content: ""; position: absolute; left: 0; top: .55em; width: 5px; height: 5px; border-radius: 50%; background: var(--m-muted); }
+  & .m-rule strong { color: #fff; }
+  & .m-rule ul + p { margin-top: 10px; color: var(--m-muted); }
+  /* Légende des couleurs : des pastilles comme les cases du tableau */
+  & .m-rule .rules-color-list li { display: flex; align-items: center; gap: 8px; padding-left: 0; }
+  & .m-rule .rules-color-list li::before { display: none; }
+  & .m-rule .color-box { flex: none; width: 22px; height: 22px; border-radius: 6px; border: none !important; }
+}
+
 /* ===== Menu pause, façon Celeste ===== */
 html.ui-modern {
   & #modern-pause:not([hidden]) {
@@ -194,6 +224,8 @@ html.ui-modern {
   & #modern-pause li.selected { transform: translateX(14px); animation: m-hl .25s steps(1) infinite; }
 }
 @keyframes m-fade { from { opacity: 0; } }
+@keyframes m-wave { 0% { transform: skewY(-6deg) scaleX(1); } 100% { transform: skewY(5deg) scaleX(.86); } }
+@media (prefers-reduced-motion: reduce) { html.ui-modern .m-cloth { animation: none; } }
 @keyframes m-hl { 0% { color: #84ff54; } 50% { color: #fcff59; } }
 
 @media (max-width: 700px) {
@@ -204,5 +236,6 @@ html.ui-modern {
     & #modern-hint { display: none; }
     & .m-moon { --size: 40px; top: 52px; right: 10px; opacity: .5; }
     & #guesses-table { border-spacing: 3px 5px; }
+    & #rules-modal .rules-content { padding: 22px 16px; }
   }
 }
