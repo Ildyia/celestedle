@@ -6,6 +6,14 @@
     <title>Celestedle</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="theme-celeste.css" />
+    <link rel="stylesheet" href="modern.css" />
+    <!-- Interface Modern : posée avant l'affichage pour éviter un éclair de
+         l'interface Classic (voir js/interface.js) -->
+    <script>
+      try {
+        if (localStorage.getItem("celestedle_modern_ui") === "true") document.documentElement.classList.add("ui-modern");
+      } catch {}
+    </script>
     <link rel="icon" href="assets/berrywinged.png" type="image/png" />
   </head>
   <body>
@@ -607,6 +615,15 @@
         </button>
         <h2>Options</h2>
         <div class="option-row">
+          <label for="toggle-modern-checkbox">Modern Interface (beta)</label>
+          <label class="switch"
+            ><input type="checkbox" id="toggle-modern-checkbox" /><span
+              class="slider"
+            ></span
+          ></label>
+        </div>
+        <hr class="options-separator" />
+        <div class="option-row option-classic-only">
           <label for="toggle-theme-checkbox"
             >Celeste Background &amp; Theme</label
           >

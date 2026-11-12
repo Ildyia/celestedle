@@ -1,0 +1,240 @@
+/* Interface « Modern » des pages de jeu, façon menus de Celeste (voir
+   REDESIGN.md). Tout est rangé sous html.ui-modern : sans cette classe, la
+   page reste exactement l'interface Classic. La classe est posée par un
+   script dans le <head> et par js/interface.js (option « Modern Interface »).
+
+   Principe : décor fixe (ciel, lune, montagne), textes blancs à contour
+   noir, et des cartes « papier » à contour d'encre pour tout ce qu'on lit
+   ou remplit. Sur le papier, on change simplement les variables de couleur
+   de style.css (--text-main, --bg-card…) : le contenu suit tout seul. */
+
+html.ui-modern {
+  --m-sky-top: #0b0a24;
+  --m-sky-mid: #2a1a4f;
+  --m-sky-low: #6a3a7a;
+  --m-paper: #f3ecd9;
+  --m-paper-dark: #d9cfb4;
+  --m-paper-light: #fbf7ec;
+  --m-ink: #2b2335;
+  --m-ink-soft: #6e6585;
+  --m-hl-a: #84ff54;
+  --m-hl-b: #fcff59;
+  --m-side-a: #5aa8e8;
+  --m-side-b: #e0475b;
+  --m-accent: #d1366a;
+  --m-outline: 2px 0 var(--m-ink), -2px 0 var(--m-ink), 0 2px var(--m-ink), 0 -2px var(--m-ink), 2px 2px var(--m-ink), -2px -2px var(--m-ink), 2px -2px var(--m-ink), -2px 2px var(--m-ink);
+  /* Couleur des onglets et boutons choisis de style.css : l'accent du menu */
+  --color-indigo: #d1366a;
+  --color-indigo-hover: #b02a58;
+  --m-outline-big: 3px 0 #000, -3px 0 #000, 0 3px #000, 0 -3px #000, 2px 2px #000, -2px -2px #000, 2px -2px #000, -2px 2px #000;
+
+  /* Le fond d'écran Classic (thème Celeste compris) laisse place au décor */
+  & body {
+    background: var(--m-sky-top) !important;
+    background-image: none !important;
+    color: #fff;
+  }
+  & body, & button, & input, & select, & textarea { font-family: "Renogare", "Segoe UI", sans-serif; }
+
+  /* Un « papier » : à appliquer aux cartes, champs et fenêtres */
+  & .sidebar-block, & .bug-card, & .rules-content, & .bug-modal-content, & .suggestions-box {
+    --bg-card: var(--m-paper);
+    --bg-input: var(--m-paper-light);
+    --text-main: var(--m-ink);
+    --text-muted: var(--m-ink-soft);
+    background: var(--m-paper) !important;
+    color: var(--m-ink);
+    border: 3px solid var(--m-ink) !important;
+    border-radius: 8px;
+    box-shadow: 0 6px 0 rgba(0, 0, 0, .35);
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* ===== Décor ===== */
+#modern-scene, #modern-back { display: none; }
+html.ui-modern {
+  & #modern-scene {
+    display: block; position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
+    background: linear-gradient(180deg, var(--m-sky-top) 0%, var(--m-sky-mid) 55%, var(--m-sky-low) 100%);
+  }
+  & .m-stars {
+    position: absolute; inset: 0; opacity: .8;
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 30% 8%, #fff 50%, transparent 51%),
+      radial-gradient(2px 2px at 55% 15%, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 70% 30%, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 85% 12%, #fff 50%, transparent 51%),
+      radial-gradient(2px 2px at 92% 40%, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 20% 45%, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 45% 35%, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 63% 5%, #fff 50%, transparent 51%),
+      radial-gradient(2px 2px at 5% 33%, #fff 50%, transparent 51%);
+  }
+  /* Même croissant que le menu, plus petit et sans étoiles animées */
+  & .m-moon {
+    --size: clamp(60px, 8vw, 110px);
+    --crescent: radial-gradient(circle at 72% 28%, transparent 0 50%, #000 51%);
+    position: absolute; top: 4vh; right: 5vw; width: var(--size); aspect-ratio: 1; opacity: .9;
+  }
+  & .m-moon-glow, & .m-moon-body { position: absolute; inset: 0; border-radius: 50%; -webkit-mask: var(--crescent); mask: var(--crescent); }
+  & .m-moon-glow { background: #d9d0ff; transform: scale(1.06); filter: blur(calc(var(--size) * .1)); opacity: .6; }
+  & .m-moon-body { background: radial-gradient(circle at 35% 60%, #fff, #f4f0ff 60%, #cfc6ef); }
+  /* Montagne du menu, en bas et assombrie : le jeu reste lisible devant */
+  & .m-mountain {
+    position: absolute; left: 50%; bottom: 0; translate: -50% 0;
+    width: max(100%, calc(55vh * 1600 / 700)); aspect-ratio: 1600 / 700; opacity: .7;
+  }
+  & #modern-scene::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgba(11, 10, 36, .55)); }
+
+  /* Retour au menu, en haut à gauche */
+  & #modern-back {
+    display: inline-flex; align-items: center; gap: 8px; position: absolute; top: 18px; left: 22px; z-index: 50;
+    color: #fff; text-decoration: none; font-size: 20px; text-shadow: var(--m-outline-big);
+    transition: transform .12s;
+  }
+  & #modern-back:hover, & #modern-back:focus-visible { color: var(--m-hl-a); transform: translateX(-4px); }
+}
+
+/* ===== En-tête ===== */
+html.ui-modern {
+  & #main-content-column h1 {
+    margin-top: 10px; font-size: clamp(2.6rem, 6vw, 4.2rem); letter-spacing: 2px;
+    background: none; -webkit-text-fill-color: #fff; color: #fff; text-shadow: var(--m-outline-big);
+  }
+  /* Boutons du haut : texte blanc à contour, sans cadre, comme un menu du jeu */
+  & .top-actions .action-btn {
+    background: none !important; border: none !important; box-shadow: none !important;
+    color: #fff; text-shadow: var(--m-outline); font-size: 1.05rem; transition: transform .12s;
+  }
+  & .top-actions .action-btn:hover, & .top-actions .action-btn:focus-visible { color: var(--m-hl-a); transform: translateY(-2px); }
+  & .top-actions .action-btn img { filter: drop-shadow(0 2px 0 rgba(0, 0, 0, .6)); }
+
+  /* Onglets des jeux : celui où l'on est devient une étiquette papier */
+  & .game-tab {
+    background: none !important; border: 3px solid transparent !important; box-shadow: none !important;
+    color: #fff !important; text-shadow: var(--m-outline); opacity: .85; transition: transform .12s, opacity .12s;
+  }
+  & .game-tab:hover { opacity: 1; transform: translateY(-2px); }
+  & .game-tab[aria-current="page"] {
+    opacity: 1; background: var(--m-paper) !important; border-color: var(--m-ink) !important; border-radius: 8px;
+    color: var(--m-ink) !important; text-shadow: none; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
+  }
+  & .game-tab-badge { border: 2px solid var(--m-ink); text-shadow: none; }
+
+  /* Normal / Hard : les onglets A-Side et B-Side du livre de chapitre */
+  & #mode-switch { background: none !important; border: none !important; box-shadow: none !important; gap: 10px; }
+  & #mode-switch button {
+    border: 3px solid var(--m-ink) !important; border-radius: 8px; padding: 6px 22px;
+    background: var(--m-paper-dark) !important; color: var(--m-ink-soft) !important; text-shadow: none;
+    box-shadow: 0 4px 0 rgba(0, 0, 0, .35); transition: transform .12s;
+  }
+  & #mode-switch button[data-mode="normal"][aria-pressed="true"] { background: var(--m-side-a) !important; color: #fff !important; text-shadow: var(--m-outline); }
+  & #mode-switch button[data-mode="hard"][aria-pressed="true"] { background: var(--m-side-b) !important; color: #fff !important; text-shadow: var(--m-outline); }
+  & #mode-switch button:hover { transform: translateY(-2px); }
+  & .hard-rules { color: #fff; text-shadow: var(--m-outline); }
+}
+
+/* ===== Barre de jeu : essais, temps, indices, abandon ===== */
+html.ui-modern {
+  & #game-status { background: none !important; border: none !important; box-shadow: none !important; }
+  & #game-status button, & #game-status .tries-badge {
+    background: var(--m-paper) !important; color: var(--m-ink) !important;
+    border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
+    text-shadow: none; transition: transform .12s;
+  }
+  & #game-status button:hover:not(:disabled) { transform: translateY(-2px); }
+  & #hint-btn { background: #fff3c4 !important; }
+  & #giveup-btn { color: #a52d3e !important; }
+  & #game-status button:disabled { opacity: .55; }
+}
+
+/* ===== Zone de jeu : saisie et tableau des essais ===== */
+html.ui-modern {
+  & #game-container { background: none !important; border-color: transparent !important; box-shadow: none !important; backdrop-filter: none !important; }
+
+  & #element-input {
+    background: var(--m-paper-light) !important; color: var(--m-ink) !important;
+    border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
+  }
+  & #element-input::placeholder { color: var(--m-ink-soft); }
+  & #element-input:focus { border-color: var(--m-ink) !important; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important; outline: 3px solid var(--m-hl-a); outline-offset: 2px; }
+  & #guess-btn img { filter: drop-shadow(0 3px 0 rgba(0, 0, 0, .5)); }
+  & .suggestion-item { color: var(--m-ink); border-color: var(--m-paper-dark) !important; }
+  & .suggestion-item:hover, & .suggestion-item.selected { background: var(--m-paper-dark) !important; color: var(--m-ink) !important; }
+
+  /* Tableau : en-têtes blancs à contour, cases à contour d'encre */
+  & #guesses-table th { color: #fff; text-shadow: var(--m-outline); border-bottom-color: transparent !important; }
+  & #guesses-table td {
+    border: 3px solid var(--m-ink) !important; border-radius: 8px;
+    color: #fff; text-shadow: var(--m-outline); box-shadow: 0 4px 0 rgba(0, 0, 0, .3);
+  }
+  & #guesses-table { border-spacing: 6px 8px; }
+  & #guesses-table td.wrong { background: #3b3352 !important; color: #e8e1ff !important; }
+}
+
+/* ===== Messages de fin, indices actifs ===== */
+html.ui-modern {
+  & .win-message, & .lose-message, & .memorial-message {
+    background: var(--m-paper) !important; color: var(--m-ink) !important;
+    border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 6px 0 rgba(0, 0, 0, .35) !important;
+    --text-main: var(--m-ink); --text-muted: var(--m-ink-soft);
+  }
+  & .win-message h2, & .win-message h3, & .lose-message h2, & .lose-message h3 { color: var(--m-ink) !important; -webkit-text-fill-color: currentColor; background: none; }
+  & #active-hints-container > * {
+    background: var(--m-paper) !important; color: var(--m-ink) !important;
+    border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
+  }
+}
+
+/* ===== Colonnes de côté ===== */
+html.ui-modern {
+  & .sidebar-block h3, & .sidebar-block h2, & .bug-card h3, & .sidebar-header h3 { color: var(--m-ink) !important; -webkit-text-fill-color: currentColor; background: none; }
+  & .sidebar-block p, & .bug-card p, & .stats-list p { color: var(--m-ink); }
+  & #next-word-timer { color: var(--m-accent) !important; }
+  & #report-bug-btn {
+    background: var(--m-paper-light) !important; color: var(--m-ink) !important;
+    border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .25) !important;
+  }
+  & .social-sidebar-link { border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .25); }
+  & .github-sidebar-link { background: #2b2335 !important; color: #fff !important; }
+  & .kofi-sidebar-link { background: var(--m-paper-light) !important; color: var(--m-accent) !important; }
+  & #site-footer, & #site-footer a { color: #fff; text-shadow: var(--m-outline); opacity: .9; }
+}
+
+/* ===== Fenêtres ===== */
+html.ui-modern {
+  & .rules-modal { background: rgba(5, 4, 15, .7); backdrop-filter: none; }
+  & .rules-content h2, & .rules-content h3, & .rules-content h4, & .modal-title {
+    color: var(--m-ink) !important; -webkit-text-fill-color: currentColor; background: none; text-shadow: none;
+  }
+  & .rules-content p, & .rules-content li, & .rules-content label, & .rules-content td, & .rules-content th { color: var(--m-ink); }
+  & .rules-content hr, & .options-separator { border-color: var(--m-paper-dark) !important; background: var(--m-paper-dark); }
+  & .rules-content input, & .rules-content select, & .rules-content textarea {
+    background: var(--m-paper-light) !important; color: var(--m-ink) !important; border: 2px solid var(--m-ink-soft) !important; border-radius: 6px;
+  }
+  & .close-modal-btn { color: var(--m-ink) !important; }
+  & .close-modal-btn:hover { color: var(--m-accent) !important; }
+  /* L'option Celeste Theme ne concerne que l'interface Classic */
+  & .option-classic-only, & .option-classic-only + .options-separator { display: none; }
+
+  & .btn-primary, & .btn-secondary {
+    border: 3px solid var(--m-ink) !important; border-radius: 8px; box-shadow: 0 4px 0 rgba(0, 0, 0, .35) !important;
+    text-shadow: none; transition: transform .12s;
+  }
+  & .btn-primary { background: var(--m-accent) !important; color: #fff !important; }
+  & .btn-secondary { background: var(--m-paper-light) !important; color: var(--m-ink) !important; }
+  & .btn-primary:hover, & .btn-secondary:hover { transform: translateY(-2px); }
+}
+
+@media (max-width: 700px) {
+  html.ui-modern {
+    & #modern-back { top: 10px; left: 12px; font-size: 16px; }
+    & #main-content-column h1 { margin-top: 34px; }
+    & .m-moon { --size: 44px; top: 8px; right: 10px; opacity: .6; }
+    & #guesses-table { border-spacing: 3px 5px; }
+    & #guesses-table td { border-width: 2px !important; border-radius: 6px; }
+  }
+}

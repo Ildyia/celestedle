@@ -545,6 +545,7 @@ function journalOpen() {
 // Chaque préférence : un libellé et une valeur qu'on fait défiler avec ◂ ▸.
 // Mêmes clés que options.js : le choix fait ici vaut aussi dans les jeux.
 const OPTION_ROWS = [
+  { label: "Modern game pages", key: KEYS.modernUi, fallback: false },
   { label: "Celeste theme", key: KEYS.celesteTheme, fallback: true },
   { label: "Show timer", key: KEYS.showTimer, fallback: true },
   { label: "Bird cursor", key: KEYS.customCursor, fallback: true },

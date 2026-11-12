@@ -57,3 +57,12 @@ npm start          # puis http://localhost:3000/menu.html
 npm run lint
 npm test
 ```
+
+## Pages de jeu : interface Modern
+
+Option « Modern Interface (beta) » (options de la page de jeu) ou « Modern game pages » (options du menu), clé `celestedle_modern_ui`, éteinte par défaut tant que la refonte n'est pas finie.
+
+- `modern.css` : tout est rangé sous `html.ui-modern`. Sans la classe, la page reste exactement la Classic.
+- La classe est posée dès le `<head>` par un petit script (pas d'éclair au chargement). `js/interface.js` l'ajoute ou la retire quand l'option change, et construit le décor (ciel, lune, montagne du menu) et le lien « ◂ Menu ».
+- Principe : textes blancs à contour noir pour ce qui est posé sur le décor, cartes « papier » à contour d'encre pour ce qu'on lit ou remplit. Sur le papier, on change les variables de `style.css` (`--text-main`, `--bg-card`…) et le contenu suit.
+- Fait : Celestedle (`index.html`). À faire : Connections, Techs, l'écran de fin façon « chapitre terminé ».

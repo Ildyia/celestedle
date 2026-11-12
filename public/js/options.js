@@ -1,8 +1,16 @@
 import { byId, openModal } from "./dom.js";
 import { storage, KEYS } from "./storage.js";
+import { applyInterface } from "./interface.js";
 
 // Préférences d'affichage, gardées dans ce navigateur
 const OPTIONS = [
+  {
+    // Interface « Modern » (façon menus du jeu) ou « Classic »
+    checkbox: "toggle-modern-checkbox",
+    key: KEYS.modernUi,
+    fallback: false,
+    apply: applyInterface
+  },
   {
     checkbox: "toggle-theme-checkbox",
     key: KEYS.celesteTheme,

@@ -10,7 +10,8 @@ export const KEYS = {
   customCursor: "celestedle_custom_cursor",
   celesteTheme: "celestedle_celeste_theme",
   showTimer: "celestedle_show_timer",
-  performance: "celestedle_performance"
+  performance: "celestedle_performance",
+  modernUi: "celestedle_modern_ui"
 };
 
 // Clés de la v1, supprimées au premier chargement de la 2.0
