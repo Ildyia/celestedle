@@ -85,7 +85,12 @@ button { font: inherit; color: inherit; }
   transform: translate(-50%, -50%); animation: sparkle 2.4s ease-in-out infinite; animation-delay: var(--d, 0s); }
 @keyframes sparkle { 50% { opacity: .35; transform: translate(-50%, -50%) scale(.75); } }
 
-#mountain { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 75vh; transition: transform 1.2s var(--ease-out); transform-origin: 50% 100%; will-change: transform; }
+#mountain { position: absolute; left: 0; right: 0; bottom: 0; height: 75vh; transition: transform 1.2s var(--ease-out); transform-origin: 50% 100%; will-change: transform; }
+/* Le dessin couvre la zone (comme « cover »), calé en bas et au centre */
+.mountain-art { position: absolute; left: 50%; bottom: 0; width: max(100%, calc(75vh * 1600 / 700)); aspect-ratio: 1600 / 700; transform: translateX(-50%); }
+.mountain-art img { display: block; width: 100%; height: 100%; user-select: none; }
+/* Drapeau placé en % du dessin : x 896 → 954, y 164 → 256 sur 1600 × 700 */
+#summit-flag { position: absolute; left: calc(896 / 1600 * 100%); top: calc(164 / 700 * 100%); width: calc(58 / 1600 * 100%); height: calc(92 / 700 * 100%); overflow: visible; will-change: transform; }
 /* Voile sombre sur la montagne (options) : bien moins coûteux qu'un filter.
    Placé avant la neige, pour ne pas recouvrir les flocons animés. */
 #dim { position: absolute; inset: 0; background: #05040f; opacity: 0; transition: opacity 1.2s; }

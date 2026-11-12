@@ -30,17 +30,18 @@
         <span class="moon-star" style="--x: -6%; --y: 19%; --s: 15px; --c: #ffb3e6; --d: 2.04s">✦</span>
         <span class="moon-star" style="--x: 9%; --y: -7%; --s: 10px; --c: #8fe3ff; --d: 2.21s">✦</span>
       </div>
-      <svg id="mountain" viewBox="0 0 1600 700" preserveAspectRatio="xMidYMax slice">
-        <polygon fill="#3b2a66" points="0,700 0,520 180,430 320,470 470,330 600,390 760,210 900,300 1040,180 1180,330 1320,260 1460,380 1600,320 1600,700" />
-        <polygon fill="#24204a" points="0,700 0,600 220,520 380,560 560,420 700,470 820,300 900,250 980,320 1120,420 1300,380 1460,470 1600,440 1600,700" />
-        <polygon fill="#e9e6ff" opacity=".85" points="820,300 900,250 980,320 940,310 905,330 870,305" />
-        <!-- Drapeau du sommet -->
-        <g id="summit-flag">
-          <line x1="900" y1="252" x2="900" y2="168" stroke="#16142f" stroke-width="4" stroke-linecap="round" />
-          <rect class="cloth" x="902" y="170" width="46" height="28" />
-        </g>
-        <polygon fill="#16142f" points="0,700 0,650 260,600 520,640 760,560 1000,620 1260,580 1600,640 1600,700" />
-      </svg>
+      <!-- Montagne : une image fixe (dessinée une fois, puis seulement agrandie
+           par la carte graphique) et le drapeau animé dans son propre calque.
+           Coordonnées du drapeau = celles du dessin (viewBox 1600 × 700). -->
+      <div id="mountain">
+        <div class="mountain-art">
+          <img src="assets/menu/mountain.svg" alt="" draggable="false" />
+          <svg id="summit-flag" viewBox="896 164 58 92">
+            <line x1="900" y1="252" x2="900" y2="168" stroke="#16142f" stroke-width="4" stroke-linecap="round" />
+            <rect class="cloth" x="902" y="170" width="46" height="28" />
+          </svg>
+        </div>
+      </div>
       <div id="dim"></div>
     </div>
 
