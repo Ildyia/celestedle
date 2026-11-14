@@ -9,6 +9,7 @@ const { streaks } = require("./players");
 const { getModeRules } = require("./mode-rules");
 const techs = require("./techs");
 const connections = require("./connections");
+const { climbOf } = require("./chapters");
 
 // Une fraise = une victoire, comme le compteur du ticket
 const STRAWBERRIES_100 = 175;
@@ -168,4 +169,9 @@ function playerAchievements(player) {
   });
 }
 
-module.exports = { ACHIEVEMENTS, playerAchievements };
+// Progression en chapitres du joueur (services/chapters.js), sur les mêmes parties
+function playerClimb(player) {
+  return climbOf(allGames(player.id));
+}
+
+module.exports = { ACHIEVEMENTS, playerAchievements, playerClimb };

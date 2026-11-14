@@ -151,11 +151,13 @@ const freshStamps = new Set();
 async function loadAchievements() {
   if (!player.profile) {
     setAchievements([]);
+    showClimb(null);
     return;
   }
   try {
-    const { achievements } = await api.myAchievements();
+    const { achievements, climb } = await api.myAchievements();
     setAchievements(achievements);
+    showClimb(climb);
     const key = `${KEYS.seenStamps}_${player.profile.id}`;
     const seen = storage.getJson(key, null);
     const now = achievements.filter((a) => a.earned).map((a) => a.id);
@@ -989,14 +991,17 @@ function watchTransition() {
   requestAnimationFrame(tick);
 }
 
-// ===== Maquette des chapitres (js/chapters.js) =====
-// menu.html?chapter=3&berries=14 : sentier sur la montagne et avancée dans le livre
-function showChapterPreview() {
-  const preview = previewChapter();
-  if (!preview) return;
-  document.querySelector(".mountain-art").insertAdjacentHTML("beforeend", trailSvg(preview.chapter));
-  const progress = chapterProgress(preview);
-  byId("book-climb").hidden = false;
+// ===== Chapitres (js/chapters.js) =====
+// Sentier sur la montagne et avancée dans le livre, d'après la progression
+// envoyée par le serveur avec les achievements
+function showClimb(climb) {
+  // L'aperçu par l'adresse passe devant la vraie progression
+  const shown = previewChapter() ?? climb;
+  document.querySelector(".mountain-art .trail")?.remove();
+  byId("book-climb").hidden = !shown;
+  if (!shown) return;
+  document.querySelector(".mountain-art").insertAdjacentHTML("beforeend", trailSvg(shown.chapter));
+  const progress = chapterProgress(shown);
   byId("book-climb-title").textContent = progress.title;
   byId("book-climb-text").textContent = progress.text;
   byId("book-climb-bar").style.width = `${progress.ratio * 100}%`;
@@ -1020,7 +1025,7 @@ async function start() {
     loadProfileStats();
     loadGames();
   });
-  showChapterPreview();
+  showClimb(null);
   await player.load();
   // Sans jeton, player.load ne prévient pas : on charge quand même les jeux
   if (!player.profile) loadGames();

@@ -348,7 +348,7 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
   .slot.selected .stub { display: grid; }
   .slot.has-stub { display: flex; flex-direction: column-reverse; }
   #files .file-actions { font-size: 22px; }
-  .icons { gap: 10px; }
+  .icons { gap: 10px; top: 12px; }
   .icon { width: 64px; height: 64px; }
   .icon.selected { width: 84px; height: 84px; }
   .mode-label { display: none; }
@@ -378,7 +378,11 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
   .journal-page h3 { font-size: 22px; }
   .journal-table { font-size: 13px; }
   .journal-table .game-icon { display: none; }
-  .journal-table:not(.board) :is(th, td):is(:nth-child(2), :nth-child(6)) { display: none; }
+  .journal-table:not(.board, .chapters) :is(th, td):is(:nth-child(2), :nth-child(6)) { display: none; }
+  .journal-table.chapters td { white-space: nowrap; font-size: 12px; padding: 0 3px; }
+  /* Livre : le chapitre tient sur deux lignes (titre et barre) */
+  .book-climb { margin-top: 8px; }
+  .book-climb > span:last-child { display: none; }
   .journal-table.board :is(th, td):nth-child(4) { display: none; }
 }
 
@@ -484,7 +488,7 @@ body.perf .stamp.fresh { animation: none; }
   #player-card .slot { margin-right: 0; }
 }
 
-/* ===== Maquette des chapitres (js/chapters.js) =====
+/* ===== Chapitres (js/chapters.js) =====
    Sentier en pointillé sur la montagne, sept repères, feu de camp au chapitre
    en cours ; dans le livre, le chapitre et l'avancée vers le suivant. */
 .trail { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
@@ -506,3 +510,8 @@ body.perf .trail-camp { animation: none; }
 .book-climb .bar { height: 8px; border-radius: 4px; background: rgba(0, 0, 0, .35); overflow: hidden; }
 .book-climb .bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #ff9d4a, #ffd98a); }
 .book-climb > span:last-child { opacity: .75; }
+
+/* Page Climb du journal : chapitres pas encore atteints estompés, chapitre en cours surligné */
+.journal-table.chapters tr.ahead td { opacity: .45; }
+.journal-table.chapters tr.here td { background: rgba(255, 157, 74, .16); }
+.journal-table.chapters tr.here td:first-child::after { content: " ⛺"; }

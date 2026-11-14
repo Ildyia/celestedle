@@ -1,12 +1,13 @@
-// MAQUETTE : progression en chapitres sur la montagne (voir REDESIGN.md).
+// Progression en chapitres sur la montagne (voir REDESIGN.md).
 // Chaque victoire (une fraise) fait monter ; le total de fraises donne le
 // chapitre atteint. Un sentier en pointillé relie sept repères, du pied de la
 // montagne au sommet, et un feu de camp marque le chapitre en cours.
-// Pour l'instant, rien ne vient du serveur : on regarde le rendu avec
-//   menu.html?chapter=3&berries=14
-// Sans ce paramètre, rien ne s'affiche.
+// Le serveur calcule la progression (src/services/chapters.js, envoyée avec
+// les achievements) ; ici, on place les repères et on dessine.
+// Pour voir un autre état sans le jouer : menu.html?chapter=3&berries=14
 
-// x / y : position du repère dans le dessin de la montagne (1600 × 700)
+// x / y : position du repère dans le dessin de la montagne (1600 × 700).
+// Les noms et les seuils sont ceux du serveur (ils servent ici à l'aperçu).
 export const CHAPTERS = [
   { name: "Forsaken City", berries: 1, x: 250, y: 540 },
   { name: "Old Site", berries: 5, x: 395, y: 578 },
@@ -50,11 +51,16 @@ export function trailSvg(chapter) {
   </svg>`;
 }
 
-/** Texte du livre : chapitre en cours et avancée vers le suivant. */
-export function chapterProgress({ chapter, berries }) {
-  const current = chapter ? `Chapter ${chapter} · ${CHAPTERS[chapter - 1].name}` : "Prologue";
-  const next = CHAPTERS[chapter];
+/**
+ * Texte du livre : chapitre en cours et avancée vers le suivant.
+ * climb : { chapter, berries, chapters? } ; chapters est la liste du serveur
+ * (prologue compris), sinon on prend les seuils d'ici (aperçu par l'adresse).
+ */
+export function chapterProgress({ chapter, berries, chapters }) {
+  const list = chapters ? chapters.slice(1) : CHAPTERS;
+  const current = chapter ? `Chapter ${chapter} · ${list[chapter - 1].name}` : "Prologue";
+  const next = list[chapter];
   if (!next) return { title: current, text: "Summit reached", ratio: 1 };
-  const from = chapter ? CHAPTERS[chapter - 1].berries : 0;
+  const from = chapter ? list[chapter - 1].berries : 0;
   return { title: current, text: `${berries} / ${next.berries} strawberries to ${next.name}`, ratio: Math.max(0, Math.min(1, (berries - from) / (next.berries - from))) };
 }

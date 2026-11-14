@@ -19,3 +19,23 @@ test("weekStart renvoie le lundi", () => {
   assert.equal(weekStart("2026-10-19"), "2026-10-19"); // lundi
   assert.equal(weekStart("2026-10-25"), "2026-10-19"); // dimanche
 });
+
+test("chapitres : fraises et morts comptées dans le chapitre en cours", () => {
+  const { climbOf } = require("../src/services/chapters");
+  const game = (day, won) => ({ date: `2026-01-${String(day).padStart(2, "0")}`, won, finishedAt: null });
+  assert.equal(climbOf([]).chapter, 0);
+
+  // Une mort au prologue, 5 victoires (chapitre 2 à la 5e), puis 2 morts
+  const climb = climbOf([game(9, false), game(8, false), game(1, false), game(2, true), game(3, true), game(4, true), game(5, true), game(6, true)]);
+  assert.equal(climb.berries, 5);
+  assert.equal(climb.chapter, 2);
+  assert.deepEqual(
+    climb.chapters.slice(0, 3).map((c) => [c.name, c.reachedOn, c.strawberries, c.deaths]),
+    [
+      ["Prologue", "2026-01-01", 1, 1],
+      ["Forsaken City", "2026-01-02", 4, 0],
+      ["Old Site", "2026-01-06", 0, 2]
+    ]
+  );
+  assert.equal(climb.chapters[3].reachedOn, null);
+});

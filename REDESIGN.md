@@ -90,3 +90,4 @@ Option « Modern Interface (beta) » (options de la page de jeu) ou « Modern ga
 - **Tampon tout juste gagné** : il s'abat sur le ticket à la première vue des fichiers (`.stamp.fresh`, `menu.css`).
 - **Fiche d'un joueur** : `GET /players/:id/card` (profils cachés ou anonymes : 404). Dans le journal, un clic sur une ligne de classement montre son ticket ; depuis une page de jeu, le nom mène à `menu.html?player=<id>`.
 - **Sons** : `js/sound.js` (Web Audio, aucun fichier), option « Sounds », coupée par défaut.
+- **Chapitres** : `src/services/chapters.js` (seuils en fraises, fraises et morts par chapitre, calculés depuis les parties), envoyés avec les achievements (`climb`). `public/js/chapters.js` place les sept repères et dessine le sentier et le feu de camp ; le livre affiche le chapitre en cours ; page « Climb » du journal. Aperçu d'un autre état : `menu.html?chapter=3&berries=14`.

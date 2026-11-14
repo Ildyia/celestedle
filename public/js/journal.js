@@ -21,6 +21,7 @@ const MY_STATS = {
 
 const PAGES = [
   { id: "progress", tab: "Progress" },
+  { id: "climb", tab: "Climb" },
   { id: "stamps", tab: "Stamps" },
   { id: "daily", tab: "Today" },
   { id: "weekly", tab: "Week" },
@@ -118,6 +119,7 @@ export function createJournal({ getContext, onPlayer }) {
     box.classList.add("turn");
     if (page.id === "progress") await renderProgress(box, current);
     else if (page.id === "stamps") await renderStamps(box, current);
+    else if (page.id === "climb") await renderClimb(box, current);
     else await renderBoard(box, page.id, current);
   }
 
@@ -168,6 +170,46 @@ export function createJournal({ getContext, onPlayer }) {
         ])
       );
     });
+  }
+
+  // ===== Page Climb : les chapitres, avec fraises et morts de chacun =====
+  // Comme le journal du jeu. Une « mort » = une partie perdue ou abandonnée.
+  async function renderClimb(box, current) {
+    box.append(el("h3", { text: "Climb" }));
+    if (!player.profile) {
+      box.append(el("p", { className: "journal-empty", text: "No file yet: play a game to start climbing." }));
+      return;
+    }
+    let climb;
+    try {
+      ({ climb } = await api.myAchievements());
+    } catch (err) {
+      if (current === request) box.append(el("p", { className: "journal-empty", text: err.message }));
+      return;
+    }
+    if (current !== request) return;
+    const head = el("tr", {}, [
+      el("th", { text: "Chapter" }),
+      ...[
+        ["strawberry", "Strawberries"],
+        ["skull", "Deaths"],
+        ["normalflag", "Reached on"]
+      ].map(([icon, label]) => el("th", { attrs: { title: label } }, [el("img", { attrs: { src: ICON(icon), alt: label } })]))
+    ]);
+    const rows = climb.chapters.map((chapter, i) => {
+      const reached = i <= climb.chapter;
+      return el("tr", { className: `${reached ? "" : "ahead"}${i === climb.chapter ? " here" : ""}` }, [
+        el("td", { text: i ? `${i}. ${chapter.name}` : chapter.name }),
+        el("td", { text: reached ? String(chapter.strawberries) : "-" }),
+        el("td", { text: reached ? String(chapter.deaths) : "-" }),
+        el("td", { text: chapter.reachedOn ?? (reached ? "-" : `${chapter.berries} 🍓`) })
+      ]);
+    });
+    const deaths = climb.chapters.reduce((sum, c) => sum + c.deaths, 0);
+    box.append(
+      el("table", { className: "journal-table chapters" }, [el("thead", {}, [head]), el("tbody", {}, rows)]),
+      el("p", { className: "journal-note", text: `${climb.berries} strawberries and ${deaths} death${deaths === 1 ? "" : "s"} so far. One win is one strawberry; a lost or abandoned game is a death, counted in the chapter you were climbing.` })
+    );
   }
 
   // ===== Page Stamps : les achievements =====

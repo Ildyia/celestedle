@@ -43,7 +43,7 @@ router.get("/players/me/stats", requirePlayer, (req, res) => {
 // Achievements du joueur : ils posent les tampons sur son ticket
 router.get("/players/me/achievements", requirePlayer, (req, res) => {
   expireOverdueGames();
-  res.json({ achievements: achievements.playerAchievements(req.player) });
+  res.json({ achievements: achievements.playerAchievements(req.player), climb: achievements.playerClimb(req.player) });
 });
 
 // Fiche publique d'un joueur des classements : son ticket (nom, avatar,
@@ -62,7 +62,8 @@ router.get("/players/:id/card", (req, res) => {
     falls: normal.losses + normal.forfeits + hard.losses + hard.forfeits,
     streak: Math.max(normal.streak.current, hard.streak.current),
     bestTime: times.length ? Math.min(...times) : null,
-    stamps: achievements.playerAchievements(target).filter((a) => a.earned).map((a) => a.id)
+    stamps: achievements.playerAchievements(target).filter((a) => a.earned).map((a) => a.id),
+    chapter: achievements.playerClimb(target).chapter
   });
 });
 
