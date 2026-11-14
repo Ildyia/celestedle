@@ -317,6 +317,7 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
 .stamp-row { display: grid; grid-template-columns: 84px 1fr 24px; align-items: center; gap: 14px; min-height: 88px; }
 .stamp-badge { position: relative; width: 80px; height: 80px; opacity: .22; filter: grayscale(1); transform: rotate(-8deg); }
 .stamp-row.earned .stamp-badge { opacity: .85; filter: none; }
+.stamp-badge.secret { display: grid; place-items: center; border: 3px dashed currentColor; border-radius: 50%; font-size: 34px; opacity: .3; }
 .stamp-text { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--j-soft); }
 .stamp-text strong { font-size: 16px; color: var(--j-ink); }
 .stamp-row:not(.earned) .stamp-text strong { color: var(--j-soft); }
@@ -547,4 +548,57 @@ body.perf :is(.trail-reveal, .trail-camp-move, .trail.advancing .trail-mark.here
 .card .chapter-line.summit { color: #b7791f; }
 /* Petit drapeau rouge, celui du sommet de la montagne */
 .card .summit-flag { width: .8em; height: 1.1em; flex: none; background: linear-gradient(#3a3350 0 0) 0 0 / 2px 100% no-repeat, linear-gradient(#e0485e 0 0) 2px 0 / calc(100% - 2px) 55% no-repeat; }
+.card .moon-mark { height: 1.2em; image-rendering: pixelated; }
+.stub .stub-stamps .trophy { margin-left: .6em; white-space: nowrap; }
+.stub .trophy-icon { height: 1.1em; vertical-align: -.2em; image-rendering: pixelated; }
 .stub .stub-stamps { font-size: .85em; color: #8a87a3; align-self: center; }
+
+/* Farewell, sur la Lune : repère sur le croissant, feu de camp une fois atteint */
+.moon-camp { position: absolute; left: 22%; top: 58%; width: 34%; display: grid; justify-items: center; pointer-events: none; }
+.moon-camp img { width: 100%; image-rendering: pixelated; filter: drop-shadow(0 0 8px rgba(255, 160, 60, .8)); display: none; }
+.moon-camp i { font-style: normal; font-family: "Renogare", sans-serif; font-size: clamp(11px, 1vw, 15px); color: #ffe9bd; paint-order: stroke; -webkit-text-stroke: 3px #16142f; }
+.moon-camp.ahead { opacity: .45; }
+.moon-camp.here img { display: block; }
+.moon-camp.arriving img { animation: mark-pop .6s 2s ease-out backwards; }
+.trail-path.to-moon { stroke-dasharray: 2 12; opacity: .7; }
+/* Le feu de camp monte jusqu'à la lune, puis la quitte pour s'y poser */
+.trail-camp.leaving { animation: camp-leave .3s 2.1s forwards; }
+@keyframes camp-leave { to { opacity: 0; } }
+
+
+/* ===== Carte ===== */
+/* La caméra recule (chapter-cam) ; noms des chapitres et fiche en bas */
+.trail-name { display: none; font-family: "Renogare", sans-serif; font-size: 17px; fill: #fff; paint-order: stroke; stroke: #16142f; stroke-width: 5px; stroke-linejoin: round; }
+body.map-open .trail-name { display: block; }
+body.map-open .trail-mark:not(.focus) .trail-name { opacity: .55; font-size: 14px; }
+.trail-mark.focus circle { r: 11; stroke: #fff; stroke-width: 3.5; }
+.trail-mark.focus .trail-name { fill: #ffd98a; }
+#moon.map-focus .moon-camp { opacity: 1; }
+#moon.map-focus .moon-camp i { color: #ffd98a; }
+.map-panel {
+  position: fixed; right: 4vw; bottom: 5vh; z-index: 25; width: min(480px, calc(100% - 32px));
+  display: grid; grid-template-columns: 40px 1fr 40px; align-items: center; gap: 8px; padding: 16px 18px; color: #3a3350;
+  background: linear-gradient(160deg, #f7f0de, #eee2c6); border-radius: 6px;
+  box-shadow: 0 0 0 5px #fbf6ea, 0 0 0 6px rgba(58, 51, 80, .25), 0 18px 40px rgba(0, 0, 0, .55);
+  animation: postcard-in .4s cubic-bezier(.2, .9, .3, 1.15);
+}
+.map-panel[hidden] { display: none; }
+.map-panel h2 { font-size: 26px; color: #3a3350; margin-bottom: 4px; }
+.map-panel p { font-size: 14px; line-height: 1.5; }
+.map-stats { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.map-icon { height: 1.3em; image-rendering: pixelated; }
+.map-icon + .map-icon, .map-stats .map-icon:nth-of-type(2) { margin-left: 10px; }
+.map-here { color: #b45309; }
+.map-reward { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.map-arrow { font-size: 34px; line-height: 1; color: #3a3350; background: none; border: none; cursor: pointer; }
+.map-arrow:disabled { opacity: .2; cursor: default; }
+.map-close { position: absolute; top: 4px; right: 8px; font-size: 22px; color: #3a3350; background: none; border: none; cursor: pointer; }
+body.map-open .corner { opacity: 0; pointer-events: none; }
+body.map-open #moon, body.chapter-cam #moon { opacity: 1 !important; }
+@media (max-width: 700px) {
+  .map-panel { right: 16px; bottom: 3vh; grid-template-columns: 24px 1fr 24px; padding: 14px 10px; }
+  .map-panel h2 { font-size: 22px; }
+}
+/* Les jumelles n'occupent qu'une partie de leur image */
+#to-map img { transform: scale(1.7); }
+.moon-camp i { font-size: clamp(13px, 1.3vw, 18px); }

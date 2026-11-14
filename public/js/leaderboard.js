@@ -1,4 +1,5 @@
 import { api } from "./api.js";
+import { trophyMarks } from "./trophies.js";
 import { el, byId, clear, openModal, closeModal } from "./dom.js";
 import { formatDuration } from "./format.js";
 import { avatarUrl } from "./profile.js";
@@ -131,7 +132,8 @@ export class LeaderboardPanel {
     return el("span", { className: "board-player", attrs: { style: `--player-color: ${entry.player.color}` } }, [
       el("img", { attrs: { src: avatarUrl(entry.player.avatar), alt: "" } }),
       // Le nom mène à la fiche du joueur (son ticket), dans le menu
-      el("a", { className: "board-player-link", text: entry.player.name, attrs: { href: `menu.html?player=${encodeURIComponent(entry.player.id)}#modes`, title: `See ${entry.player.name}'s file` } })
+      el("a", { className: "board-player-link", text: entry.player.name, attrs: { href: `menu.html?player=${encodeURIComponent(entry.player.id)}#modes`, title: `See ${entry.player.name}'s file` } }),
+      ...trophyMarks(entry, this.period === "daily")
     ]);
   }
 

@@ -15,8 +15,14 @@ export const CHAPTERS = [
   { name: "Golden Ridge", berries: 25, x: 640, y: 472 },
   { name: "Mirror Temple", berries: 45, x: 722, y: 452 },
   { name: "Reflection", berries: 70, x: 800, y: 352 },
-  { name: "The Summit", berries: 100, x: 892, y: 268 }
+  { name: "The Summit", berries: 100, x: 892, y: 268 },
+  // Sur la Lune : le repère est posé sur la lune (#moon, menu.js), le sentier
+  // part du sommet vers le ciel jusqu'à MOON_PATH
+  { name: "Farewell", berries: 150, moon: true, x: 1290, y: -40 }
 ];
+const ON_MOUNTAIN = CHAPTERS.filter((c) => !c.moon);
+// Du sommet à la lune
+const MOON_PATH = "M 892 268 Q 1000 60 1290 -40";
 
 /** Chapitre atteint avec ce nombre de fraises : 0 (prologue) à 7. */
 export function chapterFor(berries) {
@@ -42,25 +48,33 @@ const points = (list) => list.map((c) => `${c.x},${c.y}`).join(" ");
 export function trailSvg(chapter, { from = null } = {}) {
   const start = { x: 150, y: 560 };
   const moving = from !== null && from < chapter;
-  const reached = [start, ...CHAPTERS.slice(0, moving ? from : chapter)];
-  const marks = CHAPTERS.map((c, i) => {
+  const reached = [start, ...ON_MOUNTAIN.slice(0, moving ? from : chapter)];
+  const marks = ON_MOUNTAIN.map((c, i) => {
     const state = i + 1 < chapter ? "done" : i + 1 === chapter ? "here" : "ahead";
-    return `<g class="trail-mark ${state}"><circle cx="${c.x}" cy="${c.y}" r="7" /><text x="${c.x}" y="${c.y + 26}" text-anchor="middle">${i + 1}</text></g>`;
+    // Le nom n'est montré que sur la carte (body.map-open)
+    return `<g class="trail-mark ${state}" data-chapter="${i + 1}"><circle cx="${c.x}" cy="${c.y}" r="7" /><text x="${c.x}" y="${c.y + 26}" text-anchor="middle">${i + 1}</text><text class="trail-name" x="${c.x}" y="${c.y - 18}" text-anchor="middle">${c.name}</text></g>`;
   }).join("");
+  // Sur la Lune, le feu de camp est sur la lune (menu.js) : pas ici
   const here = chapter ? CHAPTERS[chapter - 1] : start;
+  const onMoon = Boolean(here.moon);
   const was = moving && from ? CHAPTERS[from - 1] : start;
-  // Nouveau bout : pointillé dévoilé par un masque qui s'allonge
+  // Nouveau bout : pointillé dévoilé par un masque qui s'allonge. Vers la
+  // Lune, c'est la courbe du ciel qui se dévoile.
+  const toMoon = moving && onMoon;
+  const climbed = [was, ...ON_MOUNTAIN.slice(from, chapter)];
   const fresh = moving
-    ? `<mask id="trail-reveal" maskUnits="userSpaceOnUse" x="0" y="0" width="1600" height="700"><polyline class="trail-reveal" pathLength="1" points="${points([was, ...CHAPTERS.slice(from, chapter)])}" /></mask>
-    <polyline class="trail-path walked" mask="url(#trail-reveal)" points="${points([was, ...CHAPTERS.slice(from, chapter)])}" />`
+    ? `<mask id="trail-reveal" maskUnits="userSpaceOnUse" x="0" y="-300" width="1600" height="1000">${climbed.length > 1 ? `<polyline class="trail-reveal" pathLength="1" points="${points(climbed)}" />` : ""}${toMoon ? `<path class="trail-reveal" pathLength="1" d="${MOON_PATH}" />` : ""}</mask>
+    ${climbed.length > 1 ? `<polyline class="trail-path walked" mask="url(#trail-reveal)" points="${points(climbed)}" />` : ""}
+    ${toMoon ? `<path class="trail-path to-moon walked" mask="url(#trail-reveal)" d="${MOON_PATH}" />` : ""}`
     : "";
   const shift = moving ? ` class="trail-camp-move" style="--dx: ${was.x - here.x}px; --dy: ${was.y - here.y}px"` : "";
   return `<svg class="trail${moving ? " advancing" : ""}" viewBox="0 0 1600 700" aria-hidden="true">
-    <polyline class="trail-path" points="${points([start, ...CHAPTERS])}" />
+    <polyline class="trail-path" points="${points([start, ...ON_MOUNTAIN])}" />
+    <path class="trail-path to-moon${chapter > ON_MOUNTAIN.length && !(moving && from <= ON_MOUNTAIN.length) ? " walked" : ""}" d="${MOON_PATH}" />
     <polyline class="trail-path walked" points="${points(reached)}" />
     ${fresh}
     ${marks}
-    <g${shift}><image class="trail-camp" href="assets/entities/bonfire.png" x="${here.x - 44}" y="${here.y - 74}" width="88" height="88" /></g>
+    <g${shift}${onMoon && !moving ? ' style="display: none"' : ""}><image class="trail-camp${onMoon ? " leaving" : ""}" href="assets/entities/bonfire.png" x="${here.x - 44}" y="${here.y - 74}" width="88" height="88" /></g>
   </svg>`;
 }
 

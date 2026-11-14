@@ -9,6 +9,7 @@ import { formatDuration } from "./format.js";
 import { avatarUrl } from "./profile.js";
 import { player } from "./player.js";
 import { STAMPS, stampSvg } from "./stamps.js";
+import { trophyMarks } from "./trophies.js";
 
 const ICON = (name) => `assets/illustration/${name}.png`;
 
@@ -140,7 +141,9 @@ export function createJournal({ getContext, onPlayer }) {
         ["goldflag", "Streak"],
         ["normalflag", "Best streak"],
         ["time", "Best time"]
-      ].map(([icon, label]) => el("th", { attrs: { title: label } }, [el("img", { attrs: { src: ICON(icon), alt: label } })]))
+      ].map(([icon, label]) => el("th", { attrs: { title: label } }, [el("img", { attrs: { src: ICON(icon), alt: label } })])),
+      // Winner : jours terminés à la première place de ce mode
+      el("th", { attrs: { title: "Winner: days finished first in this mode" } }, [el("img", { attrs: { src: "assets/entities/moon-berry.png", alt: "Winner" } })])
     ]);
     const body = el("tbody");
     box.append(el("table", { className: "journal-table" }, [el("thead", {}, [head]), body]));
@@ -149,8 +152,14 @@ export function createJournal({ getContext, onPlayer }) {
     const rows = games.flatMap((game) =>
       ["a", "b"].filter(() => MY_STATS[game.id]).map((side) => ({ game, side, mode: game.modes[side] }))
     );
-    const stats = await Promise.all(rows.map((r) => MY_STATS[r.game.id](r.mode).catch(() => null)));
+    const [stats, mine] = await Promise.all([
+      Promise.all(rows.map((r) => MY_STATS[r.game.id](r.mode).catch(() => null))),
+      api.myAchievements().catch(() => null)
+    ]);
     if (current !== request) return;
+    const trophies = mine?.trophies ?? { winnerByBoard: {}, champion: 0, isChampion: false };
+    // Identifiant du classement du jour d'un mode (Connections : cx-…)
+    const boardOf = (r) => (r.game.id === "connections" ? `cx-${r.mode}` : r.mode);
     rows.forEach((r, i) => {
       const st = stats[i];
       if (!st) return;
@@ -166,10 +175,22 @@ export function createJournal({ getContext, onPlayer }) {
           el("td", { text: String(st.losses + st.forfeits) }),
           el("td", { text: String(st.streak.current) }),
           el("td", { text: String(st.streak.best) }),
-          el("td", { text: formatDuration(st.bestSeconds) })
+          el("td", { text: formatDuration(st.bestSeconds) }),
+          el("td", { text: String(trophies.winnerByBoard[boardOf(r)] ?? 0) })
         ])
       );
     });
+    // Champion : semaines terminées à la première place (tous les jeux)
+    box.append(
+      el("p", { className: "journal-note trophies-note" }, [
+        el("span", { className: "trophy", text: "🏆" }),
+        ` Champion: ${trophies.champion} week${trophies.champion === 1 ? "" : "s"} finished first in the weekly ranking`,
+        trophies.isChampion ? " (reigning champion!)" : "",
+        ". ",
+        el("img", { className: "trophy", attrs: { src: "assets/entities/moon-berry.png", alt: "" } }),
+        ` Winner: ${trophies.winner ?? 0} day${trophies.winner === 1 ? "" : "s"} finished first in a mode.`
+      ])
+    );
   }
 
   // ===== Page Climb : les chapitres, avec fraises et morts de chacun =====
@@ -213,9 +234,12 @@ export function createJournal({ getContext, onPlayer }) {
   }
 
   // ===== Page Stamps : les achievements =====
-  function stampBadge(stamp) {
-    const node = el("span", { className: "stamp-badge" });
-    if (stamp) node.innerHTML = stampSvg(stamp);
+  // Un tampon pas encore gagné reste secret : cercle vide, « ??? », ni
+  // description ni progression
+  function stampBadge(stamp, earned) {
+    const node = el("span", { className: `stamp-badge${earned ? "" : " secret"}` });
+    if (stamp && earned) node.innerHTML = stampSvg(stamp);
+    else node.textContent = "?";
     return node;
   }
 
@@ -242,13 +266,10 @@ export function createJournal({ getContext, onPlayer }) {
         list.map((a) => {
           const stamp = STAMPS.find((st) => st.id === a.id);
           return el("div", { className: `stamp-row${a.earned ? " earned" : ""}` }, [
-            stampBadge(stamp),
+            stampBadge(stamp, a.earned),
             el("div", { className: "stamp-text" }, [
-              el("strong", { text: a.name }),
-              el("span", { text: a.description }),
-              a.earned || a.goal === 1
-                ? null
-                : el("span", { className: "stamp-bar", attrs: { style: `--p: ${(a.current / a.goal) * 100}%` } }, [el("i"), `${a.current} / ${a.goal}`])
+              el("strong", { text: a.earned ? a.name : "???" }),
+              el("span", { text: a.earned ? a.description : "A secret stamp. Keep climbing to find it!" })
             ]),
             el("span", { className: "stamp-state", text: a.earned ? "✓" : "" })
           ]);
@@ -312,7 +333,8 @@ export function createJournal({ getContext, onPlayer }) {
         el("td", { className: "rank", text: `#${entry.rank}` }),
         el("td", { className: "who" }, [
           el("span", { className: "avatar", attrs: { style: `--player-color: ${entry.player.color}` } }, [el("img", { attrs: { src: avatarUrl(entry.player.avatar), alt: "" } })]),
-          entry.player.name
+          entry.player.name,
+          ...trophyMarks(entry, period === "daily")
         ]),
         ...columns.map((c) => el("td", { text: String(c.value(entry) ?? "-") }))
       ]);

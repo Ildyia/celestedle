@@ -4,8 +4,10 @@ import { formatDuration, formatNumber } from "./format.js";
 import { player } from "./player.js";
 import { showToast } from "./toast.js";
 
+// « famille/nom » : images des personnages à débloquer (assets/avatars/),
+// sinon les sprites ouverts à tous (assets/entities/)
 export function avatarUrl(avatar) {
-  return `assets/entities/${avatar}.png`;
+  return avatar.includes("/") ? `assets/avatars/${avatar}.png` : `assets/entities/${avatar}.png`;
 }
 
 // Certains sprites ont beaucoup de vide autour du dessin : on les agrandit
@@ -20,6 +22,14 @@ const AVATAR_FIT = {
   "golden-winged-strawberry": "scale(1.25)",
   "theo-crystal": "scale(2.6)",
   pufferfish: "translate(7%, -4%) scale(3.6)",
+  "strawberry/seed": "scale(.8)",
+  "strawberry/ghost-seed": "scale(.8)",
+  "badeline/sprite": "translate(0, -6%) scale(1.5)",
+  "theo/sprite": "translate(0, -6%) scale(1.5)",
+  "granny/sprite": "translate(0, -6%) scale(1.5)",
+  "granny/laughing": "translate(0, -6%) scale(1.5)",
+  "oshiro/sprite": "translate(0, 10%) scale(2.2)",
+  "oshiro-boss": "translate(0, 12%) scale(2.2)",
   bird: "translate(3%, -28%) scale(1.65)"
 };
 export function avatarFit(avatar) {
@@ -92,6 +102,7 @@ export class ProfilePanel {
   fillForm() {
     const profile = player.profile;
     this.selected = { avatar: profile.avatar, color: profile.color };
+    this.openFamily = null;
     this.nodes.name.value = profile.name;
     byId("player-id").textContent = profile.id;
     this.nodes.discord.value = profile.discordTag ?? "";
@@ -102,28 +113,76 @@ export class ProfilePanel {
     this.renderPickers();
   }
 
-  // Les portraits et couleurs de chaque chapitre suivent ceux de tous,
-  // verrouillés (cadenas) tant que le chapitre n'est pas atteint
-  renderPickers() {
-    const { avatars, colors, rewards = [] } = this.options;
-    const lockOf = (chapter) => (chapter > this.chapter ? `Reach Chapter ${chapter} · ${rewards[chapter - 1].name} to unlock` : null);
-    const avatarButton = (avatar, lock = null, chapterName = null) => {
-      const label = avatar.replace(/-/g, " ");
-      return el(
-        "button",
-        {
-          className: `avatar-choice${lock ? " locked" : ""}`,
-          attrs: {
-            type: "button",
-            "aria-pressed": String(avatar === this.selected.avatar),
-            "aria-disabled": lock ? "true" : null,
-            title: lock ?? (chapterName ? `${label} (${chapterName})` : label)
-          },
-          on: { click: () => this.pick("avatar", avatar, lock) }
+  // Une case par personnage (son image ouverte à tous) ; un personnage dont
+  // le chapitre est atteint a d'autres images, montrées dans une bande sous la
+  // grille quand on le choisit. Verrouillées : silhouette et cadenas.
+  // Les couleurs des chapitres suivent celles de tous, verrouillées aussi.
+  familyOf(avatar) {
+    const { families = {} } = this.options;
+    return Object.keys(families).find((id) => families[id].base === avatar || families[id].avatars.includes(avatar)) ?? null;
+  }
+
+  rewardOf(family) {
+    return (this.options.rewards ?? []).find((r) => r.family === family) ?? null;
+  }
+
+  lockOf(reward) {
+    return reward && reward.chapter > this.chapter ? `Reach Chapter ${reward.chapter} · ${reward.name} to unlock` : null;
+  }
+
+  avatarButton(avatar, { lock = null, title = null, badge = null, family = null } = {}) {
+    const label = title ?? avatar.split("/").pop().replace(/-/g, " ");
+    return el(
+      "button",
+      {
+        className: `avatar-choice${lock ? " locked" : ""}`,
+        attrs: {
+          type: "button",
+          "aria-pressed": String(avatar === this.selected.avatar),
+          "aria-disabled": lock ? "true" : null,
+          title: lock ?? label
         },
-        [el("img", { attrs: { src: avatarUrl(avatar), alt: label, style: avatarFit(avatar) } })]
-      );
-    };
+        on: {
+          click: () => {
+            if (family) this.openFamily = family;
+            this.pick("avatar", avatar, lock);
+          }
+        }
+      },
+      [el("img", { attrs: { src: avatarUrl(avatar), alt: label, style: avatarFit(avatar) } }), badge ? el("span", { className: "avatar-badge", text: badge }) : null]
+    );
+  }
+
+  renderPickers() {
+    const { avatars, colors, families = {}, rewards = [] } = this.options;
+    this.openFamily ??= this.familyOf(this.selected.avatar);
+    // Cases : les images ouvertes à tous, puis les personnages sans image ouverte
+    const tiles = [
+      ...avatars.map((avatar) => ({ avatar, family: this.familyOf(avatar) })),
+      ...Object.entries(families).filter(([, f]) => !f.base).map(([id, f]) => ({ avatar: f.avatars[0], family: id, own: true }))
+    ];
+    clear(this.nodes.avatars);
+    this.nodes.avatars.append(
+      ...tiles.map(({ avatar, family, own }) => {
+        const reward = family ? this.rewardOf(family) : null;
+        const lock = this.lockOf(reward);
+        const inFamily = family && this.familyOf(this.selected.avatar) === family;
+        const button = this.avatarButton(inFamily && !own ? this.selected.avatar : avatar, {
+          lock: own ? lock : null,
+          title: family ? families[family].name : null,
+          family,
+          // Images en plus : leur nombre, ou un cadenas
+          badge: family && !(own && lock) ? (lock ? "🔒" : `+${families[family].avatars.length - (own ? 1 : 0)}`) : null
+        });
+        if (family && this.openFamily === family) button.classList.add("open");
+        // La case d'un personnage montre l'image choisie parmi les siennes
+        if (inFamily && !own) button.setAttribute("aria-pressed", "true");
+        return button;
+      })
+    );
+    this.renderFamily();
+
+    clear(this.nodes.colors);
     const colorButton = (color, lock = null, chapterName = null) =>
       el("button", {
         className: `color-choice${lock ? " locked" : ""}`,
@@ -137,20 +196,43 @@ export class ProfilePanel {
         },
         on: { click: () => this.pick("color", color, lock) }
       });
-    clear(this.nodes.avatars);
-    this.nodes.avatars.append(
-      ...avatars.map((avatar) => avatarButton(avatar)),
-      ...rewards.map((r) => avatarButton(r.avatar, lockOf(r.chapter), r.name))
-    );
-    clear(this.nodes.colors);
     this.nodes.colors.append(
       ...colors.map((color) => colorButton(color)),
-      ...rewards.map((r) => colorButton(r.color, lockOf(r.chapter), r.name))
+      ...rewards.map((r) => colorButton(r.color, this.lockOf(r), r.name))
+    );
+  }
+
+  // Bande des images du personnage ouvert, sous la grille
+  renderFamily() {
+    let strip = byId("profile-family");
+    if (!strip) {
+      strip = el("div", { className: "family-strip", attrs: { id: "profile-family" } });
+      this.nodes.avatars.after(strip);
+    }
+    clear(strip);
+    const family = this.options.families?.[this.openFamily];
+    strip.hidden = !family;
+    if (!family) return;
+    const reward = this.rewardOf(this.openFamily);
+    const lock = this.lockOf(reward);
+    strip.append(
+      el("p", {
+        className: "family-title",
+        text: lock ? `${family.name}: ${family.avatars.length} more pictures at Chapter ${reward.chapter} · ${reward.name}` : `${family.name}: unlocked in ${reward.name}`
+      }),
+      el(
+        "div",
+        { className: "avatar-grid" },
+        [family.base, ...family.avatars].filter(Boolean).map((avatar) => this.avatarButton(avatar, { lock: avatar === family.base ? null : lock }))
+      )
     );
   }
 
   pick(kind, value, lock) {
-    if (lock) return showToast(`${lock}.`);
+    if (lock) {
+      this.renderPickers();
+      return showToast(`${lock}.`);
+    }
     this.selected[kind] = value;
     this.renderPickers();
   }
@@ -178,13 +260,16 @@ export class ProfilePanel {
     );
     clear(this.nodes.stats);
     try {
-      this.renderStats(await api.myStats(this.statsMode));
+      const [stats, mine] = await Promise.all([api.myStats(this.statsMode), api.myAchievements().catch(() => null)]);
+      this.renderStats(stats, mine?.trophies);
     } catch (err) {
       this.nodes.stats.append(el("p", { className: "small-subtext", text: err.message }));
     }
   }
 
-  renderStats(stats) {
+  // trophies : Winner (jours finis premier dans ce mode) et Champion
+  // (semaines finies premier), voir src/services/trophies.js
+  renderStats(stats, trophies = null) {
     const tile = (label, value) =>
       el("div", { className: "stat-tile" }, [el("strong", { text: String(value) }), el("span", { text: label })]);
     const max = Math.max(1, ...stats.distribution.map((d) => d.count));
@@ -198,7 +283,10 @@ export class ProfilePanel {
         tile("Avg. tries", formatNumber(stats.avgTries)),
         tile("Avg. time", formatDuration(stats.avgSeconds)),
         tile("Best time", formatDuration(stats.bestSeconds)),
-        tile("Forfeits", stats.forfeits + stats.losses)
+        tile("Forfeits", stats.forfeits + stats.losses),
+        ...(trophies
+          ? [tile("Winner (days 1st)", trophies.winnerByBoard[this.statsMode] ?? 0), tile(trophies.isChampion ? "Champion 🏆 (reigning)" : "Champion (weeks 1st)", trophies.champion)]
+          : [])
       ]),
       el("p", { className: "small-subtext", text: "Wins by number of tries" }),
       el(

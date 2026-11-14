@@ -336,12 +336,14 @@ function ticketElement(t, { selected = false, empty = false, golden = false, fre
   return el("div", { className: `slot${selected ? " selected" : ""}${t.stub ? " has-stub" : ""}${empty ? " empty" : ""}${golden ? " golden" : ""}` }, children);
 }
 
-// Chapitre atteint, sous le nom ; au sommet, le drapeau du sommet
+// Chapitre atteint, sous le nom ; au sommet, le drapeau du sommet ; sur la
+// Lune (Farewell), une baie lunaire
 function chapterLine(chapter) {
   const name = chapter ? CHAPTERS[chapter - 1].name : "Prologue";
-  const summit = chapter === CHAPTERS.length;
+  const moon = chapter === CHAPTERS.length;
+  const summit = chapter >= CHAPTERS.length - 1;
   return el("div", { className: `sub chapter-line${summit ? " summit" : ""}`, attrs: { title: chapter ? `Chapter ${chapter} · ${name}` : name } }, [
-    summit ? el("span", { className: "summit-flag", attrs: { "aria-hidden": "true" } }) : null,
+    moon ? img("assets/entities/moon-berry.png", "moon-mark") : summit ? el("span", { className: "summit-flag", attrs: { "aria-hidden": "true" } }) : null,
     chapter ? `Ch. ${chapter} · ${name}` : name
   ]);
 }
@@ -381,7 +383,14 @@ async function openPlayerCard(id) {
         counter(`${ICON}/strawberry.png`, card.wins, "Strawberries: one per win, on every game")
       ],
       stub: [
-        el("div", { className: "stub-stamps", text: `${stamps.length} / ${STAMPS.length} stamps` }),
+        el("div", { className: "stub-stamps" }, [
+          `${stamps.length} / ${STAMPS.length} stamps`,
+          // Trophées : semaines et jours finis premier
+          card.trophies?.champion ? el("span", { className: "trophy", attrs: { title: card.trophies.isChampion ? "Reigning champion" : "Weeks finished first" } }, [`🏆×${card.trophies.champion}`]) : null,
+          card.trophies?.winner
+            ? el("span", { className: "trophy", attrs: { title: "Days finished first in a mode" } }, [img("assets/entities/moon-berry.png", "trophy-icon"), `×${card.trophies.winner}`])
+            : null
+        ]),
         el("div", { className: "streak", attrs: { title: "Current streak" } }, [img("assets/illustration/goldflag.png"), String(card.streak)]),
         el("div", { className: "stub-bottom" }, [
           counter(`${ICON}/skull.png`, card.falls, "Deaths: lost or abandoned games, on every game"),
@@ -824,7 +833,7 @@ const HINTS = {
   // Écran titre : le rond « C » remplace la touche, et clignote
   title: [[null, "Start"]],
   files: [["↑↓", "Move"], ["Enter", "Confirm"], ["Esc", "Back"]],
-  modes: [["←→", "Game"], ["↑↓", "Side"], ["Enter", "Climb"], ["J", "Journal"], ["O", "Options"], ["B", "Bug"], ["Esc", "Back"]],
+  modes: [["←→", "Game"], ["↑↓", "Side"], ["Enter", "Climb"], ["J", "Journal"], ["M", "Map"], ["O", "Options"], ["B", "Bug"], ["Esc", "Back"]],
   options: [["↑↓", "Move"], ["Enter", "Change"], ["Esc", "Back"]]
 };
 
@@ -860,6 +869,7 @@ const KEY_HANDLERS = {
     Tab: () => selectSide(side === "a" ? "b" : "a"),
     Enter: climb,
     j: openJournal,
+    m: openMap,
     o: openOptions,
     b: openReport,
     Escape: () => go("files")
@@ -896,6 +906,14 @@ document.addEventListener("keydown", (event) => {
       event.preventDefault();
       closePostcard();
     }
+    return;
+  }
+  if (mapOpen()) {
+    keySound(event.key);
+    if (event.key === "Escape" || event.key === "m" || event.key === "M") closeMap();
+    if (event.key === "ArrowLeft") moveMap(-1);
+    if (event.key === "ArrowRight") moveMap(1);
+    event.preventDefault();
     return;
   }
   if (chapterCardOpen()) {
@@ -954,6 +972,7 @@ onSwipe(byId("journal"), (step) => journal.flip(step));
 byId("to-options").addEventListener("click", openOptions);
 byId("to-report").addEventListener("click", openReport);
 byId("to-journal").addEventListener("click", openJournal);
+byId("to-map").addEventListener("click", openMap);
 byId("journal-close").addEventListener("click", closeJournal);
 byId("journal-prev").addEventListener("click", () => journal.flip(-1));
 byId("journal-next").addEventListener("click", () => journal.flip(1));
@@ -1028,10 +1047,116 @@ function showClimb(climb, from = null, { animate = false } = {}) {
   if (!shown) return;
   const drawn = from !== null && !animate ? from : shown.chapter;
   document.querySelector(".mountain-art").insertAdjacentHTML("beforeend", trailSvg(drawn, { from: animate ? from : null }));
+  showMoonCamp(drawn, animate && from < drawn);
   const progress = chapterProgress(from !== null && !animate ? { ...shown, chapter: from } : shown);
   byId("book-climb-title").textContent = progress.title;
   byId("book-climb-text").textContent = progress.text;
   byId("book-climb-bar").style.width = `${progress.ratio * 100}%`;
+}
+
+// Dernier chapitre, Farewell, sur la Lune : son repère est posé sur la lune
+// (elle bouge à part de la montagne), avec le feu de camp une fois atteint
+function showMoonCamp(chapter, arriving = false) {
+  const moon = byId("moon");
+  let camp = moon.querySelector(".moon-camp");
+  if (!camp) {
+    camp = el("span", { className: "moon-camp", attrs: { "aria-hidden": "true" } }, [
+      el("img", { attrs: { src: "assets/entities/bonfire.png", alt: "" } }),
+      el("i", { text: String(CHAPTERS.length) })
+    ]);
+    moon.append(camp);
+  }
+  const reached = chapter >= CHAPTERS.length;
+  camp.className = `moon-camp ${reached ? "here" : chapter === CHAPTERS.length - 1 ? "next" : "ahead"}${reached && arriving ? " arriving" : ""}`;
+}
+
+// ===== Carte =====
+// Toute la montagne (la caméra recule comme pour l'annonce d'un chapitre),
+// les noms des chapitres, et la fiche du chapitre choisi (←→) : fraises,
+// morts, date d'arrivée ou fraises manquantes, ce qu'il débloque.
+let mapIndex = null;
+let mapRewards = null;
+const mapOpen = () => mapIndex !== null;
+
+function camOn(x) {
+  document.body.style.setProperty("--cam-x", `${((0.5 - x / 1600) * 171.43).toFixed(2)}vh`);
+}
+
+async function openMap() {
+  if (mapOpen()) return;
+  const shown = previewChapter() ?? climbState;
+  mapIndex = shown?.chapter ?? 0;
+  document.body.classList.add("chapter-cam", "map-open");
+  renderMap();
+  playSound("confirm");
+  mapRewards ??= (await api.profileOptions().catch(() => null))?.rewards ?? [];
+  if (mapOpen()) renderMap();
+}
+
+function closeMap() {
+  if (!mapOpen()) return;
+  mapIndex = null;
+  document.body.classList.remove("chapter-cam", "map-open");
+  document.querySelectorAll(".trail-mark.focus").forEach((m) => m.classList.remove("focus"));
+  byId("map-panel").hidden = true;
+}
+
+function moveMap(step) {
+  mapIndex = Math.max(0, Math.min(CHAPTERS.length, mapIndex + step));
+  renderMap();
+}
+
+function renderMap() {
+  const shown = previewChapter() ?? climbState;
+  const reached = shown?.chapter ?? 0;
+  const berries = shown?.berries ?? 0;
+  const chapter = mapIndex ? CHAPTERS[mapIndex - 1] : { name: "Prologue", berries: 0, x: 150 };
+  const stats = climbState?.chapters?.[mapIndex];
+  // Téléphone : la lune reste en haut à droite de l'écran, on cadre à sa gauche
+  camOn(chapter.moon ? 1150 : chapter.x);
+  document.querySelectorAll(".trail-mark").forEach((m) => m.classList.toggle("focus", Number(m.dataset.chapter) === mapIndex));
+  byId("moon").classList.toggle("map-focus", Boolean(chapter.moon));
+
+  const lines = [];
+  if (mapIndex <= reached) {
+    if (stats) {
+      lines.push(
+        el("p", { className: "map-stats" }, [
+          img(`${ICON}/strawberry.png`, "map-icon"),
+          `${stats.strawberries} strawberr${stats.strawberries === 1 ? "y" : "ies"}`,
+          img(`${ICON}/skull.png`, "map-icon"),
+          `${stats.deaths} death${stats.deaths === 1 ? "" : "s"}`
+        ])
+      );
+      if (stats.reachedOn) lines.push(el("p", { text: `Reached on ${stats.reachedOn}` }));
+    }
+    if (mapIndex === reached) lines.push(el("p", { className: "map-here", text: "Your camp is here." }));
+  } else {
+    lines.push(el("p", { text: `${chapter.berries} strawberries needed: ${Math.max(0, chapter.berries - berries)} to go.` }));
+  }
+  const reward = mapRewards?.find((r) => r.chapter === mapIndex);
+  if (reward) {
+    lines.push(
+      el("p", { className: "map-reward" }, [
+        el("span", { className: "unlock-avatar" }, [el("img", { attrs: { src: avatarUrl(reward.avatars[0]), alt: "", style: avatarFit(reward.avatars[0]) } })]),
+        el("span", { className: "unlock-swatch", attrs: { style: `--swatch: ${reward.color}` } }),
+        `${mapIndex <= reached ? "Unlocked" : "Unlocks"}: ${reward.familyName} (${reward.avatars.length} picture${reward.avatars.length > 1 ? "s" : ""}) and a colour`
+      ])
+    );
+  }
+  const panel = byId("map-panel");
+  clear(panel);
+  panel.append(
+    el("button", { className: "map-arrow", attrs: { type: "button", "aria-label": "Previous chapter", disabled: mapIndex === 0 }, on: { click: () => moveMap(-1) } }, ["‹"]),
+    el("div", { className: "map-body" }, [
+      el("p", { className: "chapter-kicker", text: mapIndex ? `Chapter ${mapIndex}${chapter.moon ? " · on the moon" : ""}` : "Start" }),
+      el("h2", { text: chapter.name }),
+      ...lines
+    ]),
+    el("button", { className: "map-arrow", attrs: { type: "button", "aria-label": "Next chapter", disabled: mapIndex === CHAPTERS.length }, on: { click: () => moveMap(1) } }, ["›"]),
+    el("button", { className: "map-close", attrs: { type: "button", "aria-label": "Close the map" }, on: { click: closeMap } }, ["×"])
+  );
+  panel.hidden = false;
 }
 
 // ===== Annonce d'un nouveau chapitre =====
@@ -1074,16 +1199,16 @@ async function announceChapter() {
   clear(chapterCard);
   const unlocks = rewards.map((r) =>
     el("li", {}, [
-      el("span", { className: "unlock-avatar" }, [el("img", { attrs: { src: avatarUrl(r.avatar), alt: "", style: avatarFit(r.avatar) } })]),
+      el("span", { className: "unlock-avatar" }, [el("img", { attrs: { src: avatarUrl(r.avatars[0]), alt: "", style: avatarFit(r.avatars[0]) } })]),
       el("span", { className: "unlock-swatch", attrs: { style: `--swatch: ${r.color}` } }),
-      el("span", { text: `${r.name}: a new portrait and colour` })
+      el("span", { text: `${r.familyName}: ${r.avatars.length} new picture${r.avatars.length > 1 ? "s" : ""}, and a new colour` })
     ])
   );
   const button = el("button", { className: "postcard-btn", attrs: { type: "button" }, on: { click: closeChapterCard } }, [el("span", { className: "press-disc" }), "Keep climbing"]);
   chapterCard.append(
     el("div", { className: "postcard", attrs: { role: "dialog", "aria-modal": "true", "aria-labelledby": "chapter-postcard-title" } }, [
       el("div", { className: "postcard-stamp", attrs: { style: reward ? `background: ${reward.color}` : "" } }, [
-        el("img", { attrs: { src: reward ? avatarUrl(reward.avatar) : "assets/entities/bonfire.png", alt: "", style: reward ? avatarFit(reward.avatar) : "" } })
+        el("img", { attrs: { src: reward ? avatarUrl(reward.avatars[0]) : "assets/entities/bonfire.png", alt: "", style: reward ? avatarFit(reward.avatars[0]) : "" } })
       ]),
       el("div", { className: "postcard-postmark", attrs: { "aria-hidden": "true" } }),
       el("div", { className: "postcard-text" }, [
@@ -1091,7 +1216,9 @@ async function announceChapter() {
         el("h2", { attrs: { id: "chapter-postcard-title" }, text: chapter.name }),
         el("p", {
           text: to === CHAPTERS.length
-            ? `You made it to the summit with ${berries} strawberries. The whole mountain is yours!`
+            ? `You made it all the way to the moon with ${berries} strawberries. Farewell, and thank you for climbing!`
+            : to === CHAPTERS.length - 1
+            ? `You made it to the summit with ${berries} strawberries! One last climb waits, up on the moon.`
             : `You reached ${chapter.name} with ${berries} strawberries.${to - from > 1 ? ` That's ${to - from} chapters climbed since your last visit!` : ""}`
         }),
         unlocks.length ? el("p", { text: "Unlocked for your file:" }) : null,
@@ -1121,7 +1248,7 @@ function closeChapterCard() {
   body.style.setProperty("--cam-x", `${((0.5 - (x(from) + x(to)) / 2 / 1600) * 171.43).toFixed(2)}vh`);
   body.classList.add("chapter-cam");
   setTimeout(() => showClimb(climbState, from, { animate: true }), 700);
-  setTimeout(() => body.classList.remove("chapter-cam"), 3600);
+  setTimeout(() => !mapOpen() && body.classList.remove("chapter-cam"), 3600);
 }
 
 // ===== Démarrage =====

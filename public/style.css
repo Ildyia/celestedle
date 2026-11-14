@@ -2237,6 +2237,43 @@ body.hard-mode #game-status {
   background: var(--swatch);
 }
 
+/* Personnage avec d'autres images : leur nombre (ou un cadenas) en badge ;
+   ses images s'ouvrent dans une bande sous la grille */
+.avatar-choice { position: relative; }
+
+.avatar-badge {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  padding: 0 4px;
+  border-radius: 6px;
+  background: rgba(10, 8, 30, .8);
+  color: #fff;
+  font-size: 10px;
+  line-height: 15px;
+}
+
+.avatar-choice.open {
+  border-color: rgba(255, 255, 255, .35);
+}
+
+.family-strip {
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, .22);
+}
+
+.family-strip[hidden] {
+  display: none;
+}
+
+.family-title {
+  margin-bottom: 6px;
+  font-size: 13px;
+  opacity: .8;
+}
+
 /* Portraits et couleurs des chapitres pas encore atteints : cadenas */
 .avatar-choice.locked,
 .color-choice.locked {
@@ -2745,3 +2782,7 @@ body.hard-mode #game-status {
 
 .board-player-link { color: inherit; text-decoration: none; }
 .board-player-link:hover, .board-player-link:focus-visible { text-decoration: underline; }
+
+/* Trophées à côté d'un nom dans les classements (js/trophies.js) */
+.trophy { display: inline-block; margin-left: .3em; font-size: .95em; line-height: 1; vertical-align: -.1em; cursor: help; }
+img.trophy { width: 1.1em; height: 1.1em; object-fit: contain; image-rendering: pixelated; }
