@@ -4,6 +4,7 @@ const statsRepo = require("../repositories/stats");
 const { HttpError } = require("../utils/http-error");
 const { todayParis, addDays } = require("../utils/dates");
 const { getMode } = require("./modes");
+const { unlockedRewards } = require("./chapters");
 
 // Avatars proposés : sprites existants dans public/assets/entities
 const AVATARS = [
@@ -102,15 +103,23 @@ function findByToken(token) {
   return playersRepo.findByTokenHash(hashToken(token));
 }
 
-function updateProfile(player, input) {
+// chapter : chapitre atteint (services/achievements.js#playerClimb), qui
+// débloque des portraits et des couleurs en plus. On garde toujours ceux
+// qu'on porte déjà.
+function updateProfile(player, input, chapter = 0) {
+  const unlocked = unlockedRewards(chapter);
   const name = input.name === undefined ? player.name : String(input.name).trim();
   if (!NAME_PATTERN.test(name)) {
     throw new HttpError(400, "Name must be 3 to 20 letters, digits, spaces, _ or -.");
   }
   const avatar = input.avatar ?? player.avatar;
-  if (!AVATARS.includes(avatar)) throw new HttpError(400, "Unknown avatar.");
+  if (avatar !== player.avatar && !AVATARS.includes(avatar)) {
+    if (!unlocked.avatars.includes(avatar)) throw new HttpError(400, "This avatar is still locked.");
+  }
   const color = input.color ?? player.color;
-  if (!COLORS.includes(color)) throw new HttpError(400, "Unknown colour.");
+  if (color !== player.color && !COLORS.includes(color)) {
+    if (!unlocked.colors.includes(color)) throw new HttpError(400, "This colour is still locked.");
+  }
   const isHidden = input.isHidden === undefined ? player.isHidden : Boolean(input.isHidden);
   const discordTag =
     input.discordTag === undefined ? player.discordTag : normalizeDiscordTag(input.discordTag);

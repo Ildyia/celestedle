@@ -34,20 +34,33 @@ export function previewChapter() {
 
 const points = (list) => list.map((c) => `${c.x},${c.y}`).join(" ");
 
-/** Le sentier et ses repères, en SVG posé sur le dessin de la montagne. */
-export function trailSvg(chapter) {
+/**
+ * Le sentier et ses repères, en SVG posé sur le dessin de la montagne.
+ * from : chapitre d'où l'on vient. Le bout de sentier de from à chapter se
+ * trace alors peu à peu et le feu de camp s'y déplace (annonce d'un chapitre).
+ */
+export function trailSvg(chapter, { from = null } = {}) {
   const start = { x: 150, y: 560 };
-  const reached = [start, ...CHAPTERS.slice(0, chapter)];
+  const moving = from !== null && from < chapter;
+  const reached = [start, ...CHAPTERS.slice(0, moving ? from : chapter)];
   const marks = CHAPTERS.map((c, i) => {
     const state = i + 1 < chapter ? "done" : i + 1 === chapter ? "here" : "ahead";
     return `<g class="trail-mark ${state}"><circle cx="${c.x}" cy="${c.y}" r="7" /><text x="${c.x}" y="${c.y + 26}" text-anchor="middle">${i + 1}</text></g>`;
   }).join("");
   const here = chapter ? CHAPTERS[chapter - 1] : start;
-  return `<svg class="trail" viewBox="0 0 1600 700" aria-hidden="true">
+  const was = moving && from ? CHAPTERS[from - 1] : start;
+  // Nouveau bout : pointillé dévoilé par un masque qui s'allonge
+  const fresh = moving
+    ? `<mask id="trail-reveal" maskUnits="userSpaceOnUse" x="0" y="0" width="1600" height="700"><polyline class="trail-reveal" pathLength="1" points="${points([was, ...CHAPTERS.slice(from, chapter)])}" /></mask>
+    <polyline class="trail-path walked" mask="url(#trail-reveal)" points="${points([was, ...CHAPTERS.slice(from, chapter)])}" />`
+    : "";
+  const shift = moving ? ` class="trail-camp-move" style="--dx: ${was.x - here.x}px; --dy: ${was.y - here.y}px"` : "";
+  return `<svg class="trail${moving ? " advancing" : ""}" viewBox="0 0 1600 700" aria-hidden="true">
     <polyline class="trail-path" points="${points([start, ...CHAPTERS])}" />
     <polyline class="trail-path walked" points="${points(reached)}" />
+    ${fresh}
     ${marks}
-    <image class="trail-camp" href="assets/entities/bonfire.png" x="${here.x - 44}" y="${here.y - 74}" width="88" height="88" />
+    <g${shift}><image class="trail-camp" href="assets/entities/bonfire.png" x="${here.x - 44}" y="${here.y - 74}" width="88" height="88" /></g>
   </svg>`;
 }
 

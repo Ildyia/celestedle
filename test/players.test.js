@@ -39,3 +39,15 @@ test("chapitres : fraises et morts comptées dans le chapitre en cours", () => {
   );
   assert.equal(climb.chapters[3].reachedOn, null);
 });
+
+test("chapitres : un portrait et une couleur débloqués par chapitre", () => {
+  const { REWARDS, unlockedRewards } = require("../src/services/chapters");
+  const players = require("../src/services/players");
+  assert.equal(REWARDS.length, 7);
+  // Ni en double, ni déjà proposés à tous
+  assert.equal(new Set(REWARDS.map((r) => r.avatar)).size, 7);
+  assert.ok(REWARDS.every((r) => !players.AVATARS.includes(r.avatar) && !players.COLORS.includes(r.color)));
+  assert.deepEqual(unlockedRewards(0), { avatars: [], colors: [] });
+  assert.deepEqual(unlockedRewards(2).avatars, ["flingbird", "cassette-tape"]);
+  assert.equal(unlockedRewards(7).colors.length, 7);
+});

@@ -12,7 +12,7 @@ import { rulesSentence } from "./rules-text.js";
 import { CELESTEDLE, TECHS } from "./catalogs.js";
 import { showToast } from "./toast.js";
 import { keySound, playSound } from "./sound.js";
-import { chapterProgress, previewChapter, trailSvg } from "./chapters.js";
+import { CHAPTERS, chapterProgress, previewChapter, trailSvg } from "./chapters.js";
 import { initNextWordTimer } from "./timer.js";
 import { openPanel, panelOpen } from "./menu-panels.js";
 import { createJournal } from "./journal.js";
@@ -33,6 +33,7 @@ function go(next) {
   document.body.dataset.screen = next;
   render();
   updateTitle();
+  announceChapter();
 }
 
 // Titre de l'onglet : dit où on est dans le menu
@@ -147,17 +148,23 @@ async function createFile() {
 // la dernière visite est annoncé (liste vue gardée dans ce navigateur)
 // Tampons gagnés depuis la dernière visite : animés une fois sur le ticket
 const freshStamps = new Set();
+// Progression en chapitres (serveur) : ses fraises et ses morts sont celles
+// du ticket, sur tous les jeux
+let climbState = null;
 
 async function loadAchievements() {
   if (!player.profile) {
     setAchievements([]);
+    climbState = null;
     showClimb(null);
     return;
   }
   try {
     const { achievements, climb } = await api.myAchievements();
     setAchievements(achievements);
-    showClimb(climb);
+    climbState = climb;
+    noteChapter(climb);
+    showClimb(climb, pendingChapter?.from);
     const key = `${KEYS.seenStamps}_${player.profile.id}`;
     const seen = storage.getJson(key, null);
     const now = achievements.filter((a) => a.earned).map((a) => a.id);
@@ -185,8 +192,6 @@ async function loadProfileStats() {
     const [normal, hard] = await Promise.all([api.myStats("normal"), api.myStats("hard")]);
     const times = [normal.bestSeconds, hard.bestSeconds].filter((t) => t !== null && t !== undefined);
     profileStats = {
-      wins: normal.wins + hard.wins,
-      falls: normal.losses + normal.forfeits + hard.losses + hard.forfeits,
       bestTime: times.length ? Math.min(...times) : null,
       streak: Math.max(normal.streak.current, hard.streak.current)
     };
@@ -215,6 +220,7 @@ async function loadTodayMarks() {
 const ICON = "assets/illustration";
 const img = (src, className = "") => el("img", { className, attrs: { src, alt: "", draggable: "false" } });
 // « × 176 » en chiffres blancs à contour, comme les compteurs du jeu
+const deathsOf = (climb) => climb.chapters.reduce((sum, c) => sum + c.deaths, 0);
 const counter = (icon, value, title) =>
   el("span", { className: "counter", attrs: { title } }, [img(icon), el("span", { className: "times", text: "×" }), String(value)]);
 
@@ -237,6 +243,7 @@ function profileStub() {
     ];
   }
   const s = profileStats;
+  const c = climbState;
   const gems = el(
     "div",
     { className: "gems" },
@@ -255,7 +262,7 @@ function profileStub() {
     gems,
     el("div", { className: "streak", attrs: { title: "Current streak" } }, [img("assets/illustration/goldflag.png"), s ? String(s.streak) : "…"]),
     el("div", { className: "stub-bottom" }, [
-      counter(`${ICON}/skull.png`, s ? s.falls : "…", "Losses and forfeits"),
+      counter(`${ICON}/skull.png`, c ? deathsOf(c) : "…", "Deaths: lost or abandoned games, on every game"),
       el("span", { className: "best", attrs: { title: "Best time" }, text: s && s.bestTime !== null ? formatDuration(s.bestTime) : "--:--" })
     ])
   ];
@@ -263,13 +270,12 @@ function profileStub() {
 
 function profileSlot() {
   const profile = player.profile;
-  const s = profileStats;
   const lastGame = GAMES.find((g) => g.id === storage.get(LAST_GAME_KEY)) ?? GAMES[0];
   const body = [el("div", { className: "name", text: profile.name })];
   if (editing === "rename") {
     body.push(el("input", { attrs: { id: "slot-input", value: profile.name, maxlength: "24", "aria-label": "New name" } }));
   } else {
-    body.push(el("div", { className: "sub", text: lastGame.title }), counter(`${ICON}/strawberry.png`, s ? s.wins : "…", "Wins"));
+    body.push(el("div", { className: "sub", text: lastGame.title }), counter(`${ICON}/strawberry.png`, climbState ? climbState.berries : "…", "Strawberries: one per win, on every game"));
   }
   return {
     color: profile.color,
@@ -330,6 +336,16 @@ function ticketElement(t, { selected = false, empty = false, golden = false, fre
   return el("div", { className: `slot${selected ? " selected" : ""}${t.stub ? " has-stub" : ""}${empty ? " empty" : ""}${golden ? " golden" : ""}` }, children);
 }
 
+// Chapitre atteint, sous le nom ; au sommet, le drapeau du sommet
+function chapterLine(chapter) {
+  const name = chapter ? CHAPTERS[chapter - 1].name : "Prologue";
+  const summit = chapter === CHAPTERS.length;
+  return el("div", { className: `sub chapter-line${summit ? " summit" : ""}`, attrs: { title: chapter ? `Chapter ${chapter} · ${name}` : name } }, [
+    summit ? el("span", { className: "summit-flag", attrs: { "aria-hidden": "true" } }) : null,
+    chapter ? `Ch. ${chapter} · ${name}` : name
+  ]);
+}
+
 // ===== Fiche d'un autre joueur (clic dans un classement du journal) =====
 // Son ticket, comme le nôtre : fraises, tampons, série, chutes, meilleur temps.
 let playerCard = null;
@@ -361,14 +377,14 @@ async function openPlayerCard(id) {
       stamps: stamps.slice(0, TICKET_SLOTS.length),
       body: [
         el("div", { className: "name", text: card.player.name }),
-        el("div", { className: "sub", text: `${stamps.length} / ${STAMPS.length} stamps` }),
-        counter(`${ICON}/strawberry.png`, card.wins, "Wins")
+        chapterLine(card.chapter),
+        counter(`${ICON}/strawberry.png`, card.wins, "Strawberries: one per win, on every game")
       ],
       stub: [
-        el("div", {}),
+        el("div", { className: "stub-stamps", text: `${stamps.length} / ${STAMPS.length} stamps` }),
         el("div", { className: "streak", attrs: { title: "Current streak" } }, [img("assets/illustration/goldflag.png"), String(card.streak)]),
         el("div", { className: "stub-bottom" }, [
-          counter(`${ICON}/skull.png`, card.falls, "Losses and forfeits"),
+          counter(`${ICON}/skull.png`, card.falls, "Deaths: lost or abandoned games, on every game"),
           el("span", { className: "best", attrs: { title: "Best time" }, text: card.bestTime !== null ? formatDuration(card.bestTime) : "--:--" })
         ])
       ]
@@ -882,6 +898,14 @@ document.addEventListener("keydown", (event) => {
     }
     return;
   }
+  if (chapterCardOpen()) {
+    if (["Enter", " ", "Escape"].includes(event.key)) {
+      event.preventDefault();
+      playSound("confirm");
+      closeChapterCard();
+    }
+    return;
+  }
   if (playerCardOpen()) {
     if (event.key === "Escape" || event.key === "Enter") {
       event.preventDefault();
@@ -993,18 +1017,111 @@ function watchTransition() {
 
 // ===== Chapitres (js/chapters.js) =====
 // Sentier sur la montagne et avancée dans le livre, d'après la progression
-// envoyée par le serveur avec les achievements
-function showClimb(climb) {
+// envoyée par le serveur avec les achievements.
+// from : chapitre d'où l'on vient, tant que le nouveau n'est pas annoncé
+// (le sentier s'arrête là) ; animate : on trace le bout de from au chapitre.
+function showClimb(climb, from = null, { animate = false } = {}) {
   // L'aperçu par l'adresse passe devant la vraie progression
   const shown = previewChapter() ?? climb;
   document.querySelector(".mountain-art .trail")?.remove();
   byId("book-climb").hidden = !shown;
   if (!shown) return;
-  document.querySelector(".mountain-art").insertAdjacentHTML("beforeend", trailSvg(shown.chapter));
-  const progress = chapterProgress(shown);
+  const drawn = from !== null && !animate ? from : shown.chapter;
+  document.querySelector(".mountain-art").insertAdjacentHTML("beforeend", trailSvg(drawn, { from: animate ? from : null }));
+  const progress = chapterProgress(from !== null && !animate ? { ...shown, chapter: from } : shown);
   byId("book-climb-title").textContent = progress.title;
   byId("book-climb-text").textContent = progress.text;
   byId("book-climb-bar").style.width = `${progress.ratio * 100}%`;
+}
+
+// ===== Annonce d'un nouveau chapitre =====
+// Comme la carte postale qui ouvre chaque chapitre du jeu : on retient le
+// dernier chapitre vu dans ce navigateur ; au-delà, carte postale avec le
+// portrait et la couleur débloqués, puis la caméra recule et le feu de camp
+// monte jusqu'au nouveau repère.
+// Pour la voir sans jouer : menu.html?chapter=3&from=2
+let pendingChapter = null;
+
+function noteChapter(climb) {
+  const params = new URLSearchParams(location.search);
+  const preview = previewChapter();
+  if (preview) {
+    if (params.has("from")) pendingChapter = { from: Math.max(0, Math.min(preview.chapter - 1, Number(params.get("from")) || 0)), to: preview.chapter, berries: preview.berries };
+    announceChapter();
+    return;
+  }
+  const key = `${KEYS.seenChapter}_${player.profile.id}`;
+  const seen = storage.get(key);
+  // Première fois sur ce navigateur : rien à fêter
+  if (seen === null || climb.chapter < Number(seen)) storage.set(key, String(climb.chapter));
+  else if (climb.chapter > Number(seen)) pendingChapter = { from: Number(seen), to: climb.chapter, berries: climb.berries };
+  announceChapter();
+}
+
+let chapterCard = null;
+const chapterCardOpen = () => Boolean(chapterCard && !chapterCard.hidden);
+
+async function announceChapter() {
+  if (!pendingChapter || chapterCardOpen() || screen === "title" || postcardOpen() || !byId("api-down").hidden) return;
+  const { from, to, berries } = pendingChapter;
+  const chapter = CHAPTERS[to - 1];
+  const rewards = ((await api.profileOptions().catch(() => null))?.rewards ?? []).filter((r) => r.chapter > from && r.chapter <= to);
+  if (!pendingChapter || chapterCardOpen()) return;
+  const reward = rewards.at(-1);
+  const next = CHAPTERS[to];
+  chapterCard ??= el("div", { className: "postcard-wrap chapter-postcard", attrs: { hidden: true } });
+  if (!chapterCard.isConnected) document.body.append(chapterCard);
+  clear(chapterCard);
+  const unlocks = rewards.map((r) =>
+    el("li", {}, [
+      el("span", { className: "unlock-avatar" }, [el("img", { attrs: { src: avatarUrl(r.avatar), alt: "", style: avatarFit(r.avatar) } })]),
+      el("span", { className: "unlock-swatch", attrs: { style: `--swatch: ${r.color}` } }),
+      el("span", { text: `${r.name}: a new portrait and colour` })
+    ])
+  );
+  const button = el("button", { className: "postcard-btn", attrs: { type: "button" }, on: { click: closeChapterCard } }, [el("span", { className: "press-disc" }), "Keep climbing"]);
+  chapterCard.append(
+    el("div", { className: "postcard", attrs: { role: "dialog", "aria-modal": "true", "aria-labelledby": "chapter-postcard-title" } }, [
+      el("div", { className: "postcard-stamp", attrs: { style: reward ? `background: ${reward.color}` : "" } }, [
+        el("img", { attrs: { src: reward ? avatarUrl(reward.avatar) : "assets/entities/bonfire.png", alt: "", style: reward ? avatarFit(reward.avatar) : "" } })
+      ]),
+      el("div", { className: "postcard-postmark", attrs: { "aria-hidden": "true" } }),
+      el("div", { className: "postcard-text" }, [
+        el("p", { className: "chapter-kicker", text: `Chapter ${to}` }),
+        el("h2", { attrs: { id: "chapter-postcard-title" }, text: chapter.name }),
+        el("p", {
+          text: to === CHAPTERS.length
+            ? `You made it to the summit with ${berries} strawberries. The whole mountain is yours!`
+            : `You reached ${chapter.name} with ${berries} strawberries.${to - from > 1 ? ` That's ${to - from} chapters climbed since your last visit!` : ""}`
+        }),
+        unlocks.length ? el("p", { text: "Unlocked for your file:" }) : null,
+        unlocks.length ? el("ul", { className: "chapter-unlocks" }, unlocks) : null,
+        unlocks.length ? el("p", { text: "Wear them from your file: Edit profile." }) : null,
+        el("p", { className: "postcard-sign", text: next ? `Next camp: ${next.name}, at ${next.berries} strawberries.` : "Thanks for climbing all the way!" })
+      ]),
+      button
+    ])
+  );
+  chapterCard.hidden = false;
+  button.focus();
+  playSound("chapter");
+}
+
+// La carte se ferme : la caméra recule pour montrer la montagne, le sentier
+// se trace jusqu'au nouveau repère, puis la caméra revient.
+function closeChapterCard() {
+  if (!chapterCardOpen()) return;
+  chapterCard.hidden = true;
+  const { from, to } = pendingChapter;
+  pendingChapter = null;
+  if (!previewChapter()) storage.set(`${KEYS.seenChapter}_${player.profile.id}`, String(to));
+  const body = document.body;
+  // Milieu du trajet, en part du dessin (1600 de large, 171vh sur téléphone)
+  const x = (n) => (n ? CHAPTERS[n - 1].x : 150);
+  body.style.setProperty("--cam-x", `${((0.5 - (x(from) + x(to)) / 2 / 1600) * 171.43).toFixed(2)}vh`);
+  body.classList.add("chapter-cam");
+  setTimeout(() => showClimb(climbState, from, { animate: true }), 700);
+  setTimeout(() => body.classList.remove("chapter-cam"), 3600);
 }
 
 // ===== Démarrage =====

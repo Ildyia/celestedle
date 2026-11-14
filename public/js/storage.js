@@ -16,7 +16,8 @@ export const KEYS = {
   timeSky: "celestedle_time_sky",
   sounds: "celestedle_sounds",
   welcomeSeen: "celestedle_welcome_v3",
-  seenStamps: "celestedle_seen_stamps"
+  seenStamps: "celestedle_seen_stamps",
+  seenChapter: "celestedle_seen_chapter"
 };
 
 // Clés de la v1, supprimées au premier chargement de la 2.0

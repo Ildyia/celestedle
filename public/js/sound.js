@@ -11,7 +11,9 @@ const SOUNDS = {
   confirm: [[520, 780, 0.07, "square", 0.06], [780, 1040, 0.09, "square", 0.06]],
   back: [[520, 330, 0.09, "square", 0.05]],
   // Coup de tampon : un choc grave et court
-  stamp: [[170, 55, 0.14, "triangle", 0.35]]
+  stamp: [[170, 55, 0.14, "triangle", 0.35]],
+  // Nouveau chapitre : un petit arpège qui monte
+  chapter: [[523, 523, 0.12, "triangle", 0.2], [659, 659, 0.12, "triangle", 0.2], [784, 784, 0.12, "triangle", 0.2], [1047, 1047, 0.3, "triangle", 0.2]]
 };
 
 export const soundsOn = () => storage.getBool(KEYS.sounds, false);

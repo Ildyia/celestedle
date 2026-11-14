@@ -7,16 +7,27 @@
 // Les repères sur la montagne sont côté client (public/js/chapters.js).
 
 // berries : fraises à avoir pour atteindre le chapitre
+// avatar / color : portrait et couleur de profil débloqués en l'atteignant
+// (sprites de public/assets/entities, en plus de ceux de services/players.js)
 const CHAPTERS = [
   { name: "Prologue", berries: 0 },
-  { name: "Forsaken City", berries: 1 },
-  { name: "Old Site", berries: 5 },
-  { name: "Celestial Resort", berries: 12 },
-  { name: "Golden Ridge", berries: 25 },
-  { name: "Mirror Temple", berries: 45 },
-  { name: "Reflection", berries: 70 },
-  { name: "The Summit", berries: 100 }
+  { name: "Forsaken City", berries: 1, avatar: "flingbird", color: "#64748b" },
+  { name: "Old Site", berries: 5, avatar: "cassette-tape", color: "#2dd4bf" },
+  { name: "Celestial Resort", berries: 12, avatar: "key", color: "#b45309" },
+  { name: "Golden Ridge", berries: 25, avatar: "golden-winged-strawberry", color: "#e0b43a" },
+  { name: "Mirror Temple", berries: 45, avatar: "theo-crystal", color: "#5b21b6" },
+  { name: "Reflection", berries: 70, avatar: "double-refill", color: "#1e3a8a" },
+  { name: "The Summit", berries: 100, avatar: "summit-gems", color: "#f1f5f9" }
 ];
+
+// Récompenses de chaque chapitre, pour la fenêtre de profil
+const REWARDS = CHAPTERS.flatMap((c, chapter) => (c.avatar ? [{ chapter, name: c.name, avatar: c.avatar, color: c.color }] : []));
+
+/** Portraits et couleurs débloqués jusqu'à ce chapitre. */
+function unlockedRewards(chapter) {
+  const rewards = REWARDS.filter((r) => r.chapter <= chapter);
+  return { avatars: rewards.map((r) => r.avatar), colors: rewards.map((r) => r.color) };
+}
 
 /**
  * games : parties terminées ({ date, won, finishedAt }), dans n'importe quel ordre.
@@ -44,4 +55,4 @@ function climbOf(games) {
   return { berries, chapter, chapters };
 }
 
-module.exports = { CHAPTERS, climbOf };
+module.exports = { CHAPTERS, REWARDS, climbOf, unlockedRewards };

@@ -14,6 +14,11 @@ const AVATAR_FIT = {
   "winged-strawberry": "translate(0, 4%) scale(1.1)",
   feather: "translate(-5%, -3%) scale(1.7)",
   refill: "scale(1.45)",
+  "double-refill": "scale(1.45)",
+  flingbird: "translate(0, 8%) scale(1.6)",
+  "cassette-tape": "scale(1.3)",
+  "golden-winged-strawberry": "scale(1.25)",
+  "theo-crystal": "scale(2.6)",
   pufferfish: "translate(7%, -4%) scale(3.6)",
   bird: "translate(3%, -28%) scale(1.65)"
 };
@@ -39,6 +44,8 @@ export class ProfilePanel {
       button: byId("profile-btn")
     };
     this.selected = {};
+    // Chapitre atteint : débloque les portraits et couleurs des chapitres
+    this.chapter = 0;
 
     this.nodes.button?.addEventListener("click", () => this.open());
     this.nodes.form.addEventListener("submit", (e) => {
@@ -74,6 +81,7 @@ export class ProfilePanel {
     try {
       this.options ??= await api.profileOptions();
       await player.ensure();
+      this.chapter = (await api.myAchievements().catch(() => null))?.climb?.chapter ?? 0;
       this.fillForm();
       await this.loadStats();
     } catch (err) {
@@ -94,32 +102,57 @@ export class ProfilePanel {
     this.renderPickers();
   }
 
+  // Les portraits et couleurs de chaque chapitre suivent ceux de tous,
+  // verrouillés (cadenas) tant que le chapitre n'est pas atteint
   renderPickers() {
-    const { avatars, colors } = this.options;
+    const { avatars, colors, rewards = [] } = this.options;
+    const lockOf = (chapter) => (chapter > this.chapter ? `Reach Chapter ${chapter} · ${rewards[chapter - 1].name} to unlock` : null);
+    const avatarButton = (avatar, lock = null, chapterName = null) => {
+      const label = avatar.replace(/-/g, " ");
+      return el(
+        "button",
+        {
+          className: `avatar-choice${lock ? " locked" : ""}`,
+          attrs: {
+            type: "button",
+            "aria-pressed": String(avatar === this.selected.avatar),
+            "aria-disabled": lock ? "true" : null,
+            title: lock ?? (chapterName ? `${label} (${chapterName})` : label)
+          },
+          on: { click: () => this.pick("avatar", avatar, lock) }
+        },
+        [el("img", { attrs: { src: avatarUrl(avatar), alt: label, style: avatarFit(avatar) } })]
+      );
+    };
+    const colorButton = (color, lock = null, chapterName = null) =>
+      el("button", {
+        className: `color-choice${lock ? " locked" : ""}`,
+        attrs: {
+          type: "button",
+          "aria-pressed": String(color === this.selected.color),
+          "aria-disabled": lock ? "true" : null,
+          "aria-label": lock ?? (chapterName ? `${color} (${chapterName})` : color),
+          title: lock ?? chapterName ?? "",
+          style: `--swatch: ${color}`
+        },
+        on: { click: () => this.pick("color", color, lock) }
+      });
     clear(this.nodes.avatars);
     this.nodes.avatars.append(
-      ...avatars.map((avatar) =>
-        el(
-          "button",
-          {
-            className: "avatar-choice",
-            attrs: { type: "button", "aria-pressed": String(avatar === this.selected.avatar), title: avatar.replace(/-/g, " ") },
-            on: { click: () => { this.selected.avatar = avatar; this.renderPickers(); } }
-          },
-          [el("img", { attrs: { src: avatarUrl(avatar), alt: avatar.replace(/-/g, " "), style: avatarFit(avatar) } })]
-        )
-      )
+      ...avatars.map((avatar) => avatarButton(avatar)),
+      ...rewards.map((r) => avatarButton(r.avatar, lockOf(r.chapter), r.name))
     );
     clear(this.nodes.colors);
     this.nodes.colors.append(
-      ...colors.map((color) =>
-        el("button", {
-          className: "color-choice",
-          attrs: { type: "button", "aria-pressed": String(color === this.selected.color), "aria-label": color, style: `--swatch: ${color}` },
-          on: { click: () => { this.selected.color = color; this.renderPickers(); } }
-        })
-      )
+      ...colors.map((color) => colorButton(color)),
+      ...rewards.map((r) => colorButton(r.color, lockOf(r.chapter), r.name))
     );
+  }
+
+  pick(kind, value, lock) {
+    if (lock) return showToast(`${lock}.`);
+    this.selected[kind] = value;
+    this.renderPickers();
   }
 
   async save() {

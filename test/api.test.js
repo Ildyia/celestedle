@@ -772,9 +772,28 @@ test("fiche publique d'un joueur : cachée tant que le profil est anonyme ou cac
   assert.deepEqual(card.data.stamps, []);
   assert.equal(card.data.player.token, undefined);
 
+  assert.equal(card.data.chapter, 0);
+
   await api.request("PATCH", "/api/players/me", { token, body: { isHidden: true } });
   assert.equal((await api.request("GET", `/api/players/${player.id}/card`)).status, 404);
   assert.equal((await api.request("GET", "/api/players/nobody/card")).status, 404);
+});
+
+test("profil : les portraits et couleurs des chapitres restent verrouillés avant d'y arriver", async () => {
+  const { token } = await api.newPlayer();
+  const options = await api.request("GET", "/api/players/options");
+  assert.equal(options.data.rewards[0].chapter, 1);
+  const { avatar, color } = options.data.rewards[0];
+  assert.equal((await api.request("PATCH", "/api/players/me", { token, body: { avatar } })).status, 400);
+  assert.equal((await api.request("PATCH", "/api/players/me", { token, body: { color } })).status, 400);
+
+  // Une victoire : chapitre 1, son portrait et sa couleur se débloquent
+  await api.request("POST", "/api/game/guess", { token, body: { mode: "normal", guess: daily.getTodaySecret("normal").element.nom } });
+  const saved = await api.request("PATCH", "/api/players/me", { token, body: { avatar, color } });
+  assert.equal(saved.status, 200, JSON.stringify(saved.data));
+  assert.equal(saved.data.player.avatar, avatar);
+  const locked = options.data.rewards[1].avatar;
+  assert.equal((await api.request("PATCH", "/api/players/me", { token, body: { avatar: locked } })).status, 400);
 });
 
 test("pages : l'image d'aperçu de lien suit l'adresse demandée", async () => {

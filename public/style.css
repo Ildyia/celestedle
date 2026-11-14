@@ -2237,6 +2237,36 @@ body.hard-mode #game-status {
   background: var(--swatch);
 }
 
+/* Portraits et couleurs des chapitres pas encore atteints : cadenas */
+.avatar-choice.locked,
+.color-choice.locked {
+  position: relative;
+  cursor: not-allowed;
+}
+
+.avatar-choice.locked img {
+  filter: brightness(0) opacity(.35);
+}
+
+.color-choice.locked {
+  opacity: .45;
+}
+
+.avatar-choice.locked::after,
+.color-choice.locked::after {
+  content: "🔒";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .6));
+}
+
+.color-choice.locked::after {
+  font-size: 14px;
+}
+
 .stat-tiles {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

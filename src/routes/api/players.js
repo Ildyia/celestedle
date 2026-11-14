@@ -5,6 +5,7 @@ const playersRepo = require("../../repositories/players");
 const { requirePlayer } = require("../../middleware/player");
 const { rateLimit } = require("../../middleware/rate-limit");
 const { expireOverdueGames } = require("../../services/games");
+const { REWARDS } = require("../../services/chapters");
 
 const router = express.Router();
 
@@ -17,7 +18,8 @@ router.post("/players", createLimit, (req, res) => {
 });
 
 router.get("/players/options", (req, res) => {
-  res.json({ avatars: players.AVATARS, colors: players.COLORS });
+  // rewards : portrait et couleur de chaque chapitre (verrouillés jusque-là)
+  res.json({ avatars: players.AVATARS, colors: players.COLORS, rewards: REWARDS });
 });
 
 router.get("/players/me", requirePlayer, (req, res) => {
@@ -26,7 +28,11 @@ router.get("/players/me", requirePlayer, (req, res) => {
 });
 
 router.patch("/players/me", requirePlayer, (req, res) => {
-  res.json({ player: players.updateProfile(req.player, req.body || {}) });
+  const body = req.body || {};
+  // Le chapitre n'est calculé que si on change de portrait ou de couleur
+  const changing = (body.avatar && body.avatar !== req.player.avatar) || (body.color && body.color !== req.player.color);
+  const chapter = changing ? achievements.playerClimb(req.player).chapter : 0;
+  res.json({ player: players.updateProfile(req.player, body, chapter) });
 });
 
 // Le joueur supprime son profil, ses parties et ses votes
@@ -47,7 +53,8 @@ router.get("/players/me/achievements", requirePlayer, (req, res) => {
 });
 
 // Fiche publique d'un joueur des classements : son ticket (nom, avatar,
-// fraises, tampons). Comme les classements, elle ne montre ni les profils
+// fraises, tampons, chapitre). Les fraises sont celles des chapitres : une
+// par victoire, sur tous les jeux. Comme les classements, elle ne montre ni les profils
 // cachés ni les profils anonymes.
 router.get("/players/:id/card", (req, res) => {
   const target = playersRepo.findById(req.params.id);
@@ -56,14 +63,15 @@ router.get("/players/:id/card", (req, res) => {
   const normal = players.playerStats(target, "normal");
   const hard = players.playerStats(target, "hard");
   const times = [normal.bestSeconds, hard.bestSeconds].filter((t) => t !== null && t !== undefined);
+  const climb = achievements.playerClimb(target);
   res.json({
     player: { id: target.id, name: target.name, avatar: target.avatar, color: target.color },
-    wins: normal.wins + hard.wins,
-    falls: normal.losses + normal.forfeits + hard.losses + hard.forfeits,
+    wins: climb.berries,
+    falls: climb.chapters.reduce((sum, c) => sum + c.deaths, 0),
     streak: Math.max(normal.streak.current, hard.streak.current),
     bestTime: times.length ? Math.min(...times) : null,
     stamps: achievements.playerAchievements(target).filter((a) => a.earned).map((a) => a.id),
-    chapter: achievements.playerClimb(target).chapter
+    chapter: climb.chapter
   });
 });
 
