@@ -783,7 +783,7 @@ test("profil : les portraits et couleurs des chapitres restent verrouillés avan
   const { token } = await api.newPlayer();
   const options = await api.request("GET", "/api/players/options");
   assert.equal(options.data.rewards[0].chapter, 1);
-  const { avatar, color } = options.data.rewards[0];
+  const { avatars: [avatar], color } = options.data.rewards[0];
   assert.equal((await api.request("PATCH", "/api/players/me", { token, body: { avatar } })).status, 400);
   assert.equal((await api.request("PATCH", "/api/players/me", { token, body: { color } })).status, 400);
 
@@ -792,7 +792,7 @@ test("profil : les portraits et couleurs des chapitres restent verrouillés avan
   const saved = await api.request("PATCH", "/api/players/me", { token, body: { avatar, color } });
   assert.equal(saved.status, 200, JSON.stringify(saved.data));
   assert.equal(saved.data.player.avatar, avatar);
-  const locked = options.data.rewards[1].avatar;
+  const locked = options.data.rewards[1].avatars[0];
   assert.equal((await api.request("PATCH", "/api/players/me", { token, body: { avatar: locked } })).status, 400);
 });
 

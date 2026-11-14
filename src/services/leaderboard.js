@@ -5,6 +5,7 @@ const { getMode } = require("./modes");
 const ranking = require("./ranking");
 const connections = require("./connections");
 const staff = require("./staff");
+const trophies = require("./trophies");
 
 const PERIODS = ["daily", "weekly", "global"];
 const LIMIT = 50;
@@ -84,10 +85,23 @@ function combinedBoard(period, playerId) {
   };
 }
 
+// Trophées à côté des noms (services/trophies.js) : champion en titre, et
+// record de trophées du mode (du jour) ou de tous les modes (semaine, général)
+function withTrophies(board) {
+  const marks = trophies.boardMarks(board.period === "daily" ? board.mode : null);
+  const mark = (entry) =>
+    entry && {
+      ...entry,
+      champion: entry.player.id === marks.champion,
+      record: entry.player.id === marks.record ? marks.recordCount : 0
+    };
+  return { ...board, top: board.top.map(mark), me: mark(board.me), oneShots: board.oneShots.map(mark) };
+}
+
 // mode : celui du classement du jour (ignoré pour la semaine et le global)
 function getLeaderboard(period, mode, player = null) {
   if (!PERIODS.includes(period)) throw new HttpError(400, `Unknown period "${period}"`);
-  return period === "daily" ? dailyBoard(mode, player) : combinedBoard(period, player?.id ?? null);
+  return withTrophies(period === "daily" ? dailyBoard(mode, player) : combinedBoard(period, player?.id ?? null));
 }
 
 module.exports = { PERIODS, getLeaderboard };

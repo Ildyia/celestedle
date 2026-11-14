@@ -6,6 +6,8 @@ const { requirePlayer } = require("../../middleware/player");
 const { rateLimit } = require("../../middleware/rate-limit");
 const { expireOverdueGames } = require("../../services/games");
 const { REWARDS } = require("../../services/chapters");
+const { FAMILIES } = require("../../services/avatars");
+const trophies = require("../../services/trophies");
 
 const router = express.Router();
 
@@ -18,8 +20,9 @@ router.post("/players", createLimit, (req, res) => {
 });
 
 router.get("/players/options", (req, res) => {
-  // rewards : portrait et couleur de chaque chapitre (verrouillés jusque-là)
-  res.json({ avatars: players.AVATARS, colors: players.COLORS, rewards: REWARDS });
+  // families : les images de chaque personnage ; rewards : personnage et
+  // couleur de chaque chapitre (verrouillés jusque-là)
+  res.json({ avatars: players.AVATARS, colors: players.COLORS, families: FAMILIES, rewards: REWARDS });
 });
 
 router.get("/players/me", requirePlayer, (req, res) => {
@@ -49,7 +52,11 @@ router.get("/players/me/stats", requirePlayer, (req, res) => {
 // Achievements du joueur : ils posent les tampons sur son ticket
 router.get("/players/me/achievements", requirePlayer, (req, res) => {
   expireOverdueGames();
-  res.json({ achievements: achievements.playerAchievements(req.player), climb: achievements.playerClimb(req.player) });
+  res.json({
+    achievements: achievements.playerAchievements(req.player),
+    climb: achievements.playerClimb(req.player),
+    trophies: trophies.playerTrophies(req.player.id)
+  });
 });
 
 // Fiche publique d'un joueur des classements : son ticket (nom, avatar,
@@ -71,7 +78,8 @@ router.get("/players/:id/card", (req, res) => {
     streak: Math.max(normal.streak.current, hard.streak.current),
     bestTime: times.length ? Math.min(...times) : null,
     stamps: achievements.playerAchievements(target).filter((a) => a.earned).map((a) => a.id),
-    chapter: climb.chapter
+    chapter: climb.chapter,
+    trophies: trophies.playerTrophies(target.id)
   });
 });
 

@@ -6,25 +6,8 @@ const { todayParis, addDays } = require("../utils/dates");
 const { getMode } = require("./modes");
 const { unlockedRewards } = require("./chapters");
 
-// Avatars proposés : sprites existants dans public/assets/entities
-const AVATARS = [
-  "madeline",
-  "badeline",
-  "theo",
-  "granny-portrait",
-  "oshiro-portrait",
-  "strawberry",
-  "golden-strawberry",
-  "winged-strawberry",
-  "moon-berry",
-  "crystal-heart",
-  "feather",
-  "refill",
-  "seeker",
-  "pufferfish",
-  "kevin",
-  "bird"
-];
+// Avatars ouverts à tous ; ceux des chapitres sont dans services/avatars.js
+const { AVATARS } = require("./avatars");
 
 const COLORS = ["#f472b6", "#a855f7", "#6366f1", "#38bdf8", "#10b981", "#facc15", "#f97316", "#ef4444"];
 

@@ -97,6 +97,38 @@ const stmts = {
       AND (g.date BETWEEN @from AND @to OR g.date BETWEEN 'hard:' || @from AND 'hard:' || @to)
   `),
 
+  // Premier de chaque classement du jour passé, par mode : les mêmes règles
+  // que dailyLeaderboard (victoires classées, joueurs visibles) et que le
+  // classement du jour de Connections
+  pastDailyWinners: db.prepare(`
+    WITH firsts AS (
+      SELECT s.player_id AS playerId, s.mode AS board, s.date,
+             ROW_NUMBER() OVER (PARTITION BY s.date, s.mode ORDER BY s.tries + s.hints, s.seconds, s.finished_at) AS rank
+      FROM game_summaries s JOIN players p ON p.id = s.player_id
+      WHERE s.date < @today AND ${RANKED_WIN_SQL} AND ${LISTED_SQL}
+      UNION ALL
+      SELECT s.player_id, s.mode, s.date,
+             ROW_NUMBER() OVER (PARTITION BY s.date, s.mode ORDER BY s.tries + s.hints, s.seconds, s.finished_at)
+      FROM tech_game_summaries s JOIN players p ON p.id = s.player_id
+      WHERE s.date < @today AND ${RANKED_WIN_SQL} AND ${LISTED_SQL}
+      UNION ALL
+      SELECT playerId, board, date, ROW_NUMBER() OVER (PARTITION BY board, date ORDER BY cost, seconds, finished_at)
+      FROM (
+        SELECT g.player_id AS playerId,
+               CASE WHEN g.date LIKE 'hard:%' THEN 'cx-hard' ELSE 'cx-normal' END AS board,
+               CASE WHEN g.date LIKE 'hard:%' THEN substr(g.date, 6) ELSE g.date END AS date,
+               (SELECT COUNT(*) FROM connection_attempts a WHERE a.game_id = g.id AND a.group_index IS NULL)
+                 + (SELECT COUNT(*) FROM connection_hints h WHERE h.game_id = g.id) AS cost,
+               julianday(g.finished_at) - julianday(g.started_at) AS seconds,
+               g.finished_at
+        FROM connection_games g JOIN players p ON p.id = g.player_id
+        WHERE g.status = 'won' AND ${LISTED_SQL} AND g.date NOT LIKE 'practice%'
+      )
+      WHERE date < @today
+    )
+    SELECT playerId, board, date FROM firsts WHERE rank = 1
+  `),
+
   listedPlayers: db.prepare(`
     SELECT p.id, p.name, p.avatar, p.color FROM players p WHERE ${LISTED_SQL}
   `),
@@ -214,6 +246,10 @@ function rankedResults(from, to) {
     .map((r) => ({ ...r, won: r.won === 1 }));
 }
 
+function pastDailyWinners(today) {
+  return stmts.pastDailyWinners.all({ today });
+}
+
 function listedPlayers() {
   return stmts.listedPlayers.all();
 }
@@ -256,6 +292,7 @@ module.exports = {
   dailyLeaderboard,
   dailyOneShots,
   rankedResults,
+  pastDailyWinners,
   listedPlayers,
   playerGames,
   dayOverview,
