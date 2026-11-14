@@ -462,3 +462,44 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   Mode daltonien (option « Colorblind mode », body.colorblind)
+   Couleurs de la palette Okabe-Ito, qui restent distinctes pour les
+   daltonismes courants, et surtout un symbole par couleur : on n'a jamais
+   besoin de la couleur seule pour reconnaître un groupe ou une marque.
+   ========================================================================== */
+body.colorblind {
+  --cx-level-0: #f0e442;
+  --cx-level-1: #56b4e9;
+  --cx-level-2: #2fbf93;
+  --cx-level-3: #cc79a7;
+  --cx-mark-0: #d55e00;
+  --cx-mark-1: #e69f00;
+  --cx-mark-2: #0072b2;
+  --cx-mark-3: #ffffff;
+}
+
+/* Groupes trouvés et légende des règles : ● ▲ ■ ◆ devant le nom */
+body.colorblind .cx-group-label::before, body.colorblind .cx-rules-kind strong::before { margin-right: 6px; }
+body.colorblind .cx-group.level-0 .cx-group-label::before, body.colorblind .cx-rules-kind.level-0 strong::before { content: "●"; }
+body.colorblind .cx-group.level-1 .cx-group-label::before, body.colorblind .cx-rules-kind.level-1 strong::before { content: "▲"; }
+body.colorblind .cx-group.level-2 .cx-group-label::before, body.colorblind .cx-rules-kind.level-2 strong::before { content: "■"; }
+body.colorblind .cx-group.level-3 .cx-group-label::before, body.colorblind .cx-rules-kind.level-3 strong::before { content: "◆"; }
+
+/* Marques du joueur (B-Side) : ✚ ✖ ★ ♥ sur la pastille et dans le coin de la tuile */
+body.colorblind .cx-tile { position: relative; }
+body.colorblind .cx-tile[class*="mark-"]::after {
+  position: absolute; top: 3px; left: 3px; min-width: 20px; height: 20px; padding: 0 3px; border-radius: 6px;
+  display: grid; place-items: center; font-size: 13px; line-height: 1; color: #11162b; text-shadow: none;
+}
+body.colorblind .cx-swatch { color: #11162b; font-size: 15px; line-height: 1; }
+body.colorblind .cx-tile.mark-0::after, body.colorblind .cx-swatch.mark-0::before { content: "✚"; }
+body.colorblind .cx-tile.mark-1::after, body.colorblind .cx-swatch.mark-1::before { content: "✖"; }
+body.colorblind .cx-tile.mark-2::after, body.colorblind .cx-swatch.mark-2::before { content: "★"; color: #fff; }
+body.colorblind .cx-tile.mark-3::after, body.colorblind .cx-swatch.mark-3::before { content: "♥"; }
+body.colorblind .cx-tile.mark-0::after { background: var(--cx-mark-0); }
+body.colorblind .cx-tile.mark-1::after { background: var(--cx-mark-1); }
+body.colorblind .cx-tile.mark-2::after { background: var(--cx-mark-2); }
+body.colorblind .cx-tile.mark-3::after { background: var(--cx-mark-3); }
+body.colorblind .cx-swatch[aria-pressed="true"] { border-color: #11162b; outline: 2px solid #fff; }
