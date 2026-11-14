@@ -2712,3 +2712,6 @@ body.hard-mode #game-status {
 
 /* Lien dans un texte, qui est en fait un bouton (ouvre une fenêtre) */
 .link-btn { border: none; background: none; padding: 0; font: inherit; color: inherit; font-weight: bold; text-decoration: underline; cursor: pointer; }
+
+.board-player-link { color: inherit; text-decoration: none; }
+.board-player-link:hover, .board-player-link:focus-visible { text-decoration: underline; }

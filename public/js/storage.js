@@ -14,6 +14,7 @@ export const KEYS = {
   modernUi: "celestedle_modern_ui",
   keyHints: "celestedle_key_hints",
   timeSky: "celestedle_time_sky",
+  sounds: "celestedle_sounds",
   welcomeSeen: "celestedle_welcome_v3",
   seenStamps: "celestedle_seen_stamps"
 };

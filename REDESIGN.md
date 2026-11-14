@@ -83,3 +83,10 @@ Option « Modern Interface (beta) » (options de la page de jeu) ou « Modern ga
 - Le menu ouvre lui-même profil, classements et signalement (`js/menu-panels.js`) : il va chercher leur HTML dans `index.html` au premier besoin (une seule source) et branche les mêmes modules que la page de jeu. Pour leur style, `menu.html` charge `style.css` et `modern.css` (classe `ui-modern` sur `<html>`).
 - Fait : Celestedle, Connections, Techs. `interface.js` ne propose que ce que la page a (Connections : pas d'Options, Rankings fait défiler jusqu'au classement de la page). Le titre devient le nom du jeu. Lien Admin dans la barre du haut pour l'équipe (et dans les options du menu).
 - Écran de fin façon « chapitre terminé » : les jeux annoncent la fin d'une partie jouée pendant la visite (`js/game-end.js`, événement `game-end`) ; `interface.js` affiche le bilan (titre, réponse, essais / indices / temps qui défilent, prochaine partie, Share / Rankings / Menu / Close). Pas d'écran quand on recharge une partie déjà finie.
+
+## Ajouts récents
+
+- **Aperçu de lien** : `src/app.js` ajoute `og:image` (adresse complète, d'après la requête) au `<head>` des pages ; l'image est `public/assets/og.png` (capture de l'écran titre, 1200 × 630).
+- **Tampon tout juste gagné** : il s'abat sur le ticket à la première vue des fichiers (`.stamp.fresh`, `menu.css`).
+- **Fiche d'un joueur** : `GET /players/:id/card` (profils cachés ou anonymes : 404). Dans le journal, un clic sur une ligne de classement montre son ticket ; depuis une page de jeu, le nom mène à `menu.html?player=<id>`.
+- **Sons** : `js/sound.js` (Web Audio, aucun fichier), option « Sounds », coupée par défaut.

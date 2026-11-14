@@ -19,6 +19,35 @@ function securityHeaders(req, res, next) {
   next();
 }
 
+// Aperçu de lien (Discord…) : l'image doit être donnée par une adresse
+// complète. On l'ajoute au <head> des pages à l'envoi, d'après l'adresse
+// demandée : pas de nom de domaine à configurer, la bêta a la sienne.
+const LINK_PREVIEW_PAGES = ["index.html", "menu.html", "connections.html", "techs.html"];
+const pageCache = new Map();
+
+function sendPageWithPreview(req, res, next) {
+  const page = req.path === "/" ? "index.html" : req.path.slice(1);
+  // Relu seulement quand le fichier change
+  let html;
+  try {
+    const file = path.join(PUBLIC_DIR, page);
+    const { mtimeMs } = fs.statSync(file);
+    if (pageCache.get(page)?.mtimeMs !== mtimeMs) pageCache.set(page, { mtimeMs, html: fs.readFileSync(file, "utf8") });
+    html = pageCache.get(page).html;
+  } catch {
+    return next();
+  }
+  const origin = `${req.protocol}://${req.get("host")}`.replace(/[^a-zA-Z0-9.:/\-[\]]/g, "");
+  const tags = [
+    `<meta property="og:url" content="${origin}${req.path}" />`,
+    `<meta property="og:image" content="${origin}/assets/og.png" />`,
+    '<meta property="og:image:width" content="1200" />',
+    '<meta property="og:image:height" content="630" />',
+    '<meta name="twitter:card" content="summary_large_image" />'
+  ].join("\n    ");
+  res.type("html").send(html.replace("</head>", `  ${tags}\n  </head>`));
+}
+
 function createApp() {
   const app = express();
 
@@ -29,6 +58,7 @@ function createApp() {
   app.use(securityHeaders);
   app.use(corsMiddleware);
   app.use(express.json({ limit: "100kb" }));
+  app.get(["/", ...LINK_PREVIEW_PAGES.map((page) => `/${page}`)], sendPageWithPreview);
   app.use(express.static(PUBLIC_DIR));
 
   // Image d'un élément, ou une image par défaut

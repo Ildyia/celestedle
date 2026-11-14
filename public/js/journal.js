@@ -60,7 +60,7 @@ const NOTES = {
 // Identifiant de classement d'un jeu et d'un côté (« cx- » pour Connections)
 const boardMode = (game, side) => (game.id === "connections" ? `cx-${game.modes[side]}` : game.modes[side]);
 
-export function createJournal({ getContext }) {
+export function createJournal({ getContext, onPlayer }) {
   const wrap = byId("journal");
   // Dernière page lue : on y revient (le temps de la visite du site)
   const PAGE_KEY = "celestedle_journal_page";
@@ -266,7 +266,7 @@ export function createJournal({ getContext }) {
     const kind = period === "daily" && mode.startsWith("cx-") ? "dailyGrid" : period;
     const columns = BOARD_COLUMNS[kind];
     const row = (entry) =>
-      el("tr", { className: entry.isMe ? "me" : "" }, [
+      el("tr", { className: `${entry.isMe ? "me " : ""}clickable`, attrs: { title: `See ${entry.player.name}'s file` }, on: { click: () => onPlayer?.(entry.player.id) } }, [
         el("td", { className: "rank", text: `#${entry.rank}` }),
         el("td", { className: "who" }, [
           el("span", { className: "avatar", attrs: { style: `--player-color: ${entry.player.color}` } }, [el("img", { attrs: { src: avatarUrl(entry.player.avatar), alt: "" } })]),

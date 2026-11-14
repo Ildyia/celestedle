@@ -759,3 +759,26 @@ test("techs : réservées à l'équipe admin par défaut", async () => {
   assert.equal((await api.request("GET", "/api/techs/game", { token })).status, 403);
   assert.equal((await api.request("GET", "/api/leaderboard?period=daily&mode=tech", { token })).status, 403);
 });
+
+test("fiche publique d'un joueur : cachée tant que le profil est anonyme ou caché", async () => {
+  const { token, player } = await api.newPlayer();
+  assert.equal((await api.request("GET", `/api/players/${player.id}/card`)).status, 404);
+
+  await api.request("PATCH", "/api/players/me", { token, body: { name: "Card Holder" } });
+  const card = await api.request("GET", `/api/players/${player.id}/card`);
+  assert.equal(card.status, 200);
+  assert.equal(card.data.player.name, "Card Holder");
+  assert.equal(card.data.wins, 0);
+  assert.deepEqual(card.data.stamps, []);
+  assert.equal(card.data.player.token, undefined);
+
+  await api.request("PATCH", "/api/players/me", { token, body: { isHidden: true } });
+  assert.equal((await api.request("GET", `/api/players/${player.id}/card`)).status, 404);
+  assert.equal((await api.request("GET", "/api/players/nobody/card")).status, 404);
+});
+
+test("pages : l'image d'aperçu de lien suit l'adresse demandée", async () => {
+  const res = await api.request("GET", "/menu.html", { headers: { Host: "example.test" } });
+  assert.equal(res.status, 200);
+  assert.match(res.data, /<meta property="og:image" content="http:\/\/[^"]+\/assets\/og\.png" \/>/);
+});

@@ -76,6 +76,7 @@ export const api = {
   deleteMe: () => request("DELETE", "/players/me"),
   myStats: (mode) => request("GET", `/players/me/stats?mode=${mode}`),
   myAchievements: () => request("GET", "/players/me/achievements"),
+  playerCard: (id) => request("GET", `/players/${encodeURIComponent(id)}/card`),
   myTechStats: (mode) => request("GET", `/techs/me/stats?mode=${mode}`),
   myConnectionsStats: (mode) => request("GET", `/connections/me/stats?mode=${mode}`),
   profileOptions: () => request("GET", "/players/options", { auth: false }),

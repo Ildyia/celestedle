@@ -459,3 +459,27 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
   .book { bottom: 15vh; padding: 16px 18px 18px; }
   .book .record { margin: 10px 0 12px; }
 }
+
+/* ===== Tampon tout juste gagné : il s'abat sur le ticket ===== */
+.stamp.fresh { animation: stamp-in .32s cubic-bezier(.3, 1.4, .5, 1) var(--stamp-delay, .25s) both; }
+@keyframes stamp-in {
+  0% { opacity: 0; scale: 2.6; }
+  60% { opacity: 1; scale: .92; }
+  100% { opacity: .95; scale: 1; }
+}
+body.perf .stamp.fresh { animation: none; }
+@media (prefers-reduced-motion: reduce) { .stamp.fresh { animation: none; } }
+
+/* ===== Fiche d'un autre joueur : son ticket, par-dessus le menu ===== */
+#player-card { position: fixed; inset: 0; z-index: 30; display: grid; place-content: center; justify-items: center; gap: 22px; padding: 16px; background: rgba(5, 4, 20, .72); cursor: pointer; animation: fade .2s ease-out; }
+#player-card[hidden] { display: none; }
+#player-card .slots { --card-w: min(520px, 50vw); }
+/* Le talon sort à droite : on recentre l'ensemble ticket + talon */
+#player-card .slot { margin-right: calc(var(--card-w) * .72); transform: none !important; }
+.player-card-hint { font-size: 14px; opacity: .7; }
+.journal-table tr.clickable { cursor: pointer; }
+.journal-table tr.clickable:hover td { background: rgba(61, 58, 88, .08); }
+@media (max-width: 700px) {
+  #player-card .slots { --card-w: 92vw; }
+  #player-card .slot { margin-right: 0; }
+}

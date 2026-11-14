@@ -13,6 +13,7 @@ import { storage, KEYS } from "./storage.js";
 import { SKY_CHOICES, applySky, skySetting, startSky } from "./sky.js";
 import { player } from "./player.js";
 import { initNextWordTimer } from "./timer.js";
+import { keySound, playSound } from "./sound.js";
 
 const SIDES = { normal: "A-Side · Normal", hard: "B-Side · Hard" };
 
@@ -187,6 +188,7 @@ const GAME_OPTIONS = [
   { label: "Colorblind mode", key: KEYS.colorblind, fallback: false, apply: (on) => (syncCheckbox("toggle-colorblind-checkbox", on), document.body.classList.toggle("colorblind", on)) },
   { label: "Sky", key: KEYS.timeSky, choices: SKY_CHOICES, current: skySetting, apply: applySky },
   { label: "Keyboard hints", key: KEYS.keyHints, fallback: true, apply: (on) => document.documentElement.classList.toggle("no-key-hints", !on) },
+  { label: "Sounds", key: KEYS.sounds, fallback: false, apply: (on) => on && playSound("confirm") },
   { label: "Performance mode", key: KEYS.performance, fallback: false, apply: (on) => document.documentElement.classList.toggle("perf", on) }
 ];
 
@@ -296,6 +298,7 @@ function onKey(event) {
   if (!document.documentElement.classList.contains("ui-modern")) return;
   if (isOpen()) {
     const items = pauseItems();
+    keySound(event.key);
     const moves = { ArrowUp: -1, ArrowDown: 1 };
     if (event.key in moves) pause.index = (pause.index + moves[event.key] + items.length) % items.length;
     else if (event.key === "Enter") items[pause.index].run();

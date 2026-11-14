@@ -11,6 +11,7 @@ import { formatDuration } from "./format.js";
 import { rulesSentence } from "./rules-text.js";
 import { CELESTEDLE, TECHS } from "./catalogs.js";
 import { showToast } from "./toast.js";
+import { keySound, playSound } from "./sound.js";
 import { initNextWordTimer } from "./timer.js";
 import { openPanel, panelOpen } from "./menu-panels.js";
 import { createJournal } from "./journal.js";
@@ -143,6 +144,9 @@ async function createFile() {
 
 // Achievements : posent les tampons sur le ticket ; un tampon gagné depuis
 // la dernière visite est annoncé (liste vue gardée dans ce navigateur)
+// Tampons gagnés depuis la dernière visite : animés une fois sur le ticket
+const freshStamps = new Set();
+
 async function loadAchievements() {
   if (!player.profile) {
     setAchievements([]);
@@ -157,6 +161,8 @@ async function loadAchievements() {
     // Première fois sur ce navigateur : on ne fête pas les anciens tampons
     if (seen) {
       const fresh = achievements.filter((a) => a.earned && !seen.includes(a.id));
+      // Ils seront posés d'un coup de tampon à la prochaine vue du ticket
+      for (const a of fresh) freshStamps.add(a.id);
       if (fresh.length) showToast(`New stamp${fresh.length > 1 ? "s" : ""}: ${fresh.map((a) => a.name).join(", ")}!`, 4000);
     }
     storage.setJson(key, now);
@@ -293,16 +299,24 @@ function stampElement(stamp, i) {
   const slot = TICKET_SLOTS[i];
   const style = `left: ${slot.x}%; top: ${slot.y}%; width: ${slot.size}%; rotate: ${slot.rotate}deg`;
   // Version compacte sur le ticket ; la complète (avec le nom) au survol
-  const node = el("span", { className: "stamp", attrs: { style, title: stamp.label } });
+  const fresh = this?.fresh?.has(stamp.id);
+  const order = fresh ? [...this.fresh].indexOf(stamp.id) : 0;
+  const node = el("span", { className: `stamp${fresh ? " fresh" : ""}`, attrs: { style: `${style}${fresh ? `; --stamp-delay: ${0.25 + order * 0.35}s` : ""}`, title: stamp.label } });
   node.innerHTML = `<span class="stamp-small">${stampSvg(stamp, { full: false })}</span><span class="stamp-full">${stampSvg(stamp)}</span>`;
   return node;
 }
 
+// Un ticket, à partir de sa description : { portrait, color, stamps, body, stub }
 function slotElement(kind, selected) {
   const t = kind === "profile" ? profileSlot() : emptySlot(kind);
+  const golden = kind === "profile" && earnedStamps().length === STAMPS.length;
+  return ticketElement(t, { selected, empty: kind !== "profile", golden, fresh: kind === "profile" ? freshStamps : null });
+}
+
+function ticketElement(t, { selected = false, empty = false, golden = false, fresh = null } = {}) {
   const card = el("div", { className: "card" }, [
     el("div", { className: "shape" }),
-    el("div", { className: "stamps" }, (t.stamps ?? []).map(stampElement)),
+    el("div", { className: "stamps" }, (t.stamps ?? []).map(stampElement, { fresh })),
     el("div", { className: "portrait", attrs: { style: `--player-color: ${t.color ?? "#cfd8ef"}` } }, [el("img", { attrs: { src: t.portrait, alt: "", style: t.portraitStyle ?? "" } })]),
     el("span", { className: "tape tl" }),
     el("span", { className: "tape br" }),
@@ -310,15 +324,69 @@ function slotElement(kind, selected) {
   ]);
   const children = t.stub ? [el("div", { className: "stub" }, [el("div", { className: "shape" }), ...t.stub]), card] : [card];
   // Tous les tampons : le ticket devient doré, comme une sauvegarde à 100 % dans le jeu
-  const golden = kind === "profile" && earnedStamps().length === STAMPS.length;
-  return el(
-    "div",
-    { className: `slot${selected ? " selected" : ""}${t.stub ? " has-stub" : ""}${kind === "profile" ? "" : " empty"}${golden ? " golden" : ""}` },
-    children
-  );
+  return el("div", { className: `slot${selected ? " selected" : ""}${t.stub ? " has-stub" : ""}${empty ? " empty" : ""}${golden ? " golden" : ""}` }, children);
 }
 
+// ===== Fiche d'un autre joueur (clic dans un classement du journal) =====
+// Son ticket, comme le nôtre : fraises, tampons, série, chutes, meilleur temps.
+let playerCard = null;
+const playerCardOpen = () => Boolean(playerCard && !playerCard.hidden);
+
+function closePlayerCard() {
+  if (playerCard) playerCard.hidden = true;
+}
+
+async function openPlayerCard(id) {
+  let card;
+  try {
+    card = await api.playerCard(id);
+  } catch {
+    showToast("This climber's file is private.");
+    return;
+  }
+  if (!playerCard) {
+    playerCard = el("div", { attrs: { id: "player-card", role: "dialog", "aria-modal": "true", "aria-label": "Climber's file" } });
+    playerCard.addEventListener("click", closePlayerCard);
+    document.body.append(playerCard);
+  }
+  const stamps = STAMPS.filter((s) => card.stamps.includes(s.id));
+  const ticket = ticketElement(
+    {
+      color: card.player.color,
+      portrait: avatarUrl(card.player.avatar),
+      portraitStyle: avatarFit(card.player.avatar),
+      stamps: stamps.slice(0, TICKET_SLOTS.length),
+      body: [
+        el("div", { className: "name", text: card.player.name }),
+        el("div", { className: "sub", text: `${stamps.length} / ${STAMPS.length} stamps` }),
+        counter(`${ICON}/strawberry.png`, card.wins, "Wins")
+      ],
+      stub: [
+        el("div", {}),
+        el("div", { className: "streak", attrs: { title: "Current streak" } }, [img("assets/illustration/goldflag.png"), String(card.streak)]),
+        el("div", { className: "stub-bottom" }, [
+          counter(`${ICON}/skull.png`, card.falls, "Losses and forfeits"),
+          el("span", { className: "best", attrs: { title: "Best time" }, text: card.bestTime !== null ? formatDuration(card.bestTime) : "--:--" })
+        ])
+      ]
+    },
+    { selected: true, golden: stamps.length === STAMPS.length }
+  );
+  clear(playerCard);
+  playerCard.append(el("div", { className: "slots" }, [ticket]), el("p", { className: "player-card-hint", text: "Click anywhere to close" }));
+  playerCard.hidden = false;
+}
+
+let freshTimer = null;
 function renderFiles() {
+  // Tampons neufs : un coup de tampon chacun, puis on n'y revient plus
+  if (screen === "files" && freshStamps.size && !freshTimer) {
+    [...freshStamps].forEach((_, i) => setTimeout(() => playSound("stamp"), 250 + i * 350 + 180));
+    freshTimer = setTimeout(() => {
+      freshStamps.clear();
+      freshTimer = null;
+    }, 600 + freshStamps.size * 350);
+  }
   const list = slotList();
   slotIndex = Math.min(slotIndex, list.length - 1);
   byId("files").classList.toggle("open", fileOpen);
@@ -627,7 +695,7 @@ function openReport() {
 }
 
 // ===== Journal (js/journal.js) =====
-const journal = createJournal({ getContext: () => ({ games, gameIndex, side }) });
+const journal = createJournal({ getContext: () => ({ games, gameIndex, side }), onPlayer: openPlayerCard });
 const journalOpen = () => journal.isOpen();
 function openJournal() {
   journal.open();
@@ -653,6 +721,8 @@ const OPTION_ROWS = [
   // Ciel : suit l'heure (Auto) ou reste fixe
   { label: "Sky", key: KEYS.timeSky, choices: SKY_CHOICES, current: skySetting, apply: applySky },
   { label: "Keyboard hints", key: KEYS.keyHints, fallback: true, apply: renderHints },
+  // Petits sons de menu (js/sound.js), coupés par défaut
+  { label: "Sounds", key: KEYS.sounds, fallback: false, apply: (on) => on && playSound("confirm") },
   { label: "Performance mode", key: KEYS.performance, fallback: false, apply: applyPerformance },
   { sep: true },
   { label: "Report a bug", run: () => openReport() },
@@ -809,7 +879,16 @@ document.addEventListener("keydown", (event) => {
     }
     return;
   }
+  if (playerCardOpen()) {
+    if (event.key === "Escape" || event.key === "Enter") {
+      event.preventDefault();
+      playSound("back");
+      closePlayerCard();
+    }
+    return;
+  }
   if (journalOpen()) {
+    keySound(event.key);
     if (event.key === "Escape" || event.key === "j") closeJournal();
     if (event.key === "ArrowLeft") journal.flip(-1);
     if (event.key === "ArrowRight") journal.flip(1);
@@ -820,6 +899,7 @@ document.addEventListener("keydown", (event) => {
   // Laisse Enter activer normalement un bouton qui a le focus (souris, Tab)
   if (event.key === "Enter" && event.target.matches("button:focus-visible")) return;
   event.preventDefault();
+  keySound(event.key);
   handler();
 });
 
@@ -931,6 +1011,9 @@ async function start() {
   if (!player.profile) loadGames();
   // Retour d'une page de jeu (menu.html#modes) : droit au choix du jeu, sans
   // repasser par l'écran titre
+  // Lien « menu.html?player=… » des classements des pages de jeu
+  const wanted = new URLSearchParams(location.search).get("player");
+  if (wanted) openPlayerCard(wanted);
   if (location.hash === "#modes" && player.profile && screen === "title") {
     history.replaceState(null, "", location.pathname + location.search);
     go("modes");
