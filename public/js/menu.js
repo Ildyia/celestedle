@@ -12,6 +12,7 @@ import { rulesSentence } from "./rules-text.js";
 import { CELESTEDLE, TECHS } from "./catalogs.js";
 import { showToast } from "./toast.js";
 import { keySound, playSound } from "./sound.js";
+import { chapterProgress, previewChapter, trailSvg } from "./chapters.js";
 import { initNextWordTimer } from "./timer.js";
 import { openPanel, panelOpen } from "./menu-panels.js";
 import { createJournal } from "./journal.js";
@@ -988,6 +989,19 @@ function watchTransition() {
   requestAnimationFrame(tick);
 }
 
+// ===== Maquette des chapitres (js/chapters.js) =====
+// menu.html?chapter=3&berries=14 : sentier sur la montagne et avancée dans le livre
+function showChapterPreview() {
+  const preview = previewChapter();
+  if (!preview) return;
+  document.querySelector(".mountain-art").insertAdjacentHTML("beforeend", trailSvg(preview.chapter));
+  const progress = chapterProgress(preview);
+  byId("book-climb").hidden = false;
+  byId("book-climb-title").textContent = progress.title;
+  byId("book-climb-text").textContent = progress.text;
+  byId("book-climb-bar").style.width = `${progress.ratio * 100}%`;
+}
+
 // ===== Démarrage =====
 async function start() {
   applyPerformance(storage.getBool(KEYS.performance, false));
@@ -1006,6 +1020,7 @@ async function start() {
     loadProfileStats();
     loadGames();
   });
+  showChapterPreview();
   await player.load();
   // Sans jeton, player.load ne prévient pas : on charge quand même les jeux
   if (!player.profile) loadGames();

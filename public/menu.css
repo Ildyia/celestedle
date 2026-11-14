@@ -483,3 +483,26 @@ body.perf .stamp.fresh { animation: none; }
   #player-card .slots { --card-w: 92vw; }
   #player-card .slot { margin-right: 0; }
 }
+
+/* ===== Maquette des chapitres (js/chapters.js) =====
+   Sentier en pointillé sur la montagne, sept repères, feu de camp au chapitre
+   en cours ; dans le livre, le chapitre et l'avancée vers le suivant. */
+.trail { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.trail-path { fill: none; stroke: rgba(255, 255, 255, .34); stroke-width: 3; stroke-dasharray: 2 9; stroke-linecap: round; stroke-linejoin: round; }
+.trail-path.walked { stroke: #ffd98a; stroke-width: 3.5; }
+.trail-mark circle { fill: #24204a; stroke: rgba(255, 255, 255, .4); stroke-width: 2.5; }
+.trail-mark text { font-family: "Renogare", sans-serif; font-size: 15px; fill: rgba(255, 255, 255, .6); paint-order: stroke; stroke: #16142f; stroke-width: 4px; stroke-linejoin: round; }
+.trail-mark.done circle { fill: #ffd98a; stroke: #7a5512; }
+.trail-mark.done text, .trail-mark.here text { fill: #ffe9bd; }
+.trail-mark.here circle { fill: #ff9d4a; stroke: #fff; }
+.trail-camp { image-rendering: pixelated; filter: drop-shadow(0 0 8px rgba(255, 160, 60, .8)); animation: camp-glow 1.1s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes camp-glow { to { filter: drop-shadow(0 0 14px rgba(255, 190, 90, 1)); transform: scale(1.04); } }
+body.perf .trail-camp { animation: none; }
+@media (prefers-reduced-motion: reduce) { .trail-camp { animation: none; } }
+
+.book-climb { display: grid; gap: 4px; margin-top: 12px; font-size: 13px; }
+.book-climb[hidden] { display: none; }
+.book-climb strong { font-size: 15px; font-weight: normal; color: #ffd98a; }
+.book-climb .bar { height: 8px; border-radius: 4px; background: rgba(0, 0, 0, .35); overflow: hidden; }
+.book-climb .bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #ff9d4a, #ffd98a); }
+.book-climb > span:last-child { opacity: .75; }
