@@ -224,12 +224,23 @@ const guess = db.transaction((player, names, { mode = "normal", practice = false
   else if (mistakes >= MAX_MISTAKES) repo.finishGame(game.id, "lost", at);
 
   // Faux groupe : les 4 cases partagent bien quelque chose, mais ce n'est pas
-  // un des groupes de la grille (une erreur quand même)
-  const decoy =
-    groupIndex === -1 &&
-    buildCategories(elementsRepo.listActive(), repo.listTags()).some((c) => ids.every((id) => c.members.has(id)));
-  const result = groupIndex !== -1 ? "correct" : oneAway ? "one_away" : decoy ? "decoy" : "wrong";
-  return { result, state: buildState(puzzle, repo.findGameById(game.id), { mode, practice, reset: loaded.reset }) };
+  // un des groupes de la grille (une erreur quand même). Deux cas :
+  // - « too_many » : plus de 4 cases restantes ont ce point commun, l'une des
+  //   4 choisies appartient donc à un autre groupe ;
+  // - « decoy » : exactement ces 4 l'ont, mais en faire un groupe empêche de
+  //   finir la grille.
+  const shared =
+    groupIndex === -1
+      ? buildCategories(elementsRepo.listActive(), repo.listTags()).filter((c) => ids.every((id) => c.members.has(id)))
+      : [];
+  const widest = Math.max(0, ...shared.map((c) => remaining.filter((e) => c.members.has(e.id)).length));
+  const result =
+    groupIndex !== -1 ? "correct" : oneAway ? "one_away" : widest > GROUP_SIZE ? "too_many" : shared.length ? "decoy" : "wrong";
+  return {
+    result,
+    ...(result === "too_many" ? { sharedBy: widest } : {}),
+    state: buildState(puzzle, repo.findGameById(game.id), { mode, practice, reset: loaded.reset })
+  };
 });
 
 // Indice : chacun une fois, MAX_HINTS par partie selon le mode

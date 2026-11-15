@@ -4,7 +4,8 @@
 // Images tirées du graphics dump de Celeste : public/assets/avatars/<famille>/
 // (identifiant « famille/nom ») ; celles sans « / » sont dans assets/entities.
 
-// Ouverts à tous
+// Ouverts à tous (le refill et le seeker n'y sont plus : ceux qui les portent
+// les gardent)
 const AVATARS = [
   "madeline",
   "badeline",
@@ -17,8 +18,6 @@ const AVATARS = [
   "moon-berry",
   "crystal-heart",
   "feather",
-  "refill",
-  "seeker",
   "pufferfish",
   "kevin",
   "bird"
@@ -28,6 +27,11 @@ const list = (family, names) => names.map((n) => `${family}/${n}`);
 
 // base : l'image ouverte à tous (null si le personnage n'en a pas)
 const FAMILIES = {
+  madeline: {
+    name: "Madeline",
+    base: "madeline",
+    avatars: list("madeline", ["normal", "angry", "deadpan", "determined", "distracted", "panic", "peaceful", "sad", "sadder", "surprised", "upset"])
+  },
   strawberry: {
     name: "Strawberry",
     base: "strawberry",
@@ -36,12 +40,12 @@ const FAMILIES = {
   badeline: {
     name: "Badeline",
     base: "badeline",
-    avatars: list("badeline", ["normal", "angry", "angry-alt", "concerned", "sad", "scoff", "sigh", "upset", "worried", "worried-alt", "yell", "sprite"])
+    avatars: list("badeline", ["normal", "angry", "angry-alt", "concerned", "sad", "scoff", "sigh", "upset", "worried", "worried-alt", "yell"])
   },
   oshiro: {
     name: "Oshiro",
     base: "oshiro-portrait",
-    avatars: [...list("oshiro", ["normal", "lostcontrol", "nervous", "serious", "sidehappy", "sidesuspicious", "sideworried", "worried", "sprite"]), "oshiro-boss"]
+    avatars: [...list("oshiro", ["normal", "lostcontrol", "nervous", "serious", "sidehappy", "sidesuspicious", "sideworried", "worried"]), "oshiro-boss"]
   },
   feather: { name: "Feather", base: "feather", avatars: list("feather", ["flash", "big"]) },
   theo: {
@@ -54,7 +58,12 @@ const FAMILIES = {
   granny: {
     name: "Granny",
     base: "granny-portrait",
-    avatars: [...list("granny", ["normal", "creep-b", "laugh", "mock", "sprite", "laughing"]), "flingbird"]
+    avatars: list("granny", ["normal", "creep-b", "laugh", "mock", "sprite", "laughing"])
+  },
+  bird: {
+    name: "Bird",
+    base: "bird",
+    avatars: [...list("bird", ["hold", "hover", "stressed", "fly", "flyup", "dash", "throw", "hurt"]), "flingbird"]
   }
 };
 

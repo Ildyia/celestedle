@@ -104,7 +104,7 @@ test("partie : erreur, « à une case près », doublon, groupe trouvé puis vic
 
   const wrong = await api.request("POST", "/api/connections/guess", { token, body: { names: [g0[0], g1[0], g2[0], g3[0]] } });
   // 4 cases de 4 groupes : parfois un faux groupe selon la grille du jour
-  assert.ok(["wrong", "decoy"].includes(wrong.data.result));
+  assert.ok(["wrong", "decoy", "too_many"].includes(wrong.data.result));
   assert.equal(wrong.data.state.mistakes, 1);
 
   const close = await api.request("POST", "/api/connections/guess", { token, body: { names: [g0[0], g0[1], g0[2], g1[0]] } });
@@ -498,15 +498,21 @@ test("faux groupe : 4 cases qui partagent une catégorie sans être un groupe so
     const groups = JSON.parse(row.groups);
     const tiles = JSON.parse(row.tiles);
     const keys = groups.map((g) => g.key);
-    const four = categories
+    const pick = categories
       .filter((c) => !keys.includes(c.key))
-      .map((c) => tiles.filter((id) => c.members.has(id)).slice(0, 4))
-      .find((ids) => ids.length === 4 && !groups.some((g) => ids.filter((id) => g.elementIds.includes(id)).length >= 3));
-    if (!four) continue;
-    const names = four.map((id) => elementsRepo.findById(id).nom);
+      .map((c) => ({ all: tiles.filter((id) => c.members.has(id)) }))
+      .map((p) => ({ ...p, four: p.all.slice(0, 4) }))
+      .find(({ four }) => four.length === 4 && !groups.some((g) => four.filter((id) => g.elementIds.includes(id)).length >= 3));
+    if (!pick) continue;
+    const names = pick.four.map((id) => elementsRepo.findById(id).nom);
     const res = await api.request("POST", "/api/connections/guess", { token, body: { names, mode: "hard", practice: true } });
     assert.equal(res.status, 200, JSON.stringify(res.data));
-    assert.equal(res.data.result, "decoy");
+    // Plus de 4 cases ont ce point commun : l'une des 4 est d'un autre groupe
+    // (le message le dit) ; sinon, c'est un vrai faux groupe
+    if (pick.all.length > 4) {
+      assert.equal(res.data.result, "too_many");
+      assert.ok(res.data.sharedBy > 4);
+    } else assert.equal(res.data.result, "decoy");
     assert.equal(res.data.state.mistakes, 1, "un faux groupe compte comme une erreur");
     return;
   }

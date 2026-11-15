@@ -24,16 +24,17 @@ const AVATAR_FIT = {
   pufferfish: "translate(7%, -4%) scale(3.6)",
   "strawberry/seed": "scale(.8)",
   "strawberry/ghost-seed": "scale(.8)",
-  "badeline/sprite": "translate(0, -6%) scale(1.5)",
   "theo/sprite": "translate(0, -6%) scale(1.5)",
   "granny/sprite": "translate(0, -6%) scale(1.5)",
   "granny/laughing": "translate(0, -6%) scale(1.5)",
-  "oshiro/sprite": "translate(0, 10%) scale(2.2)",
   "oshiro-boss": "translate(0, 12%) scale(2.2)",
   bird: "translate(3%, -28%) scale(1.65)"
 };
+// Les sprites de l'oiseau (32 × 24) : agrandis comme celui de base
+const FAMILY_FIT = { bird: "scale(1.5)" };
 export function avatarFit(avatar) {
-  return AVATAR_FIT[avatar] ? `transform: ${AVATAR_FIT[avatar]}` : "";
+  const fit = AVATAR_FIT[avatar] ?? FAMILY_FIT[avatar.split("/")[0]];
+  return fit && (AVATAR_FIT[avatar] || avatar.includes("/")) ? `transform: ${fit}` : "";
 }
 
 // Fenêtre « My profile » : personnalisation, statistiques, code de récupération
@@ -123,7 +124,7 @@ export class ProfilePanel {
   }
 
   rewardOf(family) {
-    return (this.options.rewards ?? []).find((r) => r.family === family) ?? null;
+    return (this.options.rewards ?? []).find((r) => r.families.includes(family)) ?? null;
   }
 
   lockOf(reward) {

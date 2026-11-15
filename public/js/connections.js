@@ -346,11 +346,12 @@ class ConnectionsGame {
     this.busy = true;
     try {
       await player.ensure();
-      const { result, state } = await api.connectionsGuess([...this.selected], this.mode, this.practice, this.state.gridId);
+      const { result, state, sharedBy } = await api.connectionsGuess([...this.selected], this.mode, this.practice, this.state.gridId);
       if (result === "correct") this.selected.clear();
       // Plus long que les messages par défaut (2,4 s) : on a le temps de le lire
       if (result === "one_away") showToast("One away…", FEEDBACK_MS);
       if (result === "decoy") showToast("These 4 do share something, but this group doesn't let you finish the grid.", FEEDBACK_MS);
+      if (result === "too_many") showToast(`These 4 do share something, but ${sharedBy} tiles fit it: one of yours belongs to another group.`, FEEDBACK_MS);
       if (result === "wrong") showToast("Not a group.", FEEDBACK_MS);
       if (result !== "correct") byId("cx-grid").classList.add("shake");
       setTimeout(() => byId("cx-grid").classList.remove("shake"), 400);

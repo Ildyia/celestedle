@@ -8,24 +8,34 @@
 const { FAMILIES } = require("./avatars");
 
 // berries : fraises à avoir pour atteindre le chapitre
-// family / color : personnage (services/avatars.js) dont les portraits se
+// families / color : personnages (services/avatars.js) dont les images se
 // débloquent en l'atteignant, et couleur de profil débloquée
 const CHAPTERS = [
   { name: "Prologue", berries: 0 },
-  { name: "Forsaken City", berries: 1, family: "strawberry", color: "#d7263d" },
-  { name: "Old Site", berries: 5, family: "badeline", color: "#c04fc8" },
-  { name: "Celestial Resort", berries: 12, family: "oshiro", color: "#8c1c3a" },
-  { name: "Golden Ridge", berries: 25, family: "feather", color: "#ffd84d" },
-  { name: "Mirror Temple", berries: 45, family: "theo", color: "#5b2d91" },
-  { name: "Reflection", berries: 70, family: "kevin", color: "#5fbf4a" },
-  { name: "The Summit", berries: 100, family: "golden-winged", color: "#f4f6fb" },
+  { name: "Forsaken City", berries: 1, families: ["madeline", "strawberry"], color: "#d7263d" },
+  { name: "Old Site", berries: 5, families: ["badeline"], color: "#c04fc8" },
+  { name: "Celestial Resort", berries: 12, families: ["oshiro"], color: "#8c1c3a" },
+  { name: "Golden Ridge", berries: 25, families: ["feather"], color: "#ffd84d" },
+  { name: "Mirror Temple", berries: 45, families: ["theo"], color: "#5b2d91" },
+  { name: "Reflection", berries: 70, families: ["kevin"], color: "#5fbf4a" },
+  { name: "The Summit", berries: 100, families: ["golden-winged"], color: "#f4f6fb" },
   // Sur la Lune
-  { name: "Farewell", berries: 150, family: "granny", color: "#8b8fa3" }
+  { name: "Farewell", berries: 150, families: ["granny", "bird"], color: "#8b8fa3" }
 ];
 
 // Récompenses de chaque chapitre, pour la fenêtre de profil
+// familyName : les personnages du chapitre, pour les textes (« Granny & Bird »)
 const REWARDS = CHAPTERS.flatMap((c, chapter) =>
-  c.family ? [{ chapter, name: c.name, family: c.family, familyName: FAMILIES[c.family].name, avatars: FAMILIES[c.family].avatars, color: c.color }] : []
+  c.families
+    ? [{
+        chapter,
+        name: c.name,
+        families: c.families,
+        familyName: c.families.map((f) => FAMILIES[f].name).join(" & "),
+        avatars: c.families.flatMap((f) => FAMILIES[f].avatars),
+        color: c.color
+      }]
+    : []
 );
 
 /** Portraits et couleurs débloqués jusqu'à ce chapitre. */
