@@ -617,3 +617,23 @@ body.map-open #moon, body.chapter-cam #moon { opacity: 1 !important; }
    pendant l'annonce d'un chapitre (body.chapter-cam) : ailleurs, le décor seul */
 .trail, .moon-camp { transition: opacity .6s; }
 body:not(.chapter-cam) :is(.trail, .moon-camp) { opacity: 0; }
+
+/* ===== Duels : fenêtre du menu ===== */
+.duel-lobby { width: min(620px, 100%); transform: rotate(-.8deg); }
+.duel-lobby h2 { font-size: 32px; margin-bottom: 6px; }
+.duel-lobby h3 { font-size: 18px; margin: 18px 0 8px; color: #3a3350; }
+.duel-lobby-intro { font-size: 14px; line-height: 1.5; }
+.duel-create { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; }
+.duel-create .postcard-btn { margin: 0 0 0 auto; }
+.duel-choice { display: flex; border-radius: 8px; overflow: hidden; box-shadow: 0 0 0 2px rgba(58, 51, 80, .25); }
+.duel-choice button { padding: 7px 12px; border: none; background: rgba(58, 51, 80, .06); color: #3a3350; font: inherit; font-size: 14px; cursor: pointer; }
+.duel-choice button[aria-pressed="true"] { background: #3a3350; color: #fff; }
+.duel-rooms { list-style: none; display: grid; gap: 6px; max-height: 40vh; overflow: auto; }
+.duel-room { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 8px; background: rgba(58, 51, 80, .07); }
+.duel-room .avatar { width: 34px; height: 34px; border-radius: 6px; background: var(--player-color); display: grid; place-items: center; flex: none; overflow: hidden; }
+.duel-room .avatar img { width: 88%; height: 88%; object-fit: contain; image-rendering: pixelated; }
+.duel-room-who { display: grid; flex: 1; min-width: 0; }
+.duel-room-who small { font-size: 12px; opacity: .7; }
+.duel-room .postcard-btn.small { margin: 0; padding: 6px 14px; font-size: 14px; text-decoration: none; }
+.duel-empty { font-size: 14px; opacity: .7; padding: 6px 2px; }
+#to-duel img { object-fit: cover; border-radius: 4px; }

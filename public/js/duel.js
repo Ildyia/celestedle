@@ -14,7 +14,8 @@ import { CELESTEDLE } from "./catalogs.js";
 const POLL_MS = 2500;
 
 export const duelId = () => new URLSearchParams(location.search).get("duel");
-export const duelUrl = (id) => `index.html?duel=${encodeURIComponent(id)}`;
+// join : on entre tout de suite dans le salon (lien « Join » de la liste)
+export const duelUrl = (id, { join = false } = {}) => `index.html?duel=${encodeURIComponent(id)}${join ? "&join=1" : ""}`;
 
 /** Catalogue Celestedle dont les parties passent par le salon. */
 export function duelCatalog(id) {
@@ -81,6 +82,7 @@ export function startDuel({ id, onReady, onUpdate }) {
   let timer = null;
   let room = null;
   let rematchShown = false;
+  let autoJoin = new URLSearchParams(location.search).has("join");
 
   const go = (next) => (location.href = duelUrl(next));
 
@@ -171,6 +173,16 @@ export function startDuel({ id, onReady, onUpdate }) {
       panel.append(el("p", { className: "duel-note", text: err.message }), backLink());
       stop();
       return;
+    }
+    // Arrivée par « Join » de la liste : on entre sans redemander
+    if (autoJoin && room.status === "waiting" && !room.role) {
+      autoJoin = false;
+      try {
+        await player.ensure();
+        room = await api.duelJoin(room.id);
+      } catch (err) {
+        showToast(err.message);
+      }
     }
     // Revanche demandée par l'autre : on le signale une fois
     if (room.rematchId && !rematchShown) {

@@ -12,6 +12,7 @@ import { rulesSentence } from "./rules-text.js";
 import { CELESTEDLE, TECHS } from "./catalogs.js";
 import { showToast } from "./toast.js";
 import { keySound, playSound } from "./sound.js";
+import { createDuel, duelUrl, openRooms } from "./duel.js";
 import { CHAPTERS, aimAtMoon, chapterProgress, previewChapter, trailSvg } from "./chapters.js";
 import { initNextWordTimer } from "./timer.js";
 import { openPanel, panelOpen } from "./menu-panels.js";
@@ -833,7 +834,7 @@ const HINTS = {
   // Écran titre : le rond « C » remplace la touche, et clignote
   title: [[null, "Start"]],
   files: [["↑↓", "Move"], ["Enter", "Confirm"], ["Esc", "Back"]],
-  modes: [["←→", "Game"], ["↑↓", "Side"], ["Enter", "Climb"], ["J", "Journal"], ["M", "Map"], ["O", "Options"], ["B", "Bug"], ["Esc", "Back"]],
+  modes: [["←→", "Game"], ["↑↓", "Side"], ["Enter", "Climb"], ["J", "Journal"], ["M", "Map"], ["D", "Duel"], ["O", "Options"], ["B", "Bug"], ["Esc", "Back"]],
   options: [["↑↓", "Move"], ["Enter", "Change"], ["Esc", "Back"]]
 };
 
@@ -870,6 +871,7 @@ const KEY_HANDLERS = {
     Enter: climb,
     j: openJournal,
     m: openMap,
+    d: openDuels,
     o: openOptions,
     b: openReport,
     Escape: () => go("files")
@@ -905,6 +907,13 @@ document.addEventListener("keydown", (event) => {
     if (["Enter", " ", "Escape"].includes(event.key)) {
       event.preventDefault();
       closePostcard();
+    }
+    return;
+  }
+  if (duelsOpen()) {
+    if (event.key === "Escape") {
+      playSound("back");
+      closeDuels();
     }
     return;
   }
@@ -1100,6 +1109,83 @@ function followMoon(ms = 1700) {
 }
 window.addEventListener("resize", () => followMoon(300));
 for (const id of ["mountain", "moon"]) byId(id).addEventListener("transitionrun", () => followMoon());
+
+// ===== Duels (js/duel.js) =====
+// Fenêtre du menu : créer un salon (côté, public ou privé) ou en rejoindre un
+// des salons publics, qu'on relit toutes les 5 s tant qu'elle est ouverte.
+const duelChoice = { mode: "normal", isPublic: true };
+let duelTimer = null;
+const duelsOpen = () => !byId("duel-lobby").hidden;
+
+function openDuels() {
+  byId("duel-lobby").hidden = false;
+  byId("duel-create").focus();
+  playSound("confirm");
+  renderDuelChoice();
+  loadRooms();
+}
+
+function closeDuels() {
+  byId("duel-lobby").hidden = true;
+  clearTimeout(duelTimer);
+}
+
+function renderDuelChoice() {
+  document.querySelectorAll("[data-duel-mode]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.duelMode === duelChoice.mode)));
+  document.querySelectorAll("[data-duel-public]").forEach((b) => b.setAttribute("aria-pressed", String((b.dataset.duelPublic === "true") === duelChoice.isPublic)));
+}
+
+const ago = (iso) => {
+  const minutes = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000));
+  return minutes < 1 ? "just now" : `${minutes} min ago`;
+};
+
+async function loadRooms() {
+  clearTimeout(duelTimer);
+  const list = byId("duel-rooms");
+  let rooms;
+  try {
+    rooms = await openRooms();
+  } catch (err) {
+    clear(list);
+    list.append(el("li", { className: "duel-empty", text: err.message }));
+    return;
+  }
+  if (!duelsOpen()) return;
+  clear(list);
+  const mine = player.profile?.id;
+  if (!rooms.length) list.append(el("li", { className: "duel-empty", text: "No open duel right now: create one!" }));
+  for (const room of rooms) {
+    const own = room.host?.id === mine;
+    list.append(
+      el("li", { className: "duel-room" }, [
+        el("span", { className: "avatar", attrs: { style: `--player-color: ${room.host?.color ?? "#ccc"}` } }, [
+          el("img", { attrs: { src: avatarUrl(room.host?.avatar ?? "strawberry"), alt: "", style: avatarFit(room.host?.avatar ?? "") } })
+        ]),
+        el("span", { className: "duel-room-who" }, [el("strong", { text: room.host?.name ?? "?" }), el("small", { text: `${room.mode === "hard" ? "B-Side · Hard" : "A-Side · Normal"} · ${ago(room.createdAt)}` })]),
+        el("a", { className: "postcard-btn small", text: own ? "Your duel" : "Join", attrs: { href: duelUrl(room.id, { join: !own }) } })
+      ])
+    );
+  }
+  duelTimer = setTimeout(loadRooms, 5000);
+}
+
+document.querySelectorAll("[data-duel-mode]").forEach((b) =>
+  b.addEventListener("click", () => {
+    duelChoice.mode = b.dataset.duelMode;
+    renderDuelChoice();
+  })
+);
+document.querySelectorAll("[data-duel-public]").forEach((b) =>
+  b.addEventListener("click", () => {
+    duelChoice.isPublic = b.dataset.duelPublic === "true";
+    renderDuelChoice();
+  })
+);
+byId("duel-create").addEventListener("click", () => createDuel(duelChoice).catch((err) => showToast(err.message)));
+byId("duel-lobby-close").addEventListener("click", closeDuels);
+byId("duel-lobby").addEventListener("click", (e) => e.target === e.currentTarget && closeDuels());
+byId("to-duel").addEventListener("click", openDuels);
 
 // ===== Carte =====
 // Toute la montagne (la caméra recule comme pour l'annonce d'un chapitre),
