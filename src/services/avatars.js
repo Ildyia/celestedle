@@ -49,7 +49,7 @@ const FAMILIES = {
     base: "theo",
     avatars: [...list("theo", ["normal", "excited", "nailedit", "serious", "thinking", "worried", "wtf", "sprite"]), "theo-crystal"]
   },
-  kevin: { name: "Kevin", base: "kevin", avatars: list("kevin", ["idle", "angry", "left", "right", "up", "down", "hurt", "giant"]) },
+  kevin: { name: "Kevin", base: "kevin", avatars: list("kevin", ["angry", "left", "right", "up", "down", "hurt", "giant"]) },
   "golden-winged": { name: "Golden winged strawberry", base: null, avatars: ["golden-winged-strawberry", "golden-winged/ghost"] },
   granny: {
     name: "Granny",
