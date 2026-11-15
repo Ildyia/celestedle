@@ -613,6 +613,7 @@ body.map-open #moon, body.chapter-cam #moon { opacity: 1 !important; }
 #to-map img { image-rendering: auto; transform: scale(1.15); }
 .moon-camp i { font-size: clamp(13px, 1.3vw, 18px); }
 
-/* Écran titre : le décor seul, sans le sentier ni les repères */
+/* Le sentier, les repères et l'épingle ne se montrent que sur la carte et
+   pendant l'annonce d'un chapitre (body.chapter-cam) : ailleurs, le décor seul */
 .trail, .moon-camp { transition: opacity .6s; }
-body[data-screen="title"]:not(.chapter-cam) :is(.trail, .moon-camp) { opacity: 0; }
+body:not(.chapter-cam) :is(.trail, .moon-camp) { opacity: 0; }
