@@ -14,6 +14,7 @@ import { ProfilePanel } from "./profile.js";
 import { LeaderboardPanel } from "./leaderboard.js";
 import { initGameTabs } from "./game-tabs.js";
 import { fillRulesText } from "./rules-text.js";
+import { duelCatalog, duelId, startDuel } from "./duel.js";
 
 let elements = [];
 const getElements = () => elements;
@@ -87,11 +88,14 @@ async function init() {
   hintPicker.setData({ synonyms: synonyms.all() });
   bindSynonymsModal(synonyms, getElements);
 
+  // index.html?duel=<id> : la page joue un duel (js/duel.js)
+  const duel = duelId();
   const game = new Game({
     synonyms,
     suggestions,
     hintPicker,
-    onFinished: (state) => refreshCommunityStats(state.mode)
+    catalog: duel ? duelCatalog(duel) : undefined,
+    onFinished: (state) => !duel && refreshCommunityStats(state.mode)
   });
   const reports = new ReportsPanel({ getElements });
   const profile = new ProfilePanel();
@@ -105,6 +109,7 @@ async function init() {
   showDisclaimerOnce();
   showVersion();
   initNextWordTimer(byId("next-word-timer"), () => {
+    if (duel) return;
     showToast("A new day on the mountain: today's climb is ready!");
     game.load();
     refreshCommunityStats(game.mode);
@@ -140,6 +145,28 @@ async function init() {
     .then((modes) => Object.entries(modes).forEach(([id, rules]) => fillRulesText(id, rules)))
     .catch(() => {});
 
+  if (duel) {
+    // La partie ne se charge qu'une fois le duel commencé (le plateau peut
+    // vouloir se recharger avant, au retour sur l'onglet)
+    const load = game.load.bind(game);
+    let started = false;
+    game.load = () => (started ? load() : Promise.resolve());
+    startDuel({
+      id: duel,
+      onReady: (room) => {
+        started = true;
+        document.documentElement.classList.add("duel-started");
+        game.mode = room.mode;
+        game.load();
+      },
+      // L'autre joueur a pu finir pendant notre partie : rien à recharger,
+      // mais le temps du mode Hard peut avoir expiré
+      onUpdate: (room) => {
+        if (room.me && game.state && room.me.status !== game.state.status) game.render(room.me);
+      }
+    });
+    return;
+  }
   await game.load();
   refreshCommunityStats(game.mode);
 }

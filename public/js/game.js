@@ -198,7 +198,9 @@ export class Game {
     nodes.form.hidden = !playing;
     nodes.hintBtn.hidden = !playing;
     nodes.giveupBtn.hidden = !playing;
-    nodes.shareBtn.hidden = playing;
+    nodes.shareBtn.hidden = playing || Boolean(this.catalog.duel);
+    // Duel : la fin est annoncée par son panneau (js/duel.js)
+    if (this.catalog.duel) return;
     this.renderEndMessage(state);
     announceEnd(state.mode, state.status, () => ({
       side: hard ? "b" : "a",

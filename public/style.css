@@ -2786,3 +2786,40 @@ body.hard-mode #game-status {
 /* Trophées à côté d'un nom dans les classements (js/trophies.js) */
 .trophy { display: inline-block; margin-left: .3em; font-size: .95em; line-height: 1; vertical-align: -.1em; cursor: help; }
 img.trophy { width: 1.1em; height: 1.1em; object-fit: contain; image-rendering: pixelated; }
+
+/* ===== Duel (index.html?duel=…, js/duel.js) ===== */
+/* Pas de choix de mode ni d'autres jeux pendant un duel */
+html.duel :is(#mode-switch, .game-tab-list, #stats-sidebar, #next-word-timer) { display: none !important; }
+/* Avant le début du duel : pas de plateau */
+html.duel:not(.duel-started) :is(#game-status, #guess-form, #guesses-table, #active-hints-container) { display: none !important; }
+.duel-mine { margin-top: 6px; font-size: 14px; opacity: .85; }
+.duel-panel { margin: 0 auto 14px; padding: 14px 16px; max-width: 720px; border-radius: 12px; background: rgba(0, 0, 0, .28); border: 1px solid rgba(255, 255, 255, .14); color: inherit; }
+.duel-kicker { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; opacity: .7; margin-bottom: 8px; }
+.duel-versus { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
+.duel-player { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: bold; }
+.duel-avatar { width: 40px; height: 40px; border-radius: 8px; overflow: hidden; display: grid; place-items: center; background: var(--player-color); }
+.duel-avatar img { width: 90%; height: 90%; object-fit: contain; image-rendering: pixelated; }
+.duel-vs { font-size: 22px; font-weight: bold; color: #ffd98a; }
+.duel-note { margin-top: 10px; text-align: center; opacity: .85; }
+.duel-link { display: flex; gap: 8px; margin-top: 10px; }
+.duel-link input { flex: 1; min-width: 0; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, .2); background: rgba(0, 0, 0, .3); color: inherit; }
+.duel-close, .duel-join, .duel-back { display: block; margin: 12px auto 0; text-align: center; text-decoration: none; }
+.duel-opponent { margin-top: 12px; }
+.duel-progress { text-align: center; font-weight: bold; }
+.duel-progress.won { color: var(--color-correct); }
+.duel-progress:is(.forfeit, .lost) { color: var(--color-wrong); }
+.duel-rows { display: grid; justify-content: center; gap: 4px; margin-top: 8px; }
+.duel-row { display: flex; align-items: center; gap: 4px; }
+.duel-cell { width: 18px; height: 18px; border-radius: 4px; background: #6b6b80; }
+.duel-cell.correct { background: var(--color-correct); }
+.duel-cell.partial { background: var(--color-partial); }
+.duel-cell:is(.wrong, .higher, .lower) { background: var(--color-wrong); }
+.duel-row-name { margin-left: 6px; font-size: 13px; opacity: .85; }
+.duel-result { margin-top: 14px; padding: 12px; border-radius: 10px; text-align: center; background: rgba(255, 255, 255, .08); }
+.duel-result.won { background: rgba(16, 185, 129, .2); }
+.duel-result.lost { background: rgba(239, 68, 68, .18); }
+.duel-result h2 { font-size: 24px; margin-bottom: 4px; color: inherit; }
+.duel-result.won h2 { color: #6ee7b7; }
+.duel-result.lost h2 { color: #fca5a5; }
+.duel-actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.duel-actions .duel-back { margin: 0; }

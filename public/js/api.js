@@ -104,6 +104,16 @@ export const api = {
   connectionsStats: (mode = "normal") => request("GET", `/connections/stats?mode=${mode}`),
   connectionsBoard: (mode = "normal") => request("GET", `/connections/leaderboard?mode=${mode}`),
 
+  duels: () => request("GET", "/duels", { auth: false }),
+  duel: (id) => request("GET", `/duels/${encodeURIComponent(id)}`),
+  duelCreate: (mode, isPublic) => request("POST", "/duels", { body: { mode, isPublic } }),
+  duelJoin: (id) => request("POST", `/duels/${encodeURIComponent(id)}/join`),
+  duelClose: (id) => request("POST", `/duels/${encodeURIComponent(id)}/close`),
+  duelGuess: (id, guess) => request("POST", `/duels/${encodeURIComponent(id)}/guess`, { body: { guess } }),
+  duelHint: (id, type, choice) => request("POST", `/duels/${encodeURIComponent(id)}/hint`, { body: { type, choice } }),
+  duelForfeit: (id) => request("POST", `/duels/${encodeURIComponent(id)}/forfeit`),
+  duelRematch: (id) => request("POST", `/duels/${encodeURIComponent(id)}/rematch`),
+
   reports: () => request("GET", "/reports"),
   similarReports: (elementName, description) =>
     request("POST", "/reports/similar", { body: { elementName, description } }),
