@@ -999,7 +999,7 @@ function letItSnow(count = 40) {
   }
 }
 
-// Curseur oiseau (style.css) : coupé si l'option est désactivée
+// Curseur repère (style.css) : coupé si l'option est désactivée
 function applyCursor(on) {
   document.body.classList.toggle("no-custom-cursor", !on);
 }
@@ -1056,13 +1056,13 @@ function showClimb(climb, from = null, { animate = false } = {}) {
 }
 
 // Dernier chapitre, Farewell, sur la Lune : son repère est posé sur la lune
-// (elle bouge à part de la montagne), avec le feu de camp une fois atteint
+// (elle bouge à part de la montagne), avec le repère une fois atteint
 function showMoonCamp(chapter, arriving = false) {
   const moon = byId("moon");
   let camp = moon.querySelector(".moon-camp");
   if (!camp) {
     camp = el("span", { className: "moon-camp", attrs: { "aria-hidden": "true" } }, [
-      el("img", { attrs: { src: "assets/entities/bonfire.png", alt: "" } }),
+      el("span", { className: "marker-sprite" }),
       el("i", { text: String(CHAPTERS.length) })
     ]);
     moon.append(camp);
@@ -1076,11 +1076,12 @@ function showMoonCamp(chapter, arriving = false) {
 // transitions, image par image, puis on s'arrête.
 let followUntil = 0;
 function aimMoonNow() {
-  const camp = document.querySelector("#moon .moon-camp");
+  // Le sentier finit sur le numéro du repère, sous la pointe de l'épingle
+  const label = document.querySelector("#moon .moon-camp i");
   const svg = document.querySelector(".mountain-art .trail");
-  if (!camp || !svg) return;
-  const box = camp.getBoundingClientRect();
-  aimAtMoon(svg, { x: box.left + box.width / 2, y: box.top + box.height * 0.35 });
+  if (!label || !svg) return;
+  const box = label.getBoundingClientRect();
+  aimAtMoon(svg, { x: box.left + box.width / 2, y: box.top });
 }
 function followMoon(ms = 1700) {
   const running = performance.now() < followUntil;
@@ -1155,7 +1156,7 @@ function renderMap() {
       );
       if (stats.reachedOn) lines.push(el("p", { text: `Reached on ${stats.reachedOn}` }));
     }
-    if (mapIndex === reached) lines.push(el("p", { className: "map-here", text: "Your camp is here." }));
+    if (mapIndex === reached) lines.push(el("p", { className: "map-here", text: "You are here." }));
   } else {
     lines.push(el("p", { text: `${chapter.berries} strawberries needed: ${Math.max(0, chapter.berries - berries)} to go.` }));
   }
@@ -1187,7 +1188,7 @@ function renderMap() {
 // ===== Annonce d'un nouveau chapitre =====
 // Comme la carte postale qui ouvre chaque chapitre du jeu : on retient le
 // dernier chapitre vu dans ce navigateur ; au-delà, carte postale avec le
-// portrait et la couleur débloqués, puis la caméra recule et le feu de camp
+// portrait et la couleur débloqués, puis la caméra recule et le repère
 // monte jusqu'au nouveau repère.
 // Pour la voir sans jouer : menu.html?chapter=3&from=2
 let pendingChapter = null;
@@ -1249,7 +1250,7 @@ async function announceChapter() {
         unlocks.length ? el("p", { text: "Unlocked for your file:" }) : null,
         unlocks.length ? el("ul", { className: "chapter-unlocks" }, unlocks) : null,
         unlocks.length ? el("p", { text: "Wear them from your file: Edit profile." }) : null,
-        el("p", { className: "postcard-sign", text: next ? `Next camp: ${next.name}, at ${next.berries} strawberries.` : "Thanks for climbing all the way!" })
+        el("p", { className: "postcard-sign", text: next ? `Next stop: ${next.name}, at ${next.berries} strawberries.` : "Thanks for climbing all the way!" })
       ]),
       button
     ])

@@ -1,7 +1,7 @@
 // Progression en chapitres sur la montagne (voir REDESIGN.md).
 // Chaque victoire (une fraise) fait monter ; le total de fraises donne le
 // chapitre atteint. Un sentier en pointillé relie sept repères, du pied de la
-// montagne au sommet, et un feu de camp marque le chapitre en cours.
+// montagne au sommet, et le repère de la carte du jeu marque le chapitre en cours.
 // Le serveur calcule la progression (src/services/chapters.js, envoyée avec
 // les achievements) ; ici, on place les repères et on dessine.
 // Pour voir un autre état sans le jouer : menu.html?chapter=3&berries=14
@@ -23,6 +23,13 @@ export const CHAPTERS = [
   { name: "Farewell", berries: 150, moon: true, x: 1290, y: -40 }
 ];
 const ON_MOUNTAIN = CHAPTERS.filter((c) => !c.moon);
+// Le chapitre en cours est montré par le repère de la carte du jeu (graphics
+// dump, Mountain/marker) : Madeline qui court dans une épingle dorée. Ses 10
+// images sont côte à côte dans assets/menu/marker-run.png (300 × 300 chacune).
+// dx / dy : coin de l'image par rapport au repère, la pointe de l'épingle dessus.
+const MARKER = { size: 80, dx: -40, dy: -78 };
+const markerSvg = (x, y, className) =>
+  `<svg class="${className}" x="${x + MARKER.dx}" y="${y + MARKER.dy}" width="${MARKER.size}" height="${MARKER.size}" viewBox="0 0 300 300"><clipPath id="marker-clip"><rect width="300" height="300" /></clipPath><g clip-path="url(#marker-clip)"><image class="marker-frames" href="assets/menu/marker-run.png" width="3000" height="300" /></g></svg>`;
 // Du sommet à la lune : courbe qui monte puis s'incline vers (x, y)
 const moonPath = (x, y) => {
   const top = ON_MOUNTAIN.at(-1);
@@ -39,12 +46,12 @@ export function aimAtMoon(svg, target) {
   if (!ctm) return;
   const point = new DOMPoint(target.x, target.y).matrixTransform(ctm.inverse());
   for (const path of svg.querySelectorAll(".moon-path")) path.setAttribute("d", moonPath(point.x, point.y));
-  // Feu de camp qui monte jusqu'à la lune (annonce de Farewell)
+  // Repère qui monte jusqu'à la lune (annonce de Farewell)
   const camp = svg.querySelector(".trail-camp.leaving");
   if (camp) {
     const top = ON_MOUNTAIN.at(-1);
-    camp.setAttribute("x", point.x - 44);
-    camp.setAttribute("y", point.y - 74);
+    camp.setAttribute("x", point.x + MARKER.dx);
+    camp.setAttribute("y", point.y + MARKER.dy);
     camp.parentNode.style.setProperty("--dx", `${top.x - point.x}px`);
     camp.parentNode.style.setProperty("--dy", `${top.y - point.y}px`);
   }
@@ -69,7 +76,7 @@ const points = (list) => list.map((c) => `${c.x},${c.y}`).join(" ");
 /**
  * Le sentier et ses repères, en SVG posé sur le dessin de la montagne.
  * from : chapitre d'où l'on vient. Le bout de sentier de from à chapter se
- * trace alors peu à peu et le feu de camp s'y déplace (annonce d'un chapitre).
+ * trace alors peu à peu et le repère s'y déplace (annonce d'un chapitre).
  */
 export function trailSvg(chapter, { from = null } = {}) {
   const start = { x: 150, y: 560 };
@@ -78,9 +85,9 @@ export function trailSvg(chapter, { from = null } = {}) {
   const marks = ON_MOUNTAIN.map((c, i) => {
     const state = i + 1 < chapter ? "done" : i + 1 === chapter ? "here" : "ahead";
     // Le nom n'est montré que sur la carte (body.map-open)
-    return `<g class="trail-mark ${state}" data-chapter="${i + 1}"><circle cx="${c.x}" cy="${c.y}" r="7" /><text x="${c.x}" y="${c.y + 26}" text-anchor="middle">${i + 1}</text><text class="trail-name" x="${c.x}" y="${c.y - 18}" text-anchor="middle">${c.name}</text></g>`;
+    return `<g class="trail-mark ${state}" data-chapter="${i + 1}"><circle cx="${c.x}" cy="${c.y}" r="7" /><text x="${c.x}" y="${c.y + 26}" text-anchor="middle">${i + 1}</text><text class="trail-name" x="${c.x}" y="${c.y + 50}" text-anchor="middle">${c.name}</text></g>`;
   }).join("");
-  // Sur la Lune, le feu de camp est sur la lune (menu.js) : pas ici
+  // Sur la Lune, le repère est sur la lune (menu.js) : pas ici
   const here = chapter ? CHAPTERS[chapter - 1] : start;
   const onMoon = Boolean(here.moon);
   const was = moving && from ? CHAPTERS[from - 1] : start;
@@ -100,7 +107,7 @@ export function trailSvg(chapter, { from = null } = {}) {
     <polyline class="trail-path walked" points="${points(reached)}" />
     ${fresh}
     ${marks}
-    <g${shift}${onMoon && !moving ? ' style="display: none"' : ""}><image class="trail-camp${onMoon ? " leaving" : ""}" href="assets/entities/bonfire.png" x="${here.x - 44}" y="${here.y - 74}" width="88" height="88" /></g>
+    <g${shift}${onMoon && !moving ? ' style="display: none"' : ""}>${markerSvg(here.x, here.y, `trail-camp${onMoon ? " leaving" : ""}`)}</g>
   </svg>`;
 }
 
