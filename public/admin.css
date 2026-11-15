@@ -577,3 +577,27 @@ body::before {
 .admin-back { align-self: center; padding: 6px 12px; border-radius: 8px; background: rgba(0, 0, 0, .5); color: #fff; text-decoration: none; font-size: 15px; }
 .admin-back:hover, .admin-back:focus-visible { background: rgba(255, 255, 255, .16); }
 .admin-container .sidebar-block { border: 1px solid rgba(255, 255, 255, .1); box-shadow: 0 12px 30px rgba(0, 0, 0, .35); }
+
+/* ===== Insights ===== */
+.insights-period { display: flex; border-radius: 8px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255, 255, 255, .2); }
+.insights-period button { padding: 6px 12px; border: none; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.insights-period button[aria-pressed="true"] { background: rgba(255, 255, 255, .16); }
+.insights-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 16px; }
+.insights-card { padding: 16px; min-width: 0; }
+.insights-card.wide { grid-column: 1 / -1; }
+.insights-card h3 { font-size: 17px; margin-bottom: 4px; }
+.insights-card .admin-table.compact td, .insights-card .admin-table.compact th { padding: 4px 8px; }
+.insights-word { display: flex; align-items: center; gap: 8px; }
+.insights-word img { width: 22px; height: 22px; object-fit: contain; image-rendering: pixelated; }
+.insights-hbars { display: grid; gap: 6px; margin-top: 8px; }
+.insights-hbar { display: grid; grid-template-columns: minmax(90px, 38%) 1fr 3ch; align-items: center; gap: 8px; font-size: 14px; }
+.insights-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.insights-track { height: 12px; }
+.insights-track i, .insights-col i { display: block; height: 100%; background: #6aa6ff; border-radius: 0 4px 4px 0; }
+.insights-hbar:hover .insights-track i, .insights-col:hover i { background: #9cc4ff; }
+.insights-value { text-align: right; opacity: .8; font-variant-numeric: tabular-nums; }
+.insights-columns { display: grid; grid-template-columns: repeat(var(--n), 1fr); grid-template-rows: 120px auto; column-gap: 2px; margin-top: 10px; border-bottom: 1px solid rgba(255, 255, 255, .15); }
+.insights-col { display: flex; align-items: flex-end; height: 100%; }
+.insights-col i { width: 100%; border-radius: 4px 4px 0 0; min-height: 1px; }
+.insights-axis { font-size: 11px; opacity: .65; text-align: center; padding-top: 4px; }
+.insights-outcomes { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: 14px; }

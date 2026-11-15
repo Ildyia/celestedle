@@ -49,6 +49,7 @@ export const admin = {
   overview: () => request("GET", "/admin/overview"),
   history: () => request("GET", "/admin/history"),
   words: () => request("GET", "/admin/words"),
+  insights: (days) => request("GET", `/admin/insights${days ? `?days=${days}` : ""}`),
   setSecret: (mode, action, elementName) => request("POST", "/admin/secret", { mode, action, elementName }),
   elements: () => request("GET", "/admin/elements"),
   createElement: (element) => request("POST", "/admin/elements", element),

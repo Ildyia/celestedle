@@ -54,6 +54,7 @@
           <button type="button" role="tab" data-tab="overview" aria-selected="true">Today</button>
           <button type="button" role="tab" data-tab="history" aria-selected="false">History</button>
           <button type="button" role="tab" data-tab="words" aria-selected="false">Words</button>
+          <button type="button" role="tab" data-tab="insights" aria-selected="false">Insights</button>
           <button type="button" role="tab" data-tab="elements" aria-selected="false">Elements</button>
           <button type="button" role="tab" data-tab="reports" aria-selected="false">Reports</button>
           <button type="button" role="tab" data-tab="connections" aria-selected="false">Connections</button>
@@ -98,6 +99,18 @@
               <tbody id="legacy-body"></tbody>
             </table>
           </div>
+        </section>
+
+        <!-- Ce que jouent les gens (js/admin/insights.js, /api/admin/insights) -->
+        <section id="tab-insights" class="admin-panel" role="tabpanel" hidden>
+          <div class="admin-toolbar">
+            <div class="insights-period" role="group" aria-label="Period">
+              <button type="button" data-days="7" aria-pressed="false">7 days</button>
+              <button type="button" data-days="30" aria-pressed="true">30 days</button>
+              <button type="button" data-days="" aria-pressed="false">All time</button>
+            </div>
+          </div>
+          <div id="insights" class="insights-grid"></div>
         </section>
 
         <section id="tab-words" class="admin-panel" role="tabpanel" hidden>

@@ -751,6 +751,23 @@ test("classements : en Celestedle, un indice compte comme un essai", async () =>
   assert.ok(twoTries.every((e) => e.rank < me.rank));
 });
 
+test("admin : insights (openers, mots les plus essayés, heures)", async () => {
+  const headers = await ownerHeaders();
+  const { token } = await api.newPlayer();
+  const secret = daily.getTodaySecret("normal").element.nom;
+  const opener = wrongGuessFor(secret);
+  await api.request("POST", "/api/game/guess", { token, body: { mode: "normal", guess: opener } });
+  await api.request("POST", "/api/game/guess", { token, body: { mode: "normal", guess: secret } });
+
+  const res = await api.request("GET", "/api/admin/insights?days=7", { headers });
+  assert.equal(res.status, 200, JSON.stringify(res.data));
+  assert.ok(res.data.openers.normal.some((o) => o.name === opener.toLowerCase() || o.name === opener));
+  assert.ok(res.data.mostGuessed.length > 0);
+  assert.equal(res.data.hours.length, 24);
+  assert.ok(res.data.days[0].players >= 1);
+  assert.equal((await api.request("GET", "/api/admin/insights")).status, 401);
+});
+
 test("techs : réservées à l'équipe admin par défaut", async () => {
   const { token } = await api.newPlayer();
   const access = await api.request("GET", "/api/techs-access", { token });

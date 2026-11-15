@@ -2,6 +2,7 @@ const express = require("express");
 const elementsRepo = require("../../repositories/elements");
 const playersRepo = require("../../repositories/players");
 const statsRepo = require("../../repositories/stats");
+const insightsRepo = require("../../repositories/insights");
 const daily = require("../../services/daily");
 const reports = require("../../services/reports");
 const { expireOverdueGames } = require("../../services/games");
@@ -15,7 +16,7 @@ const { requireStaff, requireOwner, limitedAction } = require("../../middleware/
 const { requirePlayer } = require("../../middleware/player");
 const { rateLimit } = require("../../middleware/rate-limit");
 const { HttpError } = require("../../utils/http-error");
-const { todayParis } = require("../../utils/dates");
+const { todayParis, addDays } = require("../../utils/dates");
 
 const router = express.Router();
 
@@ -79,6 +80,14 @@ router.get("/admin/overview", (req, res) => {
 
 router.get("/admin/history", (req, res) => {
   res.json(statsRepo.history());
+});
+
+// Ce que jouent les gens : openers, mots les plus essayés, essais, indices,
+// heures, activité par jour. days : 7, 30 ou tout (absent)
+router.get("/admin/insights", (req, res) => {
+  const days = Number(req.query.days);
+  const since = Number.isInteger(days) && days > 0 ? addDays(todayParis(), -(days - 1)) : "0000-01-01";
+  res.json(insightsRepo.insights(since));
 });
 
 router.get("/admin/words", (req, res) => {

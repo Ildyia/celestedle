@@ -5,6 +5,7 @@ import { admin, setAccessLostHandler } from "./client.js";
 import { renderOverview } from "./overview.js";
 import { renderHistory } from "./history.js";
 import { WordsTab } from "./words.js";
+import { InsightsTab } from "./insights.js";
 import { ElementsTab } from "./elements.js";
 import { ReportsTab } from "./reports.js";
 import { ConnectionsTab } from "./connections.js";
@@ -26,6 +27,7 @@ export function notify(text, isError = false) {
 }
 
 const words = new WordsTab();
+const insights = new InsightsTab();
 const elements = new ElementsTab({ notify });
 const reports = new ReportsTab({ notify });
 const connectionsTab = new ConnectionsTab({ notify });
@@ -38,6 +40,7 @@ const TABS = {
   overview: () => renderOverview({ notify }),
   history: () => renderHistory(),
   words: () => words.load(),
+  insights: () => insights.load(),
   elements: () => elements.load(),
   reports: () => reports.load(),
   connections: () => connectionsTab.load(),
