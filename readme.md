@@ -46,7 +46,7 @@ Useful environment variables (`.env`):
 | `TECHS_ACCESS` | Same for Celestedle Techs: `staff` (default), `playtest` or `public` |
 | `CONNECTIONS_ACCESS` | Who can play Connections until the admin changes it: `staff`, `playtest` (default) or `public`. Set it to `public` on the beta |
 
-The home page during the redesign is `menu.html` (it will become `index.html`); see `REDESIGN.md` for how the menus and the Modern interface are built, and `docs/GUIDE.md` for the project tour (in French).
+The home page is the Celeste-style menu (`index.html`); the main game is `celestedle.html`. See `REDESIGN.md` for how the menus and the Modern interface are built, and `docs/GUIDE.md` for the project tour (in French).
 
 Elements live in `db.json` (attributes), `public/assets/entities/mapping.json` (sprites) and `aliases.json` (official synonyms). They are copied into the database at startup, except elements edited from the admin page.
 

@@ -1,4 +1,4 @@
-// Duel sur la page de jeu (index.html?duel=<id>) : même plateau que le jeu du
+// Duel sur la page de jeu (celestedle.html?duel=<id>) : même plateau que le jeu du
 // jour, branché sur les routes du duel (src/services/duels.js), avec un
 // panneau qui montre l'adversaire et le résultat.
 // Le serveur n'envoie rien de lui-même : on redemande le salon toutes les
@@ -15,7 +15,7 @@ const POLL_MS = 2500;
 
 export const duelId = () => new URLSearchParams(location.search).get("duel");
 // join : on entre tout de suite dans le salon (lien « Join » de la liste)
-export const duelUrl = (id, { join = false } = {}) => `index.html?duel=${encodeURIComponent(id)}${join ? "&join=1" : ""}`;
+export const duelUrl = (id, { join = false } = {}) => `celestedle.html?duel=${encodeURIComponent(id)}${join ? "&join=1" : ""}`;
 
 /** Catalogue Celestedle dont les parties passent par le salon. */
 export function duelCatalog(id) {
@@ -162,7 +162,7 @@ export function startDuel({ id, onReady, onUpdate }) {
   }
 
   function backLink() {
-    return el("a", { className: "btn-secondary duel-back", text: "Back to the menu", attrs: { href: "menu.html#modes" } });
+    return el("a", { className: "btn-secondary duel-back", text: "Back to the menu", attrs: { href: "index.html#modes" } });
   }
 
   async function update() {

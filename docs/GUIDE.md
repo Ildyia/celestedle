@@ -19,10 +19,10 @@ Du HTML, du CSS et des modules JavaScript, sans framework ni étape de build.
 
 | Fichier | Rôle |
 | --- | --- |
-| `menu.html`, `menu.css`, `celeste-ui.css` | Le menu façon Celeste (titre, fichiers, choix du jeu, journal, options). Future page d'accueil |
+| `index.html`, `menu.css`, `celeste-ui.css` | La page d'accueil : le menu façon Celeste (titre, fichiers, choix du jeu, journal, options, duels). `menu.html` redirige ici |
 | `js/menu.js`, `journal.js`, `menu-panels.js`, `stamps.js`, `sky.js` | Le menu, le journal-carnet, les fenêtres ouvertes depuis le menu, les tampons, le ciel selon l'heure |
 | `modern.css`, `js/interface.js`, `js/game-end.js` | L'interface Modern des pages de jeu (décor, menu pause, écran de fin) : tout est sous `html.ui-modern` |
-| `index.html`, `style.css` | La page du jeu principal |
+| `celestedle.html`, `style.css` | La page du jeu principal (et des duels : `?duel=<id>`) |
 | `connections.html` + `.css` | La page Connections |
 | `techs.html` | La page Techs (mêmes modules que Celestedle, autre catalogue) |
 | `admin.html` + `.css` | Le panneau admin |
@@ -176,10 +176,10 @@ La base locale se trouve dans `data/celestedle.db`. Pour repartir de zéro, supp
 | Corriger les infos d'un élément | `db.json`, ou le panneau admin |
 | Changer un texte affiché | Le `.html` correspondant, ou `public/js/rules-text.js` pour les règles |
 | Changer le style | Menu : `menu.css` et `celeste-ui.css` ; pages de jeu : `modern.css` (Modern) ou `style.css`, `connections.css` (Classic) ; admin : `admin.css` |
-| Changer le message d'accueil | La carte postale dans `menu.html` (et la clé `welcomeSeen` de `storage.js` pour la remontrer à tous) |
+| Changer le message d'accueil | La carte postale dans `index.html` (et la clé `welcomeSeen` de `storage.js` pour la remontrer à tous) |
 | Ajouter un tampon (achievements) | `public/js/stamps.js` : la liste `STAMPS` et la fonction `earnedStamps()` |
 | Changer une règle de mode | `src/services/mode-rules.js` (essais, temps, nombre d'indices) |
-| Ajouter un indice | `services/hints.js` (`HINT_TYPES` et `BUILDERS`), une migration pour le `CHECK` de `game_hints`, l'affichage dans `public/js/hints.js`, le bouton dans `index.html` |
+| Ajouter un indice | `services/hints.js` (`HINT_TYPES` et `BUILDERS`), une migration pour le `CHECK` de `game_hints`, l'affichage dans `public/js/hints.js`, le bouton dans `celestedle.html` |
 | Ajouter une route d'API | `routes/api/xxx.js`, puis `services/xxx.js`, `repositories/xxx.js` et `public/js/api.js` |
 | Ajouter une colonne ou une table | Une nouvelle migration `0NN_xxx.sql`, puis le repository |
 | Ajouter un réglage admin | `repositories/settings.js`, une route dans `routes/api/admin.js`, `public/js/admin/settings.js` |

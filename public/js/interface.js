@@ -1,6 +1,6 @@
 // Interface « Modern » des pages de jeu (voir REDESIGN.md).
 // En Modern, la page ne garde que le jeu : tout le reste (profil,
-// classements, options, communauté) vit dans le menu (menu.html). On garde
+// classements, options, communauté) vit dans le menu (index.html). On garde
 // sous la main, via un menu pause façon Celeste (Échap ou ❚❚) : les règles,
 // les options, le changement de côté et le retour au menu.
 //
@@ -51,7 +51,7 @@ function currentMode() {
 }
 
 // Montagne du menu avec son drapeau au sommet (mêmes coordonnées que
-// menu.html : viewBox du dessin 1600 × 700)
+// index.html : viewBox du dessin 1600 × 700)
 function mountain() {
   const wrap = el("div", { className: "m-mountain" }, [
     el("img", { attrs: { src: "assets/menu/mountain.png", alt: "", decoding: "async" } })
@@ -122,7 +122,7 @@ function buildDecor() {
   showAdmin(player.profile);
   player.onChange(showAdmin);
   const nav = el("nav", { attrs: { id: "modern-nav", "aria-label": "Menu" } }, [
-    el("a", { attrs: { href: "menu.html#modes" } }, [el("span", { text: "◂" }), el("span", { className: "m-label", text: "Menu" })]),
+    el("a", { attrs: { href: "index.html#modes" } }, [el("span", { text: "◂" }), el("span", { className: "m-label", text: "Menu" })]),
     el("button", { attrs: { type: "button", "aria-label": "Pause" }, on: { click: openPause } }, [
       el("span", { className: "m-pause-icon", text: "❚❚" }),
       el("span", { className: "m-label", text: "Pause" })
@@ -244,7 +244,7 @@ function pauseItems() {
         document.querySelector(`#mode-switch [data-mode='${other}']`)?.click();
       }
     },
-    { label: "Return to menu", run: () => (location.href = "menu.html#modes") }
+    { label: "Return to menu", run: () => (location.href = "index.html#modes") }
   ].filter(Boolean);
 }
 
@@ -400,7 +400,7 @@ function showEnd(detail) {
     otherSwitch &&
       el("button", { className: "m-end-btn", text: `Go to ${otherMode === "hard" ? "B-Side" : "A-Side"}`, attrs: { type: "button" }, on: { click: () => (closeEnd(), otherSwitch.click()) } }),
     rankings && el("button", { className: "m-end-btn", text: "Rankings", attrs: { type: "button" }, on: { click: () => (closeEnd(), rankings()) } }),
-    el("a", { className: "m-end-btn", text: "Menu", attrs: { href: "menu.html#modes" } }),
+    el("a", { className: "m-end-btn", text: "Menu", attrs: { href: "index.html#modes" } }),
     el("button", { className: "m-end-btn", text: "Close", attrs: { type: "button" }, on: { click: closeEnd } })
   ].filter(Boolean);
 

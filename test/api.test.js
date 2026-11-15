@@ -814,7 +814,12 @@ test("profil : les portraits et couleurs des chapitres restent verrouillés avan
 });
 
 test("pages : l'image d'aperçu de lien suit l'adresse demandée", async () => {
-  const res = await api.request("GET", "/menu.html", { headers: { Host: "example.test" } });
-  assert.equal(res.status, 200);
-  assert.match(res.data, /<meta property="og:image" content="http:\/\/[^"]+\/assets\/og\.png" \/>/);
+  for (const page of ["/", "/celestedle.html"]) {
+    const res = await api.request("GET", page, { headers: { Host: "example.test" } });
+    assert.equal(res.status, 200);
+    assert.match(res.data, /<meta property="og:image" content="http:\/\/[^"]+\/assets\/og\.png" \/>/);
+  }
+  // L'accueil est le menu ; l'ancienne adresse du menu y renvoie
+  assert.match((await api.request("GET", "/")).data, /id="journal-wrap"|data-screen="title"/);
+  assert.match((await api.request("GET", "/menu.html")).data, /location\.replace\("index\.html"/);
 });

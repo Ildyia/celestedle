@@ -88,7 +88,7 @@ async function init() {
   hintPicker.setData({ synonyms: synonyms.all() });
   bindSynonymsModal(synonyms, getElements);
 
-  // index.html?duel=<id> : la page joue un duel (js/duel.js)
+  // celestedle.html?duel=<id> : la page joue un duel (js/duel.js)
   const duel = duelId();
   const game = new Game({
     synonyms,
@@ -121,7 +121,7 @@ async function init() {
     player.load()
   ]);
   elements = loadedElements;
-  // Liens du menu vers ces fenêtres : index.html#leaderboard, #bug, #profile
+  // Liens du menu vers ces fenêtres : celestedle.html#leaderboard, #bug, #profile
   const fromMenu = { "#leaderboard": leaderboard, "#bug": reports, "#profile": profile }[location.hash];
   if (fromMenu) {
     history.replaceState(null, "", location.pathname + location.search);

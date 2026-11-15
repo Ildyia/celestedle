@@ -2787,7 +2787,7 @@ body.hard-mode #game-status {
 .trophy { display: inline-block; margin-left: .3em; font-size: .95em; line-height: 1; vertical-align: -.1em; cursor: help; }
 img.trophy { width: 1.1em; height: 1.1em; object-fit: contain; image-rendering: pixelated; }
 
-/* ===== Duel (index.html?duel=…, js/duel.js) ===== */
+/* ===== Duel (celestedle.html?duel=…, js/duel.js) ===== */
 /* Pas de choix de mode ni d'autres jeux pendant un duel */
 html.duel :is(#mode-switch, .game-tab-list, #stats-sidebar, #next-word-timer) { display: none !important; }
 /* Avant le début du duel : pas de plateau */
@@ -2818,8 +2818,9 @@ html.duel:not(.duel-started) :is(#game-status, #guess-form, #guesses-table, #act
 .duel-result { margin-top: 14px; padding: 12px; border-radius: 10px; text-align: center; background: rgba(255, 255, 255, .08); }
 .duel-result.won { background: rgba(16, 185, 129, .2); }
 .duel-result.lost { background: rgba(239, 68, 68, .18); }
-.duel-result h2 { font-size: 24px; margin-bottom: 4px; color: inherit; }
-.duel-result.won h2 { color: #6ee7b7; }
-.duel-result.lost h2 { color: #fca5a5; }
+/* !important : l'interface Modern colore tous les titres h2 */
+.duel-result h2 { font-size: 24px; margin-bottom: 4px; color: #fff !important; -webkit-text-fill-color: currentColor !important; background: none !important; text-shadow: 0 2px 0 rgba(0, 0, 0, .35); }
+.duel-result.won h2 { color: #6ee7b7 !important; }
+.duel-result.lost h2 { color: #fca5a5 !important; }
 .duel-actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
 .duel-actions .duel-back { margin: 0; }

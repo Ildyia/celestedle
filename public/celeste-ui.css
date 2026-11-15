@@ -101,7 +101,7 @@ button { font: inherit; color: inherit; }
    Placé avant la neige, pour ne pas recouvrir les flocons animés. */
 #dim { position: absolute; inset: 0; background: #05040f; opacity: 0; transition: opacity 1.2s; }
 
-/* Petits drapeaux des jeux (menu.html), placés en % du dessin par --x / --y.
+/* Petits drapeaux des jeux (index.html), placés en % du dessin par --x / --y.
    Un jeu auquel le joueur n'a pas accès n'a pas de drapeau (body[data-games]). */
 .game-flag { position: absolute; left: calc(var(--x) / 1600 * 100%); top: calc(var(--y) / 700 * 100%); width: calc(38 / 1600 * 100%); height: calc(56 / 700 * 100%); overflow: visible; }
 /* Liseré sombre : le drapeau se détache du ciel à toute heure */

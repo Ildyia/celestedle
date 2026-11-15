@@ -4,7 +4,7 @@
 // montagne au sommet, et le repère de la carte du jeu marque le chapitre en cours.
 // Le serveur calcule la progression (src/services/chapters.js, envoyée avec
 // les achievements) ; ici, on place les repères et on dessine.
-// Pour voir un autre état sans le jouer : menu.html?chapter=3&berries=14
+// Pour voir un autre état sans le jouer : index.html?chapter=3&berries=14
 
 // x / y : position du repère dans le dessin de la montagne (1600 × 700).
 // Les noms et les seuils sont ceux du serveur (ils servent ici à l'aperçu).

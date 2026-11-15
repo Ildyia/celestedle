@@ -22,7 +22,7 @@ function securityHeaders(req, res, next) {
 // Aperçu de lien (Discord…) : l'image doit être donnée par une adresse
 // complète. On l'ajoute au <head> des pages à l'envoi, d'après l'adresse
 // demandée : pas de nom de domaine à configurer, la bêta a la sienne.
-const LINK_PREVIEW_PAGES = ["index.html", "menu.html", "connections.html", "techs.html"];
+const LINK_PREVIEW_PAGES = ["index.html", "celestedle.html", "connections.html", "techs.html"];
 const pageCache = new Map();
 
 function sendPageWithPreview(req, res, next) {

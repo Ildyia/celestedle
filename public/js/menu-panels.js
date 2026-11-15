@@ -1,6 +1,6 @@
 // Fenêtres de la page de jeu (profil, classements, signalement de bug)
 // ouvertes directement dans le menu, sans quitter l'écran.
-// Leur HTML vit dans index.html : on l'y prend au premier besoin (une seule
+// Leur HTML vit dans celestedle.html : on l'y prend au premier besoin (une seule
 // source à maintenir), puis on branche les mêmes modules que la page de jeu.
 import { api } from "./api.js";
 import { bindModalClosing } from "./dom.js";
@@ -13,7 +13,7 @@ const MODAL_IDS = ["profile-modal", "leaderboard-modal", "bug-modal"];
 let loading = null;
 
 async function load() {
-  const html = await fetch("index.html").then((r) => r.text());
+  const html = await fetch("celestedle.html").then((r) => r.text());
   const doc = new DOMParser().parseFromString(html, "text/html");
   for (const id of MODAL_IDS) {
     const node = doc.getElementById(id);

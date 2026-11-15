@@ -3,7 +3,7 @@
 // et au centre une image du jeu, en couleur.
 // Chaque tampon illustre l'achievement de même identifiant, calculé par le
 // serveur (src/services/achievements.js, GET /players/me/achievements).
-// Pour voir le rendu de tous les tampons : menu.html?stamps=all
+// Pour voir le rendu de tous les tampons : index.html?stamps=all
 
 // Du plus rare au plus courant (les plus rares prennent les grandes places
 // du ticket, voir TICKET_SLOTS). `image` : image du jeu au centre, dans

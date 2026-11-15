@@ -491,7 +491,7 @@ const GAMES = [
     id: "celestedle",
     title: "Celestedle",
     icon: "assets/entities/winged-strawberry.png",
-    page: "index.html",
+    page: "celestedle.html",
     modes: { a: "normal", b: "hard" },
     desc: {
       a: "Guess today's Celeste entity. Each guess shows which details match.",
@@ -1281,7 +1281,7 @@ function renderMap() {
 // dernier chapitre vu dans ce navigateur ; au-delà, carte postale avec le
 // portrait et la couleur débloqués, puis la caméra recule et le repère
 // monte jusqu'au nouveau repère.
-// Pour la voir sans jouer : menu.html?chapter=3&from=2
+// Pour la voir sans jouer : index.html?chapter=3&from=2
 let pendingChapter = null;
 
 function noteChapter(climb) {
@@ -1390,9 +1390,9 @@ async function start() {
   await player.load();
   // Sans jeton, player.load ne prévient pas : on charge quand même les jeux
   if (!player.profile) loadGames();
-  // Retour d'une page de jeu (menu.html#modes) : droit au choix du jeu, sans
+  // Retour d'une page de jeu (index.html#modes) : droit au choix du jeu, sans
   // repasser par l'écran titre
-  // Lien « menu.html?player=… » des classements des pages de jeu
+  // Lien « index.html?player=… » des classements des pages de jeu
   const wanted = new URLSearchParams(location.search).get("player");
   if (wanted) openPlayerCard(wanted);
   if (location.hash === "#modes" && player.profile && screen === "title") {
