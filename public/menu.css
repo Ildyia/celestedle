@@ -264,7 +264,7 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
 .journal-wrap[hidden] { display: none; }
 .journal {
   --j-ink: #3a3350; --j-soft: #7d7592; --j-line: rgba(90, 120, 170, .18);
-  position: relative; width: min(700px, calc(100% - 40px)); min-height: min(520px, 80vh); max-height: 88vh;
+  position: relative; width: min(700px, calc(100% - 40px)); min-height: min(600px, 88vh); max-height: 88vh;
   display: flex; flex-direction: column; padding: 30px 34px 18px 58px; color: var(--j-ink); border-radius: 4px 10px 10px 4px;
   background:
     linear-gradient(90deg, transparent 40px, rgba(214, 80, 90, .45) 40px 42px, transparent 42px),
@@ -274,10 +274,13 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
   transform: rotate(-1deg); animation: fade .3s ease-out;
 }
 /* Onglets marque-page qui dépassent du bord droit */
-.journal-tabs { position: absolute; top: 34px; right: -38px; display: flex; flex-direction: column; gap: 6px; }
+/* La colonne ne dépasse jamais le bas du livre : sur un écran peu haut, les
+   onglets se resserrent (le texte trop long est coupé par « … ») */
+.journal-tabs { position: absolute; top: 24px; bottom: 16px; right: -38px; display: flex; flex-direction: column; gap: 5px; pointer-events: none; }
 .journal-tab {
-  width: 42px; padding: 12px 0; border: none; border-radius: 0 8px 8px 0; cursor: pointer; writing-mode: vertical-rl;
-  font-size: 13px; letter-spacing: 1px; color: #fff; text-shadow: 0 1px 0 rgba(0, 0, 0, .4);
+  flex: 0 1 auto; min-height: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; pointer-events: auto;
+  width: 42px; padding: 10px 0; border: none; border-radius: 0 8px 8px 0; cursor: pointer; writing-mode: vertical-rl;
+  font-size: 13px; letter-spacing: .5px; color: #fff; text-shadow: 0 1px 0 rgba(0, 0, 0, .4);
   background: var(--tab, #8a7fb0); filter: brightness(.82); transform: translateX(-6px); transition: transform .15s, filter .15s;
 }
 .journal-tab:nth-child(1) { --tab: #d1566a; }
@@ -286,6 +289,8 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
 .journal-tab:nth-child(4) { --tab: #e0a63a; }
 .journal-tab:nth-child(5) { --tab: #5fae6a; }
 .journal-tab.active, .journal-tab:hover { filter: none; transform: none; }
+/* Écran peu haut : onglets plus petits */
+@media (max-height: 640px) and (min-width: 701px) { .journal-tab { font-size: 11px; padding: 7px 0; letter-spacing: 0; } }
 .journal-close { position: absolute; top: 10px; right: 12px; width: 32px; height: 32px; border: none; border-radius: 50%; background: rgba(58, 51, 80, .12); color: var(--j-ink); cursor: pointer; font-size: 16px; }
 .journal-page { flex: 1; overflow: auto; padding-bottom: 22px;
   -webkit-mask: linear-gradient(#000 calc(100% - 26px), transparent); mask: linear-gradient(#000 calc(100% - 26px), transparent); }
