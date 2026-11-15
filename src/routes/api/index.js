@@ -13,6 +13,7 @@ router.use(require("./leaderboard"));
 router.use(require("./reports"));
 router.use(require("./connections"));
 router.use(require("./techs"));
+router.use(require("./duels"));
 router.use(require("./admin-techs"));
 router.use(require("./admin"));
 router.use(notFound);
