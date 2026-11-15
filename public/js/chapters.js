@@ -17,12 +17,38 @@ export const CHAPTERS = [
   { name: "Reflection", berries: 70, x: 800, y: 352 },
   { name: "The Summit", berries: 100, x: 892, y: 268 },
   // Sur la Lune : le repère est posé sur la lune (#moon, menu.js), le sentier
-  // part du sommet vers le ciel jusqu'à MOON_PATH
+  // part du sommet vers le ciel. La lune bouge à part de la montagne (et
+  // selon la taille de l'écran) : x / y sont une première visée, que
+  // aimAtMoon corrige sur la vraie position de la lune.
   { name: "Farewell", berries: 150, moon: true, x: 1290, y: -40 }
 ];
 const ON_MOUNTAIN = CHAPTERS.filter((c) => !c.moon);
-// Du sommet à la lune
-const MOON_PATH = "M 892 268 Q 1000 60 1290 -40";
+// Du sommet à la lune : courbe qui monte puis s'incline vers (x, y)
+const moonPath = (x, y) => {
+  const top = ON_MOUNTAIN.at(-1);
+  return `M ${top.x} ${top.y} Q ${Math.round(top.x + (x - top.x) * 0.27)} ${Math.round(y + (top.y - y) * 0.3)} ${Math.round(x)} ${Math.round(y)}`;
+};
+const MOON_PATH = moonPath(CHAPTERS.at(-1).x, CHAPTERS.at(-1).y);
+
+/**
+ * Fait finir le sentier du ciel sur la lune. target : point de l'écran
+ * (en pixels) où se trouve le repère de la lune.
+ */
+export function aimAtMoon(svg, target) {
+  const ctm = svg?.getScreenCTM();
+  if (!ctm) return;
+  const point = new DOMPoint(target.x, target.y).matrixTransform(ctm.inverse());
+  for (const path of svg.querySelectorAll(".moon-path")) path.setAttribute("d", moonPath(point.x, point.y));
+  // Feu de camp qui monte jusqu'à la lune (annonce de Farewell)
+  const camp = svg.querySelector(".trail-camp.leaving");
+  if (camp) {
+    const top = ON_MOUNTAIN.at(-1);
+    camp.setAttribute("x", point.x - 44);
+    camp.setAttribute("y", point.y - 74);
+    camp.parentNode.style.setProperty("--dx", `${top.x - point.x}px`);
+    camp.parentNode.style.setProperty("--dy", `${top.y - point.y}px`);
+  }
+}
 
 /** Chapitre atteint avec ce nombre de fraises : 0 (prologue) à 7. */
 export function chapterFor(berries) {
@@ -63,14 +89,14 @@ export function trailSvg(chapter, { from = null } = {}) {
   const toMoon = moving && onMoon;
   const climbed = [was, ...ON_MOUNTAIN.slice(from, chapter)];
   const fresh = moving
-    ? `<mask id="trail-reveal" maskUnits="userSpaceOnUse" x="0" y="-300" width="1600" height="1000">${climbed.length > 1 ? `<polyline class="trail-reveal" pathLength="1" points="${points(climbed)}" />` : ""}${toMoon ? `<path class="trail-reveal" pathLength="1" d="${MOON_PATH}" />` : ""}</mask>
+    ? `<mask id="trail-reveal" maskUnits="userSpaceOnUse" x="-400" y="-1200" width="2400" height="1900">${climbed.length > 1 ? `<polyline class="trail-reveal" pathLength="1" points="${points(climbed)}" />` : ""}${toMoon ? `<path class="trail-reveal moon-path" pathLength="1" d="${MOON_PATH}" />` : ""}</mask>
     ${climbed.length > 1 ? `<polyline class="trail-path walked" mask="url(#trail-reveal)" points="${points(climbed)}" />` : ""}
-    ${toMoon ? `<path class="trail-path to-moon walked" mask="url(#trail-reveal)" d="${MOON_PATH}" />` : ""}`
+    ${toMoon ? `<path class="trail-path to-moon walked moon-path" mask="url(#trail-reveal)" d="${MOON_PATH}" />` : ""}`
     : "";
   const shift = moving ? ` class="trail-camp-move" style="--dx: ${was.x - here.x}px; --dy: ${was.y - here.y}px"` : "";
   return `<svg class="trail${moving ? " advancing" : ""}" viewBox="0 0 1600 700" aria-hidden="true">
     <polyline class="trail-path" points="${points([start, ...ON_MOUNTAIN])}" />
-    <path class="trail-path to-moon${chapter > ON_MOUNTAIN.length && !(moving && from <= ON_MOUNTAIN.length) ? " walked" : ""}" d="${MOON_PATH}" />
+    <path class="trail-path to-moon moon-path${chapter > ON_MOUNTAIN.length && !(moving && from <= ON_MOUNTAIN.length) ? " walked" : ""}" d="${MOON_PATH}" />
     <polyline class="trail-path walked" points="${points(reached)}" />
     ${fresh}
     ${marks}

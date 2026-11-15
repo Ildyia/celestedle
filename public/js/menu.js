@@ -12,7 +12,7 @@ import { rulesSentence } from "./rules-text.js";
 import { CELESTEDLE, TECHS } from "./catalogs.js";
 import { showToast } from "./toast.js";
 import { keySound, playSound } from "./sound.js";
-import { CHAPTERS, chapterProgress, previewChapter, trailSvg } from "./chapters.js";
+import { CHAPTERS, aimAtMoon, chapterProgress, previewChapter, trailSvg } from "./chapters.js";
 import { initNextWordTimer } from "./timer.js";
 import { openPanel, panelOpen } from "./menu-panels.js";
 import { createJournal } from "./journal.js";
@@ -1048,6 +1048,7 @@ function showClimb(climb, from = null, { animate = false } = {}) {
   const drawn = from !== null && !animate ? from : shown.chapter;
   document.querySelector(".mountain-art").insertAdjacentHTML("beforeend", trailSvg(drawn, { from: animate ? from : null }));
   showMoonCamp(drawn, animate && from < drawn);
+  followMoon();
   const progress = chapterProgress(from !== null && !animate ? { ...shown, chapter: from } : shown);
   byId("book-climb-title").textContent = progress.title;
   byId("book-climb-text").textContent = progress.text;
@@ -1069,6 +1070,30 @@ function showMoonCamp(chapter, arriving = false) {
   const reached = chapter >= CHAPTERS.length;
   camp.className = `moon-camp ${reached ? "here" : chapter === CHAPTERS.length - 1 ? "next" : "ahead"}${reached && arriving ? " arriving" : ""}`;
 }
+
+// Le sentier du ciel suit la lune : elle et la montagne bougent chacune de
+// leur côté (écrans, caméra, taille de la fenêtre). On revise pendant leurs
+// transitions, image par image, puis on s'arrête.
+let followUntil = 0;
+function aimMoonNow() {
+  const camp = document.querySelector("#moon .moon-camp");
+  const svg = document.querySelector(".mountain-art .trail");
+  if (!camp || !svg) return;
+  const box = camp.getBoundingClientRect();
+  aimAtMoon(svg, { x: box.left + box.width / 2, y: box.top + box.height * 0.35 });
+}
+function followMoon(ms = 1700) {
+  const running = performance.now() < followUntil;
+  followUntil = Math.max(followUntil, performance.now() + ms);
+  if (running) return;
+  const tick = () => {
+    aimMoonNow();
+    if (performance.now() < followUntil) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+window.addEventListener("resize", () => followMoon(300));
+for (const id of ["mountain", "moon"]) byId(id).addEventListener("transitionrun", () => followMoon());
 
 // ===== Carte =====
 // Toute la montagne (la caméra recule comme pour l'annonce d'un chapitre),

@@ -602,3 +602,7 @@ body.map-open #moon, body.chapter-cam #moon { opacity: 1 !important; }
 /* Les jumelles n'occupent qu'une partie de leur image */
 #to-map img { transform: scale(1.7); }
 .moon-camp i { font-size: clamp(13px, 1.3vw, 18px); }
+
+/* Écran titre : le décor seul, sans le sentier ni les repères */
+.trail, .moon-camp { transition: opacity .6s; }
+body[data-screen="title"]:not(.chapter-cam) :is(.trail, .moon-camp) { opacity: 0; }
