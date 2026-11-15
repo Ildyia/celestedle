@@ -609,8 +609,8 @@ body.map-open #moon, body.chapter-cam #moon { opacity: 1 !important; }
   .map-panel { right: 16px; bottom: 3vh; grid-template-columns: 24px 1fr 24px; padding: 14px 10px; }
   .map-panel h2 { font-size: 22px; }
 }
-/* Les jumelles n'occupent qu'une partie de leur image */
-#to-map img { transform: scale(1.7); }
+/* Repère de la carte : image lisse (pas du pixel art), agrandie un peu */
+#to-map img { image-rendering: auto; transform: scale(1.15); }
 .moon-camp i { font-size: clamp(13px, 1.3vw, 18px); }
 
 /* Écran titre : le décor seul, sans le sentier ni les repères */

@@ -973,6 +973,11 @@ byId("to-options").addEventListener("click", openOptions);
 byId("to-report").addEventListener("click", openReport);
 byId("to-journal").addEventListener("click", openJournal);
 byId("to-map").addEventListener("click", openMap);
+// Retour aux fichiers, comme Échap
+byId("to-files").addEventListener("click", () => {
+  playSound("back");
+  go("files");
+});
 byId("journal-close").addEventListener("click", closeJournal);
 byId("journal-prev").addEventListener("click", () => journal.flip(-1));
 byId("journal-next").addEventListener("click", () => journal.flip(1));
