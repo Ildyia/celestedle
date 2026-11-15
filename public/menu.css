@@ -422,6 +422,8 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
 }
 .postcard-text h2 { font-size: 28px; margin-bottom: 12px; color: #3a3350; }
 .postcard-text p, .postcard-text li { font-size: 15px; line-height: 1.55; }
+/* Note à part, plus discrète (comment la mise à jour a été faite) */
+.postcard-text .postcard-note { margin-top: 12px; padding: 8px 12px; border-left: 3px solid rgba(58, 51, 80, .3); font-size: 13.5px; font-style: italic; color: #5a5370; }
 .postcard-text p + p, .postcard-text ul + p { margin-top: 10px; }
 .postcard-text ul { margin: 8px 0 0 18px; display: grid; gap: 4px; }
 .postcard-sign { text-align: right; font-style: italic; }

@@ -15,7 +15,7 @@ export const KEYS = {
   keyHints: "celestedle_key_hints",
   timeSky: "celestedle_time_sky",
   sounds: "celestedle_sounds",
-  welcomeSeen: "celestedle_welcome_v3",
+  welcomeSeen: "celestedle_welcome_v4",
   seenStamps: "celestedle_seen_stamps",
   seenChapter: "celestedle_seen_chapter"
 };
