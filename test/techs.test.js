@@ -11,6 +11,8 @@ const { startServer } = require("./support/http");
 let api;
 test.before(async () => {
   api = await startServer();
+  // Les techs sont retirées (fermées à tous) : on les rouvre pour tester le jeu
+  require("../src/services/staff").setGameAccess("techs", "public");
 });
 test.after(() => api.close());
 

@@ -768,11 +768,13 @@ test("admin : insights (openers, mots les plus essayés, heures)", async () => {
   assert.equal((await api.request("GET", "/api/admin/insights")).status, 401);
 });
 
-test("techs : réservées à l'équipe admin par défaut", async () => {
+test("techs : retirées, fermées à tous (l'équipe aussi)", async () => {
   const { token } = await api.newPlayer();
   const access = await api.request("GET", "/api/techs-access", { token });
-  assert.equal(access.data.access, "staff");
+  assert.equal(access.data.access, "closed");
   assert.equal(access.data.canPlay, false);
+  const owner = await api.request("GET", "/api/techs-access", { headers: await ownerHeaders() });
+  assert.equal(owner.data.canPlay, false);
   assert.equal((await api.request("GET", "/api/techs/game", { token })).status, 403);
   assert.equal((await api.request("GET", "/api/leaderboard?period=daily&mode=tech", { token })).status, 403);
 });

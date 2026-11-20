@@ -64,7 +64,7 @@ test("générateur : 4 groupes de 4, une seule solution, pas de faux groupe trom
   assert.deepEqual(generatePuzzle(elements, [], seededRandom(7)), generatePuzzle(elements, [], seededRandom(7)));
 });
 
-test("générateur : un tag incomplet ne sert pas de groupe, un tag complet est imposé", () => {
+test("générateur : un tag incomplet ne sert pas de groupe, un tag complet est imposé environ une grille sur deux", () => {
   const elements = elementsRepo.listActive();
   // Un élément de chaque type : un tag d'un seul type ferait doublon avec ce type
   const types = [...new Set(elements.map((e) => e.type))];
@@ -74,11 +74,17 @@ test("générateur : un tag incomplet ne sert pas de groupe, un tag complet est 
   const draft = buildCategories(elements, [{ ...tag, unreviewedIds: [elements[0].id] }]).find((c) => c.key === "tag:1");
   assert.equal(draft.usable, false);
 
-  const puzzle = generatePuzzle(elements, [tag], seededRandom(3));
-  const tagGroup = puzzle.groups.find((g) => g.kind === "tag");
-  assert.ok(tagGroup, "un groupe tag est imposé quand c'est possible");
-  assert.equal(tagGroup.label, "Shiny");
-  assert.ok(tagGroup.elementIds.every((id) => members.includes(id)));
+  // Sur 20 grilles, le tag sort souvent (imposé une fois sur deux environ)
+  // mais pas toujours : imposé chaque jour, il revenait sans cesse
+  let withTag = 0;
+  for (let seed = 1; seed <= 20; seed++) {
+    const tagGroup = generatePuzzle(elements, [tag], seededRandom(seed)).groups.find((g) => g.kind === "tag");
+    if (!tagGroup) continue;
+    withTag++;
+    assert.equal(tagGroup.label, "Shiny");
+    assert.ok(tagGroup.elementIds.every((id) => members.includes(id)));
+  }
+  assert.ok(withTag >= 6 && withTag <= 18, `tag dans ${withTag} grilles sur 20`);
 });
 
 test("Connections est réservé à l'équipe admin pendant les tests", async () => {
@@ -594,4 +600,23 @@ test("indices : chacun une fois, 3 en normal et 1 en Hard, comptés au classemen
   assert.equal(me.hints, 3);
   assert.equal(me.mistakes, 0);
   assert.equal((await hint("kinds")).status, 409, "partie finie");
+});
+
+test("variété : un seul groupe « Found in … » en normal, et un élément récent sort bien moins souvent", () => {
+  const elements = elementsRepo.listActive();
+  const oshiro = elements.find((e) => e.nom.toLowerCase() === "oshiro");
+  const draw = (seed, recent) =>
+    generatePuzzle(elements, [], seededRandom(seed), { maxTags: 1, maxPerKind: { chapter: 1 }, recent });
+
+  let withOshiro = 0;
+  let withOshiroRecent = 0;
+  const recent = { elements: new Map([[oshiro.id, 1]]), categories: new Map() };
+  for (let seed = 1; seed <= 40; seed++) {
+    const free = draw(seed, null);
+    assert.ok(free.groups.filter((g) => g.kind === "chapter").length <= 1, "au plus un groupe chapitre");
+    if (free.tiles.includes(oshiro.id)) withOshiro++;
+    if (draw(seed, recent).tiles.includes(oshiro.id)) withOshiroRecent++;
+  }
+  // Sorti la veille : il ne revient presque plus le lendemain
+  assert.ok(withOshiroRecent < withOshiro / 2, `${withOshiroRecent} grilles avec Oshiro récent contre ${withOshiro} sans`);
 });

@@ -19,13 +19,15 @@ function isStaff(player) {
 }
 
 // Accès aux jeux en test (Connections, techs), réglé depuis l'admin : équipe
-// seulement, playtest (playtesters et équipe) ou ouvert à tous
-const GAME_ACCESS = ["staff", "playtest", "public"];
+// seulement, playtest (playtesters et équipe), ouvert à tous, ou retiré
+// (« closed » : personne, l'équipe non plus ; les données sont gardées)
+const GAME_ACCESS = ["staff", "playtest", "public", "closed"];
 // standard : accès sans réglage ni variable d'environnement (les techs
 // arrivent réservées à l'équipe admin, le temps de les remplir)
 const ACCESS_SETTINGS = {
   connections: { key: "connections_access", fallback: () => config.connectionsAccess, standard: "playtest" },
-  techs: { key: "techs_access", fallback: () => config.techsAccess, standard: "staff" }
+  // Techs retirées (pas assez fun) : fermées par défaut
+  techs: { key: "techs_access", fallback: () => config.techsAccess, standard: "closed" }
 };
 
 function accessSetting(game) {
@@ -58,6 +60,7 @@ function setGameAccess(game, access) {
 // Sans profil, on ne joue qu'en accès ouvert à tous
 function canPlay(game, player) {
   const access = gameAccess(game);
+  if (access === "closed") return false;
   if (access === "public" || isStaff(player)) return true;
   return access === "playtest" && player?.isPlaytester === true;
 }

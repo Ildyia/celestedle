@@ -66,6 +66,15 @@ function seededRandom(seed) {
   };
 }
 
+// Mélange pondéré (Efraimidis-Spirakis) : un poids fort passe plus souvent
+// en tête, sans jamais exclure un poids faible
+function weightedShuffle(list, weight, random) {
+  return list
+    .map((item) => ({ item, key: -Math.log(1 - random()) / Math.max(weight(item), 1e-6) }))
+    .sort((a, b) => a.key - b.key)
+    .map((x) => x.item);
+}
+
 function shuffle(list, random) {
   const copy = [...list];
   for (let i = copy.length - 1; i > 0; i--) {
@@ -115,16 +124,17 @@ function countSolutions(tileIds, categories) {
 const SAMPLES_PER_CHOICE = 10;
 
 // stats compte les raisons d'échec, pour expliquer une génération impossible
-function tryGroups(chosen, categories, random, rule, stats) {
+function tryGroups(chosen, categories, random, rule, stats, weigh) {
   for (let sample = 0; sample < SAMPLES_PER_CHOICE; sample++) {
-    const found = sampleGroups(chosen, categories, random, rule, stats);
+    const found = sampleGroups(chosen, categories, random, rule, stats, weigh);
     if (found !== undefined) return found;
   }
   return null;
 }
 
 // null : ces catégories ne peuvent pas marcher ; undefined : réessayer d'autres cases
-function sampleGroups(chosen, categories, random, rule, stats) {
+// weigh.element(id) : poids d'un élément à la pioche (voir tryGenerate)
+function sampleGroups(chosen, categories, random, rule, stats, weigh) {
   const tiles = [];
   const groups = [];
   // Types et tags à surveiller pendant la pioche (voir hasObviousDecoy)
@@ -144,7 +154,7 @@ function sampleGroups(chosen, categories, random, rule, stats) {
     // type ou tag hors des groupes, plutôt que de jeter toute la grille à la
     // vérification. Bien plus de grilles strictes, et plus vite.
     const members = [];
-    for (const id of shuffle(pool, random)) {
+    for (const id of weightedShuffle(pool, weigh.element, random)) {
       if (members.length === GROUP_SIZE) break;
       const placed = [...tiles, ...members];
       const makesDecoy = guards.some(
@@ -199,14 +209,48 @@ function hasObviousDecoy(tiles, chosen, categories, rule = "strict") {
 // En dernier recours, le mode normal accepte aussi une grille à faux groupes
 // (rule "none") : mieux vaut une grille imparfaite que pas de grille. La règle
 // utilisée est renvoyée (rule) pour que l'admin le voie.
-function generatePuzzle(elements, tags, random = Math.random, { allowDecoys = false, maxTags = MAX_SAME_KIND } = {}) {
+//
+// Variété (recent) : { elements: Map<id, poids>, categories: Map<clé, poids> },
+// ce qui est sorti les jours précédents (poids plus fort si plus récent).
+// Sans ça, les grilles se répétaient : le générateur garde facilement les
+// éléments qui ne rentrent que dans peu de catégories (Oshiro, Badeline
+// chaser) et écarte presque toujours ceux « à tout faire » (Tiles, Spikes).
+// D'où ces corrections (mesurées sur 120 jours simulés : l'élément le plus
+// fréquent passe de 3 fois à 2 fois la moyenne, et deux fois moins
+// d'éléments repris d'un jour à l'autre) :
+// - catégories et éléments récents moins souvent tirés ;
+// - une catégorie est tirée selon sa taille (taille^1,5) : les petites
+//   imposaient toujours les mêmes membres ;
+// - à la pioche, un élément pèse d'autant plus qu'il a de catégories ;
+// - CANDIDATES grilles valides, et on garde la moins répétitive.
+const CANDIDATES = 6;
+const SIZE_POW = 1.5;
+const TAG_CHANCE = 0.5;
+
+// maxPerKind : nombre de groupes au plus par sorte (chapter, colour…), en plus
+// de MAX_SAME_KIND (ex. { chapter: 1 } : un seul groupe « Found in … »)
+function generatePuzzle(
+  elements,
+  tags,
+  random = Math.random,
+  { allowDecoys = false, maxTags = MAX_SAME_KIND, recent = null, maxPerKind = {} } = {}
+) {
   const rules = allowDecoys ? ["none"] : ["strict", "relaxed", "none"];
   const stats = { incompatible: 0, decoy: 0, multiple: 0 };
   for (const rule of rules) {
-    const puzzle = tryGenerate(elements, tags, random, rule, stats, maxTags);
+    const puzzle = tryGenerate(elements, tags, random, rule, stats, { maxTags, maxPerKind }, recent);
     if (puzzle) return { ...puzzle, rule };
   }
   throw noPuzzleError(elements, tags, stats);
+}
+
+// Répétition d'une grille par rapport aux jours précédents : plus c'est
+// bas, plus elle est neuve
+function repetitionScore(found, recent) {
+  if (!recent) return 0;
+  const element = (id) => recent.elements?.get(id) ?? 0;
+  const category = (key) => recent.categories?.get(key) ?? 0;
+  return found.tiles.reduce((s, id) => s + element(id), 0) + 4 * found.groups.reduce((s, g) => s + category(g.category.key), 0);
 }
 
 // Message détaillé : l'équipe admin le voit dans l'onglet Connections
@@ -222,7 +266,7 @@ function noPuzzleError(elements, tags, stats) {
   );
 }
 
-function tryGenerate(elements, tags, random, rule, stats, maxTags) {
+function tryGenerate(elements, tags, random, rule, stats, { maxTags, maxPerKind }, recent) {
   // Un tag qui ne peut pas servir de groupe (hors limites ou incomplet) ne
   // compte pas non plus dans la vérification : un tag qui couvre presque tout
   // le catalogue rendait toutes les combinaisons de 4 cases valides, et plus
@@ -231,32 +275,49 @@ function tryGenerate(elements, tags, random, rule, stats, maxTags) {
   const usable = categories.filter((c) => c.usable);
   const usableTags = usable.filter((c) => c.kind === "tag");
 
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+  // Poids : une catégorie ou un élément sortis récemment pèsent moins ; un
+  // élément pèse d'autant plus qu'il appartient à de catégories (sinon les
+  // éléments « à tout faire » ne sortent presque jamais)
+  const breadth = new Map(elements.map((e) => [e.id, categories.filter((c) => c.members.has(e.id)).length]));
+  const weigh = {
+    category: (c) => c.members.size ** SIZE_POW / (1 + 3 * (recent?.categories?.get(c.key) ?? 0)),
+    element: (id) => (breadth.get(id) ?? 1) / (1 + 4 * (recent?.elements?.get(id) ?? 0)) ** 2
+  };
+
+  // Un groupe tag n'est imposé qu'une grille sur TAG_CHANCE environ :
+  // imposé chaque jour, les quelques tags complets revenaient sans cesse.
+  // Les autres jours, un tag peut sortir comme n'importe quelle catégorie.
+  const imposeTag = usableTags.length > 0 && random() < TAG_CHANCE;
+  const candidates = [];
+  for (let attempt = 0; attempt < MAX_ATTEMPTS && candidates.length < CANDIDATES; attempt++) {
     // La moitié des essais sans tag imposé, si aucun tirage avec tag n'aboutit
-    const withTag = usableTags.length > 0 && attempt < MAX_ATTEMPTS / 2;
-    const first = withTag ? [usableTags[Math.floor(random() * usableTags.length)]] : [];
+    const withTag = imposeTag && attempt < MAX_ATTEMPTS / 2;
+    const first = withTag ? weightedShuffle(usableTags, weigh.category, random).slice(0, 1) : [];
     // Au plus 2 groupes de la même sorte, pour varier (pas 3 groupes couleur)
     const chosen = [...first];
-    for (const category of shuffle(usable.filter((c) => !first.includes(c)), random)) {
+    for (const category of weightedShuffle(usable.filter((c) => !first.includes(c)), weigh.category, random)) {
       if (chosen.length === GROUP_COUNT) break;
-      const limit = category.kind === "tag" ? maxTags : MAX_SAME_KIND;
+      const limit = category.kind === "tag" ? maxTags : (maxPerKind[category.kind] ?? MAX_SAME_KIND);
       if (chosen.filter((c) => c.kind === category.kind).length < limit) chosen.push(category);
     }
     if (chosen.length < GROUP_COUNT) break;
 
-    const found = tryGroups(chosen, categories, random, rule, stats);
-    if (!found) continue;
-
-    const groups = shuffle(found.groups, random).map((g, level) => ({
-      key: g.category.key,
-      kind: g.category.kind,
-      label: g.category.label,
-      level,
-      elementIds: g.elementIds
-    }));
-    return { groups, tiles: shuffle(found.tiles, random) };
+    const found = tryGroups(chosen, categories, random, rule, stats, weigh);
+    if (found) candidates.push(found);
+    // Sans historique, la première grille valide suffit
+    if (found && !recent) break;
   }
-  return null;
+  if (!candidates.length) return null;
+
+  const best = candidates.reduce((a, b) => (repetitionScore(b, recent) < repetitionScore(a, recent) ? b : a));
+  const groups = shuffle(best.groups, random).map((g, level) => ({
+    key: g.category.key,
+    kind: g.category.kind,
+    label: g.category.label,
+    level,
+    elementIds: g.elementIds
+  }));
+  return { groups, tiles: shuffle(best.tiles, random) };
 }
 
 module.exports = {

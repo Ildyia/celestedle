@@ -4,7 +4,7 @@ const db = require("../db");
 const elementsRepo = require("../repositories/elements");
 const repo = require("../repositories/connections");
 const { HttpError } = require("../utils/http-error");
-const { todayParis, nowIso, secondsBetween } = require("../utils/dates");
+const { todayParis, nowIso, secondsBetween, addDays } = require("../utils/dates");
 const { GROUP_SIZE, GROUP_COUNT, buildCategories, generatePuzzle, seededRandom } = require("./connections-generator");
 
 const MAX_MISTAKES = 4;
@@ -43,21 +43,46 @@ function seedFor(key) {
   return crypto.createHash("sha256").update(`connections|${key}|${config.randomSeed ?? ""}`).digest().readUInt32LE(0);
 }
 
-function generate(mode, random) {
+// Mode normal : un seul groupe « Found in … » (les plus durs à deviner)
+const MAX_PER_KIND = { normal: { chapter: 1 }, hard: {} };
+
+// Variété : ce qui est sorti les RECENT_DAYS jours avant `date` (les deux
+// modes), pesant d'autant plus que c'est récent (RECENT_DECAY par jour), et
+// la grille de l'autre mode du même jour, si elle existe déjà
+const RECENT_DAYS = 30;
+const RECENT_DECAY = 0.85;
+function recentFor(date, mode) {
+  const recent = { elements: new Map(), categories: new Map() };
+  const add = (puzzle, weight) => {
+    if (!puzzle) return;
+    for (const id of puzzle.tiles) recent.elements.set(id, (recent.elements.get(id) ?? 0) + weight);
+    for (const g of puzzle.groups) recent.categories.set(g.key, (recent.categories.get(g.key) ?? 0) + weight);
+  };
+  add(repo.findPuzzle(dailyKey(mode === "hard" ? "normal" : "hard", date)), 1);
+  for (let ago = 1; ago <= RECENT_DAYS; ago++) {
+    const day = addDays(date, -ago);
+    for (const m of MODES) add(repo.findPuzzle(dailyKey(m, day)), RECENT_DECAY ** (ago - 1));
+  }
+  return recent;
+}
+
+function generate(mode, random, date = todayParis()) {
   return generatePuzzle(elementsRepo.listActive(), repo.listTags(), random, {
     allowDecoys: mode === "hard",
-    maxTags: MAX_TAGS[mode]
+    maxTags: MAX_TAGS[mode],
+    maxPerKind: MAX_PER_KIND[mode],
+    recent: recentFor(date, mode)
   });
 }
 
 function getPuzzle(date = todayParis(), mode = "normal") {
   const key = dailyKey(checkMode(mode), date);
-  return repo.findPuzzle(key) ?? repo.createPuzzleIfMissing(key, generate(mode, seededRandom(seedFor(key))), nowIso());
+  return repo.findPuzzle(key) ?? repo.createPuzzleIfMissing(key, generate(mode, seededRandom(seedFor(key)), date), nowIso());
 }
 
 // Nouvelle grille tirée par l'admin : les parties du jour repartent de zéro
 function regeneratePuzzle(date, mode = "normal") {
-  return repo.replacePuzzle(dailyKey(checkMode(mode), date), generate(mode, Math.random), nowIso());
+  return repo.replacePuzzle(dailyKey(checkMode(mode), date), generate(mode, Math.random, date), nowIso());
 }
 
 // Grille d'entraînement d'un joueur (playtest) : rangée avec les grilles du

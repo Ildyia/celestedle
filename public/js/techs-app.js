@@ -121,7 +121,11 @@ async function init() {
   player.onChange(showAdmin);
 
   const { canPlay } = await api.techsAccess().catch(() => ({ canPlay: false }));
-  if (!canPlay) return showLocked();
+  // Techs retirées ou pas encore ouvertes : retour au menu (en Classic, au jeu)
+  if (!canPlay) {
+    if (document.documentElement.classList.contains("ui-modern")) return location.replace("index.html#modes");
+    return showLocked();
+  }
 
   const list = await api.techsList().catch(() => ({ techs: [], aliases: {} }));
   for (const tech of list.techs) if (tech.hasMedia) withMedia.add(tech.nom);
