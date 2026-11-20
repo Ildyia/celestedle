@@ -10,6 +10,9 @@ const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const pct = (part, total) => (total ? `${Math.round((part / total) * 100)}%` : "-");
 const HINT_NAMES = { opposite: "Opposite", secret_info: "Secret info", truth_and_lies: "Truth & lies", info: "Element Info" };
 const STATUS_NAMES = { won: "Won", lost: "Lost", forfeit: "Gave up" };
+const CX_HINT_NAMES = { kinds: "Kinds", category: "Category", pair: "Pair" };
+const KIND_NAMES = { type: "Type", colour: "Colour", shape: "Shape", chapter: "Chapter", tag: "Tag" };
+const SIDES = { normal: "A-Side", hard: "B-Side" };
 
 function card(title, note, ...content) {
   return el("section", { className: "admin-card insights-card" }, [el("h3", { text: title }), note ? el("p", { className: "small-subtext", text: note }) : null, ...content]);
@@ -31,7 +34,7 @@ function openersTable(rows) {
 }
 
 // Barres horizontales : libellé, barre, valeur
-function hbars(rows, { label, value, title = (r) => `${label(r)}: ${value(r)}`, none }) {
+function hbars(rows, { label, value, format = String, title = (r) => `${label(r)}: ${format(value(r))}`, none }) {
   if (!rows.length) return empty(none);
   const max = Math.max(1, ...rows.map(value));
   return el(
@@ -41,7 +44,7 @@ function hbars(rows, { label, value, title = (r) => `${label(r)}: ${value(r)}`, 
       el("div", { className: "insights-hbar", attrs: { title: title(r) } }, [
         el("span", { className: "insights-label" }, [label(r)]),
         el("span", { className: "insights-track" }, [el("i", { attrs: { style: `width: ${(value(r) / max) * 100}%` } })]),
-        el("span", { className: "insights-value", text: String(value(r)) })
+        el("span", { className: "insights-value", text: format(value(r)) })
       ])
     )
   );
@@ -73,6 +76,33 @@ function outcomes(rows) {
   }));
 }
 
+// Connections, un mode : issues, erreurs des victoires, réussite par sorte
+function cxModeCard(mode, m) {
+  if (!m) return card(`Connections · ${SIDES[mode]}`, null, empty());
+  const finished = m.outcomes.won + m.outcomes.lost;
+  return card(
+    `Connections · ${SIDES[mode]}`,
+    `Wins by mistakes made; ${pct(m.hints, finished)} of finished grids used a hint.`,
+    columns(m.mistakes, ["0", "1", "2", "3", "4"], { title: (l, v) => `${v} win${v === 1 ? "" : "s"} with ${l} mistake${l === "1" ? "" : "s"}` }),
+    el("p", { className: "insights-outcomes" }, ["won", "lost"].map((s) => el("span", {}, [el("strong", { text: String(m.outcomes[s]) }), ` ${STATUS_NAMES[s]} (${pct(m.outcomes[s], finished)})`]))),
+    el("p", { className: "small-subtext", text: "Groups found, by kind (share of finished grids where the group was found):" }),
+    hbars(m.kinds, { label: (k) => KIND_NAMES[k.kind] ?? k.kind, value: (k) => Math.round((k.found / k.seen) * 100), format: (v) => `${v}%`, title: (k) => `${KIND_NAMES[k.kind] ?? k.kind}: found ${k.found} times out of ${k.seen}` })
+  );
+}
+
+function hardestTable(rows) {
+  if (!rows.length) return empty("Not enough players per grid yet.");
+  return el("table", { className: "admin-table compact" }, [
+    el("thead", {}, [el("tr", {}, ["Group", "Kind", "Grid", "Found"].map((t) => el("th", { text: t })))]),
+    el("tbody", {}, rows.map((r) => el("tr", {}, [
+      el("td", { text: r.label }),
+      el("td", { text: KIND_NAMES[r.kind] ?? r.kind }),
+      el("td", { text: `${r.date} · ${SIDES[r.mode]}` }),
+      el("td", { text: `${pct(r.found, r.players)} (${r.found}/${r.players})` })
+    ])))
+  ]);
+}
+
 export class InsightsTab {
   constructor() {
     this.days = "30";
@@ -99,13 +129,26 @@ export class InsightsTab {
       card("Wins by tries · A-Side", "A hint counts as a try.", triesColumns(data.tries.normal), outcomes(data.outcomes.normal)),
       card("Wins by tries · B-Side", null, triesColumns(data.tries.hard), outcomes(data.outcomes.hard)),
       card(
-        "Hints",
+        "Hints · Celestedle",
         `${pct(hintsTotal.withHints ?? 0, hintsTotal.games)} of finished games used at least one hint.`,
         hbars(data.hints, { label: (r) => HINT_NAMES[r.type] ?? r.type, value: (r) => r.uses, none: "No hint used in this period." })
       ),
+      cxModeCard("normal", data.connections.modes.normal),
+      cxModeCard("hard", data.connections.modes.hard),
+      card("Hardest Connections groups", "Lowest share of players who found the group (grids with 3 players or more).", hardestTable(data.connections.hardest)),
+      card(
+        "Connections decoys",
+        "Entities most often put in a wrong group of 4.",
+        hbars(data.connections.decoys, { label: (r) => capitalize(r.name), value: (r) => r.times, none: "No mistakes in this period." })
+      ),
+      card(
+        "Connections hints",
+        null,
+        hbars(data.connections.hints, { label: (r) => CX_HINT_NAMES[r.type] ?? r.type, value: (r) => r.uses, none: "No hint used in this period." })
+      ),
       card(
         "When people finish",
-        "Finished Celestedle games by hour, Paris time.",
+        "Finished Celestedle and Connections games by hour, Paris time.",
         columns(data.hours, data.hours.map((_, h) => (h % 3 === 0 ? `${h}h` : "")), { title: (_, v) => `${v} games` })
       ),
       card(

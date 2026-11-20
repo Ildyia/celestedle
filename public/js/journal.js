@@ -233,8 +233,8 @@ export function createJournal({ getContext, onPlayer }) {
   }
 
   // ===== Page Stamps : les achievements =====
-  // Un tampon pas encore gagné reste secret : cercle vide, « ??? », ni
-  // description ni progression
+  // Un tampon pas encore gagné : cercle vide et son nom seul, comme indice
+  // (le serveur n'envoie pas sa description)
   function stampBadge(stamp, earned) {
     const node = el("span", { className: `stamp-badge${earned ? "" : " secret"}` });
     if (stamp && earned) node.innerHTML = stampSvg(stamp);
@@ -267,8 +267,8 @@ export function createJournal({ getContext, onPlayer }) {
           return el("div", { className: `stamp-row${a.earned ? " earned" : ""}` }, [
             stampBadge(stamp, a.earned),
             el("div", { className: "stamp-text" }, [
-              el("strong", { text: a.earned ? a.name : "???" }),
-              el("span", { text: a.earned ? a.description : "A secret stamp. Keep climbing to find it!" })
+              el("strong", { text: a.name }),
+              el("span", { text: a.earned ? a.description : "Not found yet: the name is your only clue." })
             ]),
             el("span", { className: "stamp-state", text: a.earned ? "✓" : "" })
           ]);

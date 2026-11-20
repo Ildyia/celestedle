@@ -165,9 +165,11 @@ const ACHIEVEMENTS = [
 
 function playerAchievements(player) {
   const games = allGames(player.id);
+  // Pas encore gagné : le nom seul sert d'indice, la description reste cachée
   return ACHIEVEMENTS.map(({ id, name, description, progress }) => {
     const [current, goal] = progress(games);
-    return { id, name, description, current: Math.min(current, goal), goal, earned: current >= goal };
+    const earned = current >= goal;
+    return { id, name, description: earned ? description : null, current: Math.min(current, goal), goal, earned };
   });
 }
 

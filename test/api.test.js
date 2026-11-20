@@ -102,6 +102,8 @@ test("achievements : rien au départ, tampons gagnés par les victoires", async 
   let list = await earned();
   assert.equal(Object.keys(list).length, 10);
   assert.ok(Object.values(list).every((a) => !a.earned && a.current === 0));
+  // Pas encore gagné : le nom comme indice, pas la description
+  assert.ok(Object.values(list).every((a) => a.name && a.description === null));
 
   // Victoire en Normal au premier essai : première fraise seulement
   const secret = daily.getTodaySecret("normal").element.nom;

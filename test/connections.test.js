@@ -5,6 +5,7 @@ const assert = require("node:assert/strict");
 const db = require("../src/db");
 const elementsRepo = require("../src/repositories/elements");
 const connections = require("../src/services/connections");
+const connectionsRepo = require("../src/repositories/connections");
 const {
   buildCategories,
   countSolutions,
@@ -496,7 +497,8 @@ test("grille remplacée pendant la partie : le joueur est prévenu au lieu d'une
 test("faux groupe : 4 cases qui partagent une catégorie sans être un groupe sont signalées", async () => {
   const token = await newAdministrator();
   const me = (await api.request("GET", "/api/players/me", { token })).data.player;
-  const categories = buildCategories(elementsRepo.listActive(), []);
+  // Avec les tags créés par les autres tests : le serveur les compte aussi
+  const categories = buildCategories(elementsRepo.listActive(), connectionsRepo.listTags());
   // Grilles Hard d'entraînement tirées jusqu'à en avoir une avec un faux groupe
   for (let draw = 0; draw < 50; draw++) {
     await api.request("POST", "/api/connections/practice", { token, body: { mode: "hard" } });
@@ -513,9 +515,13 @@ test("faux groupe : 4 cases qui partagent une catégorie sans être un groupe so
     const names = pick.four.map((id) => elementsRepo.findById(id).nom);
     const res = await api.request("POST", "/api/connections/guess", { token, body: { names, mode: "hard", practice: true } });
     assert.equal(res.status, 200, JSON.stringify(res.data));
-    // Plus de 4 cases ont ce point commun : l'une des 4 est d'un autre groupe
-    // (le message le dit) ; sinon, c'est un vrai faux groupe
-    if (pick.all.length > 4) {
+    // Plus de 4 cases ont un point commun des 4 (celui choisi ou un autre, un
+    // tag par exemple) : l'une des 4 est d'un autre groupe (le message le
+    // dit) ; sinon, c'est un vrai faux groupe
+    const widest = Math.max(
+      ...categories.filter((c) => pick.four.every((id) => c.members.has(id))).map((c) => tiles.filter((id) => c.members.has(id)).length)
+    );
+    if (widest > 4) {
       assert.equal(res.data.result, "too_many");
       assert.ok(res.data.sharedBy > 4);
     } else assert.equal(res.data.result, "decoy");
@@ -619,4 +625,25 @@ test("variété : un seul groupe « Found in … » en normal, et un élément r
   }
   // Sorti la veille : il ne revient presque plus le lendemain
   assert.ok(withOshiroRecent < withOshiro / 2, `${withOshiroRecent} grilles avec Oshiro récent contre ${withOshiro} sans`);
+});
+
+test("insights : Connections (issues, erreurs, sortes de groupes, pièges)", async () => {
+  const token = await newAdministrator();
+  const puzzle = connections.getPuzzle();
+  const names = (ids) => ids.map((id) => elementsRepo.findById(id).nom);
+  const groups = puzzle.groups.map((g) => names(g.elementIds));
+  const before = (await api.request("GET", "/api/admin/insights?days=7", { token: await owner() })).data.connections;
+  const wonBefore = before.modes.normal?.outcomes.won ?? 0;
+
+  const wrong = await api.request("POST", "/api/connections/guess", { token, body: { names: groups.map((g) => g[0]) } });
+  assert.equal(wrong.status, 200, JSON.stringify(wrong.data));
+  for (const g of groups) await api.request("POST", "/api/connections/guess", { token, body: { names: g } });
+
+  const after = (await api.request("GET", "/api/admin/insights?days=7", { token: await owner() })).data.connections;
+  const m = after.modes.normal;
+  assert.equal(m.outcomes.won, wonBefore + 1);
+  assert.ok(m.mistakes.reduce((a, b) => a + b, 0) >= 1);
+  assert.equal(m.kinds.reduce((s, k) => s + k.seen, 0), (wonBefore + 1 + m.outcomes.lost) * 4);
+  assert.ok(after.decoys.length > 0);
+  assert.ok(Array.isArray(after.hardest));
 });
