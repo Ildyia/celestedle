@@ -1715,31 +1715,6 @@ input[type="checkbox"]:not(.switch input):checked::after {
   }
 }
 
-/* Techs : 6 colonnes (Nom, Category, Difficulty, Utility, Dash, Hardcoded) */
-@media (max-width: 600px) {
-  #guesses-table.techs-table th:nth-child(1) {
-    width: 19%;
-  }
-
-  #guesses-table.techs-table th:nth-child(2),
-  #guesses-table.techs-table th:nth-child(6) {
-    width: 16%;
-  }
-
-  #guesses-table.techs-table th:nth-child(3),
-  #guesses-table.techs-table th:nth-child(4) {
-    width: 18%;
-  }
-
-  #guesses-table.techs-table th:nth-child(5) {
-    width: 13%;
-  }
-
-  #guesses-table.techs-table th,
-  #guesses-table.techs-table td {
-    font-size: 0.52rem;
-  }
-}
   
 /* ==========================================================================
    14. CELESTEDLE 2.0 COMPONENTS

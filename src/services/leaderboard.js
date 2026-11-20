@@ -11,7 +11,6 @@ const PERIODS = ["daily", "weekly", "global"];
 const LIMIT = 50;
 // Classements du jour : un par mode ; « cx-… » pour Connections
 const CONNECTIONS_BOARDS = { "cx-normal": "normal", "cx-hard": "hard" };
-const TECH_BOARDS = ["tech", "tech-hard"];
 
 function toEntry(row, playerId) {
   return {
@@ -33,10 +32,7 @@ function dailyBoard(board, player) {
     const top = connections.leaderboard(playerId, CONNECTIONS_BOARDS[board]);
     return { period: "daily", mode: board, range, top, me: top.find((e) => e.isMe) ?? null, oneShots: [] };
   }
-  if (TECH_BOARDS.includes(board) && !staff.canPlay("techs", player)) {
-    throw new HttpError(403, "This mode isn't open yet.");
-  }
-  const mode = TECH_BOARDS.includes(board) ? { id: board } : getMode(board);
+  const mode = getMode(board);
   const entries = statsRepo.dailyLeaderboard(today, mode.id, playerId).map((row) => toEntry(row, playerId));
   return {
     period: "daily",

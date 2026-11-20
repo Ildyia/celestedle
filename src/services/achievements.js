@@ -7,7 +7,6 @@ const statsRepo = require("../repositories/stats");
 const staff = require("./staff");
 const { streaks } = require("./players");
 const { getModeRules } = require("./mode-rules");
-const techs = require("./techs");
 const connections = require("./connections");
 const { climbOf } = require("./chapters");
 
@@ -16,10 +15,13 @@ const STRAWBERRIES_100 = 175;
 const STRAWBERRIES_MAX = 202;
 const SPEEDRUN_SECONDS = 5 * 60;
 
+// Indices « normaux » des techs, mode retiré dont les parties comptent encore
+const TECHS_MAX_HINTS = { a: 3, b: 1 };
+
 // Indices « normaux » autorisés dans un mode (sans Element Info)
 function maxHintsOf(game, side) {
   if (game === "connections") return connections.MAX_HINTS[side === "b" ? "hard" : "normal"];
-  if (game === "techs") return techs.getRules(side === "b" ? "tech-hard" : "tech").maxHints;
+  if (game === "techs") return TECHS_MAX_HINTS[side];
   return getModeRules(side === "b" ? "hard" : "normal").maxHints;
 }
 
@@ -62,7 +64,6 @@ function allGames(playerId) {
 function publicModes() {
   const modes = ["celestedle|a", "celestedle|b"];
   if (staff.gameAccess("connections") === "public") modes.push("connections|a", "connections|b");
-  if (staff.gameAccess("techs") === "public") modes.push("techs|a", "techs|b");
   return modes;
 }
 
@@ -138,6 +139,7 @@ const ACHIEVEMENTS = [
     description: "Win 7 days in a row on the same game and side.",
     progress: (games) => {
       let best = 0;
+      // Techs : mode retiré, ses séries passées comptent encore
       for (const game of ["celestedle", "connections", "techs"]) {
         for (const side of ["a", "b"]) {
           const dates = games.filter((g) => g.won && g.game === game && g.side === side).map((g) => g.date).sort();

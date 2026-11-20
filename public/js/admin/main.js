@@ -9,7 +9,6 @@ import { InsightsTab } from "./insights.js";
 import { ElementsTab } from "./elements.js";
 import { ReportsTab } from "./reports.js";
 import { ConnectionsTab } from "./connections.js";
-import { TechsTab } from "./techs.js";
 import { TeamTab } from "./team.js";
 import { PlayersTab } from "./players.js";
 import { bindSettings } from "./settings.js";
@@ -31,7 +30,6 @@ const insights = new InsightsTab();
 const elements = new ElementsTab({ notify });
 const reports = new ReportsTab({ notify });
 const connectionsTab = new ConnectionsTab({ notify });
-const techsTab = new TechsTab({ notify });
 const team = new TeamTab({ notify });
 const playersTab = new PlayersTab({ notify, getRole: () => currentRole });
 const loadSettings = bindSettings({ notify });
@@ -44,7 +42,6 @@ const TABS = {
   elements: () => elements.load(),
   reports: () => reports.load(),
   connections: () => connectionsTab.load(),
-  techs: () => techsTab.load(),
   settings: () => loadSettings(),
   team: () => team.load(),
   players: () => playersTab.load()

@@ -3,7 +3,6 @@ const { dataPath } = require("../utils/data-dir");
 const { migrate } = require("./migrate");
 const { syncElementsFromJson } = require("./sync-elements");
 const { importLegacyJson } = require("./legacy-import");
-const { seedTechsSafely } = require("./seed-techs");
 
 // DB_PATH=":memory:" pour les tests
 const db = new Database(process.env.DB_PATH || dataPath("celestedle.db"));
@@ -14,6 +13,5 @@ migrate(db);
 // db.json reste la source des éléments qui n'ont pas été modifiés dans l'admin
 syncElementsFromJson(db);
 importLegacyJson(db);
-seedTechsSafely(db);
 
 module.exports = db;

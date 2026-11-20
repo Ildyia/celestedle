@@ -1,6 +1,7 @@
 // Trophées des classements, calculés à partir des parties (rien n'est stocké) :
 // - « Winner » : premier du classement d'un jour terminé, dans un mode
-//   (normal, hard, tech, tech-hard, cx-normal, cx-hard) ;
+//   (normal, hard, cx-normal, cx-hard ; tech et tech-hard, mode retiré,
+//   pour les jours passés) ;
 // - « Champion » : premier du classement d'une semaine terminée (tous les
 //   modes ensemble, comme le classement de la semaine).
 // Ils servent de statistiques au profil et marquent deux joueurs dans les

@@ -768,15 +768,19 @@ test("admin : insights (openers, mots les plus essayés, heures)", async () => {
   assert.equal((await api.request("GET", "/api/admin/insights")).status, 401);
 });
 
-test("techs : retirées, fermées à tous (l'équipe aussi)", async () => {
-  const { token } = await api.newPlayer();
-  const access = await api.request("GET", "/api/techs-access", { token });
-  assert.equal(access.data.access, "closed");
-  assert.equal(access.data.canPlay, false);
-  const owner = await api.request("GET", "/api/techs-access", { headers: await ownerHeaders() });
-  assert.equal(owner.data.canPlay, false);
-  assert.equal((await api.request("GET", "/api/techs/game", { token })).status, 403);
-  assert.equal((await api.request("GET", "/api/leaderboard?period=daily&mode=tech", { token })).status, 403);
+test("techs : mode retiré, ses parties passées comptent encore", async () => {
+  const { token, player } = await api.newPlayer();
+  const before = (await api.request("GET", "/api/players/me/achievements", { token })).data.climb.berries;
+  // Une victoire jouée du temps des techs
+  const at = new Date().toISOString();
+  db.prepare("INSERT INTO tech_games (date, mode, player_id, status, secret_version, started_at, finished_at) VALUES ('2026-01-05', 'tech', ?, 'won', 1, ?, ?)").run(player.id, at, at);
+  const after = (await api.request("GET", "/api/players/me/achievements", { token })).data.climb.berries;
+  assert.equal(after, before + 1);
+
+  assert.equal((await api.request("GET", "/api/techs/game", { token })).status, 404);
+  assert.equal((await api.request("GET", "/api/leaderboard?period=daily&mode=tech", { token })).status, 400);
+  // L'ancienne page renvoie au choix des jeux
+  assert.match((await api.request("GET", "/techs.html")).data, /location\.replace\("index\.html#modes"\)/);
 });
 
 test("fiche publique d'un joueur : cachée tant que le profil est anonyme ou caché", async () => {

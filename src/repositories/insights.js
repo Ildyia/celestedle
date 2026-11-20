@@ -46,14 +46,11 @@ const stmts = {
   // Heure de fin des parties (convertie à l'heure de Paris côté JS)
   finishTimes: db.prepare(`
     SELECT finished_at FROM games WHERE date >= @since AND finished_at IS NOT NULL
-    UNION ALL SELECT finished_at FROM tech_games WHERE date >= @since AND finished_at IS NOT NULL
   `),
   // Parties et joueurs par jour, par jeu
   daily: db.prepare(`
     SELECT date, 'celestedle' AS game, COUNT(*) AS games, COUNT(DISTINCT player_id) AS players
     FROM games WHERE date >= @since GROUP BY date
-    UNION ALL
-    SELECT date, 'techs', COUNT(*), COUNT(DISTINCT player_id) FROM tech_games WHERE date >= @since GROUP BY date
     UNION ALL
     SELECT CASE WHEN date LIKE 'hard:%' THEN substr(date, 6) ELSE date END AS day, 'connections', COUNT(*), COUNT(DISTINCT player_id)
     FROM connection_games WHERE date NOT LIKE 'practice%'
@@ -64,7 +61,6 @@ const stmts = {
   players: db.prepare(`
     SELECT day, COUNT(DISTINCT player_id) AS players FROM (
       SELECT date AS day, player_id FROM games
-      UNION ALL SELECT date, player_id FROM tech_games
       UNION ALL SELECT CASE WHEN date LIKE 'hard:%' THEN substr(date, 6) ELSE date END, player_id
       FROM connection_games WHERE date NOT LIKE 'practice%'
     ) WHERE day >= @since GROUP BY day
@@ -85,7 +81,7 @@ function insights(since) {
   // Jours : une ligne par date, une colonne par jeu, joueurs distincts par jeu
   const days = new Map();
   for (const row of stmts.daily.all({ since })) {
-    const day = days.get(row.date) ?? { date: row.date, celestedle: 0, techs: 0, connections: 0, players: 0 };
+    const day = days.get(row.date) ?? { date: row.date, celestedle: 0, connections: 0, players: 0 };
     day[row.game] = row.games;
     days.set(row.date, day);
   }

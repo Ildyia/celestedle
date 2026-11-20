@@ -9,7 +9,7 @@ import { storage, KEYS } from "./storage.js";
 import { byId, el, clear } from "./dom.js";
 import { formatDuration } from "./format.js";
 import { rulesSentence } from "./rules-text.js";
-import { CELESTEDLE, TECHS } from "./catalogs.js";
+import { CELESTEDLE } from "./catalogs.js";
 import { showToast } from "./toast.js";
 import { keySound, playSound } from "./sound.js";
 import { createDuel, duelUrl, openRooms } from "./duel.js";
@@ -516,22 +516,6 @@ const GAMES = [
     access: () => api.connectionsAccess(),
     state: (mode) => api.connections(mode),
     community: (mode) => api.connectionsStats(mode)
-  },
-  {
-    id: "techs",
-    title: "Techs",
-    icon: "assets/entities/refill.png",
-    page: "techs.html",
-    modes: { a: "tech", b: "tech-hard" },
-    desc: {
-      a: "Guess today's movement tech from its category, difficulty and utility.",
-      b: "Fewer tries against the clock: every guess must fit your clues."
-    },
-    access: () => api.techsAccess(),
-    state: (mode) => api.techsGame(mode),
-    rules: () => api.techsModes(),
-    hintNames: TECHS.hintNames,
-    community: (mode) => api.techsStats(mode)
   }
 ];
 

@@ -18,16 +18,13 @@ function isStaff(player) {
   return STAFF_ROLES.includes(player?.role);
 }
 
-// Accès aux jeux en test (Connections, techs), réglé depuis l'admin : équipe
+// Accès aux jeux en test (Connections), réglé depuis l'admin : équipe
 // seulement, playtest (playtesters et équipe), ouvert à tous, ou retiré
 // (« closed » : personne, l'équipe non plus ; les données sont gardées)
 const GAME_ACCESS = ["staff", "playtest", "public", "closed"];
-// standard : accès sans réglage ni variable d'environnement (les techs
-// arrivent réservées à l'équipe admin, le temps de les remplir)
+// standard : accès sans réglage ni variable d'environnement
 const ACCESS_SETTINGS = {
-  connections: { key: "connections_access", fallback: () => config.connectionsAccess, standard: "playtest" },
-  // Techs retirées (pas assez fun) : fermées par défaut
-  techs: { key: "techs_access", fallback: () => config.techsAccess, standard: "closed" }
+  connections: { key: "connections_access", fallback: () => config.connectionsAccess, standard: "playtest" }
 };
 
 function accessSetting(game) {
@@ -36,8 +33,8 @@ function accessSetting(game) {
   return setting;
 }
 
-// Sans réglage enregistré : variable d'environnement (CONNECTIONS_ACCESS,
-// TECHS_ACCESS), sinon l'accès standard du jeu
+// Sans réglage enregistré : variable d'environnement (CONNECTIONS_ACCESS),
+// sinon l'accès standard du jeu
 function defaultAccess(game) {
   const setting = accessSetting(game);
   const value = setting.fallback();

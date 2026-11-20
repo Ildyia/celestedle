@@ -24,7 +24,6 @@ Du HTML, du CSS et des modules JavaScript, sans framework ni étape de build.
 | `modern.css`, `js/interface.js`, `js/game-end.js` | L'interface Modern des pages de jeu (décor, menu pause, écran de fin) : tout est sous `html.ui-modern` |
 | `celestedle.html`, `style.css` | La page du jeu principal (et des duels : `?duel=<id>`) |
 | `connections.html` + `.css` | La page Connections |
-| `techs.html` | La page Techs (mêmes modules que Celestedle, autre catalogue) |
 | `admin.html` + `.css` | Le panneau admin |
 | `js/app.js` | Point d'entrée du jeu : crée les objets et les branche ensemble |
 | `js/game.js` | Logique de la page : clics, essais, indices, fin de partie |
@@ -110,14 +109,11 @@ SQLite ne sait pas modifier une contrainte `CHECK` ou supprimer certaines colonn
 
 Les rôles (`owner`, `administrator`…) sont gérés dans `services/staff.js`. `middleware/admin-auth.js` protège les routes admin. L'accès à Connections (staff, playtest ou public) se règle depuis l'admin.
 
-### Les techs (Celestedle Techs)
+### Les techs (mode retiré)
 
-Un Celestedle dont la réponse est une tech. Il utilise **le même moteur** que Celestedle : `createGameService` (`services/games.js`), `createDaily` (`services/daily.js`), les repositories `createGamesRepo` et `createSecretsRepo`, avec ses propres tables (`techs`, `tech_secrets`, `tech_games`…, migration 015). Tout ce qui lui est propre est dans `services/techs.js` : les colonnes, la difficulté comparée dans l'ordre (flèches ⬆️ ⬇️) et les règles des modes `tech` et `tech-hard`.
+Le mode Techs (deviner une tech de mouvement) a été retiré : pas assez fun. Son code est supprimé, mais ses tables (`tech_games`, `tech_guesses`…, migrations 015 et 017) restent en base : les parties jouées comptent toujours pour les fraises, les tampons, les trophées et les classements de la semaine et du All time (`repositories/stats.js`). `techs.html` renvoie au choix des jeux.
 
-- `techs.json` (liste tirée du [Celeste Wiki](https://celeste.ink/wiki/Tech)) remplit la table au premier démarrage. Pour ajouter des techs à une base déjà remplie, augmente `SEED_VERSION` dans `src/db/seed-techs.js` : au démarrage suivant, les techs manquantes sont ajoutées, sans toucher à celles modifiées dans l'admin. Le reste se gère dans l'admin, onglet Techs : liste, édition, image ou GIF de 3 Mo, tech du jour et accès.
-- Les synonymes sont tirés des noms : « Superdash (Super) » donne « Super » et « Superdash ».
-- Côté page, `public/js/catalogs.js` décrit chaque jeu (colonnes, images, routes de l'API, textes). `Game`, le tableau, les indices et le partage les reçoivent en paramètre.
-- L'accès (staff, playtest ou public) se règle comme pour Connections, avec `TECHS_ACCESS` comme valeur par défaut.
+Le moteur de partie reste générique : `createGameService`, `createDaily`, `createGamesRepo` et `public/js/catalogs.js` reçoivent le catalogue (colonnes, images, routes) en paramètre. Les duels s'en servent.
 
 ### Les classements
 

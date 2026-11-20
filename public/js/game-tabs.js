@@ -6,8 +6,7 @@ import { storage } from "./storage.js";
 // que pour qui peut y jouer ; sans autre jeu que Celestedle, il ne reste que
 // le sélecteur, comme avant.
 const GAMES = [
-  { id: "connections", access: () => api.connectionsAccess(), seenKey: "celestedle_cx_seen" },
-  { id: "techs", access: () => api.techsAccess(), seenKey: "celestedle_techs_seen" }
+  { id: "connections", access: () => api.connectionsAccess(), seenKey: "celestedle_cx_seen" }
 ];
 
 async function showTab(game, current) {

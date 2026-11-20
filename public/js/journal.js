@@ -16,8 +16,7 @@ const ICON = (name) => `assets/illustration/${name}.png`;
 // Statistiques perso de chaque jeu, pour la page Progress
 const MY_STATS = {
   celestedle: (mode) => api.myStats(mode),
-  connections: (mode) => api.myConnectionsStats(mode),
-  techs: (mode) => api.myTechStats(mode)
+  connections: (mode) => api.myConnectionsStats(mode)
 };
 
 const PAGES = [

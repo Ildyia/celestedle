@@ -105,7 +105,7 @@ export class InsightsTab {
       ),
       card(
         "When people finish",
-        "Finished Celestedle and Techs games by hour, Paris time.",
+        "Finished Celestedle games by hour, Paris time.",
         columns(data.hours, data.hours.map((_, h) => (h % 3 === 0 ? `${h}h` : "")), { title: (_, v) => `${v} games` })
       ),
       card(
@@ -122,8 +122,8 @@ export class InsightsTab {
         "Games started each day; players across all games.",
         data.days.length
           ? el("table", { className: "admin-table compact" }, [
-              el("thead", {}, [el("tr", {}, ["Date", "Players", "Celestedle", "Connections", "Techs"].map((t) => el("th", { text: t })))]),
-              el("tbody", {}, data.days.map((d) => el("tr", {}, [d.date, d.players, d.celestedle, d.connections, d.techs].map((v) => el("td", { text: String(v) })))))
+              el("thead", {}, [el("tr", {}, ["Date", "Players", "Celestedle", "Connections"].map((t) => el("th", { text: t })))]),
+              el("tbody", {}, data.days.map((d) => el("tr", {}, [d.date, d.players, d.celestedle, d.connections].map((v) => el("td", { text: String(v) })))))
             ])
           : empty()
       )

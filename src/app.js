@@ -5,7 +5,6 @@ const corsMiddleware = require("./middleware/cors");
 const { errorHandler } = require("./middleware/errors");
 const elementsRepo = require("./repositories/elements");
 const sprites = require("./services/sprites");
-const techsRepo = require("./repositories/techs");
 
 const PUBLIC_DIR = path.join(__dirname, "..", "public");
 const PLACEHOLDER_SPRITE = path.join(PUBLIC_DIR, "assets/placeholder.svg");
@@ -22,7 +21,7 @@ function securityHeaders(req, res, next) {
 // Aperçu de lien (Discord…) : l'image doit être donnée par une adresse
 // complète. On l'ajoute au <head> des pages à l'envoi, d'après l'adresse
 // demandée : pas de nom de domaine à configurer, la bêta a la sienne.
-const LINK_PREVIEW_PAGES = ["index.html", "celestedle.html", "connections.html", "techs.html"];
+const LINK_PREVIEW_PAGES = ["index.html", "celestedle.html", "connections.html"];
 const pageCache = new Map();
 
 function sendPageWithPreview(req, res, next) {
@@ -69,12 +68,6 @@ function createApp() {
     const file = uploaded ?? (sprite ? path.join(PUBLIC_DIR, sprite) : null);
     const allowed = uploaded || (file && file.startsWith(PUBLIC_DIR + path.sep));
     res.sendFile(allowed && fs.existsSync(file) ? file : PLACEHOLDER_SPRITE);
-  });
-
-  // Image ou GIF d'une tech, envoyé depuis l'admin
-  app.get("/tech-media/:name", (req, res) => {
-    const file = sprites.uploadFile(techsRepo.findByName(req.params.name)?.media);
-    res.sendFile(file && fs.existsSync(file) ? file : PLACEHOLDER_SPRITE);
   });
 
   app.use("/api", require("./routes/api"));

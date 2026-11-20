@@ -7,7 +7,7 @@ Each day, a secret element or entity from Celeste is picked for all players. You
 ## Features
 
 - **Celeste-style menus**: a title screen with the mountain under a sky that follows your time of day, save tickets for profiles, a chapter-select screen for the games (A-Side = Normal, B-Side = Hard), a journal with your progress and every ranking, and an end-of-climb screen.
-- **Three games**: Celestedle (guess the entity), Connections (sort 16 entities into 4 groups) and Techs (guess the movement tech). Connections and Techs open according to the admin's access setting.
+- **Two games and duels**: Celestedle (guess the entity) and Connections (sort 16 entities into 4 groups, open according to the admin's access setting), plus Celestedle duels in public or private rooms.
 - **Modern or Classic**: the game pages show just the game with a pause menu (Esc); the original full page is still one option away.
 
 - **Daily Challenges**: a new secret Celeste entity every day at midnight (Europe/Paris timezone).
@@ -43,7 +43,6 @@ Useful environment variables (`.env`):
 | `CORS_ORIGINS` | Extra allowed origins, comma separated |
 | `PERMANENT_OWNER_TOKEN` | Beta only: recovery code of a profile recreated as owner at startup (16+ characters) |
 | `PERMANENT_OWNER_NAME` | Name of that profile (default `Amélia`) |
-| `TECHS_ACCESS` | Same for Celestedle Techs: `staff` (default), `playtest` or `public` |
 | `CONNECTIONS_ACCESS` | Who can play Connections until the admin changes it: `staff`, `playtest` (default) or `public`. Set it to `public` on the beta |
 
 The home page is the Celeste-style menu (`index.html`); the main game is `celestedle.html`. See `REDESIGN.md` for how the menus and the Modern interface are built, and `docs/GUIDE.md` for the project tour (in French).

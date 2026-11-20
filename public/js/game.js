@@ -45,7 +45,7 @@ function memorialMessage() {
 }
 
 // Partie du jour : l'état vient du serveur, la page ne fait que l'afficher.
-// catalog : Celestedle ou les techs (voir catalogs.js)
+// catalog : Celestedle, ou Celestedle branché sur un duel (voir catalogs.js, duel.js)
 export class Game {
   constructor({ synonyms, suggestions, hintPicker, onFinished, catalog = CELESTEDLE }) {
     this.catalog = catalog;

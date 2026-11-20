@@ -10,8 +10,7 @@ const LISTED_SQL = "p.is_hidden = 0 AND p.is_anonymous = 0";
 
 const LEADERBOARD_LIMIT = 50;
 
-// Requêtes du jour d'une table de parties : game_summaries (Celestedle) ou
-// tech_game_summaries (techs), mêmes colonnes
+// Requêtes du jour de Celestedle
 function dayStatements(table) {
   return {
     // Moyennes sur les victoires ; taux de victoire sur les parties terminées
@@ -59,22 +58,13 @@ function dayStatements(table) {
   };
 }
 
-const DAY = {
-  game_summaries: dayStatements("game_summaries"),
-  tech_game_summaries: dayStatements("tech_game_summaries")
-};
-
-// Les modes des techs (tech, tech-hard) ont leurs propres tables
-function dayFor(mode) {
-  return DAY[
-    String(mode).startsWith("tech") ? "tech_game_summaries" : "game_summaries"
-  ];
-}
+const DAY = dayStatements("game_summaries");
 
 const stmts = {
   // Parties terminées de tous les modes sur une période (semaine ou global),
   // y compris des profils non listés : ils comptent pour comparer les joueurs
-  // du jour, mais ne sont pas affichés
+  // du jour, mais ne sont pas affichés. Les techs (mode retiré) comptent pour
+  // les semaines passées
   rankedResults: db.prepare(`
     SELECT s.player_id AS playerId, s.mode AS board, s.date, s.status = 'won' AS won,
            s.tries + s.hints AS cost -- un indice compte comme un essai
@@ -138,7 +128,8 @@ const stmts = {
     WHERE player_id = ? AND mode = ? AND status <> 'playing'
     ORDER BY date
   `),
-  // Toutes les parties terminées d'un joueur, Celestedle et techs (achievements)
+  // Toutes les parties terminées d'un joueur, Celestedle et techs (achievements ;
+  // le mode Techs est retiré mais ses parties passées comptent toujours)
   // regularHints : sans l'indice Element Info, qui ne compte pas dans maxHints
   playerAllGames: db.prepare(`
     SELECT s.mode, s.date, s.status, s.tries, s.hints, s.wasted_tries AS wastedTries, s.finished_at AS finishedAt,
@@ -150,11 +141,6 @@ const stmts = {
            (SELECT COUNT(*) FROM tech_hints h WHERE h.game_id = s.id AND h.type <> 'info')
     FROM tech_game_summaries s
     WHERE s.player_id = @playerId AND s.status <> 'playing'
-  `),
-  playerTechGames: db.prepare(`
-    SELECT date, status, tries, seconds FROM tech_game_summaries
-    WHERE player_id = ? AND mode = ? AND status <> 'playing'
-    ORDER BY date
   `),
   // Grilles du jour de Connections (pas les grilles d'entraînement) : la date
   // est « AAAA-MM-JJ » en Normal, « hard:AAAA-MM-JJ » en Hard. Les erreurs
@@ -216,7 +202,7 @@ const stmts = {
 };
 
 function communityStats(date, mode) {
-  const { finished, ...stats } = dayFor(mode).community.get(date, mode);
+  const { finished, ...stats } = DAY.community.get(date, mode);
   return {
     ...stats,
     winRate: finished ? Math.round((stats.wins / finished) * 100) : null
@@ -224,7 +210,7 @@ function communityStats(date, mode) {
 }
 
 function dailyLeaderboard(date, mode, playerId) {
-  return dayFor(mode).daily.all({
+  return DAY.daily.all({
     date,
     mode,
     playerId,
@@ -233,7 +219,7 @@ function dailyLeaderboard(date, mode, playerId) {
 }
 
 function dailyOneShots(date, mode) {
-  return dayFor(mode).dailyOneShots.all({
+  return DAY.dailyOneShots.all({
     date,
     mode,
     limit: LEADERBOARD_LIMIT
@@ -254,10 +240,9 @@ function listedPlayers() {
   return stmts.listedPlayers.all();
 }
 
-// Parties terminées d'un joueur dans un mode (Celestedle ou techs)
+// Parties terminées d'un joueur dans un mode de Celestedle
 function playerGames(playerId, mode) {
-  const stmt = String(mode).startsWith("tech") ? stmts.playerTechGames : stmts.playerGames;
-  return stmt.all(playerId, mode);
+  return stmts.playerGames.all(playerId, mode);
 }
 
 function playerAllGames(playerId) {
@@ -268,11 +253,9 @@ function playerConnectionGames(playerId, mode) {
   return stmts.playerConnectionGames.all({ playerId, mode });
 }
 
-// Chiffres du jour par mode, pour Celestedle ou pour les techs
-function dayOverview(date, { techs = false } = {}) {
-  return DAY[techs ? "tech_game_summaries" : "game_summaries"].dayOverview.all(
-    date
-  );
+// Chiffres du jour par mode de Celestedle
+function dayOverview(date) {
+  return DAY.dayOverview.all(date);
 }
 
 function history() {

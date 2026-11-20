@@ -89,8 +89,7 @@ export class LeaderboardPanel {
   // Classements du jour des jeux en test : pour qui peut y jouer
   async showGridModes() {
     const games = [
-      { prefix: "cx-", access: api.connectionsAccess },
-      { prefix: "tech", access: api.techsAccess }
+      { prefix: "cx-", access: api.connectionsAccess }
     ];
     await Promise.all(
       games.map(async ({ prefix, access }) => {

@@ -77,20 +77,11 @@ export const api = {
   myStats: (mode) => request("GET", `/players/me/stats?mode=${mode}`),
   myAchievements: () => request("GET", "/players/me/achievements"),
   playerCard: (id) => request("GET", `/players/${encodeURIComponent(id)}/card`),
-  myTechStats: (mode) => request("GET", `/techs/me/stats?mode=${mode}`),
   myConnectionsStats: (mode) => request("GET", `/connections/me/stats?mode=${mode}`),
   profileOptions: () => request("GET", "/players/options", { auth: false }),
 
   leaderboard: (period, mode) => request("GET", `/leaderboard?period=${period}&mode=${mode}`),
 
-  techsAccess: () => request("GET", "/techs-access"),
-  techsList: () => request("GET", "/techs/list"),
-  techsModes: () => request("GET", "/techs/modes"),
-  techsStats: (mode) => request("GET", `/techs/stats?mode=${mode}`),
-  techsGame: (mode) => request("GET", `/techs/game?mode=${mode}`),
-  techsGuess: (mode, guess, wordId) => request("POST", "/techs/guess", { body: { mode, guess, wordId } }),
-  techsHint: (mode, type, wordId, choice) => request("POST", "/techs/hint", { body: { mode, type, wordId, choice } }),
-  techsForfeit: (mode, wordId) => request("POST", "/techs/forfeit", { body: { mode, wordId } }),
 
   connections: (mode = "normal", practice = false) =>
     request("GET", `/connections?mode=${mode}${practice ? "&practice=1" : ""}`),

@@ -9,8 +9,8 @@
 //   node scripts/dev-fill.js "<nom du profil>" --reset    retire les parties ajoutées par ce script
 //
 // Serveur arrêté de préférence (même base data/celestedle.db, ou DB_PATH).
-// Perfectionist et Bad Day ne viennent que si Connections et Techs ne sont pas
-// ouverts à tous (sinon il faudrait aussi des parties de ces jeux).
+// Perfectionist et Bad Day ne viennent que si Connections n'est pas ouvert à
+// tous (sinon il faudrait aussi des parties de ce jeu).
 const db = require("../src/db");
 
 const FAKE = -1;
