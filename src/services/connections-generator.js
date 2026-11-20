@@ -123,13 +123,28 @@ function countSolutions(tileIds, categories) {
 // souvent à faire disparaître un faux groupe
 const SAMPLES_PER_CHOICE = 10;
 
+// Catégories d'abord, éléments ensuite : une fois les 4 catégories du jour
+// choisies, on cherche vraiment des éléments qui marchent (ELEMENT_SAMPLES
+// tirages), et on garde jusqu'à `keep` combinaisons valides différentes. Avant,
+// 10 tirages ratés faisaient changer de catégories : les catégories « faciles
+// à remplir » gagnaient toujours, avec leurs mêmes éléments.
+const ELEMENT_SAMPLES = 150;
+
 // stats compte les raisons d'échec, pour expliquer une génération impossible
-function tryGroups(chosen, categories, random, rule, stats, weigh) {
-  for (let sample = 0; sample < SAMPLES_PER_CHOICE; sample++) {
-    const found = sampleGroups(chosen, categories, random, rule, stats, weigh);
-    if (found !== undefined) return found;
+function tryGroups(chosen, categories, random, rule, stats, weigh, keep = 1, samples = SAMPLES_PER_CHOICE) {
+  const found = [];
+  const seen = new Set();
+  for (let sample = 0; sample < samples && found.length < keep; sample++) {
+    const result = sampleGroups(chosen, categories, random, rule, stats, weigh);
+    // null : ces catégories ne peuvent pas marcher du tout
+    if (result === null) break;
+    if (result === undefined) continue;
+    const key = [...result.tiles].sort((a, b) => a - b).join();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    found.push(result);
   }
-  return null;
+  return found;
 }
 
 // null : ces catégories ne peuvent pas marcher ; undefined : réessayer d'autres cases
@@ -215,17 +230,20 @@ function hasObviousDecoy(tiles, chosen, categories, rule = "strict") {
 // Sans ça, les grilles se répétaient : le générateur garde facilement les
 // éléments qui ne rentrent que dans peu de catégories (Oshiro, Badeline
 // chaser) et écarte presque toujours ceux « à tout faire » (Tiles, Spikes).
-// D'où ces corrections (mesurées sur 120 jours simulés : l'élément le plus
-// fréquent passe de 3 fois à 2 fois la moyenne, et deux fois moins
-// d'éléments repris d'un jour à l'autre) :
-// - catégories et éléments récents moins souvent tirés ;
-// - une catégorie est tirée selon sa taille (taille^1,5) : les petites
-//   imposaient toujours les mêmes membres ;
-// - à la pioche, un élément pèse d'autant plus qu'il a de catégories ;
-// - CANDIDATES grilles valides, et on garde la moins répétitive.
+// D'où ces corrections (mesurées sur 80 à 120 jours simulés) :
+// - les 4 catégories du jour d'abord, en rotation : une catégorie sortie
+//   récemment passe son tour (la plus tirée : 32 fois → 17 sur 80 jours) ;
+// - puis une vraie recherche d'éléments pour ces catégories (voir
+//   ELEMENT_SAMPLES), qui évite les éléments récents et favorise ceux « à
+//   tout faire » ; on garde la moins répétitive de CANDIDATES combinaisons ;
+// - on ne change de catégories que si elles sont impossibles à remplir.
+// Les petites catégories (personnages, forme « humanoid ») n'ont que 6 à 8
+// membres : leurs membres reviennent avec elles, c'est inévitable.
 const CANDIDATES = 6;
-const SIZE_POW = 1.5;
+
 const TAG_CHANCE = 0.5;
+// Rotation des catégories : poids 1 / (1 + 3 × récence)^CAT_POW
+const CAT_POW = 3;
 
 // maxPerKind : nombre de groupes au plus par sorte (chapter, colour…), en plus
 // de MAX_SAME_KIND (ex. { chapter: 1 } : un seul groupe « Found in … »)
@@ -280,7 +298,8 @@ function tryGenerate(elements, tags, random, rule, stats, { maxTags, maxPerKind 
   // éléments « à tout faire » ne sortent presque jamais)
   const breadth = new Map(elements.map((e) => [e.id, categories.filter((c) => c.members.has(e.id)).length]));
   const weigh = {
-    category: (c) => c.members.size ** SIZE_POW / (1 + 3 * (recent?.categories?.get(c.key) ?? 0)),
+    // Rotation : une catégorie sortie récemment passe son tour
+    category: (c) => 1 / (1 + 3 * (recent?.categories?.get(c.key) ?? 0)) ** CAT_POW,
     element: (id) => (breadth.get(id) ?? 1) / (1 + 4 * (recent?.elements?.get(id) ?? 0)) ** 2
   };
 
@@ -302,10 +321,10 @@ function tryGenerate(elements, tags, random, rule, stats, { maxTags, maxPerKind 
     }
     if (chosen.length < GROUP_COUNT) break;
 
-    const found = tryGroups(chosen, categories, random, rule, stats, weigh);
-    if (found) candidates.push(found);
     // Sans historique, la première grille valide suffit
-    if (found && !recent) break;
+    candidates.push(...tryGroups(chosen, categories, random, rule, stats, weigh, recent ? CANDIDATES : 1, ELEMENT_SAMPLES));
+    // Catégories du jour trouvées : on s'y tient
+    if (candidates.length) break;
   }
   if (!candidates.length) return null;
 
