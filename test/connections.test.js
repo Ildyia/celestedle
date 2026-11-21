@@ -340,6 +340,30 @@ test("générateur : 4 cases grises qui ne forment pas un groupe sont un faux gr
   assert.equal(hasObviousDecoy(tiles, chosen, categories, "none"), false, "mode Hard : faux groupes permis");
 });
 
+test("générateur : un type (ou un tag) sur exactement 4 cases est un faux groupe, sur 5 c'est une fausse piste permise", () => {
+  // 16 éléments inventés : 4 groupes par chapitre, couleurs et formes toutes
+  // différentes ; `typed` d'entre eux partagent le type « shared »
+  const grid = (typed) => {
+    const elements = Array.from({ length: 16 }, (_, i) => ({
+      id: i + 1,
+      type: i % 4 === 0 || (typed === 5 && i === 1) ? "shared" : `type${i}`,
+      shape: `shape${i}`,
+      couleur: [`colour${i}`],
+      lieu: [`chapter${Math.floor(i / 4)}`]
+    }));
+    const categories = buildCategories(elements, []).map((c) => ({ ...c, usable: true }));
+    const chosen = categories.filter((c) => c.kind === "chapter");
+    return { tiles: elements.map((e) => e.id), chosen, categories };
+  };
+  // Exactement 4 cases « shared » (une par groupe) : faux groupe parfait
+  const four = grid(4);
+  assert.equal(hasObviousDecoy(four.tiles, four.chosen, four.categories), true);
+  assert.equal(hasObviousDecoy(four.tiles, four.chosen, four.categories, "relaxed"), true, "en repli aussi : c'est un type");
+  // 5 cases : le joueur voit qu'il faut en écarter une, c'est permis
+  const five = grid(5);
+  assert.equal(hasObviousDecoy(five.tiles, five.chosen, five.categories), false);
+});
+
 test("générateur Hard : faux groupes permis, une seule solution", () => {
   const elements = elementsRepo.listActive();
   const categories = buildCategories(elements, []);

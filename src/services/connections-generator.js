@@ -6,11 +6,12 @@ const GROUP_COUNT = 4;
 const MAX_ATTEMPTS = 5000;
 const MAX_SAME_KIND = 2;
 
-// Faux groupes refusés : 4 cases ou plus d'un même type (ou tag) hors des
-// groupes, et pour toute catégorie exactement 4 cases hors des groupes (un
-// « faux groupe parfait », impossible à distinguer d'un vrai). 5 cases ou plus
-// d'une même couleur ou d'un même chapitre restent des fausses pistes
-// permises : le joueur voit qu'il faut en écarter.
+// Faux groupe refusé (A-Side) : exactement 4 cases qui partagent une
+// catégorie sans être un des groupes, un « faux groupe parfait » impossible à
+// distinguer d'un vrai. 5 cases ou plus d'une même catégorie (type, tag,
+// couleur…) restent des fausses pistes permises : le joueur voit qu'il faut
+// en écarter. En repli (règle « relaxed »), seuls les types et les tags,
+// visibles d'un coup d'œil, sont surveillés.
 const OBVIOUS_DECOY_KINDS = ["type", "tag"];
 
 // Au-delà, une catégorie chevauche presque toutes les autres et la grille
@@ -133,12 +134,13 @@ function tryGroups(chosen, categories, random, rule, stats) {
 }
 
 // null : ces catégories ne peuvent pas marcher ; undefined : réessayer d'autres cases
+// Échanges tentés pour défaire les faux groupes d'un tirage
+const MAX_REPAIRS = 8;
+
 function sampleGroups(chosen, categories, random, rule, stats) {
   const tiles = [];
   const groups = [];
-  // Types et tags à surveiller pendant la pioche (voir hasObviousDecoy)
-  const guards =
-    rule === "none" ? [] : categories.filter((c) => !chosen.includes(c) && OBVIOUS_DECOY_KINDS.includes(c.kind) && c.usable);
+  const spares = []; // par groupe : les membres pas tirés, pour les échanges
   for (const category of chosen) {
     const others = chosen.filter((c) => c !== category);
     // Chaque élément ne va que dans un seul des 4 groupes choisis
@@ -150,33 +152,34 @@ function sampleGroups(chosen, categories, random, rule, stats) {
       blame(stats, category, "incompatible");
       return null;
     }
-    // Pioche case par case : on saute une case qui ferait 4 cases d'un même
-    // type ou tag hors des groupes, plutôt que de jeter toute la grille à la
-    // vérification. Bien plus de grilles strictes, et plus vite.
-    const members = [];
-    const blockers = new Set();
-    for (const id of shuffle(pool, random)) {
-      if (members.length === GROUP_SIZE) break;
-      const placed = [...tiles, ...members];
-      const blocker = guards.find(
-        (c) => c.members.has(id) && placed.filter((x) => c.members.has(x)).length >= GROUP_SIZE - 1
-      );
-      if (blocker) blockers.add(blocker);
-      else members.push(id);
-    }
-    if (members.length < GROUP_SIZE) {
-      stats.decoy++;
-      for (const c of blockers) blame(stats, c, "decoy");
-      return undefined;
-    }
+    const shuffled = shuffle(pool, random);
+    const members = shuffled.slice(0, GROUP_SIZE);
+    spares.push(shuffled.slice(GROUP_SIZE));
     tiles.push(...members);
     groups.push({ category, elementIds: members });
   }
-  const decoy = findDecoy(tiles, chosen, categories, rule);
-  if (decoy) {
-    stats.decoy++;
-    blame(stats, decoy, "decoy");
-    return undefined;
+  // Faux groupe : on échange une de ses 4 cases contre un autre membre de son
+  // groupe (qui n'a pas ce point commun), puis on revérifie. Bien plus de
+  // grilles strictes qu'en jetant tout le tirage.
+  for (let repair = 0; ; repair++) {
+    const decoy = findDecoy(tiles, chosen, categories, rule);
+    if (!decoy) break;
+    const swaps = [];
+    tiles.forEach((id, index) => {
+      if (!decoy.members.has(id)) return;
+      const group = Math.floor(index / GROUP_SIZE);
+      const spare = spares[group].find((s) => !decoy.members.has(s));
+      if (spare !== undefined) swaps.push({ index, group, spare });
+    });
+    if (repair === MAX_REPAIRS || !swaps.length) {
+      stats.decoy++;
+      blame(stats, decoy, "decoy");
+      return undefined;
+    }
+    const { index, group, spare } = swaps[Math.floor(random() * swaps.length)];
+    spares[group] = spares[group].filter((s) => s !== spare).concat(tiles[index]);
+    tiles[index] = spare;
+    groups[group].elementIds = tiles.slice(group * GROUP_SIZE, (group + 1) * GROUP_SIZE);
   }
   if (countSolutions(tiles, categories) !== 1) {
     stats.multiple++;
@@ -186,8 +189,9 @@ function sampleGroups(chosen, categories, random, rule, stats) {
 }
 
 // tiles : les 16 cases rangées groupe par groupe (4 par 4, dans l'ordre de chosen)
-// rule : "strict" (mode normal), "relaxed" (repli du mode normal : type et
-// tag seulement) ou "none" (mode Hard : faux groupes permis)
+// rule : "strict" (mode normal : aucun faux groupe parfait), "relaxed" (repli
+// du mode normal : types et tags seulement) ou "none" (mode Hard : faux
+// groupes permis)
 function hasObviousDecoy(tiles, chosen, categories, rule = "strict") {
   return Boolean(findDecoy(tiles, chosen, categories, rule));
 }
@@ -196,15 +200,16 @@ function hasObviousDecoy(tiles, chosen, categories, rule = "strict") {
 function findDecoy(tiles, chosen, categories, rule = "strict") {
   if (rule === "none") return null;
   const groupKeys = chosen.map((_, i) => [...tiles.slice(i * GROUP_SIZE, (i + 1) * GROUP_SIZE)].sort().join());
-  return categories.find((c) => {
-    if (chosen.includes(c)) return false;
-    const inside = tiles.filter((id) => c.members.has(id));
-    // Type ou tag : visibles d'un coup d'œil, aucun faux groupe accepté
-    if (OBVIOUS_DECOY_KINDS.includes(c.kind) && c.usable && inside.length >= GROUP_SIZE) return true;
-    // Toute catégorie : exactement 4 cases qui ne sont pas un des groupes
-    // ressemblent en tout point à un vrai groupe
-    return rule === "strict" && inside.length === GROUP_SIZE && !groupKeys.includes([...inside].sort().join());
-  }) ?? null;
+  return (
+    categories.find((c) => {
+      if (chosen.includes(c)) return false;
+      if (rule === "relaxed" && !OBVIOUS_DECOY_KINDS.includes(c.kind)) return false;
+      // Exactement 4 cases qui ne sont pas un des groupes : elles ressemblent
+      // en tout point à un vrai groupe
+      const inside = tiles.filter((id) => c.members.has(id));
+      return inside.length === GROUP_SIZE && !groupKeys.includes([...inside].sort().join());
+    }) ?? null
+  );
 }
 
 // Grille { groups: [{ key, kind, label, level, elementIds }], tiles: [16 ids] }.
