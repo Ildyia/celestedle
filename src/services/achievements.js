@@ -26,7 +26,18 @@ function maxHintsOf(game, side) {
 }
 
 // Date et heure de Paris d'un horodatage ISO : « AAAA-MM-JJ HH:MM:SS »
-const parisClock = (iso) => new Date(iso).toLocaleString("sv-SE", { timeZone: "Europe/Paris" });
+// (un seul formateur : toLocaleString en recrée un à chaque appel, c'est lent)
+const PARIS_CLOCK = new Intl.DateTimeFormat("sv-SE", {
+  timeZone: "Europe/Paris",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false
+});
+const parisClock = (iso) => PARIS_CLOCK.format(new Date(iso));
 
 // Une partie = { game, side, date, won, lost, tries, hints, regularHints, wastedTries, finishedAt }
 function allGames(playerId) {

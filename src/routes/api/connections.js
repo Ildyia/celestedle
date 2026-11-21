@@ -107,22 +107,32 @@ router.delete("/admin/connections/tags/:id", limitedAction("delete_tag", (req) =
 
 // Grilles d'aujourd'hui et des 6 jours suivants, avec leurs réponses, pour
 // chaque mode
-router.get("/admin/connections/puzzles", (req, res) => {
-  const today = todayParis();
-  const days = Array.from({ length: 7 }, (_, i) => addDays(today, i));
-  // Une grille qui échoue n'empêche pas d'afficher les autres
-  res.json(
-    days.flatMap((date) =>
-      connections.MODES.map((mode) => {
+// Les grilles pas encore tirées le sont ici (jusqu'à 14 d'un coup) : on rend
+// la main entre deux grilles, sinon le serveur ne répond plus à personne
+// pendant ce temps (le calcul est synchrone) et Docker le croit en panne
+const yieldToOthers = () => new Promise((resolve) => setImmediate(resolve));
+
+router.get("/admin/connections/puzzles", async (req, res, next) => {
+  try {
+    const today = todayParis();
+    const days = Array.from({ length: 7 }, (_, i) => addDays(today, i));
+    const previews = [];
+    for (const date of days) {
+      for (const mode of connections.MODES) {
+        // Une grille qui échoue n'empêche pas d'afficher les autres
         try {
-          return connections.puzzlePreview(date, mode);
+          previews.push(connections.puzzlePreview(date, mode));
         } catch (err) {
           console.error(`[ERROR] Connections ${mode} ${date}`, err);
-          return { date, mode, error: `${err.name}: ${err.message}` };
+          previews.push({ date, mode, error: `${err.name}: ${err.message}` });
         }
-      })
-    )
-  );
+        await yieldToOthers();
+      }
+    }
+    res.json(previews);
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.post(

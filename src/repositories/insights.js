@@ -163,7 +163,10 @@ function connectionsInsights(since) {
   };
 }
 
-const parisHour = (iso) => Number(new Date(iso).toLocaleString("en-GB", { timeZone: "Europe/Paris", hour: "2-digit", hour12: false }).slice(0, 2)) % 24;
+// Un seul formateur : toLocaleString en crée un à chaque appel, et des
+// dizaines de milliers d'appels bloquaient le serveur plusieurs secondes
+const PARIS_HOUR = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", hour: "2-digit", hour12: false });
+const parisHour = (iso) => Number(PARIS_HOUR.format(new Date(iso))) % 24;
 
 function insights(since) {
   const byMode = (stmt) => ({ normal: stmt.all({ mode: "normal", since }), hard: stmt.all({ mode: "hard", since }) });

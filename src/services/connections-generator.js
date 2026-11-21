@@ -129,6 +129,17 @@ const SAMPLES_PER_CHOICE = 10;
 // 10 tirages ratés faisaient changer de catégories : les catégories « faciles
 // à remplir » gagnaient toujours, avec leurs mêmes éléments.
 const ELEMENT_SAMPLES = 150;
+// … mais seulement pour les premiers jeux de catégories : quand ils sont
+// impossibles à remplir (certains tags), les essais suivants reprennent
+// SAMPLES_PER_CHOICE tirages. Sans cette borne, un jour difficile coûtait
+// 15 fois plus que l'ancien générateur (des minutes de calcul qui bloquaient
+// tout le serveur : better-sqlite3 et ce calcul sont synchrones).
+const FULL_SEARCH_ATTEMPTS = 20;
+// Et au plus FULL_SEARCH_MS de recherche complète par règle : au-delà, on
+// repasse aussi à SAMPLES_PER_CHOICE (une grille lente à trouver n'est pas
+// meilleure). La grille est enregistrée une fois tirée : que ce cas dépende
+// de la vitesse de la machine ne change rien pour les joueurs.
+const FULL_SEARCH_MS = 1000;
 
 // stats compte les raisons d'échec, pour expliquer une génération impossible
 function tryGroups(chosen, categories, random, rule, stats, weigh, keep = 1, samples = SAMPLES_PER_CHOICE) {
@@ -308,6 +319,7 @@ function tryGenerate(elements, tags, random, rule, stats, { maxTags, maxPerKind 
   // Les autres jours, un tag peut sortir comme n'importe quelle catégorie.
   const imposeTag = usableTags.length > 0 && random() < TAG_CHANCE;
   const candidates = [];
+  const fullSearchUntil = Date.now() + FULL_SEARCH_MS;
   for (let attempt = 0; attempt < MAX_ATTEMPTS && candidates.length < CANDIDATES; attempt++) {
     // La moitié des essais sans tag imposé, si aucun tirage avec tag n'aboutit
     const withTag = imposeTag && attempt < MAX_ATTEMPTS / 2;
@@ -322,7 +334,9 @@ function tryGenerate(elements, tags, random, rule, stats, { maxTags, maxPerKind 
     if (chosen.length < GROUP_COUNT) break;
 
     // Sans historique, la première grille valide suffit
-    candidates.push(...tryGroups(chosen, categories, random, rule, stats, weigh, recent ? CANDIDATES : 1, ELEMENT_SAMPLES));
+    const full = attempt < FULL_SEARCH_ATTEMPTS && Date.now() < fullSearchUntil;
+    const samples = full ? ELEMENT_SAMPLES : SAMPLES_PER_CHOICE;
+    candidates.push(...tryGroups(chosen, categories, random, rule, stats, weigh, recent ? CANDIDATES : 1, samples));
     // Catégories du jour trouvées : on s'y tient
     if (candidates.length) break;
   }
