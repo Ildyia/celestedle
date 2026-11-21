@@ -22,6 +22,7 @@ export class ConnectionsTab {
     byId("cx-tag-search").addEventListener("input", () => this.renderElements());
     byId("cx-tag-delete-btn").addEventListener("click", () => this.remove());
     byId("cx-diagnose-btn").addEventListener("click", () => this.diagnose());
+    byId("export-tags-btn").addEventListener("click", () => this.exportTags());
     this.form.addEventListener("submit", (e) => {
       e.preventDefault();
       this.save();
@@ -53,6 +54,29 @@ export class ConnectionsTab {
     if (suggestions.status === "fulfilled") this.renderSuggestions(suggestions.value);
     else errors.push(`suggestions: ${suggestions.reason.message}`);
     if (errors.length) this.notify(`Couldn't load ${errors.join("; ")}`, true);
+  }
+
+  // Export des tags en JSON (pour tester le générateur ailleurs) : éléments
+  // donnés par leur nom, les identifiants pouvant changer d'une base à l'autre
+  exportTags() {
+    const names = new Map(this.elements.map((e) => [e.id, e.nom]));
+    const named = (ids) => ids.map((id) => names.get(id)).filter(Boolean).sort();
+    const data = {
+      exportedAt: new Date().toISOString(),
+      tags: this.tags.map((tag) => ({
+        label: tag.label,
+        description: tag.description,
+        elements: named(tag.elementIds),
+        unreviewed: named(tag.unreviewedIds)
+      }))
+    };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+    const link = el("a", { attrs: { href: url, download: `connections-tags-${data.exportedAt.slice(0, 10)}.json` } });
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    this.notify(`${data.tags.length} tags exported.`);
   }
 
   // Diagnostic des tags (src/services/connections.js, tagDiagnostics)
