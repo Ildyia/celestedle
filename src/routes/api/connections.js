@@ -45,12 +45,12 @@ router.post("/connections/hint", requirePlayer, (req, res) => {
   res.json(connections.useHint(req.player, type, options));
 });
 
-// Playtest : nouvelle grille d'entraînement, autant que voulu (la génération
-// prend quelques millisecondes ; la limite évite seulement les abus)
+// Playtest : nouvelle grille d'entraînement, autant que voulu (tirée dans le
+// worker ; la limite évite seulement les abus)
 const practiceLimit = rateLimit({ name: "connections-practice", windowMs: 60 * 1000, max: 30 });
-router.post("/connections/practice", requirePlayer, practiceLimit, (req, res) => {
+router.post("/connections/practice", requirePlayer, practiceLimit, async (req, res) => {
   checkPractice(req, true);
-  res.json(connections.newPracticePuzzle(req.player, req.body?.mode ?? "normal"));
+  res.json(await connections.newPracticePuzzle(req.player, req.body?.mode ?? "normal"));
 });
 
 // Statistiques du joueur sur les grilles du jour (journal du menu) ;
@@ -105,47 +105,40 @@ router.delete("/admin/connections/tags/:id", limitedAction("delete_tag", (req) =
   res.status(204).end();
 });
 
-// Grilles d'aujourd'hui et des 6 jours suivants, avec leurs réponses, pour
-// chaque mode
-// Les grilles pas encore tirées le sont ici (jusqu'à 14 d'un coup) : on rend
-// la main entre deux grilles, sinon le serveur ne répond plus à personne
-// pendant ce temps (le calcul est synchrone) et Docker le croit en panne
-const yieldToOthers = () => new Promise((resolve) => setImmediate(resolve));
-
-router.get("/admin/connections/puzzles", async (req, res, next) => {
-  try {
-    const today = todayParis();
-    const days = Array.from({ length: 7 }, (_, i) => addDays(today, i));
-    const previews = [];
-    for (const date of days) {
-      for (const mode of connections.MODES) {
-        // Une grille qui échoue n'empêche pas d'afficher les autres
-        try {
-          previews.push(connections.puzzlePreview(date, mode));
-        } catch (err) {
-          console.error(`[ERROR] Connections ${mode} ${date}`, err);
-          previews.push({ date, mode, error: `${err.name}: ${err.message}` });
-        }
-        await yieldToOthers();
+// Grilles d'aujourd'hui et des jours suivants (UPCOMING_DAYS en tout), avec
+// leurs réponses, pour chaque mode. Celles qui manquent sont tirées dans le
+// worker : le serveur continue de répondre aux joueurs pendant ce temps.
+router.get("/admin/connections/puzzles", async (req, res) => {
+  const today = todayParis();
+  const previews = [];
+  for (let i = 0; i < connections.UPCOMING_DAYS; i++) {
+    const date = addDays(today, i);
+    for (const mode of connections.MODES) {
+      // Une grille qui échoue n'empêche pas d'afficher les autres
+      try {
+        await connections.ensurePuzzle(date, mode);
+        previews.push(connections.puzzlePreview(date, mode));
+      } catch (err) {
+        console.error(`[ERROR] Connections ${mode} ${date}`, err);
+        previews.push({ date, mode, error: `${err.name}: ${err.message}` });
       }
     }
-    res.json(previews);
-  } catch (err) {
-    next(err);
   }
+  res.json(previews);
 });
 
 router.post(
   "/admin/connections/puzzles/:date/regenerate",
   limitedAction("regenerate_grid", (req) => `${req.params.date} ${req.body?.mode ?? "normal"}`),
-  (req, res) => {
+  async (req, res) => {
     const { date } = req.params;
     const today = todayParis();
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today || date > addDays(today, 6)) {
-      throw new HttpError(400, "Only today's grid and the next 6 days can be regenerated.");
+    const last = addDays(today, connections.UPCOMING_DAYS - 1);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today || date > last) {
+      throw new HttpError(400, `Only today's grid and the next ${connections.UPCOMING_DAYS - 1} days can be regenerated.`);
     }
     const mode = req.body?.mode ?? "normal";
-    connections.regeneratePuzzle(date, mode);
+    await connections.regeneratePuzzle(date, mode);
     res.json(connections.puzzlePreview(date, mode));
   }
 );

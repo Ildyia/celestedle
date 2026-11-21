@@ -25,4 +25,6 @@ try {
 
 app.listen(config.port, () => {
   console.log(`Server successfully started running on port ${config.port}`);
+  // Grilles Connections des prochains jours, tirées en avance dans un worker
+  require("./services/connections").startPreparingUpcoming();
 });

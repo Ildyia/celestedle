@@ -6,6 +6,7 @@ const db = require("../src/db");
 const elementsRepo = require("../src/repositories/elements");
 const connections = require("../src/services/connections");
 const connectionsRepo = require("../src/repositories/connections");
+const { generateInWorker } = require("../src/services/connections-worker");
 const {
   buildCategories,
   countSolutions,
@@ -220,7 +221,7 @@ test("admin : tags, éléments à classer, aperçu et régénération des grille
   assert.equal(saved.data.elementIds.length, 4);
 
   const puzzles = await api.request("GET", "/api/admin/connections/puzzles", { token });
-  assert.equal(puzzles.data.length, 14, "7 jours, normal et Hard");
+  assert.equal(puzzles.data.length, 6, "3 jours, normal et Hard");
   assert.deepEqual(puzzles.data.slice(0, 2).map((p) => p.mode), ["normal", "hard"]);
   assert.equal(puzzles.data[0].groups.length, 4);
 
@@ -608,23 +609,17 @@ test("indices : chacun une fois, 3 en normal et 1 en Hard, comptés au classemen
   assert.equal((await hint("kinds")).status, 409, "partie finie");
 });
 
-test("variété : un seul groupe « Found in … » en normal, et un élément récent sort bien moins souvent", () => {
+test("générateur : un seul groupe « Found in … » en normal ; le worker tire la même grille", async () => {
   const elements = elementsRepo.listActive();
-  const oshiro = elements.find((e) => e.nom.toLowerCase() === "oshiro");
-  const draw = (seed, recent) =>
-    generatePuzzle(elements, [], seededRandom(seed), { maxTags: 1, maxPerKind: { chapter: 1 }, recent });
-
-  let withOshiro = 0;
-  let withOshiroRecent = 0;
-  const recent = { elements: new Map([[oshiro.id, 1]]), categories: new Map() };
-  for (let seed = 1; seed <= 40; seed++) {
-    const free = draw(seed, null);
-    assert.ok(free.groups.filter((g) => g.kind === "chapter").length <= 1, "au plus un groupe chapitre");
-    if (free.tiles.includes(oshiro.id)) withOshiro++;
-    if (draw(seed, recent).tiles.includes(oshiro.id)) withOshiroRecent++;
+  const options = { maxTags: 1, maxPerKind: { chapter: 1 } };
+  for (let seed = 1; seed <= 30; seed++) {
+    const puzzle = generatePuzzle(elements, [], seededRandom(seed), options);
+    assert.ok(puzzle.groups.filter((g) => g.kind === "chapter").length <= 1, "au plus un groupe chapitre");
   }
-  // Sorti la veille : il ne revient presque plus le lendemain
-  assert.ok(withOshiroRecent < withOshiro / 2, `${withOshiroRecent} grilles avec Oshiro récent contre ${withOshiro} sans`);
+  // Calculée dans le worker (le serveur ne bloque pas) : même grille, même graine
+  const direct = generatePuzzle(elements, [], seededRandom(42), options);
+  const inWorker = await generateInWorker(elements, [], 42, options);
+  assert.deepEqual(inWorker, direct);
 });
 
 test("insights : Connections (issues, erreurs, sortes de groupes, pièges)", async () => {
