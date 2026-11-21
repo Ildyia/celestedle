@@ -258,6 +258,19 @@
               </div>
             </form>
           </div>
+        
+          <h3 class="admin-subtitle">Tag diagnostics</h3>
+          <p class="small-subtext">
+            Draws test grids in the background (about 30 seconds, the site keeps
+            running) to show which tags stop grids from being drawn. "Blocks"
+            is the share of rejected draws a tag caused in A-Side: it would have
+            made 4 tiles share it outside the groups (a decoy), or it had too
+            few elements of its own once the other groups were placed. Tags
+            that overlap a lot with another category, or are very big, block
+            the most.
+          </p>
+          <button type="button" id="cx-diagnose-btn" class="btn-secondary">Diagnose tags</button>
+          <div id="cx-diagnostics"></div>
         </section>
 
         <section id="tab-reports" class="admin-panel" role="tabpanel" hidden>

@@ -6,7 +6,7 @@ const repo = require("../repositories/connections");
 const { HttpError } = require("../utils/http-error");
 const { todayParis, nowIso, secondsBetween, addDays } = require("../utils/dates");
 const { GROUP_SIZE, GROUP_COUNT, buildCategories, generatePuzzle, seededRandom } = require("./connections-generator");
-const { generateInWorker } = require("./connections-worker");
+const { generateInWorker, diagnoseInWorker } = require("./connections-worker");
 
 const MAX_MISTAKES = 4;
 const MODES = ["normal", "hard"];
@@ -394,6 +394,105 @@ function deleteSuggestion(id) {
 }
 
 // Grille d'un jour avec ses réponses, pour la relecture dans l'admin
+// Grilles du jour passées (pas l'entraînement) et parties finies dessus : pour
+// savoir combien de fois chaque tag est sorti, et s'il a été trouvé
+const diagnosticStmts = {
+  puzzles: db.prepare("SELECT date, version, groups FROM connection_puzzles WHERE date NOT LIKE 'practice%'"),
+  found: db.prepare(`
+    SELECT g.date, g.puzzle_version AS version, a.group_index AS groupIndex
+    FROM connection_games g JOIN connection_attempts a ON a.game_id = g.id
+    WHERE g.status <> 'playing' AND g.date NOT LIKE 'practice%' AND a.group_index IS NOT NULL
+  `),
+  finished: db.prepare(`
+    SELECT date, puzzle_version AS version, COUNT(*) AS players FROM connection_games
+    WHERE status <> 'playing' AND date NOT LIKE 'practice%' GROUP BY date, puzzle_version
+  `)
+};
+
+const DIAGNOSTIC_TRIALS = 30;
+const DIAGNOSTIC_BUDGET_MS = 15000;
+
+/**
+ * Diagnostic des tags (onglet Connections de l'admin), pour voir lesquels
+ * empêchent de tirer des grilles :
+ * - size, status : membres actifs, et si le tag peut servir de groupe ;
+ * - overlap : la catégorie qui partage le plus de membres avec lui ;
+ * - daily : grilles du jour où il est sorti, et part des joueurs qui l'ont
+ *   trouvé ;
+ * - trials : grilles d'essai (par mode) où il est choisi (picked), et tirages
+ *   qu'il fait rejeter (decoy : il formerait un faux groupe ; incompatible :
+ *   pas assez de membres à lui une fois les autres groupes posés).
+ * Les essais tournent dans le worker : le serveur répond pendant ce temps.
+ */
+async function tagDiagnostics() {
+  const elements = elementsRepo.listActive();
+  const tags = repo.listTags();
+  const categories = buildCategories(elements, tags);
+  const reports = {};
+  for (const mode of MODES) {
+    reports[mode] = await diagnoseInWorker(elements, tags, generateOptions(mode), {
+      trials: DIAGNOSTIC_TRIALS,
+      budgetMs: DIAGNOSTIC_BUDGET_MS
+    });
+  }
+
+  // Sorties dans les grilles du jour, et groupes trouvés
+  const players = new Map(diagnosticStmts.finished.all().map((r) => [`${r.date}|${r.version}`, r.players]));
+  const found = new Map();
+  for (const r of diagnosticStmts.found.all()) {
+    const key = `${r.date}|${r.version}|${r.groupIndex}`;
+    found.set(key, (found.get(key) ?? 0) + 1);
+  }
+  const daily = new Map();
+  for (const p of diagnosticStmts.puzzles.all()) {
+    JSON.parse(p.groups).forEach((g, index) => {
+      if (!g.key.startsWith("tag:")) return;
+      const d = daily.get(g.key) ?? { grids: 0, players: 0, found: 0 };
+      d.grids++;
+      d.players += players.get(`${p.date}|${p.version}`) ?? 0;
+      d.found += found.get(`${p.date}|${p.version}|${index}`) ?? 0;
+      daily.set(g.key, d);
+    });
+  }
+
+  const rows = tags.map((tag) => {
+    const key = `tag:${tag.id}`;
+    const category = categories.find((c) => c.key === key);
+    const size = category.members.size;
+    let overlap = null;
+    for (const other of categories) {
+      if (other === category) continue;
+      const shared = [...category.members].filter((id) => other.members.has(id)).length;
+      if (shared && (!overlap || shared > overlap.shared)) overlap = { label: other.label, kind: other.kind, shared, size: other.members.size };
+    }
+    const status = tag.unreviewedIds.length ? "unreviewed" : size < GROUP_SIZE ? "too small" : category.usable ? "ok" : "too big";
+    const trials = Object.fromEntries(
+      MODES.map((mode) => [
+        mode,
+        {
+          picked: reports[mode].picked[key] ?? 0,
+          decoy: reports[mode].blame[key]?.decoy ?? 0,
+          incompatible: reports[mode].blame[key]?.incompatible ?? 0
+        }
+      ])
+    );
+    return { id: tag.id, label: tag.label, size, status, overlap, daily: daily.get(key) ?? { grids: 0, players: 0, found: 0 }, trials };
+  });
+  const blocked = (r) => r.trials.normal.decoy + r.trials.normal.incompatible;
+  rows.sort((a, b) => blocked(b) - blocked(a) || b.size - a.size);
+
+  // Les autres catégories (couleurs, formes…) qui bloquent le plus, pour comparer
+  const tagKeys = new Set(tags.map((t) => `tag:${t.id}`));
+  const others = Object.entries(reports.normal.blame)
+    .filter(([key]) => !tagKeys.has(key))
+    .map(([key, b]) => ({ label: categories.find((c) => c.key === key)?.label ?? key, kind: key.split(":")[0], ...b }))
+    .sort((a, b) => b.decoy + b.incompatible - (a.decoy + a.incompatible))
+    .slice(0, 8);
+
+  const summary = (r) => ({ trials: r.trials, failed: r.failed, rules: r.rules, ms: r.ms, rejected: r.rejected });
+  return { summary: { normal: summary(reports.normal), hard: summary(reports.hard) }, tags: rows, others };
+}
+
 function puzzlePreview(date, mode = "normal") {
   const puzzle = getPuzzle(date, mode);
   return {
@@ -416,6 +515,7 @@ module.exports = {
   MODES,
   getPuzzle,
   ensurePuzzle,
+  tagDiagnostics,
   startPreparingUpcoming,
   UPCOMING_DAYS,
   regeneratePuzzle,

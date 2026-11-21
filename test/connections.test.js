@@ -642,3 +642,21 @@ test("insights : Connections (issues, erreurs, sortes de groupes, pièges)", asy
   assert.ok(after.decoys.length > 0);
   assert.ok(Array.isArray(after.hardest));
 });
+
+test("diagnostic des tags : grilles d'essai dans le worker, réservé à l'équipe", async () => {
+  const token = await owner();
+  const ids = elementsRepo.listActive().slice(0, 6).map((e) => e.id);
+  const created = await api.request("POST", "/api/admin/connections/tags", { token, body: { label: "Diag tag", elementIds: ids } });
+  assert.equal(created.status, 201, JSON.stringify(created.data));
+
+  const res = await api.request("GET", "/api/admin/connections/tags/diagnostics", { token });
+  assert.equal(res.status, 200, JSON.stringify(res.data));
+  assert.ok(res.data.summary.normal.trials > 0);
+  const row = res.data.tags.find((t) => t.id === created.data.id);
+  assert.equal(row.size, 6);
+  assert.ok(row.trials.normal && row.trials.hard && row.daily);
+
+  const { token: playerToken } = await api.newPlayer();
+  assert.equal((await api.request("GET", "/api/admin/connections/tags/diagnostics", { token: playerToken })).status, 403);
+  await api.request("DELETE", `/api/admin/connections/tags/${created.data.id}`, { token });
+});

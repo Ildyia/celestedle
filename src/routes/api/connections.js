@@ -108,6 +108,11 @@ router.delete("/admin/connections/tags/:id", limitedAction("delete_tag", (req) =
 // Grilles d'aujourd'hui et des jours suivants (UPCOMING_DAYS en tout), avec
 // leurs réponses, pour chaque mode. Celles qui manquent sont tirées dans le
 // worker : le serveur continue de répondre aux joueurs pendant ce temps.
+// Diagnostic des tags : quelques secondes de grilles d'essai dans le worker
+router.get("/admin/connections/tags/diagnostics", async (req, res) => {
+  res.json(await connections.tagDiagnostics());
+});
+
 router.get("/admin/connections/puzzles", async (req, res) => {
   const today = todayParis();
   const previews = [];

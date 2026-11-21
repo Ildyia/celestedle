@@ -114,7 +114,16 @@ function countSolutions(tileIds, categories) {
 // souvent à faire disparaître un faux groupe
 const SAMPLES_PER_CHOICE = 10;
 
-// stats compte les raisons d'échec, pour expliquer une génération impossible
+// stats compte les raisons d'échec, pour expliquer une génération impossible.
+// stats.blame (facultatif, diagnostic des tags) : par clé de catégorie,
+// { decoy, incompatible } = nombre de tirages qu'elle a fait rejeter
+function blame(stats, category, reason) {
+  if (!stats.blame || !category) return;
+  const entry = stats.blame.get(category.key) ?? { decoy: 0, incompatible: 0 };
+  entry[reason]++;
+  stats.blame.set(category.key, entry);
+}
+
 function tryGroups(chosen, categories, random, rule, stats) {
   for (let sample = 0; sample < SAMPLES_PER_CHOICE; sample++) {
     const found = sampleGroups(chosen, categories, random, rule, stats);
@@ -138,29 +147,35 @@ function sampleGroups(chosen, categories, random, rule, stats) {
     );
     if (pool.length < GROUP_SIZE) {
       stats.incompatible++;
+      blame(stats, category, "incompatible");
       return null;
     }
     // Pioche case par case : on saute une case qui ferait 4 cases d'un même
     // type ou tag hors des groupes, plutôt que de jeter toute la grille à la
     // vérification. Bien plus de grilles strictes, et plus vite.
     const members = [];
+    const blockers = new Set();
     for (const id of shuffle(pool, random)) {
       if (members.length === GROUP_SIZE) break;
       const placed = [...tiles, ...members];
-      const makesDecoy = guards.some(
+      const blocker = guards.find(
         (c) => c.members.has(id) && placed.filter((x) => c.members.has(x)).length >= GROUP_SIZE - 1
       );
-      if (!makesDecoy) members.push(id);
+      if (blocker) blockers.add(blocker);
+      else members.push(id);
     }
     if (members.length < GROUP_SIZE) {
       stats.decoy++;
+      for (const c of blockers) blame(stats, c, "decoy");
       return undefined;
     }
     tiles.push(...members);
     groups.push({ category, elementIds: members });
   }
-  if (hasObviousDecoy(tiles, chosen, categories, rule)) {
+  const decoy = findDecoy(tiles, chosen, categories, rule);
+  if (decoy) {
     stats.decoy++;
+    blame(stats, decoy, "decoy");
     return undefined;
   }
   if (countSolutions(tiles, categories) !== 1) {
@@ -174,9 +189,14 @@ function sampleGroups(chosen, categories, random, rule, stats) {
 // rule : "strict" (mode normal), "relaxed" (repli du mode normal : type et
 // tag seulement) ou "none" (mode Hard : faux groupes permis)
 function hasObviousDecoy(tiles, chosen, categories, rule = "strict") {
-  if (rule === "none") return false;
+  return Boolean(findDecoy(tiles, chosen, categories, rule));
+}
+
+// La catégorie qui fait un faux groupe (la première trouvée), ou null
+function findDecoy(tiles, chosen, categories, rule = "strict") {
+  if (rule === "none") return null;
   const groupKeys = chosen.map((_, i) => [...tiles.slice(i * GROUP_SIZE, (i + 1) * GROUP_SIZE)].sort().join());
-  return categories.some((c) => {
+  return categories.find((c) => {
     if (chosen.includes(c)) return false;
     const inside = tiles.filter((id) => c.members.has(id));
     // Type ou tag : visibles d'un coup d'œil, aucun faux groupe accepté
@@ -184,7 +204,7 @@ function hasObviousDecoy(tiles, chosen, categories, rule = "strict") {
     // Toute catégorie : exactement 4 cases qui ne sont pas un des groupes
     // ressemblent en tout point à un vrai groupe
     return rule === "strict" && inside.length === GROUP_SIZE && !groupKeys.includes([...inside].sort().join());
-  });
+  }) ?? null;
 }
 
 // Grille { groups: [{ key, kind, label, level, elementIds }], tiles: [16 ids] }.
@@ -201,9 +221,14 @@ function hasObviousDecoy(tiles, chosen, categories, rule = "strict") {
 // utilisée est renvoyée (rule) pour que l'admin le voie.
 // maxPerKind : nombre de groupes au plus par sorte (chapter, colour…), en plus
 // de MAX_SAME_KIND (ex. { chapter: 1 } : un seul groupe « Found in … »)
-function generatePuzzle(elements, tags, random = Math.random, { allowDecoys = false, maxTags = MAX_SAME_KIND, maxPerKind = {} } = {}) {
+// stats : pour le diagnostic des tags (voir diagnoseTags)
+function generatePuzzle(
+  elements,
+  tags,
+  random = Math.random,
+  { allowDecoys = false, maxTags = MAX_SAME_KIND, maxPerKind = {}, stats = { incompatible: 0, decoy: 0, multiple: 0 } } = {}
+) {
   const rules = allowDecoys ? ["none"] : ["strict", "relaxed", "none"];
-  const stats = { incompatible: 0, decoy: 0, multiple: 0 };
   for (const rule of rules) {
     const puzzle = tryGenerate(elements, tags, random, rule, stats, { maxTags, maxPerKind });
     if (puzzle) return { ...puzzle, rule };
@@ -267,7 +292,43 @@ function tryGenerate(elements, tags, random, rule, stats, { maxTags, maxPerKind 
   return null;
 }
 
+/**
+ * Diagnostic des tags : `trials` grilles d'essai (graines 1, 2…, arrêt au bout
+ * de budgetMs), en notant pour chaque catégorie combien de tirages elle a fait
+ * rejeter (faux groupe, ou groupe impossible à remplir) et combien de grilles
+ * réussies l'ont prise comme groupe. Long avec beaucoup de tags : à lancer
+ * dans le worker.
+ */
+function diagnoseTags(elements, tags, options, { trials = 30, budgetMs = 15000 } = {}) {
+  const stats = { incompatible: 0, decoy: 0, multiple: 0, blame: new Map() };
+  const picked = new Map();
+  const rules = { strict: 0, relaxed: 0, none: 0 };
+  let done = 0;
+  let failed = 0;
+  const started = Date.now();
+  for (let seed = 1; seed <= trials && Date.now() - started < budgetMs; seed++) {
+    done++;
+    try {
+      const puzzle = generatePuzzle(elements, tags, seededRandom(seed), { ...options, stats });
+      rules[puzzle.rule]++;
+      for (const g of puzzle.groups) picked.set(g.key, (picked.get(g.key) ?? 0) + 1);
+    } catch {
+      failed++;
+    }
+  }
+  return {
+    trials: done,
+    failed,
+    rules,
+    ms: Date.now() - started,
+    rejected: { incompatible: stats.incompatible, decoy: stats.decoy, multiple: stats.multiple },
+    blame: Object.fromEntries(stats.blame),
+    picked: Object.fromEntries(picked)
+  };
+}
+
 module.exports = {
+  diagnoseTags,
   GROUP_SIZE,
   hasObviousDecoy,
   GROUP_COUNT,

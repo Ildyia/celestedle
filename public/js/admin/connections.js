@@ -21,6 +21,7 @@ export class ConnectionsTab {
     byId("cx-tag-cancel-btn").addEventListener("click", () => this.closeForm());
     byId("cx-tag-search").addEventListener("input", () => this.renderElements());
     byId("cx-tag-delete-btn").addEventListener("click", () => this.remove());
+    byId("cx-diagnose-btn").addEventListener("click", () => this.diagnose());
     this.form.addEventListener("submit", (e) => {
       e.preventDefault();
       this.save();
@@ -52,6 +53,74 @@ export class ConnectionsTab {
     if (suggestions.status === "fulfilled") this.renderSuggestions(suggestions.value);
     else errors.push(`suggestions: ${suggestions.reason.message}`);
     if (errors.length) this.notify(`Couldn't load ${errors.join("; ")}`, true);
+  }
+
+  // Diagnostic des tags (src/services/connections.js, tagDiagnostics)
+  async diagnose() {
+    const button = byId("cx-diagnose-btn");
+    const box = byId("cx-diagnostics");
+    button.disabled = true;
+    clear(box);
+    box.append(el("p", { className: "small-subtext", text: "Drawing test grids… (about 30 seconds)" }));
+    try {
+      this.renderDiagnostics(await admin.connectionTagDiagnostics());
+    } catch (err) {
+      clear(box);
+      this.notify(`Couldn't run the diagnostics: ${err.message}`, true);
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  renderDiagnostics({ summary, tags, others }) {
+    const box = byId("cx-diagnostics");
+    clear(box);
+    const pct = (part, total) => (total ? `${Math.round((part / total) * 100)}%` : "0%");
+    const rejected = (s) => s.rejected.decoy + s.rejected.incompatible;
+    const line = (name, s) =>
+      `${name}: ${s.trials} test grids in ${(s.ms / 1000).toFixed(1)} s` +
+      (s.failed ? `, ${s.failed} impossible` : "") +
+      (name === "A-Side" ? ` · ${s.rules.strict} without any decoy, ${s.rules.relaxed} with a fallback rule (a colour, shape or chapter decoy allowed)` : "");
+    box.append(
+      el("p", { className: "small-subtext", text: line("A-Side", summary.normal) }),
+      el("p", { className: "small-subtext", text: line("B-Side", summary.hard) })
+    );
+    const total = rejected(summary.normal);
+    const blocks = (t) => t.decoy + t.incompatible;
+    const statusText = { ok: "OK", unreviewed: "Incomplete", "too small": "Under 4", "too big": "Over 40" };
+    box.append(
+      el("div", { className: "admin-table-wrapper" }, [
+        el("table", { className: "admin-table compact" }, [
+          el("thead", {}, [
+            el("tr", {}, ["Tag", "Elements", "Status", "Blocks (A)", "Picked in tests A / B", "Daily grids", "Found", "Overlaps most with"].map((t) => el("th", { text: t })))
+          ]),
+          el(
+            "tbody",
+            {},
+            tags.map((t) =>
+              el("tr", {}, [
+                el("td", { text: t.label }),
+                el("td", { text: String(t.size) }),
+                el("td", { text: statusText[t.status] ?? t.status }),
+                el("td", { text: pct(blocks(t.trials.normal), total), attrs: { title: `${t.trials.normal.decoy} decoy, ${t.trials.normal.incompatible} too few elements of its own` } }),
+                el("td", { text: `${t.trials.normal.picked} / ${t.trials.hard.picked}` }),
+                el("td", { text: String(t.daily.grids) }),
+                el("td", { text: t.daily.players ? pct(t.daily.found, t.daily.players) : "-" }),
+                el("td", { text: t.overlap ? `${t.overlap.label} (${KIND_LABELS[t.overlap.kind] ?? t.overlap.kind}): ${t.overlap.shared} of ${t.size} shared` : "-" })
+              ])
+            )
+          )
+        ])
+      ])
+    );
+    if (others.length) {
+      box.append(
+        el("p", {
+          className: "small-subtext",
+          text: "Other categories that block the most (A-Side): " + others.map((o) => `${o.label} (${KIND_LABELS[o.kind] ?? o.kind}) ${pct(o.decoy + o.incompatible, total)}`).join(", ")
+        })
+      );
+    }
   }
 
   async setAccess(select) {

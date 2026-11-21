@@ -57,6 +57,7 @@ export const admin = {
   uploadSprite: (id, file) => upload(`/admin/elements/${id}/sprite`, file),
   exportDbJson: () => request("GET", "/admin/export/db.json"),
   connectionTags: () => request("GET", "/admin/connections/tags"),
+  connectionTagDiagnostics: () => request("GET", "/admin/connections/tags/diagnostics"),
   createConnectionTag: (tag) => request("POST", "/admin/connections/tags", tag),
   updateConnectionTag: (id, tag) => request("PUT", `/admin/connections/tags/${id}`, tag),
   deleteConnectionTag: (id) => request("DELETE", `/admin/connections/tags/${id}`),

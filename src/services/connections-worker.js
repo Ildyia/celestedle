@@ -7,14 +7,19 @@
 // - dans le fil principal : generateInWorker(...) envoie un calcul au worker
 //   et renvoie une promesse ;
 // - dans le worker : il reçoit { id, elements, tags, seed, options } et
-//   renvoie { id, puzzle } ou { id, error }.
+//   renvoie { id, puzzle } ou { id, error } ; avec diagnose (réglages du
+//   diagnostic des tags), il renvoie { id, report } (voir diagnoseTags).
 // Le worker ne touche pas à la base : il reçoit les éléments et les tags.
 const { Worker, isMainThread, parentPort } = require("worker_threads");
 
 if (!isMainThread) {
-  const { generatePuzzle, seededRandom } = require("./connections-generator");
-  parentPort.on("message", ({ id, elements, tags, seed, options }) => {
+  const { generatePuzzle, diagnoseTags, seededRandom } = require("./connections-generator");
+  parentPort.on("message", ({ id, elements, tags, seed, options, diagnose }) => {
     try {
+      if (diagnose) {
+        parentPort.postMessage({ id, report: diagnoseTags(elements, tags, options, diagnose) });
+        return;
+      }
       const random = seed === null ? Math.random : seededRandom(seed);
       parentPort.postMessage({ id, puzzle: generatePuzzle(elements, tags, random, options) });
     } catch (err) {
@@ -31,13 +36,13 @@ if (!isMainThread) {
   function getWorker() {
     if (worker) return worker;
     worker = new Worker(__filename);
-    worker.on("message", ({ id, puzzle, error }) => {
+    worker.on("message", ({ id, puzzle, report, error }) => {
       const job = pending.get(id);
       if (!job) return;
       pending.delete(id);
       if (!pending.size) worker?.unref();
       if (error) job.reject(Object.assign(new Error(error.message), { name: error.name }));
-      else job.resolve(puzzle);
+      else job.resolve(report ?? puzzle);
     });
     const fail = (err) => {
       worker = null;
@@ -53,15 +58,20 @@ if (!isMainThread) {
    * Même résultat que generatePuzzle(elements, tags, seededRandom(seed),
    * options), calculé dans le worker. seed null : Math.random.
    */
-  function generateInWorker(elements, tags, seed, options) {
+  function send(message) {
     return new Promise((resolve, reject) => {
       const id = nextId++;
       pending.set(id, { resolve, reject });
       const w = getWorker();
       w.ref();
-      w.postMessage({ id, elements, tags, seed, options });
+      w.postMessage({ id, ...message });
     });
   }
 
-  module.exports = { generateInWorker };
+  const generateInWorker = (elements, tags, seed, options) => send({ elements, tags, seed, options });
+
+  /** diagnoseTags(elements, tags, options, settings), calculé dans le worker. */
+  const diagnoseInWorker = (elements, tags, options, settings = {}) => send({ elements, tags, options, diagnose: settings });
+
+  module.exports = { generateInWorker, diagnoseInWorker };
 }
