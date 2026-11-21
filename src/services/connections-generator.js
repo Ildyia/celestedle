@@ -285,6 +285,9 @@ const OVERUSE_CAP = 1.5;
 const SHORT_CATEGORY = 0.01;
 // Essais (jeux de catégories) des recherches avec restrictions
 const PHASE_ATTEMPTS = 1500;
+// … et au plus PHASE_MS chacune : une nouvelle grille demandée depuis l'admin
+// doit sortir en quelques secondes
+const PHASE_MS = 3000;
 
 // maxPerKind : nombre de groupes au plus par sorte (chapter, colour…), en plus
 // de MAX_SAME_KIND (ex. { chapter: 1 } : un seul groupe « Found in … »)
@@ -390,8 +393,8 @@ function tryGenerate(elements, tags, random, rule, stats, { maxTags, maxPerKind 
   const yesterday = (c) => (recent.categories?.get(c.key) ?? 0) >= 1;
   const phases = recent
     ? [
-        { ...weigh, resting: overused, skip: yesterday, attempts: PHASE_ATTEMPTS },
-        { ...weigh, resting: overused, attempts: PHASE_ATTEMPTS },
+        { ...weigh, resting: overused, skip: yesterday, attempts: PHASE_ATTEMPTS, ms: PHASE_MS },
+        { ...weigh, resting: overused, attempts: PHASE_ATTEMPTS, ms: PHASE_MS },
         weigh
       ]
     : [weigh];
@@ -399,7 +402,8 @@ function tryGenerate(elements, tags, random, rule, stats, { maxTags, maxPerKind 
   const open = usable.filter((c) => !phaseWeigh.skip?.(c));
   const openTags = open.filter((c) => c.kind === "tag");
   const fullSearchUntil = Date.now() + FULL_SEARCH_MS;
-  for (let attempt = 0; attempt < (phaseWeigh.attempts ?? MAX_ATTEMPTS) && candidates.length < CANDIDATES; attempt++) {
+  const phaseUntil = phaseWeigh.ms ? Date.now() + phaseWeigh.ms : Infinity;
+  for (let attempt = 0; attempt < (phaseWeigh.attempts ?? MAX_ATTEMPTS) && candidates.length < CANDIDATES && Date.now() < phaseUntil; attempt++) {
     // La moitié des essais sans tag imposé, si aucun tirage avec tag n'aboutit
     const withTag = imposeTag && attempt < (phaseWeigh.attempts ?? MAX_ATTEMPTS) / 2;
     const first = withTag && openTags.length ? weightedShuffle(openTags, weigh.category, random).slice(0, 1) : [];

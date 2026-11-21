@@ -148,7 +148,7 @@ export class ConnectionsTab {
                 className: "btn-secondary btn-small",
                 text: "Redraw",
                 attrs: { type: "button" },
-                on: { click: () => this.regenerate(puzzle.date, puzzle.mode) }
+                on: { click: (e) => this.regenerate(puzzle.date, puzzle.mode, e.currentTarget) }
               })
             ])
           : el("div", { className: "admin-card cx-admin-puzzle" }, [
@@ -171,7 +171,7 @@ export class ConnectionsTab {
               className: "btn-secondary btn-small",
               text: "Redraw",
               attrs: { type: "button", title: "Draws another grid; today's games start over" },
-              on: { click: () => this.regenerate(puzzle.date, puzzle.mode) }
+              on: { click: (e) => this.regenerate(puzzle.date, puzzle.mode, e.currentTarget) }
             })
           ]),
           ...puzzle.groups.map((group) =>
@@ -186,13 +186,24 @@ export class ConnectionsTab {
     );
   }
 
-  async regenerate(date, mode) {
+  // Le tirage peut prendre quelques secondes (dans le worker, derrière une
+  // préparation ou un diagnostic en cours) : le bouton le dit
+  async regenerate(date, mode, button) {
+    const label = button?.textContent;
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Drawing…";
+    }
     try {
-      await admin.regenerateConnectionPuzzle(date, mode);
-      this.notify(`New ${mode === "hard" ? "Hard" : "Normal"} grid for ${date}.`);
+      const puzzle = await admin.regenerateConnectionPuzzle(date, mode);
+      this.notify(`New ${mode === "hard" ? "Hard" : "Normal"} grid for ${date} (v${puzzle.version}).`);
       this.renderPuzzles(await admin.connectionPuzzles());
     } catch (err) {
       this.notify(err.message, true);
+      if (button) {
+        button.disabled = false;
+        button.textContent = label;
+      }
     }
   }
 
