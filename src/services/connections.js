@@ -47,25 +47,51 @@ function seedFor(key) {
 // Mode normal : un seul groupe « Found in … » (les plus durs à deviner)
 const MAX_PER_KIND = { normal: { chapter: 1 }, hard: {} };
 
-// Options du générateur pour un mode
-function generateOptions(mode) {
-  return { allowDecoys: mode === "hard", maxTags: MAX_TAGS[mode], maxPerKind: MAX_PER_KIND[mode] };
+// Variété : ce qui est sorti les RECENT_DAYS jours avant `date` (les deux
+// modes), pesant d'autant plus que c'est récent (RECENT_DECAY par jour), et
+// la grille de l'autre mode du même jour, si elle existe déjà
+const RECENT_DAYS = 30;
+const RECENT_DECAY = 0.85;
+function recentFor(date, mode) {
+  // counts : nombre de sorties de chaque élément (sans pondération), pour le
+  // plafond des éléments trop sortis
+  const recent = { elements: new Map(), categories: new Map(), counts: new Map() };
+  const add = (puzzle, weight) => {
+    if (!puzzle) return;
+    for (const id of puzzle.tiles) {
+      recent.elements.set(id, (recent.elements.get(id) ?? 0) + weight);
+      recent.counts.set(id, (recent.counts.get(id) ?? 0) + 1);
+    }
+    for (const g of puzzle.groups) recent.categories.set(g.key, (recent.categories.get(g.key) ?? 0) + weight);
+  };
+  add(repo.findPuzzle(dailyKey(mode === "hard" ? "normal" : "hard", date)), 1);
+  for (let ago = 1; ago <= RECENT_DAYS; ago++) {
+    const day = addDays(date, -ago);
+    for (const m of MODES) add(repo.findPuzzle(dailyKey(m, day)), RECENT_DECAY ** (ago - 1));
+  }
+  return recent;
 }
 
-function generate(mode, random) {
-  return generatePuzzle(elementsRepo.listActive(), repo.listTags(), random, generateOptions(mode));
+// Options du générateur pour un mode, avec ce qui est sorti avant `date`
+// (variété : voir generatePuzzle)
+function generateOptions(mode, date = todayParis()) {
+  return { allowDecoys: mode === "hard", maxTags: MAX_TAGS[mode], maxPerKind: MAX_PER_KIND[mode], recent: recentFor(date, mode) };
+}
+
+function generate(mode, random, date = todayParis()) {
+  return generatePuzzle(elementsRepo.listActive(), repo.listTags(), random, generateOptions(mode, date));
 }
 
 // Même grille, calculée dans le worker (connections-worker.js) : le serveur
 // continue de répondre pendant ce temps. seed null : tirage au hasard.
-function generateAsync(mode, seed) {
-  return generateInWorker(elementsRepo.listActive(), repo.listTags(), seed, generateOptions(mode));
+function generateAsync(mode, seed, date = todayParis()) {
+  return generateInWorker(elementsRepo.listActive(), repo.listTags(), seed, generateOptions(mode, date));
 }
 
 function getPuzzle(date = todayParis(), mode = "normal") {
   const key = dailyKey(checkMode(mode), date);
   // Normalement déjà tirée en avance (prepareUpcoming) ; sinon, sur place
-  return repo.findPuzzle(key) ?? repo.createPuzzleIfMissing(key, generate(mode, seededRandom(seedFor(key))), nowIso());
+  return repo.findPuzzle(key) ?? repo.createPuzzleIfMissing(key, generate(mode, seededRandom(seedFor(key)), date), nowIso());
 }
 
 // Grille d'un jour, tirée dans le worker si elle n'existe pas encore : la même
@@ -74,7 +100,7 @@ async function ensurePuzzle(date, mode = "normal") {
   const key = dailyKey(checkMode(mode), date);
   const existing = repo.findPuzzle(key);
   if (existing) return existing;
-  const puzzle = await generateAsync(mode, seedFor(key));
+  const puzzle = await generateAsync(mode, seedFor(key), date);
   return repo.createPuzzleIfMissing(key, puzzle, nowIso());
 }
 
@@ -103,7 +129,7 @@ function startPreparingUpcoming() {
 // Nouvelle grille tirée par l'admin : les parties du jour repartent de zéro
 async function regeneratePuzzle(date, mode = "normal") {
   const key = dailyKey(checkMode(mode), date);
-  return repo.replacePuzzle(key, await generateAsync(mode, null), nowIso());
+  return repo.replacePuzzle(key, await generateAsync(mode, null, date), nowIso());
 }
 
 // Grille d'entraînement d'un joueur (playtest) : rangée avec les grilles du

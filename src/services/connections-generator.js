@@ -67,6 +67,15 @@ function seededRandom(seed) {
   };
 }
 
+// Mélange pondéré (Efraimidis-Spirakis) : un poids fort passe plus souvent
+// en tête, sans jamais exclure un poids faible
+function weightedShuffle(list, weight, random) {
+  return list
+    .map((item) => ({ item, key: -Math.log(1 - random()) / Math.max(weight(item), 1e-6) }))
+    .sort((a, b) => a.key - b.key)
+    .map((x) => x.item);
+}
+
 function shuffle(list, random) {
   const copy = [...list];
   for (let i = copy.length - 1; i > 0; i--) {
@@ -115,6 +124,24 @@ function countSolutions(tileIds, categories) {
 // souvent à faire disparaître un faux groupe
 const SAMPLES_PER_CHOICE = 10;
 
+// Catégories d'abord, éléments ensuite : une fois les 4 catégories du jour
+// choisies, on cherche vraiment des éléments qui marchent (ELEMENT_SAMPLES
+// tirages), et on garde jusqu'à `keep` combinaisons valides différentes. Avant,
+// 10 tirages ratés faisaient changer de catégories : les catégories « faciles
+// à remplir » gagnaient toujours, avec leurs mêmes éléments.
+const ELEMENT_SAMPLES = 150;
+// … mais seulement pour les premiers jeux de catégories : quand ils sont
+// impossibles à remplir (certains tags), les essais suivants reprennent
+// SAMPLES_PER_CHOICE tirages. Sans cette borne, un jour difficile coûtait
+// 15 fois plus que l'ancien générateur (le calcul tourne maintenant dans un
+// worker, mais une grille doit quand même sortir en quelques secondes).
+const FULL_SEARCH_ATTEMPTS = 20;
+// Et au plus FULL_SEARCH_MS de recherche complète par règle : au-delà, on
+// repasse aussi à SAMPLES_PER_CHOICE (une grille lente à trouver n'est pas
+// meilleure). La grille est enregistrée une fois tirée : que ce cas dépende
+// de la vitesse de la machine ne change rien pour les joueurs.
+const FULL_SEARCH_MS = 1000;
+
 // stats compte les raisons d'échec, pour expliquer une génération impossible.
 // stats.blame (facultatif, diagnostic des tags) : par clé de catégorie,
 // { decoy, incompatible } = nombre de tirages qu'elle a fait rejeter
@@ -125,19 +152,28 @@ function blame(stats, category, reason) {
   stats.blame.set(category.key, entry);
 }
 
-function tryGroups(chosen, categories, random, rule, stats) {
-  for (let sample = 0; sample < SAMPLES_PER_CHOICE; sample++) {
-    const found = sampleGroups(chosen, categories, random, rule, stats);
-    if (found !== undefined) return found;
+function tryGroups(chosen, categories, random, rule, stats, weigh, keep = 1, samples = SAMPLES_PER_CHOICE) {
+  const found = [];
+  const seen = new Set();
+  for (let sample = 0; sample < samples && found.length < keep; sample++) {
+    const result = sampleGroups(chosen, categories, random, rule, stats, weigh);
+    // null : ces catégories ne peuvent pas marcher du tout
+    if (result === null) break;
+    if (result === undefined) continue;
+    const key = [...result.tiles].sort((a, b) => a - b).join();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    found.push(result);
   }
-  return null;
+  return found;
 }
 
-// null : ces catégories ne peuvent pas marcher ; undefined : réessayer d'autres cases
 // Échanges tentés pour défaire les faux groupes d'un tirage
 const MAX_REPAIRS = 8;
 
-function sampleGroups(chosen, categories, random, rule, stats) {
+// null : ces catégories ne peuvent pas marcher ; undefined : réessayer d'autres cases
+// weigh.element(id) : poids d'un élément à la pioche (voir tryGenerate)
+function sampleGroups(chosen, categories, random, rule, stats, weigh) {
   const tiles = [];
   const groups = [];
   const spares = []; // par groupe : les membres pas tirés, pour les échanges
@@ -145,14 +181,14 @@ function sampleGroups(chosen, categories, random, rule, stats) {
     const others = chosen.filter((c) => c !== category);
     // Chaque élément ne va que dans un seul des 4 groupes choisis
     const pool = [...category.members].filter(
-      (id) => !tiles.includes(id) && !others.some((o) => o.members.has(id))
+      (id) => !tiles.includes(id) && !others.some((o) => o.members.has(id)) && !weigh.resting?.(id)
     );
     if (pool.length < GROUP_SIZE) {
       stats.incompatible++;
       blame(stats, category, "incompatible");
       return null;
     }
-    const shuffled = shuffle(pool, random);
+    const shuffled = weightedShuffle(pool, weigh.element, random);
     const members = shuffled.slice(0, GROUP_SIZE);
     spares.push(shuffled.slice(GROUP_SIZE));
     tiles.push(...members);
@@ -224,6 +260,32 @@ function findDecoy(tiles, chosen, categories, rule = "strict") {
 // En dernier recours, le mode normal accepte aussi une grille à faux groupes
 // (rule "none") : mieux vaut une grille imparfaite que pas de grille. La règle
 // utilisée est renvoyée (rule) pour que l'admin le voie.
+//
+// Variété (recent) : ce qui est sorti les 30 jours précédents :
+// { elements: Map<id, poids>, categories: Map<clé, poids> } (poids plus fort
+// si plus récent) et counts: Map<id, nombre de sorties>.
+// Priorités, dans l'ordre : une grille sans faux groupe, puis pas d'élément
+// trop répété, puis pas de catégorie reprise. D'où (voir tryGenerate) :
+// - un élément sorti plus de OVERUSE_CAP fois la moyenne (+ 1) n'est pas
+//   pioché ; en dessous, il a d'autant moins de chances qu'il est sorti ;
+// - les catégories sont tirées en rotation (une catégorie sortie récemment,
+//   ou dont les membres ont trop servi, passe son tour) ; celles de la
+//   veille sont écartées d'abord ;
+// - on garde la moins répétitive de CANDIDATES grilles valides.
+// Les petites catégories (personnages, forme « humanoid ») n'ont que 6 à 8
+// membres : leurs membres ne peuvent pas sortir moins souvent qu'elles.
+const CANDIDATES = 6;
+
+// Rotation des catégories : poids 1 / (1 + 3 × récence)^CAT_POW
+const CAT_POW = 3;
+// Un élément sorti plus de OVERUSE_CAP fois la moyenne (+ 1) sur les 30
+// derniers jours n'a plus aucune chance (voir tryGenerate)
+const OVERUSE_CAP = 1.5;
+// Catégorie qui n'a pas 4 membres disponibles : poids × SHORT_CATEGORY
+const SHORT_CATEGORY = 0.01;
+// Essais (jeux de catégories) des recherches avec restrictions
+const PHASE_ATTEMPTS = 1500;
+
 // maxPerKind : nombre de groupes au plus par sorte (chapter, colour…), en plus
 // de MAX_SAME_KIND (ex. { chapter: 1 } : un seul groupe « Found in … »)
 // stats : pour le diagnostic des tags (voir diagnoseTags)
@@ -231,14 +293,23 @@ function generatePuzzle(
   elements,
   tags,
   random = Math.random,
-  { allowDecoys = false, maxTags = MAX_SAME_KIND, maxPerKind = {}, stats = { incompatible: 0, decoy: 0, multiple: 0 } } = {}
+  { allowDecoys = false, maxTags = MAX_SAME_KIND, maxPerKind = {}, recent = null, stats = { incompatible: 0, decoy: 0, multiple: 0 } } = {}
 ) {
   const rules = allowDecoys ? ["none"] : ["strict", "relaxed", "none"];
   for (const rule of rules) {
-    const puzzle = tryGenerate(elements, tags, random, rule, stats, { maxTags, maxPerKind });
+    const puzzle = tryGenerate(elements, tags, random, rule, stats, { maxTags, maxPerKind }, recent);
     if (puzzle) return { ...puzzle, rule };
   }
   throw noPuzzleError(elements, tags, stats);
+}
+
+// Répétition d'une grille par rapport aux jours précédents : plus c'est
+// bas, plus elle est neuve
+function repetitionScore(found, recent) {
+  if (!recent) return 0;
+  const element = (id) => recent.elements?.get(id) ?? 0;
+  const category = (key) => recent.categories?.get(key) ?? 0;
+  return found.tiles.reduce((s, id) => s + element(id), 0) + 4 * found.groups.reduce((s, g) => s + category(g.category.key), 0);
 }
 
 // Message détaillé : l'équipe admin le voit dans l'onglet Connections
@@ -259,7 +330,7 @@ function noPuzzleError(elements, tags, stats) {
 // un tag peut sortir comme n'importe quelle catégorie.
 const TAG_CHANCE = 0.5;
 
-function tryGenerate(elements, tags, random, rule, stats, { maxTags, maxPerKind }) {
+function tryGenerate(elements, tags, random, rule, stats, { maxTags, maxPerKind }, recent) {
   // Un tag qui ne peut pas servir de groupe (hors limites ou incomplet) ne
   // compte pas non plus dans la vérification : un tag qui couvre presque tout
   // le catalogue rendait toutes les combinaisons de 4 cases valides, et plus
@@ -268,33 +339,100 @@ function tryGenerate(elements, tags, random, rule, stats, { maxTags, maxPerKind 
   const usable = categories.filter((c) => c.usable);
   const usableTags = usable.filter((c) => c.kind === "tag");
 
+  // Poids d'un élément : selon le nombre de fois qu'il est sorti ces derniers
+  // jours (recent.counts) par rapport à la moyenne. Plus il sort plus que les
+  // autres, moins il a de chances ; à OVERUSE_CAP fois la moyenne (+ 1), il
+  // n'en a plus aucune (sauf en dernier recours, voir plus bas)
+  const picks = (id) => recent?.counts?.get(id) ?? 0;
+  const meanPicks = elements.reduce((sum, e) => sum + picks(e.id), 0) / Math.max(elements.length, 1);
+  const cap = OVERUSE_CAP * meanPicks + 1;
+  const element = (id) => Math.max(0, 1 - picks(id) / cap) ** 2;
+  // Fraîcheur d'une catégorie : poids moyen de ses membres. Une petite
+  // catégorie dont les membres viennent de trop sortir passe aussi son tour
+  const failures = new Map();
+  // Une catégorie qui n'a pas 4 membres disponibles (poids non nul) ne peut
+  // sortir qu'avec un élément trop sorti : elle ne passe qu'en dernier recours
+  const freshness = new Map(
+    categories.map((c) => {
+      const weights = [...c.members].map(element);
+      const available = weights.filter((w) => w > 0).length;
+      const mean = weights.reduce((sum, w) => sum + w, 0) / weights.length;
+      return [c.key, available >= GROUP_SIZE ? mean : mean * SHORT_CATEGORY];
+    })
+  );
+  const weigh = {
+    // Rotation : une catégorie sortie récemment passe son tour
+    // Une catégorie qui vient d'échouer (pour cette grille) perd aussi du poids :
+    // sinon une catégorie impossible à remplir, jamais sortie donc « neuve »,
+    // était retirée sans fin
+    category: (c) =>
+      Math.max(freshness.get(c.key), 1e-6) / (1 + 3 * (recent?.categories?.get(c.key) ?? 0)) ** CAT_POW / (1 + (failures.get(c.key) ?? 0)) ** 2,
+    element: (id) => Math.max(element(id), 1e-6)
+  };
+
+  // Un groupe tag n'est imposé qu'une grille sur TAG_CHANCE environ :
+  // imposé chaque jour, les quelques tags complets revenaient sans cesse.
+  // Les autres jours, un tag peut sortir comme n'importe quelle catégorie.
   const imposeTag = usableTags.length > 0 && random() < TAG_CHANCE;
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+  const candidates = [];
+  // D'abord sans les éléments trop sortis (poids nul), sur autant de jeux de
+  // catégories qu'il faut ; s'il n'y a vraiment aucune grille sans eux, on
+  // recommence en les autorisant
+  // Trois recherches, chacune seulement si la précédente n'a rien trouvé :
+  // 1. sans élément trop sorti (poids nul) ni catégorie sortie la veille (ou
+  //    le jour même dans l'autre mode : poids de récence ≥ 1) ;
+  // 2. sans élément trop sorti ;
+  // 3. sans restriction.
+  // Priorités : une grille sans faux groupe (la règle passe avant tout, voir
+  // generatePuzzle), puis pas d'élément trop répété, puis pas de catégorie
+  // reprise.
+  const overused = (id) => element(id) === 0;
+  const yesterday = (c) => (recent.categories?.get(c.key) ?? 0) >= 1;
+  const phases = recent
+    ? [
+        { ...weigh, resting: overused, skip: yesterday, attempts: PHASE_ATTEMPTS },
+        { ...weigh, resting: overused, attempts: PHASE_ATTEMPTS },
+        weigh
+      ]
+    : [weigh];
+  for (const phaseWeigh of phases) {
+  const open = usable.filter((c) => !phaseWeigh.skip?.(c));
+  const openTags = open.filter((c) => c.kind === "tag");
+  const fullSearchUntil = Date.now() + FULL_SEARCH_MS;
+  for (let attempt = 0; attempt < (phaseWeigh.attempts ?? MAX_ATTEMPTS) && candidates.length < CANDIDATES; attempt++) {
     // La moitié des essais sans tag imposé, si aucun tirage avec tag n'aboutit
-    const withTag = imposeTag && attempt < MAX_ATTEMPTS / 2;
-    const first = withTag ? [usableTags[Math.floor(random() * usableTags.length)]] : [];
+    const withTag = imposeTag && attempt < (phaseWeigh.attempts ?? MAX_ATTEMPTS) / 2;
+    const first = withTag && openTags.length ? weightedShuffle(openTags, weigh.category, random).slice(0, 1) : [];
     // Au plus 2 groupes de la même sorte, pour varier (pas 3 groupes couleur)
     const chosen = [...first];
-    for (const category of shuffle(usable.filter((c) => !first.includes(c)), random)) {
+    for (const category of weightedShuffle(open.filter((c) => !first.includes(c)), weigh.category, random)) {
       if (chosen.length === GROUP_COUNT) break;
       const limit = category.kind === "tag" ? maxTags : (maxPerKind[category.kind] ?? MAX_SAME_KIND);
       if (chosen.filter((c) => c.kind === category.kind).length < limit) chosen.push(category);
     }
     if (chosen.length < GROUP_COUNT) break;
 
-    const found = tryGroups(chosen, categories, random, rule, stats);
-    if (!found) continue;
-
-    const groups = shuffle(found.groups, random).map((g, level) => ({
-      key: g.category.key,
-      kind: g.category.kind,
-      label: g.category.label,
-      level,
-      elementIds: g.elementIds
-    }));
-    return { groups, tiles: shuffle(found.tiles, random) };
+    // Sans historique, la première grille valide suffit
+    const full = attempt < FULL_SEARCH_ATTEMPTS && Date.now() < fullSearchUntil;
+    const samples = full ? ELEMENT_SAMPLES : SAMPLES_PER_CHOICE;
+    candidates.push(...tryGroups(chosen, categories, random, rule, stats, phaseWeigh, recent ? CANDIDATES : 1, samples));
+    // Catégories du jour trouvées : on s'y tient
+    if (candidates.length) break;
+    for (const c of chosen) failures.set(c.key, (failures.get(c.key) ?? 0) + 1);
   }
-  return null;
+  if (candidates.length) break;
+  }
+  if (!candidates.length) return null;
+
+  const best = candidates.reduce((a, b) => (repetitionScore(b, recent) < repetitionScore(a, recent) ? b : a));
+  const groups = shuffle(best.groups, random).map((g, level) => ({
+    key: g.category.key,
+    kind: g.category.kind,
+    label: g.category.label,
+    level,
+    elementIds: g.elementIds
+  }));
+  return { groups, tiles: shuffle(best.tiles, random) };
 }
 
 /**

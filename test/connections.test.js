@@ -684,3 +684,18 @@ test("diagnostic des tags : grilles d'essai dans le worker, réservé à l'équi
   assert.equal((await api.request("GET", "/api/admin/connections/tags/diagnostics", { token: playerToken })).status, 403);
   await api.request("DELETE", `/api/admin/connections/tags/${created.data.id}`, { token });
 });
+
+test("générateur : un élément trop sorti (plafond) n'est plus pioché, la grille reste stricte", () => {
+  const elements = elementsRepo.listActive();
+  const oshiro = elements.find((e) => e.nom.toLowerCase() === "oshiro");
+  // Sorti 20 fois ces 30 derniers jours, les autres une fois
+  const counts = new Map(elements.map((e) => [e.id, e.id === oshiro.id ? 20 : 1]));
+  const recent = { elements: new Map(), categories: new Map(), counts };
+  let withOshiro = 0;
+  for (let seed = 1; seed <= 15; seed++) {
+    const puzzle = generatePuzzle(elements, [], seededRandom(seed), { maxTags: 1, maxPerKind: { chapter: 1 }, recent });
+    assert.equal(puzzle.rule, "strict");
+    if (puzzle.tiles.includes(oshiro.id)) withOshiro++;
+  }
+  assert.equal(withOshiro, 0, "Oshiro au-dessus du plafond : jamais pioché quand on peut s'en passer");
+});
