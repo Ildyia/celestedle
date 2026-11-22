@@ -3,8 +3,11 @@ const express = require("express");
 const mail = require("../../services/mail");
 const { requirePlayer } = require("../../middleware/player");
 const { requireStaff, limitedAction } = require("../../middleware/admin-auth");
+const { rateLimit } = require("../../middleware/rate-limit");
 
 const router = express.Router();
+
+const voteLimit = rateLimit({ name: "poll-votes", windowMs: 60 * 1000, max: 30 });
 
 // Sans profil : le courrier pour tous, rien de lu
 router.get("/mail", (req, res) => {
@@ -13,6 +16,14 @@ router.get("/mail", (req, res) => {
 
 router.post("/mail/:id/read", requirePlayer, (req, res) => {
   res.json(mail.markRead(req.player, req.params.id));
+});
+
+router.post("/mail/:id/vote", requirePlayer, voteLimit, (req, res) => {
+  res.json(mail.vote(req.player, req.params.id, req.body?.choices));
+});
+
+router.post("/admin/mail/:id/close", requireStaff, limitedAction("close_poll", (req) => req.params.id), async (req, res) => {
+  res.json(await mail.closePoll(req.params.id));
 });
 
 router.get("/admin/mail", requireStaff, (req, res) => {

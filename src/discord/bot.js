@@ -148,12 +148,21 @@ function createBot() {
     await interaction.reply({ content: "Configured!", flags: MessageFlags.Ephemeral });
   }
 
-  // Boîte aux lettres : une annonce postée dans le salon réglé, le rôle mentionné
+  // Boîte aux lettres : une annonce ou un sondage posté dans le salon réglé,
+  // le rôle mentionné. Le sondage montre ses boutons tant qu'il est ouvert.
+  function mailMessage(letter) {
+    if (letter.kind !== "poll") return { embeds: [embeds.mailEmbed(letter, config.siteUrl)], components: [] };
+    const poll = mail.pollView(letter, null, { all: true });
+    // Les voix restent cachées tant que le sondage est ouvert
+    const shown = poll.closed ? poll : { ...poll, options: poll.options.map((o) => ({ ...o, votes: null })) };
+    return { embeds: [embeds.pollEmbed(letter, shown, config.siteUrl)], components: embeds.pollButtons(letter, shown) };
+  }
+
   async function mailPosted(letter, { channelId, roleId }) {
     const channel = await client.channels.fetch(channelId);
     const message = await channel.send({
       content: roleId ? `<@&${roleId}>` : undefined,
-      embeds: [embeds.mailEmbed(letter, config.siteUrl)],
+      ...mailMessage(letter),
       allowedMentions: { parse: [], roles: roleId ? [roleId] : [] }
     });
     return { channelId, messageId: message.id };
@@ -161,12 +170,48 @@ function createBot() {
 
   async function mailUpdated(letter) {
     const message = await fetchMessage(letter.discordChannelId, letter.discordMessageId);
-    await message?.edit({ embeds: [embeds.mailEmbed(letter, config.siteUrl)] });
+    await message?.edit(mailMessage(letter));
   }
 
   async function mailDeleted(letter) {
     const message = await fetchMessage(letter.discordChannelId, letter.discordMessageId);
     await message?.delete();
+  }
+
+  // Un vote change le nombre de votants : une mise à jour toutes les 5 s au
+  // plus par sondage (Discord limite les modifications de messages)
+  const pendingPolls = new Map();
+  async function pollVoted(letter) {
+    if (pendingPolls.has(letter.id)) return;
+    pendingPolls.set(
+      letter.id,
+      setTimeout(() => {
+        pendingPolls.delete(letter.id);
+        mailUpdated(mail.findLetter(letter.id) ?? letter).catch((err) => console.error("[DISCORD] Sondage :", err.message));
+      }, 5000)
+    );
+  }
+
+  async function pollClosed(letter) {
+    clearTimeout(pendingPolls.get(letter.id));
+    pendingPolls.delete(letter.id);
+    await mailUpdated(letter);
+  }
+
+  // Bouton d'un sondage : le vote, puis ses choix et les résultats, pour lui seul
+  async function handlePollVote(interaction, { mailId, position }) {
+    const reply = (content) => interaction.reply({ content, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+    let result;
+    try {
+      result = mail.voteFromDiscord(mailId, interaction.user, position);
+    } catch (err) {
+      return reply(err.status ? err.message : "Something went wrong.");
+    }
+    const { poll } = result;
+    const picked = poll.options.filter((o) => poll.myChoices.includes(o.position)).map((o) => `**${o.label}**`);
+    const head = picked.length ? `Your vote: ${picked.join(", ")}.` : "Your vote was removed.";
+    const tip = poll.multiple ? " Click an answer again to untick it." : "";
+    return reply(`${head}${tip}\n\n${embeds.resultLines(poll)}\n\n${poll.voters} climber${poll.voters === 1 ? "" : "s"} voted so far.`);
   }
 
   // Récap de minuit : seul le rôle choisi est mentionné, jamais un joueur
@@ -234,6 +279,10 @@ function createBot() {
       console.error("[DISCORD] Enregistrement des commandes impossible :", err.message);
     }
     poster.start();
+    // Sondages arrivés à leur date de fin : résultats finaux sur Discord
+    const closeDue = () => mail.closeDuePolls().catch((err) => console.error("[DISCORD] Sondages :", err.message));
+    closeDue();
+    setInterval(closeDue, 5 * 60 * 1000).unref();
   });
 
   client.on("interactionCreate", async (interaction) => {
@@ -251,6 +300,8 @@ function createBot() {
         return await handlePasscode(interaction);
       }
       if (!interaction.isButton()) return;
+      const pollVote = embeds.parsePollId(interaction.customId);
+      if (pollVote) return await handlePollVote(interaction, pollVote);
       const action = embeds.parseCustomId(interaction.customId);
       if (action?.kind === "vote") return await handleVote(interaction, action);
       if (action?.kind === "status" && action.status) return await handleStatus(interaction, action);
@@ -266,7 +317,7 @@ function createBot() {
 
   client.on("error", (err) => console.error("[DISCORD] Erreur client :", err.message));
 
-  return { client, reportCreated, reportUpdated, reportDeleted, mailPosted, mailUpdated, mailDeleted };
+  return { client, reportCreated, reportUpdated, reportDeleted, mailPosted, mailUpdated, mailDeleted, pollVoted, pollClosed };
 }
 
 // Démarre le bot si un token est configuré, et le branche sur les reports
@@ -281,7 +332,13 @@ function startBot() {
     reportUpdated: bot.reportUpdated,
     reportDeleted: bot.reportDeleted
   });
-  mail.setNotifier({ mailPosted: bot.mailPosted, mailUpdated: bot.mailUpdated, mailDeleted: bot.mailDeleted });
+  mail.setNotifier({
+    mailPosted: bot.mailPosted,
+    mailUpdated: bot.mailUpdated,
+    mailDeleted: bot.mailDeleted,
+    pollVoted: bot.pollVoted,
+    pollClosed: bot.pollClosed
+  });
   bot.client.login(config.discord.token).catch((err) => {
     console.error("[DISCORD] Connexion impossible :", err.message);
   });

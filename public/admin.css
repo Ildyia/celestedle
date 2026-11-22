@@ -674,3 +674,16 @@ body::before {
 .mail-preview-date { font-size: 13px; color: #7a7290; }
 .row-actions { display: flex; gap: 6px; justify-content: flex-end; white-space: nowrap; }
 @media (max-width: 900px) { .mail-compose { grid-template-columns: minmax(0, 1fr); } }
+.mail-kind { align-self: flex-start; }
+.mail-poll-fields { display: grid; gap: 10px; margin: 0; padding: 12px; border: 1px solid #334155; border-radius: 8px; }
+.mail-poll-fields[hidden] { display: none; }
+.mail-poll-fields legend { padding: 0 6px; font-weight: bold; }
+.mail-poll-fields #mail-add-option { justify-self: start; }
+.mail-options { display: grid; gap: 6px; }
+.mail-option { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
+.mail-preview-poll { display: grid; gap: 6px; margin-top: 12px; }
+.mail-preview-choice { display: flex; align-items: center; gap: 10px; padding: 7px 12px; border-radius: 8px; background: rgba(58, 51, 80, .08); font-size: 15px; }
+.mail-poll-summary { display: grid; gap: 4px; margin-top: 6px; min-width: 220px; }
+.mail-poll-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; font-size: 13px; }
+.mail-poll-row .insights-track { grid-column: 1 / -1; height: 6px; }
+.mail-poll-count { font-variant-numeric: tabular-nums; color: var(--text-muted); }

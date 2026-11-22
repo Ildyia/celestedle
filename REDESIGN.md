@@ -185,3 +185,27 @@ HTML (js/letter-format.js construit le DOM).
 
 Préparé pour la suite : `kind` 'poll' et 'reply', `player_id` pour une lettre
 à un seul joueur (déjà visible de lui seul).
+
+### Boîte aux lettres (étape 2 : sondages)
+
+Admin, Mailbox → « Poll » : la question, la lettre, 2 à 10 réponses, « several
+answers » (cases à cocher) ou non (une seule), une date de fin facultative.
+Les réponses ne changent plus une fois envoyé (le titre et le texte, si).
+Dans la liste : votants, voix et part de chaque réponse, « Close now ».
+
+Dans le jeu, le sondage est une lettre : on coche, « Vote » (le profil est
+créé au premier vote), puis on voit les résultats ; « Change my vote » tant
+qu'il est ouvert. Les voix ne se voient qu'après avoir voté, ou une fois
+fermé. Part d'une réponse = votants qui l'ont cochée / votants.
+
+Sur Discord, un bouton par réponse. Plusieurs cases : un clic coche ou
+décoche ; une seule : un clic choisit. La réponse au clic (visible de soi
+seul) donne ses choix et les résultats ; le message public ne montre que le
+nombre de votants (mis à jour 5 s après un vote au plus), puis les résultats
+finaux à la fermeture (« Close now », ou la date de fin : le bot vérifie
+toutes les 5 minutes). Un compte Discord dont le tag est celui d'un seul
+profil vote comme ce profil : jamais deux voix pour la même personne.
+Tables `poll_options` et `poll_votes` (migration 019).
+
+Menu : sur écran large, les boutons du bas s'arrêtent avant le livre et
+passent à la ligne vers le haut (ils recouvraient « Climb » à 8 boutons).

@@ -311,8 +311,12 @@
           <div class="mail-compose">
             <form id="mail-form" class="admin-card element-form">
               <h3 id="mail-form-title">New letter</h3>
+              <div class="insights-period mail-kind" role="group" aria-label="Kind of letter" id="mail-kind">
+                <button type="button" data-mail-kind="news" aria-pressed="true">Letter</button>
+                <button type="button" data-mail-kind="poll" aria-pressed="false">Poll</button>
+              </div>
               <div class="form-group">
-                <label for="mail-title">Title</label>
+                <label for="mail-title" id="mail-title-label">Title</label>
                 <input type="text" id="mail-title" class="bug-input" maxlength="120" required placeholder="e.g. A big update for Celestedle!" />
               </div>
               <div class="form-group">
@@ -323,6 +327,24 @@
                   "- " for a list, **bold**, *italic*, [text](https://link).
                 </p>
               </div>
+              <fieldset class="mail-poll-fields" id="mail-poll-fields" hidden>
+                <legend>Answers</legend>
+                <div id="mail-options" class="mail-options"></div>
+                <button type="button" id="mail-add-option" class="btn-secondary">Add an answer</button>
+                <div class="form-group form-inline">
+                  <input type="checkbox" id="mail-multiple" />
+                  <label for="mail-multiple">Players can tick several answers</label>
+                </div>
+                <div class="form-group">
+                  <label for="mail-closes">Closes (optional, your local time)</label>
+                  <input type="datetime-local" id="mail-closes" class="bug-input" />
+                </div>
+                <p class="small-subtext">
+                  Players see the results once they've voted. Answers can't be
+                  changed after sending. A Discord account linked to a profile
+                  (Discord tag) votes as that profile, never twice.
+                </p>
+              </fieldset>
               <div class="form-group form-inline" id="mail-discord-row">
                 <input type="checkbox" id="mail-discord" checked />
                 <label for="mail-discord" id="mail-discord-label">Also post it on Discord</label>

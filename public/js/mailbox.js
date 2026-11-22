@@ -7,6 +7,7 @@ import { el, byId } from "./dom.js";
 import { player } from "./player.js";
 import { storage, KEYS } from "./storage.js";
 import { renderLetter } from "./letter-format.js";
+import { showToast } from "./toast.js";
 
 // Une annonce récente pas encore lue s'ouvre seule en quittant l'écran titre
 const FRESH_DAYS = 14;
@@ -16,6 +17,8 @@ let letters = [];
 let current = null;
 let onChange = () => {};
 let onClose = null;
+// Sondage dont on change le vote (le formulaire revient, cases déjà cochées)
+let changing = null;
 
 const localRead = () => new Set(storage.getJson(KEYS.mailRead, []));
 
@@ -56,6 +59,81 @@ function markRead(letter) {
 }
 
 const formatDate = (iso) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+const formatClose = (iso) =>
+  new Date(iso).toLocaleString("en-GB", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+
+// ===== Sondages =====
+// Le profil est créé au premier vote, comme au premier essai d'une partie
+async function submitVote(letter, choices) {
+  try {
+    await player.ensure();
+    await api.votePoll(letter.id, choices);
+  } catch (err) {
+    showToast(err.message);
+    return;
+  }
+  changing = null;
+  await loadMailbox();
+  show(letters.find((l) => l.id === letter.id) ?? letter);
+}
+
+function pollResults(letter) {
+  const { poll } = letter;
+  const voters = poll.voters ?? 0;
+  return el("div", { className: "poll-results" }, [
+    ...poll.options.map((o) => {
+      const share = voters ? Math.round(((o.votes ?? 0) / voters) * 100) : 0;
+      const mine = poll.myChoices.includes(o.position);
+      return el("div", { className: `poll-result${mine ? " mine" : ""}` }, [
+        el("span", { className: "poll-label", text: `${mine ? "✓ " : ""}${o.label}` }),
+        el("span", { className: "poll-share", text: `${share}%` }),
+        el("span", { className: "poll-track", attrs: { "aria-hidden": "true" } }, [el("i", { attrs: { style: `width: ${share}%` } })])
+      ]);
+    }),
+    el("p", {
+      className: "poll-note",
+      text: `${voters} climber${voters === 1 ? "" : "s"} voted, on the site and on Discord. ` +
+        (poll.closed ? "This poll is closed." : poll.closesAt ? `Closes ${formatClose(poll.closesAt)}.` : "")
+    }),
+    poll.closed
+      ? null
+      : el("button", {
+          className: "postcard-btn poll-change",
+          attrs: { type: "button" },
+          text: "Change my vote",
+          on: { click: () => { changing = letter.id; render(); } }
+        })
+  ]);
+}
+
+function pollForm(letter) {
+  const { poll } = letter;
+  const type = poll.multiple ? "checkbox" : "radio";
+  const button = el("button", { className: "postcard-btn", attrs: { type: "submit", disabled: !poll.myChoices.length }, text: poll.myChoices.length ? "Update my vote" : "Vote" });
+  const form = el("form", { className: "poll-form" }, [
+    el("p", { className: "poll-note", text: (poll.multiple ? "Pick as many as you like." : "Pick one.") + (poll.closesAt ? ` Closes ${formatClose(poll.closesAt)}.` : "") }),
+    ...poll.options.map((o) =>
+      el("label", { className: "poll-choice" }, [
+        el("input", { attrs: { type, name: `poll-${letter.id}`, value: String(o.position), checked: poll.myChoices.includes(o.position) } }),
+        el("span", { text: o.label })
+      ])
+    ),
+    button
+  ]);
+  form.addEventListener("change", () => (button.disabled = !form.querySelector("input:checked")));
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    button.disabled = true;
+    submitVote(letter, [...form.querySelectorAll("input:checked")].map((input) => Number(input.value)));
+  });
+  return form;
+}
+
+function pollBlock(letter) {
+  const { poll } = letter;
+  const voted = poll.myChoices.length > 0;
+  return poll.closed || (voted && changing !== letter.id) ? pollResults(letter) : pollForm(letter);
+}
 
 function wrap() {
   let node = byId("mailbox");
@@ -92,7 +170,8 @@ function render() {
         el("div", { className: "postcard-text" }, [
           el("p", { className: "mailbox-date", text: formatDate(current.createdAt) }),
           el("h2", { attrs: { id: "mailbox-title" }, text: current.title }),
-          ...renderLetter(current.body)
+          ...renderLetter(current.body),
+          current.poll ? pollBlock(current) : null
         ])
       ])
     : el("article", { className: "postcard mailbox-letter" }, [el("p", { text: "Your mailbox is empty for now." })]);
@@ -109,6 +188,7 @@ function render() {
 }
 
 function show(letter) {
+  if (letter?.id !== current?.id) changing = null;
   // Le courrier a pu être rechargé depuis : on garde la version à jour
   current = letter ? letters.find((l) => l.id === letter.id) ?? letter : null;
   if (current) markRead(current);

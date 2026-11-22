@@ -237,7 +237,13 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
 .climb.a { background: var(--side-a); box-shadow: 0 5px 0 #3b7bb3; }
 .climb.b { background: var(--side-b); box-shadow: 0 5px 0 #a52d3e; }
 .climb:active { transform: translateY(3px); box-shadow: none; }
-.corner { position: absolute; left: 4vw; right: 4vw; bottom: 9vh; display: flex; flex-wrap: wrap; gap: 14px; }
+.corner { position: absolute; left: 4vw; right: 4vw; bottom: 9vh; display: flex; flex-wrap: wrap; align-content: flex-end; gap: 14px; }
+/* Écran large : le livre est à droite, à la hauteur des boutons ; ils
+   s'arrêtent avant lui et passent à la ligne vers le haut au lieu de
+   recouvrir « Climb » */
+@media (min-width: 1000px) {
+  .corner { right: calc(5vw + min(460px, 90vw) + 24px); }
+}
 .corner button { font-size: 18px; color: #fff; background: rgba(0,0,0,.35); border: 2px solid rgba(255,255,255,.4); border-radius: 8px; padding: 8px 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
 .corner button img { width: 26px; height: 26px; image-rendering: pixelated; }
 
@@ -717,3 +723,17 @@ body.perf .moon-flag .cloth { animation: none; }
   .mailbox-letter { max-height: 62vh; }
   .mailbox-close { top: -6px; right: 0; }
 }
+/* Sondage dans une lettre : les cases, puis les résultats une fois voté */
+.poll-form, .poll-results { display: grid; gap: 8px; margin-top: 14px; }
+.poll-choice { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; background: rgba(58, 51, 80, .08); cursor: pointer; font-size: 15px; }
+.poll-choice:hover { background: rgba(58, 51, 80, .14); }
+.poll-choice input { width: 18px; height: 18px; accent-color: #5a4a8a; flex: none; }
+.poll-form .postcard-btn, .poll-change { justify-self: start; margin-top: 6px; }
+.postcard-btn[disabled] { opacity: .45; cursor: default; }
+.poll-result { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; font-size: 15px; }
+.poll-result.mine .poll-label { font-weight: bold; }
+.poll-share { font-variant-numeric: tabular-nums; }
+.poll-track { grid-column: 1 / -1; height: 9px; border-radius: 99px; background: rgba(58, 51, 80, .13); overflow: hidden; }
+.poll-track i { display: block; height: 100%; border-radius: 99px; background: #5a4a8a; }
+.poll-result.mine .poll-track i { background: #8a6cc4; }
+.poll-note { font-size: 13.5px; color: #6a6283; }

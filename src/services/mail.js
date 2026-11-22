@@ -1,11 +1,15 @@
 // Boîte aux lettres : courrier écrit dans l'admin, lu dans le menu du jeu.
-// Étape 1 : annonces pour tous (kind « news »), relayées sur Discord dans le
-// salon réglé (Settings de l'admin, ou DISCORD_MAIL_CHANNEL_ID), avec le rôle
-// réglé mentionné.
+// Annonces (kind « news ») et sondages (« poll ») pour tous, relayés sur
+// Discord dans le salon réglé (Settings de l'admin, ou
+// DISCORD_MAIL_CHANNEL_ID), avec le rôle réglé mentionné.
+// Sondages : une ou plusieurs cases ; les résultats ne se voient qu'après
+// avoir voté (ou une fois fermé) ; un vote sur Discord d'un compte lié à un
+// profil (tag Discord du profil) compte comme le vote de ce profil.
 const config = require("../config");
 const repo = require("../repositories/mail");
 const settingsRepo = require("../repositories/settings");
 const { HttpError } = require("../utils/http-error");
+const players = require("./players");
 const { nowIso } = require("../utils/dates");
 
 const TITLE_MAX = 120;
@@ -13,13 +17,20 @@ const BODY_MAX = 4000;
 const CHANNEL_KEY = "discord_mail_channel_id";
 const ROLE_KEY = "discord_mail_role_id";
 const SNOWFLAKE = /^\d{5,25}$/;
+const OPTIONS_MIN = 2;
+const OPTIONS_MAX = 10;
+const OPTION_MAX = 80;
 
 // Le bot Discord s'enregistre ici au démarrage ; sans bot, rien n'est envoyé.
 // mailPosted renvoie { channelId, messageId } du message posté.
+// pollVoted : un vote de plus (le message montre le nombre de votants) ;
+// pollClosed : le message passe aux résultats finaux.
 let notifier = {
   mailPosted: async () => null,
   mailUpdated: async () => {},
-  mailDeleted: async () => {}
+  mailDeleted: async () => {},
+  pollVoted: async () => {},
+  pollClosed: async () => {}
 };
 
 function setNotifier(next) {
@@ -52,14 +63,46 @@ function validate({ title, body } = {}) {
   return clean;
 }
 
+const playerVoter = (player) => `player:${player.id}`;
+const isClosed = (mail, now = nowIso()) => Boolean(mail.closesAt) && mail.closesAt <= now;
+
+/**
+ * Un sondage vu par `voter` (null : personne) : ses cases, ses choix, et les
+ * voix quand il a voté, quand c'est fini, ou pour l'équipe (all).
+ */
+function pollView(mail, voter, { all = false } = {}) {
+  const closed = isClosed(mail);
+  const myChoices = voter ? repo.choicesOf(mail.id, voter) : [];
+  const show = all || closed || myChoices.length > 0;
+  const { counts, voters } = show ? repo.results(mail.id) : { counts: new Map(), voters: null };
+  return {
+    multiple: Boolean(mail.multiple),
+    closesAt: mail.closesAt,
+    closed,
+    myChoices,
+    voters,
+    options: repo.options(mail.id).map((o) => ({ position: o.position, label: o.label, votes: show ? counts.get(o.position) ?? 0 : null }))
+  };
+}
+
 // Ce que voit le joueur
-function toPublic(mail) {
-  return { id: mail.id, kind: mail.kind, slug: mail.slug, title: mail.title, body: mail.body, createdAt: mail.createdAt, read: Boolean(mail.readAt), personal: Boolean(mail.playerId) };
+function toPublic(mail, player = null) {
+  return {
+    id: mail.id,
+    kind: mail.kind,
+    slug: mail.slug,
+    title: mail.title,
+    body: mail.body,
+    createdAt: mail.createdAt,
+    read: Boolean(mail.readAt),
+    personal: Boolean(mail.playerId),
+    poll: mail.kind === "poll" ? pollView(mail, player ? playerVoter(player) : null) : null
+  };
 }
 
 /** Courrier d'un joueur (ou de tous, sans profil), le plus récent d'abord. */
 function inbox(player) {
-  return repo.listFor(player?.id ?? null).map(toPublic);
+  return repo.listFor(player?.id ?? null).map((mail) => toPublic(mail, player));
 }
 
 function markRead(player, id) {
@@ -67,6 +110,21 @@ function markRead(player, id) {
   if (!mail || (mail.playerId && mail.playerId !== player.id)) throw new HttpError(404, "Letter not found.");
   repo.markRead(mail.id, player.id, nowIso());
   return { ok: true };
+}
+
+function validatePoll({ options, multiple, closesAt } = {}) {
+  const labels = (Array.isArray(options) ? options : []).map((o) => String(o ?? "").trim()).filter(Boolean);
+  if (labels.length < OPTIONS_MIN || labels.length > OPTIONS_MAX) throw new HttpError(400, `A poll needs ${OPTIONS_MIN} to ${OPTIONS_MAX} answers.`);
+  if (labels.some((l) => l.length > OPTION_MAX)) throw new HttpError(400, `Each answer must be ${OPTION_MAX} characters at most.`);
+  if (new Set(labels.map((l) => l.toLowerCase())).size !== labels.length) throw new HttpError(400, "Two answers are the same.");
+  let end = null;
+  if (closesAt) {
+    const at = new Date(closesAt);
+    if (Number.isNaN(at.getTime())) throw new HttpError(400, "The closing date isn't valid.");
+    if (at <= new Date()) throw new HttpError(400, "The closing date must be in the future.");
+    end = at.toISOString();
+  }
+  return { options: labels, multiple: Boolean(multiple), closesAt: end };
 }
 
 // Une erreur Discord ne doit jamais faire échouer l'action de l'admin
@@ -79,15 +137,26 @@ async function relay(event, mail, ...args) {
   }
 }
 
-/** Admin : le courrier pour tous, avec le nombre de lecteurs. */
+/** Admin : le courrier pour tous, avec le nombre de lecteurs et les résultats des sondages. */
 function listForAdmin() {
-  return { letters: repo.listPublic(), discord: discordSettings() };
+  return {
+    letters: repo.listPublic().map((mail) => ({ ...mail, poll: mail.kind === "poll" ? pollView(mail, null, { all: true }) : null })),
+    discord: discordSettings()
+  };
 }
 
-/** Admin : nouvelle annonce ; discord = la poster aussi sur Discord. */
+/**
+ * Admin : nouvelle annonce, ou sondage (kind « poll » : options, multiple,
+ * closesAt) ; discord = la poster aussi sur Discord.
+ */
 async function send(author, input = {}) {
   const { title, body } = validate(input);
-  const mail = repo.insert({ kind: "news", title, body, playerId: null, authorId: author.id, at: nowIso() });
+  const kind = input.kind === "poll" ? "poll" : "news";
+  const poll = kind === "poll" ? validatePoll(input) : { options: [], multiple: false, closesAt: null };
+  const mail = repo.insert(
+    { kind, title, body, playerId: null, authorId: author.id, multiple: poll.multiple, closesAt: poll.closesAt, at: nowIso() },
+    poll.options
+  );
   const { channelId, roleId } = discordSettings();
   if (input.discord && channelId) {
     const posted = await relay("mailPosted", mail, { channelId, roleId: roleId || null });
@@ -116,4 +185,78 @@ async function remove(id) {
   return { ok: true };
 }
 
-module.exports = { setNotifier, inbox, markRead, listForAdmin, send, edit, remove, discordSettings, setDiscordSettings, TITLE_MAX, BODY_MAX };
+// ===== Sondages =====
+function openPoll(id) {
+  const mail = repo.find(Number(id));
+  if (!mail || mail.kind !== "poll" || mail.playerId) throw new HttpError(404, "Poll not found.");
+  if (isClosed(mail)) throw new HttpError(409, "This poll is closed.");
+  return mail;
+}
+
+function checkChoices(mail, choices) {
+  const positions = new Set(repo.options(mail.id).map((o) => o.position));
+  const picked = [...new Set((Array.isArray(choices) ? choices : []).map(Number))];
+  if (!picked.length) throw new HttpError(400, "Pick at least one answer.");
+  if (picked.some((p) => !positions.has(p))) throw new HttpError(400, "Unknown answer.");
+  if (!mail.multiple && picked.length > 1) throw new HttpError(400, "Only one answer for this poll.");
+  return picked.sort((a, b) => a - b);
+}
+
+/** Vote du site : les cases cochées remplacent le vote d'avant. */
+function vote(player, id, choices) {
+  const mail = openPoll(id);
+  repo.setVote(mail.id, playerVoter(player), checkChoices(mail, choices), nowIso());
+  repo.markRead(mail.id, player.id, nowIso());
+  if (mail.discordMessageId) relay("pollVoted", repo.find(mail.id));
+  return toPublic({ ...repo.find(mail.id), readAt: nowIso() }, player);
+}
+
+// Votant Discord : le profil dont le tag Discord est le sien, s'il n'y en a
+// qu'un ; sinon le compte Discord lui-même
+function discordVoter(user) {
+  const matches = players.findByDiscordUser({ username: user.username, discriminator: user.discriminator });
+  return matches.length === 1 ? `player:${matches[0].id}` : `discord:${user.id}`;
+}
+
+/**
+ * Bouton Discord : plusieurs cases, il coche ou décoche la sienne ; une seule
+ * case, il la choisit. Renvoie le sondage vu par ce votant.
+ */
+function voteFromDiscord(id, user, position) {
+  const mail = openPoll(id);
+  const voter = discordVoter(user);
+  const mine = repo.choicesOf(mail.id, voter);
+  const next = mail.multiple ? (mine.includes(position) ? mine.filter((p) => p !== position) : [...mine, position]) : [position];
+  // Plus aucune case : le vote est retiré
+  repo.setVote(mail.id, voter, next.length ? checkChoices(mail, next) : [], nowIso());
+  const updated = repo.find(mail.id);
+  relay("pollVoted", updated);
+  return { mail: updated, poll: pollView(updated, voter) };
+}
+
+/** Admin : ferme un sondage maintenant. */
+async function closePoll(id) {
+  const mail = openPoll(id);
+  repo.close(mail.id, nowIso());
+  const closed = repo.find(mail.id);
+  if (closed.discordMessageId && (await relay("pollClosed", closed)) !== null) repo.setDiscordClosed(closed.id);
+  return { ...closed, poll: pollView(closed, null, { all: true }) };
+}
+
+/** Sondages arrivés à leur date de fin : leur message Discord passe aux résultats. */
+async function closeDuePolls() {
+  for (const mail of repo.closedOnDiscord(nowIso())) {
+    if ((await relay("pollClosed", mail)) !== null) repo.setDiscordClosed(mail.id);
+  }
+}
+
+const findLetter = (id) => repo.find(Number(id));
+
+module.exports = {
+  findLetter,
+  vote,
+  voteFromDiscord,
+  closePoll,
+  closeDuePolls,
+  pollView,
+  setNotifier, inbox, markRead, listForAdmin, send, edit, remove, discordSettings, setDiscordSettings, TITLE_MAX, BODY_MAX };

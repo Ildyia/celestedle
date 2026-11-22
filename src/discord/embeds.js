@@ -132,4 +132,54 @@ function mailEmbed(letter, siteUrl) {
   };
 }
 
-module.exports = { mailEmbed, publicEmbed, privateEmbed, voteButtons, statusButtons, parseCustomId, truncate };
+// Sondage : la question et ses cases ; les voix ne s'affichent qu'une fois
+// fermé (chacun voit les siennes en votant, en message éphémère)
+const NUMBERS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
+
+function resultLines(poll) {
+  return poll.options
+    .map((o, i) => {
+      const share = poll.voters ? Math.round(((o.votes ?? 0) / poll.voters) * 100) : 0;
+      const bar = "█".repeat(Math.round(share / 10)) + "░".repeat(10 - Math.round(share / 10));
+      const mine = poll.myChoices?.includes(o.position) ? " ✓" : "";
+      return `${NUMBERS[i]} ${truncate(o.label, 80)}${mine}\n\`${bar}\` ${share}% (${o.votes ?? 0})`;
+    })
+    .join("\n");
+}
+
+function pollEmbed(letter, poll, siteUrl) {
+  const closes = poll.closesAt ? `<t:${Math.floor(Date.parse(poll.closesAt) / 1000)}:R>` : null;
+  const voters = poll.voters ?? 0;
+  const lines = poll.closed
+    ? ["**Final results**", resultLines(poll)]
+    : [
+        poll.options.map((o, i) => `${NUMBERS[i]} ${truncate(o.label, 80)}`).join("\n"),
+        "",
+        `${poll.multiple ? "Pick as many as you like." : "Pick one."} Results show up once you vote.${closes ? ` Closes ${closes}.` : ""}`
+      ];
+  return {
+    title: `🗳️ ${truncate(letter.title, 250)}`,
+    url: siteUrl,
+    color: 0x5aa8e8,
+    description: truncate(`${letter.body}\n\n${lines.join("\n")}`, DESCRIPTION_LIMIT),
+    footer: { text: `${voters} climber${voters === 1 ? "" : "s"} voted · also in your mailbox on Celestedle` }
+  };
+}
+
+// Un bouton par case, 5 par ligne ; rien une fois fermé
+function pollButtons(letter, poll) {
+  if (poll.closed) return [];
+  const rows = [];
+  poll.options.forEach((o, i) => {
+    if (i % 5 === 0) rows.push({ type: 1, components: [] });
+    rows.at(-1).components.push({ type: 2, style: 2, custom_id: `poll:${letter.id}:${o.position}`, label: truncate(o.label, 80), emoji: { name: NUMBERS[i] } });
+  });
+  return rows;
+}
+
+function parsePollId(customId) {
+  const match = /^poll:(\d+):(\d+)$/.exec(customId);
+  return match ? { mailId: Number(match[1]), position: Number(match[2]) } : null;
+}
+
+module.exports = { pollEmbed, pollButtons, parsePollId, resultLines, mailEmbed, publicEmbed, privateEmbed, voteButtons, statusButtons, parseCustomId, truncate };
