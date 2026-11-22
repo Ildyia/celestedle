@@ -156,6 +156,9 @@ que le classement de la semaine). `/recap-preview` montre les deux messages,
 Un post manqué (serveur arrêté à minuit) est rattrapé au redémarrage avant
 6 h, pas après. Le jour posté est noté dans `settings`
 (`discord_daily_posted`) : jamais deux fois le même jour. Personne n'est
-mentionné (`allowedMentions` vide). Données : `src/services/recap.js` ;
+mentionné, sauf le rôle « ping word reset » (1535840476068974622, ou
+`DISCORD_RESET_ROLE_ID`), en tête du message de minuit ; `/setup-daily`
+accepte `role` pour en choisir un autre et `no-ping` pour ne mentionner
+personne. Données : `src/services/recap.js` ;
 messages : `src/discord/recap-embeds.js` ; minuit : `src/discord/recap-poster.js`.
 Adresse du site dans les liens : `SITE_URL` (par défaut celestedle.vercel.app).

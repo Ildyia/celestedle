@@ -11,6 +11,7 @@ const { todayParis, addDays, weekStart, msUntilNextDay } = require("../utils/dat
 
 const CHANNEL_KEY = "discord_daily_channel_id";
 const POSTED_KEY = "discord_daily_posted";
+const ROLE_KEY = "discord_daily_role_id";
 const CATCH_UP_HOURS = 6;
 const DELAY_AFTER_MIDNIGHT_MS = 60 * 1000;
 
@@ -33,9 +34,17 @@ function previewEmbeds(today) {
 
 const channelId = () => settingsRepo.get(CHANNEL_KEY);
 const setChannelId = (id) => settingsRepo.set(CHANNEL_KEY, id);
+// Rôle mentionné à minuit : choisi par /setup-daily, sinon celui de la config
+// (« none » : personne)
+const roleId = () => {
+  const id = settingsRepo.get(ROLE_KEY, config.discord.resetRoleId);
+  return id && id !== "none" ? id : null;
+};
+const setRoleId = (id) => settingsRepo.set(ROLE_KEY, id ?? "none");
 
 /**
- * send(channelId, embeds) envoie le message ; now() donne l'heure (tests).
+ * send(channelId, embeds, roleId) envoie le message (roleId : rôle à
+ * mentionner, ou null) ; now() donne l'heure (tests).
  * Renvoie { postIfDue, start, stop }.
  */
 function createRecapPoster({ send, now = () => new Date() }) {
@@ -51,7 +60,7 @@ function createRecapPoster({ send, now = () => new Date() }) {
     if (Number(PARIS_HOUR.format(at)) % 24 >= CATCH_UP_HOURS) return false;
     // Noté avant l'envoi : une erreur Discord ne doit pas faire poster deux fois
     settingsRepo.set(POSTED_KEY, today);
-    await send(channel, recapEmbeds(today));
+    await send(channel, recapEmbeds(today), roleId());
     return true;
   }
 
@@ -75,4 +84,4 @@ function createRecapPoster({ send, now = () => new Date() }) {
   return { postIfDue, start, stop };
 }
 
-module.exports = { createRecapPoster, recapEmbeds, previewEmbeds, channelId, setChannelId, CHANNEL_KEY, POSTED_KEY };
+module.exports = { createRecapPoster, recapEmbeds, previewEmbeds, channelId, setChannelId, roleId, setRoleId, CHANNEL_KEY, POSTED_KEY };

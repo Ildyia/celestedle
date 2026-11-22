@@ -33,7 +33,9 @@ const commands = [
     .setName("setup-daily")
     .setDescription("Choose the channel for the midnight recap and the champion of the week")
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
-    .addChannelOption((opt) => opt.setName("channel").setDescription("Channel for the daily recap").setRequired(true)),
+    .addChannelOption((opt) => opt.setName("channel").setDescription("Channel for the daily recap").setRequired(true))
+    .addRoleOption((opt) => opt.setName("role").setDescription("Role pinged at midnight (default: the word reset role)"))
+    .addBooleanOption((opt) => opt.setName("no-ping").setDescription("Ping nobody")),
   new SlashCommandBuilder()
     .setName("recap-preview")
     .setDescription("See the daily recap and the champion of the week now (only you see it)")
@@ -145,24 +147,41 @@ function createBot() {
     await interaction.reply({ content: "Configured!", flags: MessageFlags.Ephemeral });
   }
 
-  // Récap de minuit : personne n'est mentionné, même si un nom le voudrait
-  async function sendRecap(channelId, recapEmbeds) {
+  // Récap de minuit : seul le rôle choisi est mentionné, jamais un joueur
+  async function sendRecap(channelId, recapEmbeds, roleId) {
     const channel = await client.channels.fetch(channelId);
-    await channel.send({ embeds: recapEmbeds, allowedMentions: { parse: [] } });
+    await channel.send({
+      content: roleId ? `<@&${roleId}>` : undefined,
+      embeds: recapEmbeds,
+      allowedMentions: { parse: [], roles: roleId ? [roleId] : [] }
+    });
   }
   const poster = recapPoster.createRecapPoster({ send: sendRecap });
 
   async function handleSetupDaily(interaction) {
     const channel = interaction.options.getChannel("channel");
+    const role = interaction.options.getRole("role");
     recapPoster.setChannelId(channel.id);
+    if (interaction.options.getBoolean("no-ping")) recapPoster.setRoleId(null);
+    else if (role) recapPoster.setRoleId(role.id);
+    const pinged = recapPoster.roleId();
     await interaction.reply({
-      content: `The recap will be posted in <#${channel.id}> every night just after midnight (Paris time). Try /recap-preview to see it now.`,
+      content:
+        `The recap will be posted in <#${channel.id}> every night just after midnight (Paris time), ` +
+        `${pinged ? `pinging <@&${pinged}>` : "without pinging anyone"}. Try /recap-preview to see it now.`,
+      allowedMentions: { parse: [] },
       flags: MessageFlags.Ephemeral
     });
   }
 
   async function handleRecapPreview(interaction) {
-    await interaction.reply({ embeds: recapPoster.previewEmbeds(todayParis()), flags: MessageFlags.Ephemeral });
+    const pinged = recapPoster.roleId();
+    await interaction.reply({
+      content: pinged ? `At midnight, this pings <@&${pinged}>.` : "At midnight, this pings nobody.",
+      embeds: recapPoster.previewEmbeds(todayParis()),
+      allowedMentions: { parse: [] },
+      flags: MessageFlags.Ephemeral
+    });
   }
 
   async function handleVote(interaction, { reportId, isUp }) {

@@ -37,6 +37,8 @@ module.exports = {
     publicChannelId:
       process.env.DISCORD_PUBLIC_CHANNEL_ID || "1534624008614576209",
     privateChannelId:
-      process.env.DISCORD_PRIVATE_CHANNEL_ID || "1534616690287972498"
+      process.env.DISCORD_PRIVATE_CHANNEL_ID || "1534616690287972498",
+    // Rôle mentionné par le récap de minuit (« ping word reset »)
+    resetRoleId: process.env.DISCORD_RESET_ROLE_ID || "1535840476068974622"
   }
 };

@@ -9,7 +9,7 @@ const elementsRepo = require("../src/repositories/elements");
 const connections = require("../src/services/connections");
 const recap = require("../src/services/recap");
 const { dailyEmbed, weeklyEmbed } = require("../src/discord/recap-embeds");
-const { createRecapPoster, setChannelId } = require("../src/discord/recap-poster");
+const { createRecapPoster, setChannelId, setRoleId } = require("../src/discord/recap-poster");
 
 // Lundi 23 novembre 2026 : le récap porte sur dimanche 22, la semaine du 16
 const SUNDAY = "2026-11-22";
@@ -91,18 +91,21 @@ test("messages : réponse sous spoiler, noms sans mise en forme, jours sans joue
 test("minuit : un message par jour, la semaine en plus le lundi, rattrapage jusqu'à 6 h seulement", async () => {
   const sent = [];
   let clock = new Date("2026-11-22T23:01:00Z"); // lundi 00:01 à Paris
-  const poster = createRecapPoster({ send: async (channel, embeds) => sent.push({ channel, embeds }), now: () => clock });
+  const poster = createRecapPoster({ send: async (channel, embeds, role) => sent.push({ channel, embeds, role }), now: () => clock });
 
   assert.equal(await poster.postIfDue(), false, "pas de salon choisi : rien");
   setChannelId("123");
   assert.equal(await poster.postIfDue(), true);
   assert.equal(sent[0].channel, "123");
+  assert.equal(sent[0].role, "1535840476068974622", "le rôle « ping word reset » par défaut");
   assert.deepEqual(sent[0].embeds.map((e) => e.title), ["🏔️ A new climb is up!", "🏆 Champion of the week"]);
   assert.equal(await poster.postIfDue(), false, "déjà posté aujourd'hui");
 
   clock = new Date("2026-11-24T09:00:00Z"); // mardi 10 h : trop tard pour « a new climb »
   assert.equal(await poster.postIfDue(), false);
   clock = new Date("2026-11-24T23:01:00Z"); // mercredi 00:01 : le récap seul
+  setRoleId(null);
   assert.equal(await poster.postIfDue(), true);
   assert.equal(sent[1].embeds.length, 1);
+  assert.equal(sent[1].role, null, "/setup-daily no-ping : personne");
 });
