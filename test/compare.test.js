@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { compareValues, verdictFor, foundCategories } = require("../src/services/compare");
+const { compareValues, verdictFor } = require("../src/services/compare");
 
 test("compareValues distingue les quatre verdicts", () => {
   assert.equal(compareValues(["red", "blue"], ["blue", "red"]), "correct");
@@ -25,12 +25,4 @@ test("verdictFor compare chaque catégorie et l'identité", () => {
     shape: "wrong"
   });
   assert.equal(verdictFor(secret, secret).isCorrect, true);
-});
-
-test("foundCategories liste les catégories déjà vertes", () => {
-  const verdicts = [
-    { type: "correct", lieu: "wrong", couleur: "partial", shape: "wrong" },
-    { type: "wrong", lieu: "wrong", couleur: "wrong", shape: "correct" }
-  ];
-  assert.deepEqual(foundCategories(verdicts), ["type", "shape"]);
 });

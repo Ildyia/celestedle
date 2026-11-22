@@ -72,10 +72,6 @@ function createComparator({ categories, labels, ordered = {}, display }) {
           display ? display(item, category) : toList(item[category]).join(", ")
         ])
       );
-    },
-    // Catégories déjà trouvées (vertes) dans une liste d'essais
-    foundCategories(verdicts) {
-      return categories.filter((category) => verdicts.some((v) => v[category] === "correct"));
     }
   };
 }
@@ -91,6 +87,5 @@ module.exports = {
   createComparator,
   elementsComparator,
   verdictFor: elementsComparator.verdictFor,
-  displayValues: elementsComparator.displayValues,
-  foundCategories: elementsComparator.foundCategories
+  displayValues: elementsComparator.displayValues
 };

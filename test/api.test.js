@@ -54,6 +54,9 @@ test("version et santé", async () => {
   const { status, data } = await api.request("GET", "/api/health");
   assert.equal(status, 200);
   assert.equal(data.status, "ok");
+  const { version } = require("../package.json");
+  assert.equal(data.version, version);
+  assert.equal((await api.request("GET", "/api/version")).data.version, version);
 });
 
 test("une partie normale : essai, doublon, victoire, puis partie terminée", async () => {

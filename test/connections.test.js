@@ -89,15 +89,6 @@ test("générateur : un tag incomplet ne sert pas de groupe, un tag complet est 
   assert.ok(withTag >= 6 && withTag <= 18, `tag dans ${withTag} grilles sur 20`);
 });
 
-test("Connections est réservé à l'équipe admin pendant les tests", async () => {
-  const { token } = await api.newPlayer();
-  assert.equal((await api.request("GET", "/api/connections")).status, 401);
-  assert.equal((await api.request("GET", "/api/connections", { token })).status, 403);
-  assert.equal((await api.request("POST", "/api/connections/guess", { token, body: { names: [] } })).status, 403);
-  assert.equal((await api.request("GET", "/api/admin/connections/tags", { token })).status, 403);
-  assert.equal((await api.request("GET", "/api/leaderboard?period=daily&mode=cx-normal", { token })).status, 403);
-});
-
 test("partie : erreur, « à une case près », doublon, groupe trouvé puis victoire", async () => {
   const token = await owner();
   const puzzle = connections.getPuzzle();
@@ -521,39 +512,36 @@ test("grille remplacée pendant la partie : le joueur est prévenu au lieu d'une
 
 test("faux groupe : 4 cases qui partagent une catégorie sans être un groupe sont signalées", async () => {
   const token = await newAdministrator();
+  const staff = await owner();
   const me = (await api.request("GET", "/api/players/me", { token })).data.player;
-  // Avec les tags créés par les autres tests : le serveur les compte aussi
+  await api.request("POST", "/api/connections/practice", { token, body: { mode: "normal" } });
+  const { groups } = db.prepare("SELECT groups FROM connection_puzzles WHERE date = ?").get(`practice:${me.id}`);
+  const [g0, g1, g2, g3] = JSON.parse(groups).map((g) => g.elementIds);
+  // 4 cases, une par groupe, qui n'ont aucun point commun pour l'instant
   const categories = buildCategories(elementsRepo.listActive(), connectionsRepo.listTags());
-  // Grilles Hard d'entraînement tirées jusqu'à en avoir une avec un faux groupe
-  for (let draw = 0; draw < 50; draw++) {
-    await api.request("POST", "/api/connections/practice", { token, body: { mode: "hard" } });
-    const row = db.prepare("SELECT groups, tiles FROM connection_puzzles WHERE date = ?").get(`practice-hard:${me.id}`);
-    const groups = JSON.parse(row.groups);
-    const tiles = JSON.parse(row.tiles);
-    const keys = groups.map((g) => g.key);
-    const pick = categories
-      .filter((c) => !keys.includes(c.key))
-      .map((c) => ({ all: tiles.filter((id) => c.members.has(id)) }))
-      .map((p) => ({ ...p, four: p.all.slice(0, 4) }))
-      .find(({ four }) => four.length === 4 && !groups.some((g) => four.filter((id) => g.elementIds.includes(id)).length >= 3));
-    if (!pick) continue;
-    const names = pick.four.map((id) => elementsRepo.findById(id).nom);
-    const res = await api.request("POST", "/api/connections/guess", { token, body: { names, mode: "hard", practice: true } });
-    assert.equal(res.status, 200, JSON.stringify(res.data));
-    // Plus de 4 cases ont un point commun des 4 (celui choisi ou un autre, un
-    // tag par exemple) : l'une des 4 est d'un autre groupe (le message le
-    // dit) ; sinon, c'est un vrai faux groupe
-    const widest = Math.max(
-      ...categories.filter((c) => pick.four.every((id) => c.members.has(id))).map((c) => tiles.filter((id) => c.members.has(id)).length)
-    );
-    if (widest > 4) {
-      assert.equal(res.data.result, "too_many");
-      assert.ok(res.data.sharedBy > 4);
-    } else assert.equal(res.data.result, "decoy");
-    assert.equal(res.data.state.mistakes, 1, "un faux groupe compte comme une erreur");
-    return;
-  }
-  assert.fail("aucune grille Hard avec un faux groupe en 50 tirages");
+  const unrelated = (ids) => !categories.some((c) => ids.every((id) => c.members.has(id)));
+  let four = null;
+  for (const a of g0) for (const b of g1) for (const c of g2) for (const d of g3) four ??= unrelated([a, b, c, d]) ? [a, b, c, d] : null;
+  assert.ok(four, "4 cases sans point commun");
+  const names = (ids) => ids.map((id) => elementsRepo.findById(id).nom);
+  const guess = (ids) => api.request("POST", "/api/connections/guess", { token, body: { names: names(ids), practice: true } });
+  const tag = (label, elementIds) => api.request("POST", "/api/admin/connections/tags", { token: staff, body: { label, elementIds } });
+
+  // Un tag sur exactement ces 4 cases : faux groupe
+  const exact = (await tag("Exactly four", four)).data;
+  const decoy = await guess(four);
+  assert.equal(decoy.status, 200, JSON.stringify(decoy.data));
+  assert.equal(decoy.data.result, "decoy");
+  assert.equal(decoy.data.state.mistakes, 1, "un faux groupe compte comme une erreur");
+
+  // Un tag sur 5 cases : l'une des 4 choisies est d'un autre groupe
+  const fifth = g0.find((id) => id !== four[0]);
+  const wide = (await tag("Five of them", [...four, fifth])).data;
+  const tooMany = await guess([fifth, ...four.slice(1)]);
+  assert.equal(tooMany.data.result, "too_many");
+  assert.equal(tooMany.data.sharedBy, 5);
+
+  for (const t of [exact, wide]) await api.request("DELETE", `/api/admin/connections/tags/${t.id}`, { token: staff });
 });
 
 test("accès à Connections : équipe seulement, playtest ou ouvert à tous", async () => {
@@ -563,9 +551,14 @@ test("accès à Connections : équipe seulement, playtest ou ouvert à tous", as
   const status = async (token) => (await api.request("GET", "/api/connections", { token })).status;
   const setAccess = (access, token) => api.request("PUT", "/api/admin/connections/access", { token, body: { access } });
 
+  // Par défaut : playtest. Un joueur ordinaire n'a accès à rien de Connections
   assert.equal((await api.request("GET", "/api/connections-access")).data.access, "playtest");
   assert.equal(await status(playtesterToken), 200);
   assert.equal(await status(playerToken), 403);
+  assert.equal(await status(undefined), 401);
+  assert.equal((await api.request("POST", "/api/connections/guess", { token: playerToken, body: { names: [] } })).status, 403);
+  assert.equal((await api.request("GET", "/api/leaderboard?period=daily&mode=cx-normal", { token: playerToken })).status, 403);
+  assert.equal((await api.request("GET", "/api/admin/connections/tags", { token: playtesterToken })).status, 403, "playtester : pas d'admin");
 
   assert.equal((await setAccess("public", playtesterToken)).status, 403, "réglage réservé à l'équipe");
   assert.equal((await setAccess("open", await owner())).status, 400);
