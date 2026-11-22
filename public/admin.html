@@ -50,18 +50,9 @@
           <span id="admin-identity" class="admin-identity"></span>
         </header>
 
-        <nav class="admin-tabs" role="tablist" aria-label="Sections">
-          <button type="button" role="tab" data-tab="overview" aria-selected="true">Today</button>
-          <button type="button" role="tab" data-tab="history" aria-selected="false">History</button>
-          <button type="button" role="tab" data-tab="words" aria-selected="false">Words</button>
-          <button type="button" role="tab" data-tab="insights" aria-selected="false">Insights</button>
-          <button type="button" role="tab" data-tab="elements" aria-selected="false">Elements</button>
-          <button type="button" role="tab" data-tab="reports" aria-selected="false">Reports</button>
-          <button type="button" role="tab" data-tab="connections" aria-selected="false">Connections</button>
-          <button type="button" role="tab" data-tab="settings" aria-selected="false">Settings</button>
-          <button type="button" role="tab" data-tab="players" aria-selected="false">Players</button>
-          <button type="button" role="tab" data-tab="team" aria-selected="false" data-owner-only hidden>Team</button>
-        </nav>
+        <!-- Groupes et sous-onglets : construits par js/admin/main.js (NAV) -->
+        <nav id="admin-tabs" class="admin-tabs" role="tablist" aria-label="Sections"></nav>
+        <nav id="admin-subtabs" class="admin-subtabs" role="tablist" aria-label="Pages" hidden></nav>
 
         <p id="admin-message" class="admin-message" role="status"></p>
 
@@ -199,11 +190,7 @@
         </section>
 
         <section id="tab-connections" class="admin-panel" role="tabpanel" hidden>
-          <div class="admin-toolbar">
-            <a class="btn-secondary" href="connections.html" target="_blank" rel="noopener">Open the game page</a>
-            <button type="button" id="export-tags-btn" class="btn-secondary" title="Download every tag and its elements as a JSON file">Export tags</button>
-            <button type="button" id="new-tag-btn" class="btn-primary">New tag</button>
-          </div>
+          <div data-cx="access" class="admin-panel">
           <div class="form-group cx-access">
             <label for="cx-access">Who can play Connections</label>
             <select id="cx-access" class="bug-input">
@@ -212,11 +199,22 @@
               <option value="public">Open to everyone</option>
             </select>
           </div>
+          </div>
 
+          <div data-cx="grids" class="admin-panel">
+          <div class="admin-toolbar">
+            <a class="btn-secondary" href="connections.html" target="_blank" rel="noopener">Open the game page</a>
+          </div>
           <h3 class="admin-subtitle">Grids for today and the next 2 days</h3>
           <p class="small-subtext">Normal: no decoy groups. Hard: decoys allowed, only a unique solution is guaranteed.</p>
           <div id="cx-puzzles" class="cx-admin-puzzles"></div>
+          </div>
 
+          <div data-cx="tags" class="admin-panel">
+          <div class="admin-toolbar">
+            <button type="button" id="new-tag-btn" class="btn-primary">New tag</button>
+            <button type="button" id="export-tags-btn" class="btn-secondary" title="Download every tag and its elements as a JSON file">Export tags</button>
+          </div>
           <h3 class="admin-subtitle">Tags suggested by players</h3>
           <p class="small-subtext">
             "Create this tag" opens the form prefilled (listed elements whose
@@ -266,7 +264,9 @@
               </div>
             </form>
           </div>
-        
+          </div>
+
+          <div data-cx="diagnostics" class="admin-panel">
           <h3 class="admin-subtitle">Tag diagnostics</h3>
           <p class="small-subtext">
             Draws test grids in the background (about 30 seconds, the site keeps
@@ -279,6 +279,7 @@
           </p>
           <button type="button" id="cx-diagnose-btn" class="btn-secondary">Diagnose tags</button>
           <div id="cx-diagnostics"></div>
+          </div>
         </section>
 
         <section id="tab-reports" class="admin-panel" role="tabpanel" hidden>

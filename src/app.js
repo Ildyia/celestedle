@@ -58,6 +58,8 @@ function createApp() {
   app.use(corsMiddleware);
   app.use(express.json({ limit: "100kb" }));
   app.get(["/", ...LINK_PREVIEW_PAGES.map((page) => `/${page}`)], sendPageWithPreview);
+  // Adresse courte de l'administration, sans passer par le jeu
+  app.get("/admin", (req, res) => res.redirect("/admin.html"));
   app.use(express.static(PUBLIC_DIR));
 
   // Image d'un élément, ou une image par défaut

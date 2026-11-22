@@ -116,3 +116,17 @@ réussite, essais moyens), fois essayé et en premier essai, duels, grilles
 Connections où il était (groupe, part des joueurs qui l'ont trouvé), fois mis
 dans un mauvais groupe de 4, tags. Route `GET /api/admin/elements/:id/insights`
 (équipe seulement), requêtes dans `src/repositories/insights.js`.
+
+### Navigation de l'admin
+
+Six groupes en haut : Today · Stats (Insights, History, Words) · Connections
+(Grids, Tags, Diagnostics, Access) · Elements · Community (Players, Reports,
+Team) · Settings. Les pages d'un groupe sont des sous-onglets en dessous. La
+page ouverte est dans l'adresse (`admin.html#connections/tags`) : un
+rechargement y revient, Retour du navigateur revient à la page d'avant, et on
+peut garder un lien en favori. Liste dans `NAV` (js/admin/main.js). L'ancien
+onglet Connections est découpé en parties `data-cx` ; passer d'une partie à
+l'autre ne recharge rien.
+
+`/admin` redirige vers `admin.html` : l'administration s'ouvre sans passer par
+le jeu (connexion par le code de récupération du profil si besoin).

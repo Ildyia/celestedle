@@ -53,6 +53,39 @@
   border-color: var(--color-indigo);
 }
 
+/* Sous-onglets du groupe ouvert : plus petits, sous les groupes */
+.admin-subtabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  width: fit-content;
+  max-width: 100%;
+  margin: -4px 0 12px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--bg-card);
+}
+
+.admin-subtabs[hidden] {
+  display: none;
+}
+
+.admin-subtabs button {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.admin-subtabs button[aria-selected="true"] {
+  background: var(--color-indigo);
+  color: #ffffff;
+}
+
 .admin-message {
   min-height: 1.4em;
   font-weight: bold;

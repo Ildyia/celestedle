@@ -824,6 +824,12 @@ test("profil : les portraits et couleurs des chapitres restent verrouillés avan
   assert.equal((await api.request("PATCH", "/api/players/me", { token, body: { avatar: locked } })).status, 400);
 });
 
+test("pages : /admin mène à l'administration", async () => {
+  const res = await fetch(`${api.base}/admin`, { redirect: "manual" });
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get("location"), "/admin.html");
+});
+
 test("pages : l'image d'aperçu de lien suit l'adresse demandée", async () => {
   for (const page of ["/", "/celestedle.html"]) {
     const res = await api.request("GET", page, { headers: { Host: "example.test" } });
