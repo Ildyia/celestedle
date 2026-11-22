@@ -24,7 +24,7 @@ function isStaff(player) {
 const GAME_ACCESS = ["staff", "playtest", "public", "closed"];
 // standard : accès sans réglage ni variable d'environnement
 const ACCESS_SETTINGS = {
-  connections: { key: "connections_access", fallback: () => config.connectionsAccess, standard: "playtest" }
+  connections: { key: "connections_access", fallback: () => config.connectionsAccess, standard: "public" }
 };
 
 function accessSetting(game) {

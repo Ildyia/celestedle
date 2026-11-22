@@ -11,6 +11,9 @@ process.env.ADMIN_PASSWORD = "test-admin-password";
 process.env.DISCORD_BOT_TOKEN = "";
 process.env.RANDOM_SEED = "";
 process.env.DISABLE_RATE_LIMIT = "1";
+// Les tests de Connections vérifient aussi l'accès réservé : ils partent du
+// playtest (ouvert à tous par défaut en vrai, voir connections-default.test.js)
+process.env.CONNECTIONS_ACCESS ??= "playtest";
 
 // Fichiers v1 à importer, écrits avant le premier require de la base
 function writeLegacyFiles({ reports, history }) {

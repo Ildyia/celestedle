@@ -209,3 +209,11 @@ Tables `poll_options` et `poll_votes` (migration 019).
 
 Menu : sur écran large, les boutons du bas s'arrêtent avant le livre et
 passent à la ligne vers le haut (ils recouvraient « Climb » à 8 boutons).
+
+### Connections ouvert à tous par défaut
+
+Sans réglage enregistré dans l'admin (Connections → Access) ni variable
+`CONNECTIONS_ACCESS`, Connections est maintenant ouvert à tous (avant :
+playtest). Un réglage déjà choisi dans l'admin reste ce qu'il est. Les tests
+partent toujours du playtest (test/support/env.js), sauf
+connections-default.test.js qui vérifie le nouveau défaut.
