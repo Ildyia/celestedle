@@ -99,7 +99,10 @@
               <button type="button" data-days="30" aria-pressed="true">30 days</button>
               <button type="button" data-days="" aria-pressed="false">All time</button>
             </div>
+            <input type="search" id="insights-element" class="bug-input insights-search" list="insights-element-names" placeholder="Stats of any entity…" aria-label="Stats of any entity" autocomplete="off" />
+            <datalist id="insights-element-names"></datalist>
           </div>
+          <section id="insights-element-card" class="admin-card insights-card element-insights insights-entity" hidden></section>
           <div id="insights" class="insights-grid"></div>
         </section>
 

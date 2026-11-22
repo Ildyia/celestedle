@@ -207,15 +207,19 @@ const elementStmts = {
     FROM daily_secrets s
     LEFT JOIN game_summaries g ON g.date = s.date AND g.mode = s.mode
       AND g.secret_version = s.version AND g.status <> 'playing'
-    WHERE s.element_id = @id AND s.date <= @today
+    WHERE s.element_id = @id AND s.date BETWEEN @since AND @today
     GROUP BY s.date, s.mode ORDER BY s.date DESC
   `),
   guesses: db.prepare(`
     SELECT COUNT(*) AS times, COUNT(DISTINCT game_id) AS games,
            SUM(position = (SELECT MIN(position) FROM guesses o WHERE o.game_id = gu.game_id)) AS openers
-    FROM guesses gu WHERE element_id = @id
+    FROM guesses gu JOIN games g ON g.id = gu.game_id
+    WHERE gu.element_id = @id AND g.date >= @since
   `),
-  duels: db.prepare("SELECT COUNT(*) AS played FROM duel_rooms WHERE element_id = @id AND started_at IS NOT NULL"),
+  duels: db.prepare(`
+    SELECT COUNT(*) AS played FROM duel_rooms
+    WHERE element_id = @id AND started_at IS NOT NULL AND substr(created_at, 1, 10) >= @since
+  `),
   cxGroups: db.prepare(`
     SELECT p.date, p.version, CAST(g.key AS INTEGER) AS groupIndex,
            json_extract(g.value, '$.label') AS label, json_extract(g.value, '$.kind') AS kind,
@@ -236,6 +240,7 @@ const elementStmts = {
     SELECT COUNT(*) AS times
     FROM connection_attempts a JOIN connection_games g ON g.id = a.game_id, json_each(a.element_ids) j
     WHERE a.group_index IS NULL AND j.value = @id AND g.date NOT LIKE 'practice%'
+      AND (CASE WHEN g.date LIKE 'hard:%' THEN substr(g.date, 6) ELSE g.date END) >= @since
   `),
   tags: db.prepare(`
     SELECT t.label FROM connection_tags t JOIN connection_tag_elements te ON te.tag_id = t.id
@@ -258,11 +263,12 @@ function groupsFound(key) {
   }));
 }
 
-function elementInsights(id, today) {
+// since : première date comptée (« 0000-01-01 » : tout)
+function elementInsights(id, today, since = "0000-01-01") {
   const grids = elementStmts.cxGroups
     .all({ id })
     .map((g) => ({ ...g, day: g.date.replace("hard:", ""), mode: g.date.startsWith("hard:") ? "hard" : "normal" }))
-    .filter((g) => g.day <= today)
+    .filter((g) => g.day <= today && g.day >= since)
     .map((g) => ({
       date: g.day,
       mode: g.mode,
@@ -274,10 +280,11 @@ function elementInsights(id, today) {
     }))
     .sort((a, b) => b.date.localeCompare(a.date) || a.mode.localeCompare(b.mode));
   return {
-    secrets: elementStmts.secrets.all({ id, today }),
-    guesses: elementStmts.guesses.get({ id }),
-    duels: elementStmts.duels.get({ id }).played,
-    connections: { grids, decoys: elementStmts.cxDecoys.get({ id }).times },
+    since,
+    secrets: elementStmts.secrets.all({ id, today, since }),
+    guesses: elementStmts.guesses.get({ id, since }),
+    duels: elementStmts.duels.get({ id, since }).played,
+    connections: { grids, decoys: elementStmts.cxDecoys.get({ id, since }).times },
     tags: elementStmts.tags.all({ id }).map((t) => t.label)
   };
 }

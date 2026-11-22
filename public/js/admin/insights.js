@@ -5,6 +5,7 @@ import { spriteUrl } from "../api.js";
 import { el, byId, clear } from "../dom.js";
 import { formatNumber } from "../format.js";
 import { admin } from "./client.js";
+import { renderElementInsights } from "./element-insights.js";
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const pct = (part, total) => (total ? `${Math.round((part / total) * 100)}%` : "-");
@@ -20,8 +21,15 @@ function card(title, note, ...content) {
 
 const empty = (text = "No games in this period.") => el("p", { className: "small-subtext", text });
 
+// Un élément cité dans une carte : un clic ouvre sa fiche en haut de l'onglet
+let openEntity = () => {};
+
+function entityButton(name) {
+  return el("button", { className: "insights-entity-link", text: capitalize(name), attrs: { type: "button", title: `Stats of ${capitalize(name)}` }, on: { click: () => openEntity(name) } });
+}
+
 function wordCell(name) {
-  return el("td", { className: "insights-word" }, [el("img", { attrs: { src: spriteUrl(name), alt: "", loading: "lazy" } }), capitalize(name)]);
+  return el("td", { className: "insights-word" }, [el("img", { attrs: { src: spriteUrl(name), alt: "", loading: "lazy" } }), entityButton(name)]);
 }
 
 // Tableau des openers d'un mode
@@ -106,12 +114,63 @@ function hardestTable(rows) {
 export class InsightsTab {
   constructor() {
     this.days = "30";
+    this.elements = null; // nom (minuscules) → élément, chargé une fois
+    this.entity = null; // élément dont la fiche est ouverte
     document.querySelectorAll("[data-days]").forEach((b) =>
       b.addEventListener("click", () => {
         this.days = b.dataset.days;
         this.load();
       })
     );
+    const search = byId("insights-element");
+    search.addEventListener("change", () => this.lookup(search.value));
+    search.addEventListener("keydown", (e) => e.key === "Enter" && this.lookup(search.value));
+    openEntity = (name) => {
+      search.value = capitalize(name);
+      this.lookup(name);
+      byId("insights-element-card").scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+  }
+
+  async loadElements() {
+    if (this.elements) return;
+    const { elements } = await admin.elements();
+    this.elements = new Map(elements.map((e) => [e.nom.toLowerCase(), e]));
+    byId("insights-element-names").replaceChildren(...elements.map((e) => el("option", { attrs: { value: capitalize(e.nom) } })));
+  }
+
+  async lookup(name) {
+    await this.loadElements();
+    const element = this.elements.get(String(name).trim().toLowerCase());
+    if (!element) return;
+    this.entity = element;
+    await this.renderEntity();
+  }
+
+  // Fiche de l'élément choisi, sur la période de l'onglet
+  async renderEntity() {
+    const card = byId("insights-element-card");
+    const element = this.entity;
+    if (!element) {
+      card.hidden = true;
+      return;
+    }
+    card.hidden = false;
+    const period = { 7: "last 7 days", 30: "last 30 days" }[this.days] ?? "all time";
+    const head = el("div", { className: "insights-entity-head" }, [
+      el("img", { attrs: { src: spriteUrl(element.nom), alt: "" } }),
+      el("h3", { text: `${capitalize(element.nom)} · ${period}` }),
+      el("button", {
+        className: "btn-secondary",
+        text: "Close",
+        attrs: { type: "button" },
+        on: { click: () => { this.entity = null; byId("insights-element").value = ""; this.renderEntity(); } }
+      })
+    ]);
+    card.replaceChildren(head, el("p", { className: "small-subtext", text: "Loading…" }));
+    const data = await admin.elementInsights(element.id, this.days);
+    if (this.entity !== element) return;
+    card.replaceChildren(head, ...renderElementInsights(data));
   }
 
   async load() {
@@ -119,13 +178,15 @@ export class InsightsTab {
     const box = byId("insights");
     clear(box);
     box.append(el("p", { className: "small-subtext", text: "Loading…" }));
+    this.loadElements().catch(() => {});
+    if (this.entity) this.renderEntity();
     const data = await admin.insights(this.days);
     clear(box);
     const hintsTotal = data.gamesWithHints;
     box.append(
       card("Openers · A-Side", "First guess of each finished game, with how those games ended.", openersTable(data.openers.normal)),
       card("Openers · B-Side", null, openersTable(data.openers.hard)),
-      card("Most guessed", "Every guess, both sides of Celestedle.", hbars(data.mostGuessed, { label: (r) => capitalize(r.name), value: (r) => r.times })),
+      card("Most guessed", "Every guess, both sides of Celestedle.", hbars(data.mostGuessed, { label: (r) => entityButton(r.name), title: (r) => `${capitalize(r.name)}: ${r.times}`, value: (r) => r.times })),
       card("Wins by tries · A-Side", "A hint counts as a try.", triesColumns(data.tries.normal), outcomes(data.outcomes.normal)),
       card("Wins by tries · B-Side", null, triesColumns(data.tries.hard), outcomes(data.outcomes.hard)),
       card(
@@ -139,7 +200,7 @@ export class InsightsTab {
       card(
         "Connections decoys",
         "Entities most often put in a wrong group of 4.",
-        hbars(data.connections.decoys, { label: (r) => capitalize(r.name), value: (r) => r.times, none: "No mistakes in this period." })
+        hbars(data.connections.decoys, { label: (r) => entityButton(r.name), title: (r) => `${capitalize(r.name)}: ${r.times}`, value: (r) => r.times, none: "No mistakes in this period." })
       ),
       card(
         "Connections hints",

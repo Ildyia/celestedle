@@ -1,6 +1,7 @@
 import { spriteUrl } from "../api.js";
 import { el, byId } from "../dom.js";
 import { admin } from "./client.js";
+import { renderElementInsights } from "./element-insights.js";
 
 // Éditeur d'éléments : la liste à gauche, le formulaire à droite
 export class ElementsTab {
@@ -145,7 +146,7 @@ export class ElementsTab {
     try {
       const data = await admin.elementInsights(element.id);
       if (this.editing?.id !== element.id) return; // un autre élément a été ouvert entre-temps
-      box.replaceChildren(el("h3", { text: `${element.nom} · all time` }), ...renderInsights(data));
+      box.replaceChildren(el("h3", { text: `${element.nom} · all time` }), ...renderElementInsights(data));
     } catch (err) {
       box.replaceChildren(el("h3", { text: "Insights" }), el("p", { className: "small-subtext", text: err.message }));
     }
@@ -199,45 +200,4 @@ export class ElementsTab {
       this.notify(err.message, true);
     }
   }
-}
-
-const SIDES = { normal: "A-Side", hard: "B-Side" };
-const KIND_NAMES = { type: "Type", colour: "Colour", shape: "Shape", chapter: "Chapter", tag: "Tag" };
-const pct = (part, total) => (total ? `${Math.round((part / total) * 100)}%` : "-");
-
-function table(head, rows) {
-  return el("table", { className: "admin-table compact" }, [
-    el("thead", {}, [el("tr", {}, head.map((t) => el("th", { text: t })))]),
-    el("tbody", {}, rows.map((cells) => el("tr", {}, cells.map((c) => el("td", { text: String(c) })))))
-  ]);
-}
-
-const note = (text) => el("p", { className: "small-subtext", text });
-
-function renderInsights({ secrets, guesses, duels, connections, tags }) {
-  const cx = connections.grids;
-  return [
-    el("h4", { text: "Celestedle" }),
-    note(
-      `Guessed ${guesses.times} times in ${guesses.games} games, ${guesses.openers ?? 0} as the first guess. ` +
-        `Answer of ${duels} duel${duels === 1 ? "" : "s"}.`
-    ),
-    secrets.length
-      ? table(
-          ["Answer of", "Players", "Won", "Avg. tries"],
-          secrets.map((s) => [`${s.date} · ${SIDES[s.mode]}`, s.players, pct(s.wins, s.players), s.avgCost ?? "-"])
-        )
-      : note("Never the answer of the day yet."),
-    el("h4", { text: "Connections" }),
-    note(
-      `In ${cx.length} daily grid${cx.length === 1 ? "" : "s"}; put in a wrong group of 4 ${connections.decoys} times. ` +
-        (tags.length ? `Tags: ${tags.join(", ")}.` : "No tag.")
-    ),
-    cx.length
-      ? table(
-          ["Grid", "Group", "Found"],
-          cx.map((g) => [`${g.date} · ${SIDES[g.mode]}`, `${g.label} (${KIND_NAMES[g.kind] ?? g.kind})`, g.players ? `${pct(g.found, g.players)} (${g.found}/${g.players})` : "-"])
-        )
-      : note("Never in a daily grid yet.")
-  ];
 }

@@ -240,3 +240,12 @@ un compte Discord est lié aux profils qui portent son nom d'utilisateur.
   caché des classements (case du profil) n'a ni fiche /profile ni rôle de
   chapitre : ceux qu'il avait lui sont retirés. Le bot a
   besoin de « Manage Roles », et son rôle doit être au-dessus de ceux-là.
+
+### Insights : n'importe quel élément
+
+Onglet Insights : une recherche « Stats of any entity… » ouvre en haut la
+fiche de l'élément (la même que dans l'éditeur d'éléments), sur la période
+choisie (7 jours, 30 jours, tout). Les noms des cartes (Openers, Most
+guessed, Connections decoys) sont cliquables et ouvrent aussi leur fiche.
+`GET /api/admin/elements/:id/insights?days=7|30` ; rendu partagé dans
+js/admin/element-insights.js.

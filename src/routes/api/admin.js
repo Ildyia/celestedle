@@ -91,11 +91,13 @@ router.get("/admin/insights", (req, res) => {
   res.json(insightsRepo.insights(since));
 });
 
-// Fiche d'un élément dans l'éditeur : ses insights, toutes périodes
+// Fiche d'un élément (éditeur et onglet Insights) ; days : 7, 30 ou tout (absent)
 router.get("/admin/elements/:id/insights", (req, res) => {
   const element = elementsRepo.findById(Number(req.params.id));
   if (!element) throw new HttpError(404, "Element not found");
-  res.json(insightsRepo.elementInsights(element.id, todayParis()));
+  const days = Number(req.query.days);
+  const since = Number.isInteger(days) && days > 0 ? addDays(todayParis(), -(days - 1)) : "0000-01-01";
+  res.json(insightsRepo.elementInsights(element.id, todayParis(), since));
 });
 
 router.get("/admin/words", (req, res) => {

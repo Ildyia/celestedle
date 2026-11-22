@@ -6,6 +6,7 @@ const db = require("../src/db");
 const elementsRepo = require("../src/repositories/elements");
 const connections = require("../src/services/connections");
 const connectionsRepo = require("../src/repositories/connections");
+const insightsRepo = require("../src/repositories/insights");
 const { generateInWorker } = require("../src/services/connections-worker");
 const {
   buildCategories,
@@ -678,6 +679,12 @@ test("fiche d'un élément : ses grilles Connections, ses pièges, ses tags", as
   assert.ok(res.data.connections.decoys >= 1);
   assert.ok(Array.isArray(res.data.secrets) && Array.isArray(res.data.tags));
   assert.equal(typeof res.data.guesses.times, "number");
+  // Sur 7 jours : la grille du jour y est encore ; depuis demain, plus rien
+  const week = await api.request("GET", `/api/admin/elements/${element.id}/insights?days=7`, { token: staff });
+  assert.ok(week.data.connections.grids.some((g) => g.label === first.label));
+  assert.ok(week.data.since > "2000-01-01");
+  const old = insightsRepo.elementInsights(element.id, "2000-01-01", "2000-01-01");
+  assert.deepEqual([old.connections.grids.length, old.secrets.length, old.guesses.times], [0, 0, 0]);
   assert.equal((await api.request("GET", "/api/admin/elements/999999/insights", { token: staff })).status, 404);
   assert.equal((await api.request("GET", `/api/admin/elements/${element.id}/insights`, { token })).status, 403);
 });
