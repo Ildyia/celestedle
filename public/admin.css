@@ -697,3 +697,6 @@ body::before {
 .insights-entity-head h3 { flex: 1; margin: 0; }
 .insights-entity-link { all: unset; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; overflow: hidden; text-overflow: ellipsis; }
 .insights-entity-link:hover, .insights-entity-link:focus-visible { text-decoration-style: solid; color: #9fd0ff; }
+.insights-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+.insights-split h4 { margin: 8px 0 6px; }
+.insights-split > div { min-width: 0; overflow-x: auto; }

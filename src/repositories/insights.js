@@ -4,6 +4,8 @@
 // comptés qu'à part. Connections : grilles du jour seulement (pas
 // l'entraînement).
 const db = require("../db");
+const elementsRepo = require("./elements");
+const { verdictFor, CATEGORIES } = require("../services/compare");
 
 const LIMIT = 15;
 
@@ -93,11 +95,65 @@ const stmts = {
     GROUP BY h.type ORDER BY uses DESC
   `),
   elementNames: db.prepare("SELECT id, name FROM elements"),
+  // Premier essai de chaque partie finie, avec la réponse du jour (même
+  // version : un mot changé par l'admin n'est plus la bonne réponse)
+  openerGames: db.prepare(`
+    SELECT gu.element_id AS openerId, s.element_id AS secretId, g.status, g.tries + g.hints AS cost
+    FROM game_summaries g
+    JOIN guesses gu ON gu.game_id = g.id AND gu.position = (SELECT MIN(position) FROM guesses WHERE game_id = g.id)
+    JOIN daily_secrets s ON s.date = g.date AND s.mode = g.mode AND s.version = g.secret_version
+    WHERE g.mode = @mode AND g.date >= @since AND g.status <> 'playing'
+  `),
   duels: db.prepare(`
     SELECT COUNT(*) AS rooms, SUM(started_at IS NOT NULL) AS played, SUM(is_public = 0) AS private
     FROM duel_rooms WHERE created_at >= @since
   `)
 };
+
+// Openers joués dans moins de parties que ça : pas classés (trop peu pour dire)
+const MIN_OPENER_GAMES = 3;
+
+/**
+ * Openers les plus efficaces d'un mode : victoires, essais moyens pour gagner
+ * (indices compris, comme au classement), et ce que le premier essai apprend
+ * en moyenne : catégories vertes, et indices (vertes ou jaunes).
+ */
+function openerEfficiency(mode, since) {
+  const elements = new Map();
+  const element = (id) => {
+    if (!elements.has(id)) elements.set(id, elementsRepo.findById(id));
+    return elements.get(id);
+  };
+  const byOpener = new Map();
+  for (const g of stmts.openerGames.all({ mode, since })) {
+    const opener = element(g.openerId);
+    const secret = element(g.secretId);
+    if (!opener || !secret) continue;
+    const verdict = verdictFor(opener, secret);
+    const row = byOpener.get(g.openerId) ?? { name: opener.nom, games: 0, wins: 0, cost: 0, greens: 0, clues: 0 };
+    row.games++;
+    if (g.status === "won") {
+      row.wins++;
+      row.cost += g.cost;
+    }
+    row.greens += CATEGORIES.filter((c) => verdict[c] === "correct").length;
+    row.clues += CATEGORIES.filter((c) => verdict[c] !== "wrong").length;
+    byOpener.set(g.openerId, row);
+  }
+  const round = (n) => Math.round(n * 10) / 10;
+  return [...byOpener.values()]
+    .filter((r) => r.games >= MIN_OPENER_GAMES)
+    .map((r) => ({
+      name: r.name,
+      games: r.games,
+      wins: r.wins,
+      avgTries: r.wins ? round(r.cost / r.wins) : null,
+      greens: round(r.greens / r.games),
+      clues: round(r.clues / r.games)
+    }))
+    .sort((a, b) => (a.avgTries ?? Infinity) - (b.avgTries ?? Infinity) || b.wins / b.games - a.wins / a.games || b.games - a.games)
+    .slice(0, LIMIT);
+}
 
 // Grilles trouvées dans moins de joueurs que ça : pas classées (trop peu de
 // parties pour dire si un groupe est dur)
@@ -185,6 +241,7 @@ function insights(since) {
   return {
     since,
     openers: byMode(stmts.openers),
+    bestOpeners: { normal: openerEfficiency("normal", since), hard: openerEfficiency("hard", since), minGames: MIN_OPENER_GAMES },
     mostGuessed: stmts.mostGuessed.all({ since }),
     tries: byMode(stmts.tries),
     outcomes: byMode(stmts.outcomes),

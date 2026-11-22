@@ -249,3 +249,14 @@ choisie (7 jours, 30 jours, tout). Les noms des cartes (Openers, Most
 guessed, Connections decoys) sont cliquables et ouvrent aussi leur fiche.
 `GET /api/admin/elements/:id/insights?days=7|30` ; rendu partagé dans
 js/admin/element-insights.js.
+
+### Insights : openers les plus efficaces
+
+Carte « Most effective openers » (A-Side et B-Side), sur la période choisie :
+les premiers essais joués dans 3 parties finies ou plus, classés par essais
+moyens pour gagner (indices compris, comme au classement), puis par taux de
+victoire. Greens / Clues : ce que le premier essai apprend en moyenne, sur 4
+catégories (vertes ; vertes ou jaunes), calculé avec la même comparaison que
+le jeu contre la réponse du jour (src/repositories/insights.js,
+openerEfficiency). La réponse compte à sa version : une partie d'un mot
+changé par l'admin est laissée de côté.

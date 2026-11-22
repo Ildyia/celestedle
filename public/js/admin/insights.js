@@ -41,6 +41,42 @@ function openersTable(rows) {
   ]);
 }
 
+const wide = (node) => {
+  node.classList.add("wide");
+  return node;
+};
+
+// Openers les plus efficaces d'un mode : les moins d'essais pour gagner d'abord
+function bestOpenersTable(rows, minGames) {
+  if (!rows.length) return empty(`No opener played in ${minGames} finished games or more in this period.`);
+  return el("table", { className: "admin-table compact" }, [
+    el("thead", {}, [
+      el("tr", {}, [
+        el("th", { text: "Opener" }),
+        el("th", { text: "Games" }),
+        el("th", { text: "Won" }),
+        el("th", { text: "Avg. tries", attrs: { title: "Tries to win, a hint counts as a try" } }),
+        el("th", { text: "Greens", attrs: { title: "Categories right on the first guess, on average" } }),
+        el("th", { text: "Clues", attrs: { title: "Categories right or partly right (green or yellow) on the first guess, on average" } })
+      ])
+    ]),
+    el(
+      "tbody",
+      {},
+      rows.map((r) =>
+        el("tr", {}, [
+          wordCell(r.name),
+          el("td", { text: String(r.games) }),
+          el("td", { text: pct(r.wins, r.games) }),
+          el("td", { text: r.avgTries === null ? "-" : formatNumber(r.avgTries) }),
+          el("td", { text: formatNumber(r.greens) }),
+          el("td", { text: formatNumber(r.clues) })
+        ])
+      )
+    )
+  ]);
+}
+
 // Barres horizontales : libellé, barre, valeur
 function hbars(rows, { label, value, format = String, title = (r) => `${label(r)}: ${format(value(r))}`, none }) {
   if (!rows.length) return empty(none);
@@ -186,6 +222,16 @@ export class InsightsTab {
     box.append(
       card("Openers · A-Side", "First guess of each finished game, with how those games ended.", openersTable(data.openers.normal)),
       card("Openers · B-Side", null, openersTable(data.openers.hard)),
+      wide(
+        card(
+          "Most effective openers",
+          `Openers of ${data.bestOpeners.minGames}+ finished games, fewest tries to win first. Greens and clues: what the first guess tells, on average, out of 4 categories (green, or green and yellow).`,
+          el("div", { className: "insights-split" }, [
+            el("div", {}, [el("h4", { text: "A-Side" }), bestOpenersTable(data.bestOpeners.normal, data.bestOpeners.minGames)]),
+            el("div", {}, [el("h4", { text: "B-Side" }), bestOpenersTable(data.bestOpeners.hard, data.bestOpeners.minGames)])
+          ])
+        )
+      ),
       card("Most guessed", "Every guess, both sides of Celestedle.", hbars(data.mostGuessed, { label: (r) => entityButton(r.name), title: (r) => `${capitalize(r.name)}: ${r.times}`, value: (r) => r.times })),
       card("Wins by tries · A-Side", "A hint counts as a try.", triesColumns(data.tries.normal), outcomes(data.outcomes.normal)),
       card("Wins by tries · B-Side", null, triesColumns(data.tries.hard), outcomes(data.outcomes.hard)),
