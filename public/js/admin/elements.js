@@ -9,6 +9,7 @@ export class ElementsTab {
     this.elements = [];
     this.vocabulary = null;
     this.editing = null; // null = création
+    this.view = "insights"; // panneau d'un élément ouvert : « insights » ou « edit »
 
     this.form = byId("element-form");
     byId("elements-search").addEventListener("input", () => this.renderList());
@@ -16,6 +17,12 @@ export class ElementsTab {
     byId("element-cancel-btn").addEventListener("click", () => this.closeForm());
     byId("export-db-btn").addEventListener("click", () => this.exportDb());
     byId("element-sprite-file").addEventListener("change", () => this.previewFile());
+    document.querySelectorAll("[data-element-view]").forEach((b) =>
+      b.addEventListener("click", () => {
+        this.view = b.dataset.elementView;
+        this.showPanel();
+      })
+    );
     this.form.addEventListener("submit", (e) => {
       e.preventDefault();
       this.save();
@@ -93,9 +100,9 @@ export class ElementsTab {
     byId("element-sprite-file").value = "";
     this.showPreview(element ? `${spriteUrl(element.nom)}?v=${encodeURIComponent(element.sprite ?? "")}` : null);
     byId("element-active").checked = element?.isActive ?? true;
-    this.form.hidden = false;
     this.renderList();
-    byId("element-name").focus();
+    this.showPanel();
+    if (element) this.showInsights(element);
   }
 
   showPreview(src) {
@@ -119,9 +126,36 @@ export class ElementsTab {
     this.previewUrl = url;
   }
 
+  // Un élément existant : insights ou formulaire, au choix ; un nouvel
+  // élément : le formulaire seul
+  showPanel() {
+    const existing = Boolean(this.editing);
+    const view = existing ? this.view : "edit";
+    byId("element-view").hidden = !existing;
+    document.querySelectorAll("[data-element-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.elementView === view)));
+    this.form.hidden = view !== "edit";
+    byId("element-insights").hidden = view !== "insights";
+    if (view === "edit") byId("element-name").focus();
+  }
+
+  // Fiche de l'élément ouvert : réponses du jour, essais, Connections
+  async showInsights(element) {
+    const box = byId("element-insights");
+    box.replaceChildren(el("h3", { text: "Insights" }), el("p", { className: "small-subtext", text: "Loading…" }));
+    try {
+      const data = await admin.elementInsights(element.id);
+      if (this.editing?.id !== element.id) return; // un autre élément a été ouvert entre-temps
+      box.replaceChildren(el("h3", { text: `${element.nom} · all time` }), ...renderInsights(data));
+    } catch (err) {
+      box.replaceChildren(el("h3", { text: "Insights" }), el("p", { className: "small-subtext", text: err.message }));
+    }
+  }
+
   closeForm() {
     this.editing = null;
     this.form.hidden = true;
+    byId("element-insights").hidden = true;
+    byId("element-view").hidden = true;
     this.renderList();
   }
 
@@ -165,4 +199,45 @@ export class ElementsTab {
       this.notify(err.message, true);
     }
   }
+}
+
+const SIDES = { normal: "A-Side", hard: "B-Side" };
+const KIND_NAMES = { type: "Type", colour: "Colour", shape: "Shape", chapter: "Chapter", tag: "Tag" };
+const pct = (part, total) => (total ? `${Math.round((part / total) * 100)}%` : "-");
+
+function table(head, rows) {
+  return el("table", { className: "admin-table compact" }, [
+    el("thead", {}, [el("tr", {}, head.map((t) => el("th", { text: t })))]),
+    el("tbody", {}, rows.map((cells) => el("tr", {}, cells.map((c) => el("td", { text: String(c) })))))
+  ]);
+}
+
+const note = (text) => el("p", { className: "small-subtext", text });
+
+function renderInsights({ secrets, guesses, duels, connections, tags }) {
+  const cx = connections.grids;
+  return [
+    el("h4", { text: "Celestedle" }),
+    note(
+      `Guessed ${guesses.times} times in ${guesses.games} games, ${guesses.openers ?? 0} as the first guess. ` +
+        `Answer of ${duels} duel${duels === 1 ? "" : "s"}.`
+    ),
+    secrets.length
+      ? table(
+          ["Answer of", "Players", "Won", "Avg. tries"],
+          secrets.map((s) => [`${s.date} · ${SIDES[s.mode]}`, s.players, pct(s.wins, s.players), s.avgCost ?? "-"])
+        )
+      : note("Never the answer of the day yet."),
+    el("h4", { text: "Connections" }),
+    note(
+      `In ${cx.length} daily grid${cx.length === 1 ? "" : "s"}; put in a wrong group of 4 ${connections.decoys} times. ` +
+        (tags.length ? `Tags: ${tags.join(", ")}.` : "No tag.")
+    ),
+    cx.length
+      ? table(
+          ["Grid", "Group", "Found"],
+          cx.map((g) => [`${g.date} · ${SIDES[g.mode]}`, `${g.label} (${KIND_NAMES[g.kind] ?? g.kind})`, g.players ? `${pct(g.found, g.players)} (${g.found}/${g.players})` : "-"])
+        )
+      : note("Never in a daily grid yet.")
+  ];
 }

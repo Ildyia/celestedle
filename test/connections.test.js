@@ -667,6 +667,28 @@ test("insights : Connections (issues, erreurs, sortes de groupes, pièges)", asy
   assert.ok(Array.isArray(after.hardest));
 });
 
+test("fiche d'un élément : ses grilles Connections, ses pièges, ses tags", async () => {
+  const { token } = await api.newPlayer();
+  const puzzle = connections.getPuzzle();
+  const [first, second] = puzzle.groups;
+  const element = elementsRepo.findById(first.elementIds[0]);
+  // Une erreur avec l'élément, puis le groupe trouvé
+  const wrong = [first.elementIds[0], ...second.elementIds.slice(0, 3)].map((id) => elementsRepo.findById(id).nom);
+  await api.request("POST", "/api/connections/guess", { token, body: { names: wrong } });
+  await api.request("POST", "/api/connections/guess", { token, body: { names: first.elementIds.map((id) => elementsRepo.findById(id).nom) } });
+
+  const staff = await owner();
+  const res = await api.request("GET", `/api/admin/elements/${element.id}/insights`, { token: staff });
+  assert.equal(res.status, 200, JSON.stringify(res.data));
+  const grid = res.data.connections.grids.find((g) => g.label === first.label && g.mode === "normal");
+  assert.ok(grid, JSON.stringify(res.data.connections));
+  assert.ok(res.data.connections.decoys >= 1);
+  assert.ok(Array.isArray(res.data.secrets) && Array.isArray(res.data.tags));
+  assert.equal(typeof res.data.guesses.times, "number");
+  assert.equal((await api.request("GET", "/api/admin/elements/999999/insights", { token: staff })).status, 404);
+  assert.equal((await api.request("GET", `/api/admin/elements/${element.id}/insights`, { token })).status, 403);
+});
+
 test("diagnostic des tags : grilles d'essai dans le worker, réservé à l'équipe", async () => {
   const token = await owner();
   const ids = elementsRepo.listActive().slice(0, 6).map((e) => e.id);

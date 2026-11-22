@@ -52,6 +52,7 @@ export const admin = {
   insights: (days) => request("GET", `/admin/insights${days ? `?days=${days}` : ""}`),
   setSecret: (mode, action, elementName) => request("POST", "/admin/secret", { mode, action, elementName }),
   elements: () => request("GET", "/admin/elements"),
+  elementInsights: (id) => request("GET", `/admin/elements/${id}/insights`),
   createElement: (element) => request("POST", "/admin/elements", element),
   updateElement: (id, changes) => request("PATCH", `/admin/elements/${id}`, changes),
   uploadSprite: (id, file) => upload(`/admin/elements/${id}/sprite`, file),

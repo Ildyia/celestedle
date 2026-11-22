@@ -197,4 +197,74 @@ function insights(since) {
   };
 }
 
-module.exports = { insights };
+// Un élément, toutes périodes : jours où il était la réponse, essais, duels,
+// grilles Connections où il était (jusqu'à aujourd'hui, pas plus loin : les
+// grilles et réponses à venir ne sont pas des insights), pièges et tags.
+const elementStmts = {
+  secrets: db.prepare(`
+    SELECT s.date, s.mode, COUNT(g.id) AS players, COALESCE(SUM(g.status = 'won'), 0) AS wins,
+           ROUND(AVG(CASE WHEN g.status = 'won' THEN g.tries + g.hints END), 1) AS avgCost
+    FROM daily_secrets s
+    LEFT JOIN game_summaries g ON g.date = s.date AND g.mode = s.mode
+      AND g.secret_version = s.version AND g.status <> 'playing'
+    WHERE s.element_id = @id AND s.date <= @today
+    GROUP BY s.date, s.mode ORDER BY s.date DESC
+  `),
+  guesses: db.prepare(`
+    SELECT COUNT(*) AS times, COUNT(DISTINCT game_id) AS games,
+           SUM(position = (SELECT MIN(position) FROM guesses o WHERE o.game_id = gu.game_id)) AS openers
+    FROM guesses gu WHERE element_id = @id
+  `),
+  duels: db.prepare("SELECT COUNT(*) AS played FROM duel_rooms WHERE element_id = @id AND started_at IS NOT NULL"),
+  cxGroups: db.prepare(`
+    SELECT p.date, p.version, CAST(g.key AS INTEGER) AS groupIndex,
+           json_extract(g.value, '$.label') AS label, json_extract(g.value, '$.kind') AS kind,
+           json_extract(g.value, '$.key') AS key
+    FROM connection_puzzles p, json_each(p.groups) g, json_each(g.value, '$.elementIds') e
+    WHERE e.value = @id AND p.date NOT LIKE 'practice%'
+  `),
+  cxPlayers: db.prepare(`
+    SELECT COUNT(*) AS players FROM connection_games
+    WHERE date = @date AND puzzle_version = @version AND status <> 'playing'
+  `),
+  cxFound: db.prepare(`
+    SELECT COUNT(DISTINCT a.game_id) AS found
+    FROM connection_attempts a JOIN connection_games g ON g.id = a.game_id
+    WHERE g.date = @date AND g.puzzle_version = @version AND g.status <> 'playing' AND a.group_index = @groupIndex
+  `),
+  cxDecoys: db.prepare(`
+    SELECT COUNT(*) AS times
+    FROM connection_attempts a JOIN connection_games g ON g.id = a.game_id, json_each(a.element_ids) j
+    WHERE a.group_index IS NULL AND j.value = @id AND g.date NOT LIKE 'practice%'
+  `),
+  tags: db.prepare(`
+    SELECT t.label FROM connection_tags t JOIN connection_tag_elements te ON te.tag_id = t.id
+    WHERE te.element_id = @id ORDER BY t.label
+  `)
+};
+
+function elementInsights(id, today) {
+  const grids = elementStmts.cxGroups
+    .all({ id })
+    .map((g) => ({ ...g, day: g.date.replace("hard:", ""), mode: g.date.startsWith("hard:") ? "hard" : "normal" }))
+    .filter((g) => g.day <= today)
+    .map((g) => ({
+      date: g.day,
+      mode: g.mode,
+      label: g.label,
+      // Les anciennes grilles n'ont pas « kind » : on le lit dans la clé
+      kind: g.kind ?? g.key?.split(":")[0],
+      players: elementStmts.cxPlayers.get(g).players,
+      found: elementStmts.cxFound.get(g).found
+    }))
+    .sort((a, b) => b.date.localeCompare(a.date) || a.mode.localeCompare(b.mode));
+  return {
+    secrets: elementStmts.secrets.all({ id, today }),
+    guesses: elementStmts.guesses.get({ id }),
+    duels: elementStmts.duels.get({ id }).played,
+    connections: { grids, decoys: elementStmts.cxDecoys.get({ id }).times },
+    tags: elementStmts.tags.all({ id }).map((t) => t.label)
+  };
+}
+
+module.exports = { insights, elementInsights };

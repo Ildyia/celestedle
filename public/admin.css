@@ -278,9 +278,31 @@
   align-items: start;
 }
 
-.element-form {
+/* Formulaire et insights de l'élément : défilent ensemble, sans sortir de l'écran */
+.element-side {
   position: sticky;
   top: 12px;
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.element-view {
+  align-self: flex-start;
+}
+
+.element-insights h3,
+.element-insights h4 {
+  margin: 0 0 6px;
+}
+
+.element-insights h4 {
+  margin-top: 12px;
+}
+
+.element-form {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -339,8 +361,9 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .element-form {
+  .element-side {
     position: static;
+    max-height: none;
   }
 
   .mode-stats {

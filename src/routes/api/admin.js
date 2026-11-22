@@ -90,6 +90,13 @@ router.get("/admin/insights", (req, res) => {
   res.json(insightsRepo.insights(since));
 });
 
+// Fiche d'un élément dans l'éditeur : ses insights, toutes périodes
+router.get("/admin/elements/:id/insights", (req, res) => {
+  const element = elementsRepo.findById(Number(req.params.id));
+  if (!element) throw new HttpError(404, "Element not found");
+  res.json(insightsRepo.elementInsights(element.id, todayParis()));
+});
+
 router.get("/admin/words", (req, res) => {
   res.json(statsRepo.wordStats());
 });

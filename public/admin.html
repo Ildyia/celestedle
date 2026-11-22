@@ -143,6 +143,11 @@
                 <tbody id="elements-body"></tbody>
               </table>
             </div>
+            <div class="element-side">
+            <div id="element-view" class="insights-period element-view" role="group" aria-label="Element panel" hidden>
+              <button type="button" data-element-view="insights" aria-pressed="true">Insights</button>
+              <button type="button" data-element-view="edit" aria-pressed="false">Edit</button>
+            </div>
             <form id="element-form" class="admin-card element-form" hidden>
               <h3 id="element-form-title">Edit</h3>
               <div class="form-group">
@@ -188,6 +193,8 @@
                 <button type="submit" class="btn-primary">Save</button>
               </div>
             </form>
+            <section id="element-insights" class="admin-card element-insights" hidden></section>
+            </div>
           </div>
         </section>
 

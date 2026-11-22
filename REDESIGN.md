@@ -106,3 +106,13 @@ Option « Modern Interface (beta) » (options de la page de jeu) ou « Modern ga
 - **Connections, génération hors du fil principal** : l'admin qui générait 14 grilles d'un coup bloquait le serveur (healthcheck Docker raté, Traefik répondait 404 à tout le monde). Ancien générateur rapide remis (en gardant « un tag une grille sur deux » et « un seul groupe Found in … » en A-Side), grilles tirées dans un worker thread (`services/connections-worker.js`), en avance pour aujourd'hui et les 2 jours suivants (au démarrage puis toutes les heures) ; l'admin n'en montre plus que 3 jours.
 - **Connections, règle des faux groupes unifiée** : en A-Side, seul le faux groupe parfait est refusé (exactement 4 cases qui partagent une catégorie sans être un groupe), types et tags compris ; 5 cases ou plus d'un même type sont une fausse piste permise, comme pour les couleurs. Un tirage avec un faux groupe est réparé (une case échangée contre un autre membre de son groupe) au lieu d'être jeté : avec 400 tags d'essai, 20 grilles strictes sur 20 en 58 ms (avant : 7 sur 20, 656 ms).
 - **Connections, diversité gardée** (rotation des catégories, éléments récents évités) avec, par ordre de priorité : grille sans faux groupe, puis plafond des éléments (sorti plus de 1,5 × la moyenne + 1 sur 30 jours : plus pioché), puis catégories de la veille écartées. Trois recherches successives (sans élément trop sorti ni catégorie de la veille, puis sans élément trop sorti, puis sans restriction) ; une catégorie qui échoue perd du poids pour la grille en cours. Simulé sur 60 jours avec 100 tags : 60 grilles strictes sur 60, élément le plus fréquent 1,8 × la moyenne (avant : 2,9 ×).
+
+### Fiche d'un élément (admin, onglet Elements)
+
+Cliquer un élément ouvre un panneau à deux vues, « Insights » (par défaut) et
+« Edit » (le formulaire d'avant). Insights, toutes périodes, jusqu'à aujourd'hui
+(rien sur les réponses ou grilles à venir) : jours où il était la réponse (joueurs,
+réussite, essais moyens), fois essayé et en premier essai, duels, grilles
+Connections où il était (groupe, part des joueurs qui l'ont trouvé), fois mis
+dans un mauvais groupe de 4, tags. Route `GET /api/admin/elements/:id/insights`
+(équipe seulement), requêtes dans `src/repositories/insights.js`.
