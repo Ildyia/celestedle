@@ -624,17 +624,38 @@ body.map-open #moon, body.chapter-cam #moon { opacity: 1 !important; }
 body:not(.chapter-cam) :is(.trail, .moon-camp) { opacity: 0; }
 
 /* ===== Duels : fenêtre du menu ===== */
-.duel-lobby { width: min(620px, 100%); transform: rotate(-.8deg); }
-.duel-lobby h2 { font-size: 32px; margin-bottom: 6px; }
-.duel-lobby h3 { font-size: 18px; margin: 18px 0 8px; color: #3a3350; }
-.duel-lobby-intro { font-size: 14px; line-height: 1.5; }
-.duel-create { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; }
-.duel-create .postcard-btn { margin: 0 0 0 auto; }
-.duel-choice { display: flex; border-radius: 8px; overflow: hidden; box-shadow: 0 0 0 2px rgba(58, 51, 80, .25); }
-.duel-choice button { padding: 7px 12px; border: none; background: rgba(58, 51, 80, .06); color: #3a3350; font: inherit; font-size: 14px; cursor: pointer; }
-.duel-choice button[aria-pressed="true"] { background: #3a3350; color: #fff; }
-.duel-rooms { list-style: none; display: grid; gap: 6px; max-height: 40vh; overflow: auto; }
-.duel-room { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 8px; background: rgba(58, 51, 80, .07); }
+/* ===== Duel et Camp, dans le livre de l'écran des jeux ===== */
+/* Le livre d'un jeu montre sa partie du jour et ses records ; Duel et Camp
+   n'en ont pas, le Camp n'a pas non plus de côté ni de bouton Climb */
+.book:not([data-page="game"]) :is(.today, .next, .book-climb, .record) { display: none; }
+.book[data-page="camp"] :is(.tabs, .climb) { display: none; }
+.book[data-page="camp"] { --tint: #c9a86a; }
+.book-duel { display: flex; justify-content: center; margin: 16px 0 20px; }
+.duel-choice { display: flex; border-radius: 8px; overflow: hidden; box-shadow: 0 0 0 2px rgba(255, 255, 255, .25); }
+.duel-choice button { padding: 7px 14px; border: none; background: rgba(0, 0, 0, .25); color: inherit; font: inherit; font-size: 14px; cursor: pointer; }
+.duel-choice button[aria-pressed="true"] { background: color-mix(in srgb, var(--tint) 70%, #000); color: #fff; }
+.book-rooms { display: grid; gap: 8px; margin-top: 22px; }
+.book-rooms .record-title { opacity: .6; letter-spacing: 2px; font-size: 13px; }
+.duel-rooms { list-style: none; display: grid; gap: 6px; max-height: 26vh; overflow: auto; margin: 0; padding: 0; }
+.duel-room { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 8px; background: rgba(0, 0, 0, .25); }
+.duel-join { padding: 5px 12px; border-radius: 6px; font-size: 14px; color: #fff; text-decoration: none; background: color-mix(in srgb, var(--tint) 70%, #000); }
+.duel-join:hover, .duel-join:focus-visible { background: var(--tint); }
+.book-camp { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 18px 0 4px; }
+.camp-item {
+  position: relative; display: flex; align-items: center; gap: 10px; min-width: 0; padding: 12px 12px; border-radius: 8px; cursor: pointer;
+  font: inherit; font-size: 17px; color: inherit; text-align: left; background: rgba(0, 0, 0, .25); border: 2px solid transparent;
+}
+.camp-item img { width: 30px; height: 30px; object-fit: contain; image-rendering: pixelated; flex: none; }
+.camp-label { flex: 1; min-width: 0; line-height: 1.2; }
+.camp-item kbd { font: inherit; font-size: 12px; padding: 1px 6px; border-radius: 4px; background: rgba(255, 255, 255, .15); opacity: .8; }
+.camp-item:hover, .camp-item:focus-visible { border-color: rgba(255, 255, 255, .5); outline: none; }
+.camp-item.selected { border-color: #ffd98a; background: rgba(255, 255, 255, .1); }
+/* Lettres non lues sur l'icône du Camp */
+.icon { position: relative; }
+.icon-count {
+  position: absolute; top: -8px; right: -8px; min-width: 24px; height: 24px; padding: 0 7px; border-radius: 999px;
+  background: #e0475b; color: #fff; font-size: 13px; line-height: 24px; text-align: center; box-shadow: 0 2px 0 rgba(0, 0, 0, .35);
+}
 .duel-room .avatar { width: 34px; height: 34px; border-radius: 6px; background: var(--player-color); display: grid; place-items: center; flex: none; overflow: hidden; }
 .duel-room .avatar img { width: 88%; height: 88%; object-fit: contain; image-rendering: pixelated; }
 .duel-room-who { display: grid; flex: 1; min-width: 0; }
@@ -737,3 +758,6 @@ body.perf .moon-flag .cloth { animation: none; }
 .poll-track i { display: block; height: 100%; border-radius: 99px; background: #5a4a8a; }
 .poll-result.mine .poll-track i { background: #8a6cc4; }
 .poll-note { font-size: 13.5px; color: #6a6283; }
+/* Les raccourcis n'ont de sens qu'avec un clavier, et prennent la place des
+   libellés sur un petit écran */
+@media (hover: none) and (pointer: coarse), (max-width: 700px) { .camp-item kbd { display: none; } }

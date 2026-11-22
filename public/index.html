@@ -119,18 +119,26 @@
           <span class="bar"><i id="book-climb-bar"></i></span>
           <span id="book-climb-text"></span>
         </div>
+        <!-- Duel : public ou privé, puis les salons ouverts sous le bouton -->
+        <div class="book-duel" id="book-duel" hidden>
+          <div class="duel-choice" role="group" aria-label="Room">
+            <button type="button" data-duel-public="true" aria-pressed="true" title="Listed for everyone">Public room</button>
+            <button type="button" data-duel-public="false" aria-pressed="false" title="Only with the link">Private room</button>
+          </div>
+        </div>
+        <!-- Camp : un bouton par chose à faire (menu.js, renderCamp) -->
+        <div class="book-camp" id="book-camp" hidden></div>
         <div class="record" id="book-record"></div>
         <button type="button" class="climb a" id="climb">Climb</button>
+        <div class="book-rooms" id="book-rooms" hidden>
+          <div class="record-title">OPEN DUELS</div>
+          <ul class="duel-rooms" id="duel-rooms"></ul>
+        </div>
       </div>
+      <!-- Tout le reste (journal, carte, courrier, options…) est au Camp,
+           dernière icône de la rangée des jeux (menu.js, CAMP_ITEMS) -->
       <div class="corner">
         <button type="button" id="to-files"><img src="assets/illustration/exit.png" alt="" />Back</button>
-        <button type="button" id="to-journal"><img src="assets/illustration/journal.png" alt="" />Journal</button>
-        <button type="button" id="to-map"><img src="assets/menu/marker.png" alt="" />Map</button>
-        <button type="button" id="to-duel"><img src="assets/entities/badeline.png" alt="" />Duel</button>
-        <button type="button" id="to-mail" aria-label="Mailbox"><img src="assets/illustration/feather.png" alt="" />Mailbox<span class="mail-badge" id="mail-badge" hidden></span></button>
-        <button type="button" id="to-options"><img src="assets/illustration/options.png" alt="" />Options</button>
-        <button type="button" id="to-report"><img src="assets/illustration/wtf.png" alt="" />Report a bug</button>
-        <button type="button" id="to-admin" hidden><img src="assets/illustration/pico8.png" alt="" />Admin</button>
       </div>
     </section>
 
@@ -168,28 +176,6 @@
           <p>Try again in a few minutes. If it lasts, please tell us on the Discord server!</p>
         </div>
         <button type="button" class="postcard-btn" id="api-down-retry"><span class="press-disc"></span>Try again</button>
-      </div>
-    </div>
-
-    <!-- Duels : créer un salon, voir les salons publics (menu.js, openDuels) -->
-    <div id="duel-lobby" class="postcard-wrap" hidden>
-      <div class="postcard duel-lobby" role="dialog" aria-modal="true" aria-labelledby="duel-lobby-title">
-        <button type="button" class="map-close" id="duel-lobby-close" aria-label="Close">×</button>
-        <h2 id="duel-lobby-title">Duel</h2>
-        <p class="duel-lobby-intro">Two climbers, one random element, the same rules. Fewest tries wins (a hint counts as a try), then the fastest. Duels don't count for strawberries or rankings.</p>
-        <div class="duel-create">
-          <div class="duel-choice" role="group" aria-label="Side">
-            <button type="button" data-duel-mode="normal" aria-pressed="true">A-Side · Normal</button>
-            <button type="button" data-duel-mode="hard" aria-pressed="false">B-Side · Hard</button>
-          </div>
-          <div class="duel-choice" role="group" aria-label="Room">
-            <button type="button" data-duel-public="true" aria-pressed="true" title="Listed below for everyone">Public</button>
-            <button type="button" data-duel-public="false" aria-pressed="false" title="Only with the link">Private</button>
-          </div>
-          <button type="button" class="postcard-btn" id="duel-create"><span class="press-disc"></span>Create a duel</button>
-        </div>
-        <h3>Open duels</h3>
-        <ul class="duel-rooms" id="duel-rooms"></ul>
       </div>
     </div>
 

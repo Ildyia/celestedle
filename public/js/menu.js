@@ -31,6 +31,7 @@ let optionsReturn = "modes";
 
 function go(next) {
   if (next !== screen) watchTransition();
+  if (next !== "modes") stopRooms();
   screen = next;
   document.body.dataset.screen = next;
   render();
@@ -40,7 +41,7 @@ function go(next) {
 
 // Titre de l'onglet : dit où on est dans le menu
 function updateTitle() {
-  const where = { title: null, files: "Files", modes: games[gameIndex]?.title, options: "Options" }[screen];
+  const where = { title: null, files: "Files", modes: current().title, options: "Options" }[screen];
   const name = journalOpen() ? "Journal" : where;
   document.title = name && name !== "Celestedle" ? `${name} · Celestedle` : "Celestedle";
 }
@@ -521,9 +522,32 @@ const GAMES = [
   }
 ];
 
+// Après les jeux, deux icônes qui n'en sont pas : Duel (la chasse à
+// l'élément, à deux) et Camp (tout le reste : journal, carte, courrier,
+// options…), pour ne pas couvrir l'écran de boutons
+const DUEL = {
+  id: "duel",
+  kind: "duel",
+  title: "Duel",
+  icon: "assets/entities/badeline.png",
+  desc: "Two climbers, one random element, the same rules. Fewest tries wins (a hint counts as a try), then the fastest. Duels don't count for strawberries or rankings."
+};
+const CAMP = {
+  id: "camp",
+  kind: "camp",
+  title: "Camp",
+  icon: "assets/illustration/backpack.png",
+  desc: "Catch your breath by the fire: your journal, the map, your mail and everything else."
+};
+
 // Jeux visibles : Celestedle, plus ceux auxquels le joueur a accès
 let games = [GAMES[0]];
+// Dernier jeu choisi (la caméra reste sur son drapeau au Duel et au Camp)
 let gameIndex = 0;
+// Icône choisie dans la rangée : un jeu, Duel ou Camp
+let selected = 0;
+const entries = () => [...games, DUEL, CAMP];
+const current = () => entries()[selected] ?? games[0];
 let side = storage.get(KEYS.mode) === "hard" ? "b" : "a";
 const rulesCache = new Map();
 // Évite qu'une réponse lente écrase l'affichage d'un autre jeu
@@ -545,14 +569,22 @@ async function loadGames() {
   document.body.dataset.games = games.map((g) => g.id).join(" ");
   const last = games.findIndex((g) => g.id === storage.get(LAST_GAME_KEY));
   gameIndex = last >= 0 ? last : 0;
+  selected = gameIndex;
   if (screen === "modes") renderModes();
   loadTodayMarks();
 }
 
 function selectGame(index) {
-  gameIndex = (index + games.length) % games.length;
-  storage.set(LAST_GAME_KEY, games[gameIndex].id);
+  const list = entries();
+  selected = (index + list.length) % list.length;
+  const entry = list[selected];
+  if (!entry.kind) {
+    gameIndex = selected;
+    storage.set(LAST_GAME_KEY, entry.id);
+  }
+  campIndex = 0;
   renderModes();
+  renderHints();
   updateTitle();
 }
 
@@ -561,38 +593,113 @@ function selectSide(next) {
   renderModes();
 }
 
-function renderModes() {
-  const game = games[gameIndex];
-  document.body.dataset.game = game.id;
-
+// Rangée d'icônes : les jeux, Duel, puis Camp (avec les lettres non lues)
+function renderIcons() {
   const icons = byId("icons");
   clear(icons);
-  games.forEach((g, i) => {
+  entries().forEach((g, i) => {
+    const count = g.kind === "camp" && unreadMail ? el("span", { className: "icon-count", text: String(unreadMail) }) : null;
     icons.append(
       el(
         "button",
         {
-          className: `icon${i === gameIndex ? " selected" : ""}`,
-          attrs: { type: "button", "aria-label": g.title, "aria-pressed": String(i === gameIndex) },
+          className: `icon${i === selected ? " selected" : ""}${g.kind ? ` icon-${g.kind}` : ""}`,
+          attrs: { type: "button", "aria-label": count ? `${g.title}, ${unreadMail} unread letters` : g.title, "aria-pressed": String(i === selected) },
           on: { click: () => selectGame(i) }
         },
-        [el("img", { attrs: { src: g.icon, alt: "" } }), g.playtest ? el("span", { className: "badge", text: "🧪" }) : null]
+        [el("img", { attrs: { src: g.icon, alt: "" } }), g.playtest ? el("span", { className: "badge", text: "🧪" }) : null, count]
       )
     );
   });
+}
 
-  byId("mode-label").textContent = game.playtest ? `${game.title} · playtest` : game.title;
-  byId("book-chapter").textContent = `GAME ${gameIndex + 1} · ${side === "a" ? "A-SIDE" : "B-SIDE"}`;
-  byId("book-title").textContent = game.title;
-  byId("book-desc").textContent = game.desc[side];
+function renderModes() {
+  const entry = current();
+  const kind = entry.kind ?? "game";
+  // La caméra reste sur le dernier jeu choisi
+  document.body.dataset.game = (games[gameIndex] ?? games[0]).id;
+  document.body.dataset.page = kind;
+  renderIcons();
+
+  const book = document.querySelector("#modes .book");
+  book.dataset.page = kind;
+  byId("book-duel").hidden = kind !== "duel";
+  byId("book-rooms").hidden = kind !== "duel";
+  byId("book-camp").hidden = kind !== "camp";
+  if (kind !== "duel") stopRooms();
+
+  byId("mode-label").textContent = entry.playtest ? `${entry.title} · playtest` : entry.title;
+  byId("book-title").textContent = entry.title;
   for (const tab of byId("tabs").children) tab.classList.toggle("active", tab.dataset.side === side);
   byId("climb").className = `climb ${side}`;
-  byId("climb").textContent = "Climb";
   const today = byId("book-today");
   today.textContent = "";
   today.className = "today";
   clear(byId("book-record"));
-  fillBook(game, game.modes[side]);
+  bookRequest++;
+
+  if (kind === "duel") {
+    byId("book-chapter").textContent = `DUEL · ${side === "a" ? "A-SIDE" : "B-SIDE"}`;
+    byId("book-desc").textContent = entry.desc;
+    byId("climb").textContent = "Create a duel";
+    renderDuelChoice();
+    loadRooms();
+    return;
+  }
+  if (kind === "camp") {
+    byId("book-chapter").textContent = "BETWEEN TWO CLIMBS";
+    byId("book-desc").textContent = entry.desc;
+    renderCamp();
+    return;
+  }
+  byId("book-chapter").textContent = `GAME ${selected + 1} · ${side === "a" ? "A-SIDE" : "B-SIDE"}`;
+  byId("book-desc").textContent = entry.desc[side];
+  byId("climb").textContent = "Climb";
+  fillBook(entry, entry.modes[side]);
+}
+
+// ===== Camp =====
+// Tout ce qui n'est pas un jeu, en gros boutons dans le livre. ↑↓ choisit,
+// Entrée ouvre ; les raccourcis (J, M, L, O, B) marchent de partout.
+const CAMP_ITEMS = [
+  { id: "journal", label: "Journal", icon: "assets/illustration/journal.png", key: "J", run: () => openJournal() },
+  { id: "map", label: "Map", icon: "assets/menu/marker.png", key: "M", run: () => openMap() },
+  { id: "mail", label: "Mailbox", icon: "assets/illustration/feather.png", key: "L", run: () => openMail(), count: () => unreadMail },
+  { id: "options", label: "Options", icon: "assets/illustration/options.png", key: "O", run: () => openOptions() },
+  { id: "report", label: "Report a bug", icon: "assets/illustration/wtf.png", key: "B", run: () => openReport() },
+  { id: "admin", label: "Admin", icon: "assets/illustration/pico8.png", run: () => (location.href = "admin.html"), visible: () => isStaff() }
+];
+let campIndex = 0;
+const campItems = () => CAMP_ITEMS.filter((item) => !item.visible || item.visible());
+
+function renderCamp() {
+  const items = campItems();
+  campIndex = Math.min(campIndex, items.length - 1);
+  byId("book-camp").replaceChildren(
+    ...items.map((item, i) => {
+      const count = item.count?.() ?? 0;
+      return el(
+        "button",
+        {
+          className: `camp-item${i === campIndex ? " selected" : ""}`,
+          attrs: { type: "button", "data-camp": item.id, "aria-label": count ? `${item.label}, ${count} unread` : item.label },
+          on: { click: () => { campIndex = i; item.run(); } }
+        },
+        [
+          el("img", { attrs: { src: item.icon, alt: "" } }),
+          el("span", { className: "camp-label", text: item.label }),
+          count ? el("span", { className: "mail-badge", text: String(count) }) : null,
+          item.key ? el("kbd", { text: item.key }) : null
+        ]
+      );
+    })
+  );
+}
+
+function moveCamp(step) {
+  const count = campItems().length;
+  campIndex = (campIndex + step + count) % count;
+  renderCamp();
 }
 
 // Partie du jour, règles et record : chargés à part, l'écran s'affiche avant
@@ -665,17 +772,26 @@ async function loadRecords(game, mode) {
 }
 
 function climb() {
+  const entry = current();
+  if (entry.kind === "duel") {
+    createDuel({ mode: side === "a" ? "normal" : "hard", isPublic: duelChoice.isPublic }).catch((err) => showToast(err.message));
+    return;
+  }
+  if (entry.kind === "camp") {
+    campItems()[campIndex]?.run();
+    return;
+  }
   // Les trois pages de jeu lisent le même réglage KEYS.mode ("normal" ou
   // "hard") au chargement : il suffit de l'écrire avant d'y aller.
   storage.set(KEYS.mode, side === "a" ? "normal" : "hard");
-  location.href = games[gameIndex].page;
+  location.href = entry.page;
 }
 
 // Au survol (ou au focus) de Climb, le navigateur va déjà chercher la page
 // du jeu : le passage est plus rapide.
 const prefetched = new Set();
 function prefetchGame() {
-  const page = games[gameIndex]?.page;
+  const page = current().page;
   if (!page || prefetched.has(page)) return;
   prefetched.add(page);
   document.head.append(el("link", { attrs: { rel: "prefetch", href: page } }));
@@ -697,12 +813,13 @@ function openMail() {
   openMailbox();
 }
 
-// Nombre de lettres non lues, sur le bouton de l'écran des jeux
+// Nombre de lettres non lues : sur l'icône du Camp et sur son bouton Mailbox
+let unreadMail = 0;
 function showUnread(count) {
-  const badge = byId("mail-badge");
-  badge.hidden = count === 0;
-  badge.textContent = String(count);
-  byId("to-mail").setAttribute("aria-label", count ? `Mailbox, ${count} unread` : "Mailbox");
+  unreadMail = count;
+  if (screen !== "modes") return;
+  renderIcons();
+  if (current().kind === "camp") renderCamp();
 }
 
 // API injoignable : même carte postale, avec un bouton pour réessayer
@@ -726,8 +843,8 @@ function openJournal() {
 function closeJournal() {
   journal.close();
   updateTitle();
-  // Le focus revient au bouton qui a ouvert le carnet
-  byId("to-journal").focus({ preventScroll: true });
+  // Le focus revient au bouton du Camp qui a ouvert le carnet
+  document.querySelector("[data-camp='journal']")?.focus({ preventScroll: true });
 }
 
 // ===== Options =====
@@ -827,9 +944,16 @@ const HINTS = {
   // Écran titre : le rond « C » remplace la touche, et clignote
   title: [[null, "Start"]],
   files: [["↑↓", "Move"], ["Enter", "Confirm"], ["Esc", "Back"]],
+  // Entrée et ↑↓ changent de sens au Duel et au Camp (modesHints)
   modes: [["←→", "Game"], ["↑↓", "Side"], ["Enter", "Climb"], ["J", "Journal"], ["M", "Map"], ["D", "Duel"], ["L", "Mail"], ["O", "Options"], ["B", "Bug"], ["Esc", "Back"]],
   options: [["↑↓", "Move"], ["Enter", "Change"], ["Esc", "Back"]]
 };
+
+function modesHints() {
+  const kind = current().kind;
+  const rename = { "↑↓": kind === "camp" ? "Move" : "Side", Enter: kind === "camp" ? "Open" : kind === "duel" ? "Create" : "Climb" };
+  return HINTS.modes.map(([key, label]) => [key, rename[key] ?? label]);
+}
 
 function renderHints() {
   const box = byId("hints");
@@ -837,7 +961,7 @@ function renderHints() {
   // Option « Keyboard hints » : l'écran titre garde son « Start », seule
   // invitation à entrer dans le menu
   if (screen !== "title" && !storage.getBool(KEYS.keyHints, true)) return;
-  for (const [key, label] of HINTS[screen]) {
+  for (const [key, label] of screen === "modes" ? modesHints() : HINTS[screen]) {
     box.append(key ? el("span", {}, [el("b", { text: key }), label]) : el("span", { className: "blink" }, [el("span", { className: "press-disc" }), label]));
   }
 }
@@ -856,15 +980,15 @@ const KEY_HANDLERS = {
     }
   },
   modes: {
-    ArrowLeft: () => selectGame(gameIndex - 1),
-    ArrowRight: () => selectGame(gameIndex + 1),
-    ArrowUp: () => selectSide("a"),
-    ArrowDown: () => selectSide("b"),
-    Tab: () => selectSide(side === "a" ? "b" : "a"),
+    ArrowLeft: () => selectGame(selected - 1),
+    ArrowRight: () => selectGame(selected + 1),
+    ArrowUp: () => (current().kind === "camp" ? moveCamp(-1) : selectSide("a")),
+    ArrowDown: () => (current().kind === "camp" ? moveCamp(1) : selectSide("b")),
+    Tab: () => current().kind !== "camp" && selectSide(side === "a" ? "b" : "a"),
     Enter: climb,
     j: openJournal,
     m: openMap,
-    d: openDuels,
+    d: () => selectGame(entries().indexOf(DUEL)),
     o: openOptions,
     b: openReport,
     l: openMail,
@@ -902,13 +1026,6 @@ document.addEventListener("keydown", (event) => {
       event.preventDefault();
       keySound(event.key);
       mailboxKey(event.key);
-    }
-    return;
-  }
-  if (duelsOpen()) {
-    if (event.key === "Escape") {
-      playSound("back");
-      closeDuels();
     }
     return;
   }
@@ -954,7 +1071,6 @@ document.addEventListener("keydown", (event) => {
 
 // ===== Souris et toucher =====
 byId("title").addEventListener("click", leaveTitle);
-byId("to-mail").addEventListener("click", openMail);
 byId("api-down-retry").addEventListener("click", () => location.reload());
 byId("climb").addEventListener("click", climb);
 for (const type of ["pointerenter", "focus", "touchstart"]) byId("climb").addEventListener(type, prefetchGame, { passive: true });
@@ -971,13 +1087,8 @@ function onSwipe(node, handler) {
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) handler(dx < 0 ? 1 : -1);
   });
 }
-onSwipe(byId("modes"), (step) => games.length > 1 && selectGame(gameIndex + step));
+onSwipe(byId("modes"), (step) => selectGame(selected + step));
 onSwipe(byId("journal"), (step) => journal.flip(step));
-byId("to-options").addEventListener("click", openOptions);
-byId("to-report").addEventListener("click", openReport);
-byId("to-admin").addEventListener("click", () => (location.href = "admin.html"));
-byId("to-journal").addEventListener("click", openJournal);
-byId("to-map").addEventListener("click", openMap);
 // Retour aux fichiers, comme Échap
 byId("to-files").addEventListener("click", () => {
   playSound("back");
@@ -1088,7 +1199,7 @@ function showMoonCamp(chapter, arriving = false) {
 const isStaff = () => ["owner", "administrator"].includes(player.profile?.role);
 
 function showStaffLinks() {
-  byId("to-admin").hidden = !isStaff();
+  if (screen === "modes" && current().kind === "camp") renderCamp();
   byId("moon-flag").hidden = !isStaff();
   placeMoonFlag();
 }
@@ -1135,28 +1246,20 @@ window.addEventListener("resize", () => followMoon(300));
 for (const id of ["mountain", "moon"]) byId(id).addEventListener("transitionrun", () => followMoon());
 
 // ===== Duels (js/duel.js) =====
-// Fenêtre du menu : créer un salon (côté, public ou privé) ou en rejoindre un
-// des salons publics, qu'on relit toutes les 5 s tant qu'elle est ouverte.
-const duelChoice = { mode: "normal", isPublic: true };
+// Icône Duel de la rangée des jeux : le côté (onglets A/B du livre), salon
+// public ou privé, « Create a duel », puis les salons publics ouverts, relus
+// toutes les 5 s tant que le Duel est choisi.
+const duelChoice = { isPublic: true };
 let duelTimer = null;
-const duelsOpen = () => !byId("duel-lobby").hidden;
-
-function openDuels() {
-  byId("duel-lobby").hidden = false;
-  byId("duel-create").focus();
-  playSound("confirm");
-  renderDuelChoice();
-  loadRooms();
-}
-
-function closeDuels() {
-  byId("duel-lobby").hidden = true;
-  clearTimeout(duelTimer);
-}
+const duelShown = () => screen === "modes" && current().kind === "duel";
 
 function renderDuelChoice() {
-  document.querySelectorAll("[data-duel-mode]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.duelMode === duelChoice.mode)));
   document.querySelectorAll("[data-duel-public]").forEach((b) => b.setAttribute("aria-pressed", String((b.dataset.duelPublic === "true") === duelChoice.isPublic)));
+}
+
+function stopRooms() {
+  clearTimeout(duelTimer);
+  duelTimer = null;
 }
 
 const ago = (iso) => {
@@ -1165,7 +1268,7 @@ const ago = (iso) => {
 };
 
 async function loadRooms() {
-  clearTimeout(duelTimer);
+  stopRooms();
   const list = byId("duel-rooms");
   let rooms;
   try {
@@ -1175,7 +1278,7 @@ async function loadRooms() {
     list.append(el("li", { className: "duel-empty", text: err.message }));
     return;
   }
-  if (!duelsOpen()) return;
+  if (!duelShown()) return;
   clear(list);
   const mine = player.profile?.id;
   if (!rooms.length) list.append(el("li", { className: "duel-empty", text: "No open duel right now: create one!" }));
@@ -1187,29 +1290,19 @@ async function loadRooms() {
           el("img", { attrs: { src: avatarUrl(room.host?.avatar ?? "strawberry"), alt: "", style: avatarFit(room.host?.avatar ?? "") } })
         ]),
         el("span", { className: "duel-room-who" }, [el("strong", { text: room.host?.name ?? "?" }), el("small", { text: `${room.mode === "hard" ? "B-Side · Hard" : "A-Side · Normal"} · ${ago(room.createdAt)}` })]),
-        el("a", { className: "postcard-btn small", text: own ? "Your duel" : "Join", attrs: { href: duelUrl(room.id, { join: !own }) } })
+        el("a", { className: "duel-join", text: own ? "Your duel" : "Join", attrs: { href: duelUrl(room.id, { join: !own }) } })
       ])
     );
   }
   duelTimer = setTimeout(loadRooms, 5000);
 }
 
-document.querySelectorAll("[data-duel-mode]").forEach((b) =>
-  b.addEventListener("click", () => {
-    duelChoice.mode = b.dataset.duelMode;
-    renderDuelChoice();
-  })
-);
 document.querySelectorAll("[data-duel-public]").forEach((b) =>
   b.addEventListener("click", () => {
     duelChoice.isPublic = b.dataset.duelPublic === "true";
     renderDuelChoice();
   })
 );
-byId("duel-create").addEventListener("click", () => createDuel(duelChoice).catch((err) => showToast(err.message)));
-byId("duel-lobby-close").addEventListener("click", closeDuels);
-byId("duel-lobby").addEventListener("click", (e) => e.target === e.currentTarget && closeDuels());
-byId("to-duel").addEventListener("click", openDuels);
 
 // ===== Carte =====
 // Toute la montagne (la caméra recule comme pour l'annonce d'un chapitre),
