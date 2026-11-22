@@ -355,13 +355,14 @@ function createBot() {
     syncChapterRoles().catch((err) => console.error("[DISCORD] Rôles de chapitre :", err.message));
   }
 
-  // Le rôle du chapitre atteint, et aucun autre rôle de chapitre
+  // Le rôle du chapitre atteint, et aucun autre rôle de chapitre (aucun
+  // du tout pour un joueur caché des classements : chapter = NO_ROLE)
   async function syncMember(guild, user, chapter, member = null) {
     const setup = community.chapterRoles();
     if (!setup || setup.guildId !== guild.id || chapter === null) return;
     member ??= await guild.members.fetch(user.id).catch(() => null);
     if (!member) return;
-    const target = setup.roles[chapter];
+    const target = chapter === community.NO_ROLE ? null : setup.roles[chapter];
     const extra = setup.roles.filter((id, i) => i !== chapter && member.roles.cache.has(id));
     if (extra.length) await member.roles.remove(extra, "Celestedle chapter");
     if (target && !member.roles.cache.has(target)) await member.roles.add(target, "Celestedle chapter");

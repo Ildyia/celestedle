@@ -236,5 +236,7 @@ un compte Discord est lié aux profils qui portent son nom d'utilisateur.
 - `/setup-chapter-roles` (admins du serveur) : un rôle par chapitre, trouvé
   par son nom (« Forsaken City »…) ou créé à la couleur du chapitre. Chaque
   joueur lié reçoit le rôle de son chapitre actuel, et perd les autres
-  (vérifié toutes les heures, et pour soi-même à chaque /profile). Le bot a
+  (vérifié toutes les heures, et pour soi-même à chaque /profile). Un joueur
+  caché des classements (case du profil) n'a ni fiche /profile ni rôle de
+  chapitre : ceux qu'il avait lui sont retirés. Le bot a
   besoin de « Manage Roles », et son rôle doit être au-dessus de ceux-là.

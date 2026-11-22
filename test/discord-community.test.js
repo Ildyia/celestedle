@@ -67,6 +67,10 @@ test("/profile : la fiche publique, jamais celle d'un profil caché", () => {
   assert.equal(embed.fields.find((f) => f.name === "Strawberries").value, "🍓 1");
   assert.match(embed.thumbnail.url, /^https:\/\/celestedle\.example\/assets\//);
   assert.match(embed.url, /index\.html\?player=/);
+
+  // Seulement des profils cachés : pas de fiche du tout
+  linked("Shy Climber", "shy.climber", { isHidden: true });
+  assert.deepEqual(community.publicProfiles(user("shy.climber")), []);
 });
 
 test("rôles de chapitre : chapitre le plus haut de chaque nom Discord, anciens tags laissés de côté", () => {
@@ -79,6 +83,12 @@ test("rôles de chapitre : chapitre le plus haut de chaque nom Discord, anciens 
   assert.ok(![...chapters.keys()].some((k) => k.includes("#")));
   assert.equal(community.chapterOf(user("cleo.roles")), 2);
   assert.equal(community.chapterOf(user("ghost")), null);
+
+  // Caché des classements : pas de rôle de chapitre (ceux qu'il a sont retirés)
+  const dana = linked("Dana Hidden", "dana.hidden", { isHidden: true });
+  win(dana.id, addDays(today, -20));
+  assert.equal(community.chaptersByUsername().get("dana.hidden"), community.NO_ROLE);
+  assert.equal(community.chapterOf(user("dana.hidden")), community.NO_ROLE);
 
   assert.equal(community.chapterRoles(), null);
   community.setChapterRoles("guild1", community.CHAPTERS.map((_, i) => `role${i}`));

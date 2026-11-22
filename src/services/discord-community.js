@@ -74,28 +74,37 @@ function setChapterRoles(guildId, roles) {
   settingsRepo.set(ROLES_KEY, JSON.stringify({ guildId, roles }));
 }
 
+// Comme /profile et les classements : un profil caché ne montre rien, pas
+// même son chapitre. NO_ROLE : aucun rôle de chapitre (retire ceux qu'il a).
+const NO_ROLE = -1;
+const visibleChapter = (profiles) => {
+  const visible = profiles.filter((p) => !p.isHidden && !p.isAnonymous);
+  return visible.length ? Math.max(...visible.map((p) => achievements.playerClimb(p).chapter)) : NO_ROLE;
+};
+
 /**
- * Chapitre atteint par nom d'utilisateur Discord (le plus haut de ses
- * profils). Les anciens tags « Nom#1234 » sont laissés de côté.
+ * Chapitre à montrer par nom d'utilisateur Discord : le plus haut de ses
+ * profils visibles, NO_ROLE s'ils sont tous cachés. Les anciens tags
+ * « Nom#1234 » sont laissés de côté.
  */
 function chaptersByUsername() {
-  const best = new Map();
+  const byTag = new Map();
   for (const profile of playersRepo.withDiscordTag()) {
     if (profile.discordTag.includes("#")) continue;
-    const chapter = achievements.playerClimb(profile).chapter;
-    best.set(profile.discordTag, Math.max(best.get(profile.discordTag) ?? 0, chapter));
+    byTag.set(profile.discordTag, [...(byTag.get(profile.discordTag) ?? []), profile]);
   }
-  return best;
+  return new Map([...byTag].map(([tag, profiles]) => [tag, visibleChapter(profiles)]));
 }
 
-/** Chapitre d'un compte Discord, ou null sans profil lié. */
+/** Chapitre d'un compte Discord (NO_ROLE si caché), ou null sans profil lié. */
 function chapterOf(user) {
   const profiles = linkedProfiles(user);
-  return profiles.length ? Math.max(...profiles.map((p) => achievements.playerClimb(p).chapter)) : null;
+  return profiles.length ? visibleChapter(profiles) : null;
 }
 
 module.exports = {
   CHAPTERS,
+  NO_ROLE,
   DEFAULT_HOUR,
   setReminder,
   removeReminder,
