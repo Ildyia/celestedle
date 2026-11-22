@@ -14,8 +14,15 @@ const { nowIso } = require("../utils/dates");
 
 const TITLE_MAX = 120;
 const BODY_MAX = 4000;
-const CHANNEL_KEY = "discord_mail_channel_id";
-const ROLE_KEY = "discord_mail_role_id";
+// Salon et rôle Discord de chaque sorte de courrier, réglés avec la
+// commande /setup-mail du bot (ou les variables d'environnement). Sans salon
+// à elles, les notes de mise à jour et les sondages vont dans celui des annonces.
+const DESTINATIONS = {
+  announcement: { channel: "discord_mail_channel_id", role: "discord_mail_role_id", config: "mail" },
+  "patch-notes": { channel: "discord_patch_channel_id", role: "discord_patch_role_id", config: "patch" },
+  poll: { channel: "discord_poll_channel_id", role: "discord_poll_role_id", config: "poll" }
+};
+const TOPICS = ["announcement", "patch-notes"];
 const SNOWFLAKE = /^\d{5,25}$/;
 const OPTIONS_MIN = 2;
 const OPTIONS_MAX = 10;
@@ -38,21 +45,40 @@ function setNotifier(next) {
 }
 
 // ===== Réglages Discord =====
+/** { announcement: { channelId, roleId }, "patch-notes": …, poll: … } ("" : rien de réglé). */
 function discordSettings() {
-  return {
-    channelId: settingsRepo.get(CHANNEL_KEY, config.discord.mailChannelId) || "",
-    roleId: settingsRepo.get(ROLE_KEY, config.discord.mailRoleId) || ""
-  };
+  return Object.fromEntries(
+    Object.entries(DESTINATIONS).map(([topic, d]) => [
+      topic,
+      {
+        channelId: settingsRepo.get(d.channel, config.discord[`${d.config}ChannelId`]) || "",
+        roleId: settingsRepo.get(d.role, config.discord[`${d.config}RoleId`]) || ""
+      }
+    ])
+  );
 }
 
-function setDiscordSettings({ channelId, roleId }) {
-  for (const [key, value, name] of [[CHANNEL_KEY, channelId, "channel"], [ROLE_KEY, roleId, "role"]]) {
-    if (value === undefined) continue;
-    const id = String(value ?? "").trim();
-    if (id && !SNOWFLAKE.test(id)) throw new HttpError(400, `The Discord ${name} ID must be a number (right-click → Copy ID in Discord).`);
-    settingsRepo.set(key, id);
+/** /setup-mail : salon (obligatoire) et rôle (null : personne) d'une sorte de courrier. */
+function setDiscordDestination(topic, channelId, roleId = null) {
+  const d = DESTINATIONS[topic];
+  if (!d) throw new HttpError(400, `Unknown kind of letter "${topic}".`);
+  for (const id of [channelId, roleId].filter(Boolean)) {
+    if (!SNOWFLAKE.test(String(id))) throw new HttpError(400, "Discord IDs are numbers.");
   }
-  return discordSettings();
+  if (!channelId) throw new HttpError(400, "A channel is needed.");
+  settingsRepo.set(d.channel, String(channelId));
+  settingsRepo.set(d.role, roleId ? String(roleId) : "");
+  return discordSettings()[topic];
+}
+
+const topicOf = (mail) => (mail.kind === "poll" ? "poll" : mail.topic ?? "announcement");
+
+/** Où poster une lettre sur Discord : { channelId, roleId }, ou null sans salon. */
+function discordTarget(mail) {
+  const all = discordSettings();
+  const own = all[topicOf(mail)];
+  const dest = own.channelId ? own : all.announcement;
+  return dest.channelId ? { channelId: dest.channelId, roleId: dest.roleId || null } : null;
 }
 
 // ===== Courrier =====
@@ -96,6 +122,7 @@ function toPublic(mail, player = null) {
     createdAt: mail.createdAt,
     read: Boolean(mail.readAt),
     personal: Boolean(mail.playerId),
+    topic: mail.topic ?? null,
     poll: mail.kind === "poll" ? pollView(mail, player ? playerVoter(player) : null) : null
   };
 }
@@ -146,20 +173,22 @@ function listForAdmin() {
 }
 
 /**
- * Admin : nouvelle annonce, ou sondage (kind « poll » : options, multiple,
- * closesAt) ; discord = la poster aussi sur Discord.
+ * Admin : nouvelle annonce (topic « announcement » ou « patch-notes »), ou
+ * sondage (kind « poll » : options, multiple, closesAt) ; discord = la poster
+ * aussi sur Discord, dans le salon de sa sorte.
  */
 async function send(author, input = {}) {
   const { title, body } = validate(input);
   const kind = input.kind === "poll" ? "poll" : "news";
+  const topic = kind === "news" ? (TOPICS.includes(input.topic) ? input.topic : "announcement") : null;
   const poll = kind === "poll" ? validatePoll(input) : { options: [], multiple: false, closesAt: null };
   const mail = repo.insert(
-    { kind, title, body, playerId: null, authorId: author.id, multiple: poll.multiple, closesAt: poll.closesAt, at: nowIso() },
+    { kind, topic, title, body, playerId: null, authorId: author.id, multiple: poll.multiple, closesAt: poll.closesAt, at: nowIso() },
     poll.options
   );
-  const { channelId, roleId } = discordSettings();
-  if (input.discord && channelId) {
-    const posted = await relay("mailPosted", mail, { channelId, roleId: roleId || null });
+  const target = discordTarget(mail);
+  if (input.discord && target) {
+    const posted = await relay("mailPosted", mail, target);
     if (posted) repo.setDiscord(mail.id, posted.channelId, posted.messageId);
   }
   return repo.find(mail.id);
@@ -253,10 +282,11 @@ async function closeDuePolls() {
 const findLetter = (id) => repo.find(Number(id));
 
 module.exports = {
+  setDiscordDestination,
   findLetter,
   vote,
   voteFromDiscord,
   closePoll,
   closeDuePolls,
   pollView,
-  setNotifier, inbox, markRead, listForAdmin, send, edit, remove, discordSettings, setDiscordSettings, TITLE_MAX, BODY_MAX };
+  setNotifier, inbox, markRead, listForAdmin, send, edit, remove, discordSettings, TITLE_MAX, BODY_MAX };

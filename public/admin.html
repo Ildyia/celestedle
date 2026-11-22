@@ -315,7 +315,8 @@
             <form id="mail-form" class="admin-card element-form">
               <h3 id="mail-form-title">New letter</h3>
               <div class="insights-period mail-kind" role="group" aria-label="Kind of letter" id="mail-kind">
-                <button type="button" data-mail-kind="news" aria-pressed="true">Letter</button>
+                <button type="button" data-mail-kind="announcement" aria-pressed="true">Announcement</button>
+                <button type="button" data-mail-kind="patch-notes" aria-pressed="false">Patch notes</button>
                 <button type="button" data-mail-kind="poll" aria-pressed="false">Poll</button>
               </div>
               <div class="form-group">
@@ -400,24 +401,6 @@
               <p class="small-subtext">
                 Changes apply right away, including to games in progress:
                 a shorter time limit can end a game that has already started.
-              </p>
-            </fieldset>
-
-            <fieldset class="checkbox-grid settings-group">
-              <legend>Discord: mailbox announcements</legend>
-              <div class="form-group">
-                <label for="mail-channel-id">Channel ID</label>
-                <input type="text" id="mail-channel-id" class="bug-input" inputmode="numeric" pattern="\d{5,25}" placeholder="Right-click the channel → Copy Channel ID" />
-              </div>
-              <div class="form-group">
-                <label for="mail-role-id">Role to ping (optional)</label>
-                <input type="text" id="mail-role-id" class="bug-input" inputmode="numeric" pattern="\d{5,25}" placeholder="Server settings → Roles → right-click → Copy Role ID" />
-              </div>
-              <p class="small-subtext">
-                Letters sent from the Mailbox page can be posted in this channel,
-                pinging this role. Leave the channel empty to keep letters on the
-                site only. IDs show up in Discord once Developer Mode is on
-                (User Settings → Advanced).
               </p>
             </fieldset>
 

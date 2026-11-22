@@ -700,3 +700,4 @@ body::before {
 .insights-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
 .insights-split h4 { margin: 8px 0 6px; }
 .insights-split > div { min-width: 0; overflow-x: auto; }
+.mail-kind-label { display: block; text-transform: uppercase; letter-spacing: .08em; font-size: 11px; }

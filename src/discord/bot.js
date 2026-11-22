@@ -41,6 +41,23 @@ const commands = [
     .addRoleOption((opt) => opt.setName("role").setDescription("Role pinged at midnight (default: the word reset role)"))
     .addBooleanOption((opt) => opt.setName("no-ping").setDescription("Ping nobody")),
   new SlashCommandBuilder()
+    .setName("setup-mail")
+    .setDescription("Choose where the mailbox letters are posted, and which role they ping")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .addStringOption((opt) =>
+      opt
+        .setName("kind")
+        .setDescription("Kind of letter")
+        .setRequired(true)
+        .addChoices(
+          { name: "Announcements", value: "announcement" },
+          { name: "Patch notes", value: "patch-notes" },
+          { name: "Polls", value: "poll" }
+        )
+    )
+    .addChannelOption((opt) => opt.setName("channel").setDescription("Channel for this kind of letter").setRequired(true))
+    .addRoleOption((opt) => opt.setName("role").setDescription("Role to ping (none if left empty)")),
+  new SlashCommandBuilder()
     .setName("recap-preview")
     .setDescription("See the daily recap and the champion of the week now (only you see it)")
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
@@ -262,6 +279,26 @@ function createBot() {
     });
   }
 
+  // Où va chaque sorte de lettre de la boîte aux lettres
+  async function handleSetupMail(interaction) {
+    const topic = interaction.options.getString("kind");
+    const channel = interaction.options.getChannel("channel");
+    const role = interaction.options.getRole("role");
+    mail.setDiscordDestination(topic, channel.id, role?.id ?? null);
+    const names = { announcement: "Announcements", "patch-notes": "Patch notes", poll: "Polls" };
+    const all = mail.discordSettings();
+    const lines = Object.entries(names).map(([key, name]) => {
+      const d = all[key];
+      if (!d.channelId) return `• ${name}: ${key === "announcement" ? "not set" : "same as announcements"}`;
+      return `• ${name}: <#${d.channelId}>${d.roleId ? `, pings <@&${d.roleId}>` : ", no ping"}`;
+    });
+    await interaction.reply({
+      content: `Saved. Letters sent from the admin's Mailbox page go to:\n${lines.join("\n")}`,
+      allowedMentions: { parse: [] },
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
   async function handleRecapPreview(interaction) {
     const pinged = recapPoster.roleId();
     await interaction.reply({
@@ -433,6 +470,9 @@ function createBot() {
       }
       if (interaction.isChatInputCommand() && interaction.commandName === "setup-daily") {
         return await handleSetupDaily(interaction);
+      }
+      if (interaction.isChatInputCommand() && interaction.commandName === "setup-mail") {
+        return await handleSetupMail(interaction);
       }
       if (interaction.isChatInputCommand() && interaction.commandName === "recap-preview") {
         return await handleRecapPreview(interaction);

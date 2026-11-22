@@ -39,7 +39,8 @@ Useful environment variables (`.env`):
 | `DATA_DIR` | Folder for the SQLite database and v1 JSON files (default `data/`) |
 | `RANDOM_SEED` | Seed of the daily word draw |
 | `ADMIN_PASSWORD` or `ADMIN_PASSWORD_HASH` | Used once to make a player profile the site owner (in clear or as a bcrypt hash) |
-| `DISCORD_BOT_TOKEN` | Enables the Discord bot for bug reports |
+| `DISCORD_BOT_TOKEN` | Enables the Discord bot (bug reports, midnight recap, mailbox, reminders, chapter roles) |
+| `DISCORD_MAIL_CHANNEL_ID`, `DISCORD_PATCH_CHANNEL_ID`, `DISCORD_POLL_CHANNEL_ID` (and `…_ROLE_ID`) | Where announcements, patch notes and polls are posted (and which role they ping) until the bot's `/setup-mail` sets them; patch notes and polls fall back to the announcements channel |
 | `CORS_ORIGINS` | Extra allowed origins, comma separated |
 | `PERMANENT_OWNER_TOKEN` | Beta only: recovery code of a profile recreated as owner at startup (16+ characters) |
 | `PERMANENT_OWNER_NAME` | Name of that profile (default `Amélia`) |

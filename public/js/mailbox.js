@@ -11,8 +11,9 @@ import { showToast } from "./toast.js";
 
 // Une annonce récente pas encore lue s'ouvre seule en quittant l'écran titre
 const FRESH_DAYS = 14;
-const STAMPS = { news: "assets/illustration/feather.png", poll: "assets/illustration/typing.png", reply: "assets/illustration/love.png" };
+const STAMPS = { "patch-notes": "assets/illustration/options.png", news: "assets/illustration/feather.png", poll: "assets/illustration/typing.png", reply: "assets/illustration/love.png" };
 
+const KIND_LABELS = { "patch-notes": "Patch notes", announcement: "Announcement", poll: "Poll" };
 let letters = [];
 let current = null;
 let onChange = () => {};
@@ -165,10 +166,10 @@ function render() {
   );
   const card = current
     ? el("article", { className: "postcard mailbox-letter", attrs: { role: "document" } }, [
-        el("div", { className: "postcard-stamp" }, [el("img", { attrs: { src: STAMPS[current.kind] ?? STAMPS.news, alt: "" } })]),
+        el("div", { className: "postcard-stamp" }, [el("img", { attrs: { src: STAMPS[current.topic] ?? STAMPS[current.kind] ?? STAMPS.news, alt: "" } })]),
         el("div", { className: "postcard-postmark", attrs: { "aria-hidden": "true" } }),
         el("div", { className: "postcard-text" }, [
-          el("p", { className: "mailbox-date", text: formatDate(current.createdAt) }),
+          el("p", { className: "mailbox-date", text: [KIND_LABELS[current.kind === "poll" ? "poll" : current.topic], formatDate(current.createdAt)].filter(Boolean).join(" · ") }),
           el("h2", { attrs: { id: "mailbox-title" }, text: current.title }),
           ...renderLetter(current.body),
           current.poll ? pollBlock(current) : null

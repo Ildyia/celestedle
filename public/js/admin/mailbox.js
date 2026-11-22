@@ -12,10 +12,10 @@ export class MailboxTab {
   constructor({ notify }) {
     this.notify = notify;
     this.letters = [];
-    this.discord = { channelId: "", roleId: "" };
+    this.discord = null; // salon et rôle de chaque sorte (réglés avec /setup-mail)
     this.editing = null;
     this.confirmDelete = null;
-    this.kind = "news";
+    this.kind = "announcement"; // announcement, patch-notes ou poll
     this.form = byId("mail-form");
     document.querySelectorAll("[data-mail-kind]").forEach((b) => b.addEventListener("click", () => this.setKind(b.dataset.mailKind)));
     byId("mail-add-option").addEventListener("click", () => this.addOption(""));
@@ -43,8 +43,9 @@ export class MailboxTab {
     this.kind = kind;
     document.querySelectorAll("[data-mail-kind]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mailKind === kind)));
     byId("mail-poll-fields").hidden = kind !== "poll" || Boolean(this.editing);
+    this.renderDiscordOption();
     byId("mail-title-label").textContent = kind === "poll" ? "Question" : "Title";
-    byId("mail-submit-btn").textContent = this.editing ? "Save changes" : kind === "poll" ? "Send the poll" : "Send to everyone";
+    byId("mail-submit-btn").textContent = this.editing ? "Save changes" : kind === "poll" ? "Send the poll" : kind === "patch-notes" ? "Send the patch notes" : "Send to everyone";
     this.preview();
   }
 
@@ -80,16 +81,24 @@ export class MailboxTab {
     return [...byId("mail-options").querySelectorAll("input")].map((i) => i.value.trim()).filter(Boolean);
   }
 
+  // Salon Discord de la sorte choisie (sinon celui des annonces)
+  destination() {
+    if (!this.discord) return null;
+    const own = this.discord[this.kind] ?? this.discord.announcement;
+    const dest = own?.channelId ? own : this.discord.announcement;
+    return dest?.channelId ? dest : null;
+  }
+
   renderDiscordOption() {
-    const ready = Boolean(this.discord.channelId);
+    const dest = this.destination();
     const box = byId("mail-discord");
-    box.disabled = !ready || Boolean(this.editing);
-    if (!ready) box.checked = false;
+    box.disabled = !dest || Boolean(this.editing);
+    if (!dest) box.checked = false;
     byId("mail-discord-label").textContent = this.editing
       ? "Editing also updates its Discord message, if it has one"
-      : ready
-        ? `Also post it on Discord${this.discord.roleId ? " and ping the role" : ""}`
-        : "Discord: choose a channel in Settings first";
+      : dest
+        ? `Also post it on Discord${dest.roleId ? " and ping the role" : ""}`
+        : "Discord: choose a channel with the bot's /setup-mail first";
   }
 
   preview() {
@@ -136,7 +145,11 @@ export class MailboxTab {
   renderList() {
     const rows = this.letters.map((letter) =>
       el("tr", { className: this.editing?.id === letter.id ? "selected" : "" }, [
-        el("td", {}, [el("strong", { text: letter.title }), letter.poll ? this.pollSummary(letter) : null]),
+        el("td", {}, [
+          el("span", { className: "small-subtext mail-kind-label", text: letter.kind === "poll" ? "Poll" : letter.topic === "patch-notes" ? "Patch notes" : "Announcement" }),
+          el("strong", { text: letter.title }),
+          letter.poll ? this.pollSummary(letter) : null
+        ]),
         el("td", { text: formatDate(letter.createdAt) }),
         el("td", { text: `${letter.reads} player${letter.reads === 1 ? "" : "s"}` }),
         el("td", { text: letter.discordMessageId ? "Posted" : "-" }),
@@ -167,7 +180,7 @@ export class MailboxTab {
     byId("mail-cancel-btn").hidden = !letter;
     byId("mail-kind").hidden = Boolean(letter);
     if (!letter) this.resetOptions();
-    this.setKind(letter ? letter.kind : this.kind);
+    this.setKind(letter ? (letter.kind === "poll" ? "poll" : letter.topic ?? "announcement") : this.kind);
     this.renderDiscordOption();
     this.renderList();
     if (letter) byId("mail-title").focus();
@@ -185,7 +198,7 @@ export class MailboxTab {
         const closes = byId("mail-closes").value;
         const poll = this.kind === "poll"
           ? { kind: "poll", options: this.options(), multiple: byId("mail-multiple").checked, closesAt: closes ? new Date(closes).toISOString() : null }
-          : {};
+          : { topic: this.kind };
         const sent = await admin.sendMail({ ...letter, ...poll, discord: byId("mail-discord").checked });
         this.notify(`"${sent.title}" sent${sent.discordMessageId ? " and posted on Discord" : ""}.`);
       }

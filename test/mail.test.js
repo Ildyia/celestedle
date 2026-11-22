@@ -31,6 +31,7 @@ test("boîte aux lettres : la carte postale de la mise à jour est la première 
   assert.equal(res.status, 200);
   const welcome = res.data.letters.find((l) => l.slug === "welcome-v4");
   assert.equal(welcome.kind, "news");
+  assert.equal(welcome.topic, "patch-notes", "la carte postale de la mise à jour : des notes de mise à jour");
   assert.equal(welcome.read, false);
   assert.match(welcome.body, /\*\*Celeste-style menus\*\*/);
   assert.equal((await api.request("POST", `/api/mail/${welcome.id}/read`)).status, 401);
@@ -60,23 +61,36 @@ test("annonce : écrite par l'équipe, lue par les joueurs, comptée, corrigée 
   assert.equal(discord.length, 0, "jamais posté : ni modifié ni supprimé sur Discord");
 });
 
-test("Discord : salon et rôle réglés dans Settings, annonce postée, corrigée et supprimée là-bas aussi", async () => {
-  const bad = await api.request("PUT", "/api/admin/settings", { token: owner, body: { discord: { channelId: "#general" } } });
-  assert.equal(bad.status, 400);
-  const saved = await api.request("PUT", "/api/admin/settings", { token: owner, body: { discord: { channelId: "123456789", roleId: "987654321" } } });
-  assert.deepEqual(saved.data.discord, { channelId: "123456789", roleId: "987654321" });
+test("Discord : salon et rôle de chaque sorte réglés par le bot, annonce postée, corrigée et supprimée là-bas aussi", async () => {
+  assert.throws(() => mail.setDiscordDestination("announcement", "#general"), /numbers/);
+  assert.throws(() => mail.setDiscordDestination("gossip", "123456"), /Unknown kind/);
+  mail.setDiscordDestination("announcement", "123456789", "987654321");
 
   const quiet = await api.request("POST", "/api/admin/mail", { token: owner, body: { title: "Site only", body: "x", discord: false } });
   assert.equal(quiet.data.discordMessageId, null);
   const sent = await api.request("POST", "/api/admin/mail", { token: owner, body: { title: "Big news", body: "Hello", discord: true } });
   assert.equal(sent.data.discordMessageId, "999");
+  assert.equal(sent.data.topic, "announcement");
   assert.deepEqual(discord.at(-1), ["posted", "Big news", { channelId: "123456789", roleId: "987654321" }]);
+
+  // Notes de mise à jour et sondages : dans le salon des annonces tant
+  // qu'ils n'ont pas le leur, puis dans le leur
+  await api.request("POST", "/api/admin/mail", { token: owner, body: { title: "Patch 1", body: "x", topic: "patch-notes", discord: true } });
+  assert.deepEqual(discord.at(-1)[2], { channelId: "123456789", roleId: "987654321" });
+  mail.setDiscordDestination("patch-notes", "555555", null);
+  mail.setDiscordDestination("poll", "666666", "777777");
+  const patch = await api.request("POST", "/api/admin/mail", { token: owner, body: { title: "Patch 2", body: "x", topic: "patch-notes", discord: true } });
+  assert.equal(patch.data.topic, "patch-notes");
+  assert.deepEqual(discord.at(-1)[2], { channelId: "555555", roleId: null });
+  await api.request("POST", "/api/admin/mail", { token: owner, body: { title: "Poll", body: "x", kind: "poll", options: ["A", "B"], discord: true } });
+  assert.deepEqual(discord.at(-1)[2], { channelId: "666666", roleId: "777777" });
 
   await api.request("PUT", `/api/admin/mail/${sent.data.id}`, { token: owner, body: { title: "Bigger news", body: "Hello" } });
   assert.deepEqual(discord.at(-1), ["updated", "Bigger news"]);
   await api.request("DELETE", `/api/admin/mail/${sent.data.id}`, { token: owner });
   assert.deepEqual(discord.at(-1), ["deleted", "Bigger news"]);
-  await api.request("PUT", "/api/admin/settings", { token: owner, body: { discord: { channelId: "", roleId: "" } } });
+  const settingsRepo = require("../src/repositories/settings");
+  for (const key of ["discord_mail_channel_id", "discord_patch_channel_id", "discord_poll_channel_id"]) settingsRepo.set(key, "");
 });
 
 test("lettre personnelle : visible de son seul destinataire", async () => {

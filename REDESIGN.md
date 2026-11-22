@@ -260,3 +260,18 @@ catégories (vertes ; vertes ou jaunes), calculé avec la même comparaison que
 le jeu contre la réponse du jour (src/repositories/insights.js,
 openerEfficiency). La réponse compte à sa version : une partie d'un mot
 changé par l'admin est laissée de côté.
+
+### Boîte aux lettres : annonces, notes de mise à jour, sondages
+
+Trois sortes de courrier pour tous, chacune avec son salon Discord et son
+rôle à mentionner : Announcement, Patch notes, Poll (choix en haut du
+formulaire de l'admin ; la sorte ne change plus après l'envoi). Réglés sur
+Discord par les admins du serveur : `/setup-mail kind channel [role]` (sans
+rôle : personne n'est mentionné) ; plus rien dans Settings de l'admin. Sans
+salon à elles, les notes de mise à jour et les sondages vont dans celui des
+annonces. Variables d'environnement en secours : `DISCORD_MAIL_*`,
+`DISCORD_PATCH_*`, `DISCORD_POLL_*` (`_CHANNEL_ID`, `_ROLE_ID`).
+Dans le jeu, la lettre dit sa sorte au-dessus du titre ; sur Discord, 🛠️
+pour les notes de mise à jour, 📮 pour les annonces, 🗳️ pour les sondages.
+Colonne `mail.topic` (migration 021) ; la carte postale de la mise à jour
+devient des notes de mise à jour.

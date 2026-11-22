@@ -11,7 +11,6 @@ const { MODE_IDS } = require("../../services/modes");
 const staff = require("../../services/staff");
 const connections = require("../../services/connections");
 const players = require("../../services/players");
-const mail = require("../../services/mail");
 const sprites = require("../../services/sprites");
 const { requireStaff, requireOwner, limitedAction } = require("../../middleware/admin-auth");
 const { requirePlayer } = require("../../middleware/player");
@@ -231,8 +230,7 @@ function currentSettings() {
   return {
     repeatDelayDays: daily.getRepeatDelay(),
     modes: allModeRules(),
-    adminDailyLimit: staff.dailyLimit(),
-    discord: mail.discordSettings()
+    adminDailyLimit: staff.dailyLimit()
   };
 }
 
@@ -242,8 +240,7 @@ router.get("/admin/settings", (req, res) => {
 
 // { repeatDelayDays?, modes?: { hard: { maxTries: 10, ... } }, adminDailyLimit? }
 router.put("/admin/settings", limitedAction("settings"), (req, res) => {
-  const { repeatDelayDays, modes = {}, adminDailyLimit, discord } = req.body || {};
-  if (discord) mail.setDiscordSettings(discord);
+  const { repeatDelayDays, modes = {}, adminDailyLimit } = req.body || {};
   if (adminDailyLimit !== undefined) {
     if (req.player.role !== "owner") throw new HttpError(403, "Only the owner can change the admin limit.");
     staff.setDailyLimit(Number(adminDailyLimit));

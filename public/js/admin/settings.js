@@ -10,10 +10,8 @@ const HARD_FIELDS = [
   { input: "hard-suggestion-chars", field: "suggestionMinChars" }
 ];
 
-function fill({ repeatDelayDays, modes, discord }) {
+function fill({ repeatDelayDays, modes }) {
   byId("repeat-delay-input").value = repeatDelayDays;
-  byId("mail-channel-id").value = discord?.channelId ?? "";
-  byId("mail-role-id").value = discord?.roleId ?? "";
   for (const { input, field, minutes } of HARD_FIELDS) {
     const value = modes.hard[field];
     byId(input).value = value === null ? 0 : minutes ? value / 60 : value;
@@ -36,8 +34,7 @@ export function bindSettings({ notify }) {
     try {
       const saved = await admin.saveSettings({
         repeatDelayDays: Number(byId("repeat-delay-input").value),
-        modes: { hard: readHardRules() },
-        discord: { channelId: byId("mail-channel-id").value.trim(), roleId: byId("mail-role-id").value.trim() }
+        modes: { hard: readHardRules() }
       });
       fill(saved);
       notify("Settings saved.");

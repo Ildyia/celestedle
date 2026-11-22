@@ -124,7 +124,7 @@ function parseCustomId(customId) {
 const DESCRIPTION_LIMIT = 4096;
 function mailEmbed(letter, siteUrl) {
   return {
-    title: `📮 ${truncate(letter.title, 250)}`,
+    title: `${letter.topic === "patch-notes" ? "🛠️" : "📮"} ${truncate(letter.title, 250)}`,
     url: siteUrl,
     color: 0xb88cff,
     description: truncate(letter.body, DESCRIPTION_LIMIT),
