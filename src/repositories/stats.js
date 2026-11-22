@@ -205,6 +205,7 @@ function communityStats(date, mode) {
   const { finished, ...stats } = DAY.community.get(date, mode);
   return {
     ...stats,
+    finished,
     winRate: finished ? Math.round((stats.wins / finished) * 100) : null
   };
 }

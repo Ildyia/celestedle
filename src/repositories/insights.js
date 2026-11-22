@@ -243,6 +243,21 @@ const elementStmts = {
   `)
 };
 
+const puzzleRow = db.prepare("SELECT version, groups FROM connection_puzzles WHERE date = ?");
+
+// Groupes d'une grille du jour (clé « date » ou « hard:date ») : part des
+// joueurs, parties finies, qui les ont trouvés
+function groupsFound(key) {
+  const p = puzzleRow.get(key);
+  if (!p) return [];
+  const { players } = elementStmts.cxPlayers.get({ date: key, version: p.version });
+  return JSON.parse(p.groups).map((g, groupIndex) => ({
+    label: g.label,
+    players,
+    found: elementStmts.cxFound.get({ date: key, version: p.version, groupIndex }).found
+  }));
+}
+
 function elementInsights(id, today) {
   const grids = elementStmts.cxGroups
     .all({ id })
@@ -267,4 +282,4 @@ function elementInsights(id, today) {
   };
 }
 
-module.exports = { insights, elementInsights };
+module.exports = { insights, elementInsights, groupsFound };

@@ -141,3 +141,21 @@ clic) et recalé sur la lune par `placeMoonFlag` (menu.js), à chaque
 mouvement de la lune ; il n'est montré que sur l'écran titre, où rien ne le
 recouvre. L'accès reste vérifié par le serveur : ces liens ne donnent aucun
 droit.
+
+### Bot Discord : récap de minuit et champion de la semaine
+
+Chaque nuit à 00:01 (Paris), le bot poste « A new climb is up! » dans le salon
+choisi avec `/setup-daily` : pour chaque côté de Celestedle, la réponse de la
+veille sous spoiler, le nombre de grimpeurs, la réussite, les essais moyens et
+le podium ; pour Connections (seulement s'il est ouvert à tous), la réussite,
+le groupe le moins trouvé (sous spoiler) et le podium. Le lundi, un second
+message donne le champion et le podium de la semaine terminée (mêmes règles
+que le classement de la semaine). `/recap-preview` montre les deux messages,
+à soi seul, à tout moment. Tant qu'aucun salon n'est choisi, rien n'est posté.
+
+Un post manqué (serveur arrêté à minuit) est rattrapé au redémarrage avant
+6 h, pas après. Le jour posté est noté dans `settings`
+(`discord_daily_posted`) : jamais deux fois le même jour. Personne n'est
+mentionné (`allowedMentions` vide). Données : `src/services/recap.js` ;
+messages : `src/discord/recap-embeds.js` ; minuit : `src/discord/recap-poster.js`.
+Adresse du site dans les liens : `SITE_URL` (par défaut celestedle.vercel.app).

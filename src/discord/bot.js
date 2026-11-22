@@ -12,6 +12,8 @@ const settingsRepo = require("../repositories/settings");
 const reports = require("../services/reports");
 const players = require("../services/players");
 const embeds = require("./embeds");
+const recapPoster = require("./recap-poster");
+const { todayParis } = require("../utils/dates");
 
 const PUBLIC_CHANNEL_KEY = "discord_public_channel_id";
 const PRIVATE_CHANNEL_KEY = "discord_private_channel_id";
@@ -27,6 +29,15 @@ const commands = [
     .addChannelOption((opt) =>
       opt.setName("private").setDescription("Private channel for management").setRequired(true)
     ),
+  new SlashCommandBuilder()
+    .setName("setup-daily")
+    .setDescription("Choose the channel for the midnight recap and the champion of the week")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .addChannelOption((opt) => opt.setName("channel").setDescription("Channel for the daily recap").setRequired(true)),
+  new SlashCommandBuilder()
+    .setName("recap-preview")
+    .setDescription("See the daily recap and the champion of the week now (only you see it)")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   new SlashCommandBuilder()
     .setName("passcode")
     .setDescription("Get a new Celestedle recovery code for the profile linked to your Discord")
@@ -134,6 +145,26 @@ function createBot() {
     await interaction.reply({ content: "Configured!", flags: MessageFlags.Ephemeral });
   }
 
+  // Récap de minuit : personne n'est mentionné, même si un nom le voudrait
+  async function sendRecap(channelId, recapEmbeds) {
+    const channel = await client.channels.fetch(channelId);
+    await channel.send({ embeds: recapEmbeds, allowedMentions: { parse: [] } });
+  }
+  const poster = recapPoster.createRecapPoster({ send: sendRecap });
+
+  async function handleSetupDaily(interaction) {
+    const channel = interaction.options.getChannel("channel");
+    recapPoster.setChannelId(channel.id);
+    await interaction.reply({
+      content: `The recap will be posted in <#${channel.id}> every night just after midnight (Paris time). Try /recap-preview to see it now.`,
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  async function handleRecapPreview(interaction) {
+    await interaction.reply({ embeds: recapPoster.previewEmbeds(todayParis()), flags: MessageFlags.Ephemeral });
+  }
+
   async function handleVote(interaction, { reportId, isUp }) {
     if (!reports.findById(reportId)) {
       return interaction.reply({ content: "This report no longer exists.", flags: MessageFlags.Ephemeral });
@@ -161,12 +192,19 @@ function createBot() {
     } catch (err) {
       console.error("[DISCORD] Enregistrement des commandes impossible :", err.message);
     }
+    poster.start();
   });
 
   client.on("interactionCreate", async (interaction) => {
     try {
       if (interaction.isChatInputCommand() && interaction.commandName === "setup-reports") {
         return await handleSetup(interaction);
+      }
+      if (interaction.isChatInputCommand() && interaction.commandName === "setup-daily") {
+        return await handleSetupDaily(interaction);
+      }
+      if (interaction.isChatInputCommand() && interaction.commandName === "recap-preview") {
+        return await handleRecapPreview(interaction);
       }
       if (interaction.isChatInputCommand() && interaction.commandName === "passcode") {
         return await handlePasscode(interaction);

@@ -29,6 +29,8 @@ module.exports = {
   // ou public (la bêta, dont la base repart de zéro, l'ouvre ainsi à tous)
   connectionsAccess: process.env.CONNECTIONS_ACCESS || "",
 
+  // Adresse publique du jeu (liens des messages du bot)
+  siteUrl: process.env.SITE_URL || "https://celestedle.vercel.app/",
   discord: {
     token: process.env.DISCORD_BOT_TOKEN || "",
     // Valeurs historiques, utilisées tant que /setup-reports n'a pas été lancé
