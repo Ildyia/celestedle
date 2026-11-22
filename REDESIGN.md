@@ -217,3 +217,24 @@ Sans réglage enregistré dans l'admin (Connections → Access) ni variable
 playtest). Un réglage déjà choisi dans l'admin reste ce qu'il est. Les tests
 partent toujours du playtest (test/support/env.js), sauf
 connections-default.test.js qui vérifie le nouveau défaut.
+
+### Bot Discord : rappel de série, /profile, rôles de chapitre
+
+Les trois passent par le tag Discord du profil (Profile → Discord username) :
+un compte Discord est lié aux profils qui portent son nom d'utilisateur.
+
+- `/reminder on [hour]` (0-23, heure de Paris, 20 par défaut) : chaque jour à
+  cette heure, si aucun de ses profils n'a fini de partie de Celestedle
+  aujourd'hui, un message privé (« Your 5-day streak is still waiting… », ou
+  « Today's climb is waiting… » sans série). `/reminder off` l'arrête. Le bot
+  regarde toutes les 5 minutes ; un jour n'est traité qu'une fois
+  (`discord_reminders.last_sent`, migration 020).
+- `/profile [@climber]` : la fiche publique, comme dans les classements du
+  site (src/services/player-card.js, partagé avec /api/players/:id/card) :
+  chapitre et fraises qui manquent pour le suivant, morts, série, meilleur
+  temps, tampons, trophées. Rien pour un profil caché ou anonyme.
+- `/setup-chapter-roles` (admins du serveur) : un rôle par chapitre, trouvé
+  par son nom (« Forsaken City »…) ou créé à la couleur du chapitre. Chaque
+  joueur lié reçoit le rôle de son chapitre actuel, et perd les autres
+  (vérifié toutes les heures, et pour soi-même à chaque /profile). Le bot a
+  besoin de « Manage Roles », et son rôle doit être au-dessus de ceux-là.

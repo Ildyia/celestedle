@@ -14,6 +14,9 @@ const players = require("../services/players");
 const embeds = require("./embeds");
 const recapPoster = require("./recap-poster");
 const mail = require("../services/mail");
+const community = require("../services/discord-community");
+const playerCard = require("../services/player-card");
+const { profileEmbed } = require("./profile-embed");
 const { todayParis } = require("../utils/dates");
 
 const PUBLIC_CHANNEL_KEY = "discord_public_channel_id";
@@ -40,6 +43,24 @@ const commands = [
   new SlashCommandBuilder()
     .setName("recap-preview")
     .setDescription("See the daily recap and the champion of the week now (only you see it)")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+  new SlashCommandBuilder()
+    .setName("reminder")
+    .setDescription("Get a private message when you haven't climbed yet today")
+    .addSubcommand((sub) =>
+      sub
+        .setName("on")
+        .setDescription("Remind me every day I haven't played yet")
+        .addIntegerOption((opt) => opt.setName("hour").setDescription("Hour, Paris time (0-23, default 20)").setMinValue(0).setMaxValue(23))
+    )
+    .addSubcommand((sub) => sub.setName("off").setDescription("Stop the reminders")),
+  new SlashCommandBuilder()
+    .setName("profile")
+    .setDescription("Show a climber's Celestedle file")
+    .addUserOption((opt) => opt.setName("climber").setDescription("Whose file (default: yours)")),
+  new SlashCommandBuilder()
+    .setName("setup-chapter-roles")
+    .setDescription("Create or find one role per chapter and give each climber the role of their chapter")
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   new SlashCommandBuilder()
     .setName("passcode")
@@ -251,6 +272,117 @@ function createBot() {
     });
   }
 
+  // ===== Rappel de série =====
+  async function handleReminder(interaction) {
+    const reply = (content) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
+    if (interaction.options.getSubcommand() === "off") {
+      return reply(community.removeReminder(interaction.user) ? "Reminders are off. See you on the mountain!" : "You had no reminder.");
+    }
+    const hour = interaction.options.getInteger("hour") ?? community.DEFAULT_HOUR;
+    try {
+      community.setReminder(interaction.user, hour);
+    } catch (err) {
+      return reply(err.message);
+    }
+    return reply(
+      `Got it! Every day at **${String(hour).padStart(2, "0")}:00** (Paris time), if you haven't climbed yet, I'll send you a private message. ` +
+        "Make sure I can message you (Privacy settings of this server). /reminder off to stop."
+    );
+  }
+
+  // Rappels de l'heure : un message privé à ceux qui n'ont pas encore joué.
+  // Traité même sans message (déjà joué) : un seul passage par jour.
+  async function sendReminders() {
+    for (const { userId } of community.dueReminders()) {
+      community.markReminderSent(userId);
+      try {
+        const user = await client.users.fetch(userId);
+        const reminder = community.reminderFor(user);
+        if (reminder) await user.send({ content: community.reminderText(reminder, config.siteUrl), allowedMentions: { parse: [] } });
+      } catch (err) {
+        console.error(`[DISCORD] Rappel ${userId} :`, err.message);
+      }
+    }
+  }
+
+  // ===== /profile =====
+  async function handleProfile(interaction) {
+    const target = interaction.options.getUser("climber") ?? interaction.user;
+    const self = target.id === interaction.user.id;
+    const cards = community.publicProfiles(target).map(playerCard.publicCard).filter(Boolean).slice(0, 3);
+    if (!cards.length) {
+      return interaction.reply({
+        content: self
+          ? "No public Celestedle file is linked to your Discord. Add your Discord username in your profile (Profile → Discord username), and make sure it isn't hidden from the rankings."
+          : `${target.username} has no public Celestedle file linked to their Discord.`,
+        flags: MessageFlags.Ephemeral,
+        allowedMentions: { parse: [] }
+      });
+    }
+    await interaction.reply({ embeds: cards.map((card) => profileEmbed(card, config.siteUrl)), allowedMentions: { parse: [] } });
+    // En passant : son rôle de chapitre à jour
+    if (self && interaction.guild) syncMember(interaction.guild, interaction.user, community.chapterOf(interaction.user)).catch(() => {});
+  }
+
+  // ===== Rôles de chapitre =====
+  async function handleSetupChapterRoles(interaction) {
+    const { guild } = interaction;
+    if (!guild) return interaction.reply({ content: "Run this in a server.", flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    const roles = [];
+    try {
+      await guild.roles.fetch();
+      for (const chapter of community.CHAPTERS) {
+        const existing = guild.roles.cache.find((r) => r.name.toLowerCase() === chapter.name.toLowerCase());
+        const role =
+          existing ??
+          (await guild.roles.create({ name: chapter.name, colors: chapter.color ? { primaryColor: chapter.color } : undefined, reason: "Celestedle chapter roles" }));
+        roles.push(role.id);
+      }
+    } catch (err) {
+      return interaction.editReply(
+        `I couldn't create the roles (${err.message}). Give me the "Manage Roles" permission, and put my role above the chapter roles.`
+      );
+    }
+    community.setChapterRoles(guild.id, roles);
+    await interaction.editReply({
+      content:
+        `Chapter roles: ${roles.map((id) => `<@&${id}>`).join(" ")}\n` +
+        "Climbers with their Discord username in their profile get the role of their current chapter (checked every hour). " +
+        "My role must stay above these roles.",
+      allowedMentions: { parse: [] }
+    });
+    syncChapterRoles().catch((err) => console.error("[DISCORD] Rôles de chapitre :", err.message));
+  }
+
+  // Le rôle du chapitre atteint, et aucun autre rôle de chapitre
+  async function syncMember(guild, user, chapter, member = null) {
+    const setup = community.chapterRoles();
+    if (!setup || setup.guildId !== guild.id || chapter === null) return;
+    member ??= await guild.members.fetch(user.id).catch(() => null);
+    if (!member) return;
+    const target = setup.roles[chapter];
+    const extra = setup.roles.filter((id, i) => i !== chapter && member.roles.cache.has(id));
+    if (extra.length) await member.roles.remove(extra, "Celestedle chapter");
+    if (target && !member.roles.cache.has(target)) await member.roles.add(target, "Celestedle chapter");
+  }
+
+  // Tous les joueurs liés : membre du serveur trouvé par son nom d'utilisateur
+  async function syncChapterRoles() {
+    const setup = community.chapterRoles();
+    if (!setup) return;
+    const guild = await client.guilds.fetch(setup.guildId);
+    for (const [username, chapter] of community.chaptersByUsername()) {
+      try {
+        const found = await guild.members.search({ query: username, limit: 10 });
+        const member = found.find((m) => m.user.username.toLowerCase() === username);
+        if (member) await syncMember(guild, member.user, chapter, member);
+      } catch (err) {
+        console.error(`[DISCORD] Rôle de chapitre ${username} :`, err.message);
+      }
+    }
+  }
+
   async function handleVote(interaction, { reportId, isUp }) {
     if (!reports.findById(reportId)) {
       return interaction.reply({ content: "This report no longer exists.", flags: MessageFlags.Ephemeral });
@@ -283,6 +415,14 @@ function createBot() {
     const closeDue = () => mail.closeDuePolls().catch((err) => console.error("[DISCORD] Sondages :", err.message));
     closeDue();
     setInterval(closeDue, 5 * 60 * 1000).unref();
+    // Rappels de série : on regarde toutes les 5 minutes si une heure est venue
+    const remind = () => sendReminders().catch((err) => console.error("[DISCORD] Rappels :", err.message));
+    remind();
+    setInterval(remind, 5 * 60 * 1000).unref();
+    // Rôles de chapitre : une fois par heure
+    const roles = () => syncChapterRoles().catch((err) => console.error("[DISCORD] Rôles de chapitre :", err.message));
+    roles();
+    setInterval(roles, 60 * 60 * 1000).unref();
   });
 
   client.on("interactionCreate", async (interaction) => {
@@ -295,6 +435,15 @@ function createBot() {
       }
       if (interaction.isChatInputCommand() && interaction.commandName === "recap-preview") {
         return await handleRecapPreview(interaction);
+      }
+      if (interaction.isChatInputCommand() && interaction.commandName === "reminder") {
+        return await handleReminder(interaction);
+      }
+      if (interaction.isChatInputCommand() && interaction.commandName === "profile") {
+        return await handleProfile(interaction);
+      }
+      if (interaction.isChatInputCommand() && interaction.commandName === "setup-chapter-roles") {
+        return await handleSetupChapterRoles(interaction);
       }
       if (interaction.isChatInputCommand() && interaction.commandName === "passcode") {
         return await handlePasscode(interaction);

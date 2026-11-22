@@ -16,6 +16,8 @@ const stmts = {
   setTokenHash: db.prepare("UPDATE players SET token_hash = ? WHERE id = ?"),
   setPlaytester: db.prepare("UPDATE players SET is_playtester = ? WHERE id = ?"),
   byDiscordTag: db.prepare("SELECT * FROM players WHERE discord_tag = ? COLLATE NOCASE"),
+  // Profils liés à un compte Discord (rôles de chapitre du bot)
+  withDiscordTag: db.prepare("SELECT * FROM players WHERE discord_tag IS NOT NULL AND is_anonymous = 0"),
   search: db.prepare(`
     SELECT p.*, (SELECT COUNT(*) FROM games g WHERE g.player_id = p.id) AS games
     FROM players p
@@ -78,6 +80,10 @@ function findByDiscordTag(tag) {
   return stmts.byDiscordTag.all(tag).map(toPlayer);
 }
 
+function withDiscordTag() {
+  return stmts.withDiscordTag.all().map(toPlayer);
+}
+
 function search(query) {
   const q = String(query ?? "").trim();
   return stmts.search
@@ -106,6 +112,7 @@ module.exports = {
   findByTokenHash,
   findById,
   findByDiscordTag,
+  withDiscordTag,
   search,
   update,
   setTokenHash,

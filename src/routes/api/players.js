@@ -8,6 +8,7 @@ const { expireOverdueGames } = require("../../services/games");
 const { REWARDS } = require("../../services/chapters");
 const { FAMILIES } = require("../../services/avatars");
 const trophies = require("../../services/trophies");
+const playerCard = require("../../services/player-card");
 
 const router = express.Router();
 
@@ -64,23 +65,9 @@ router.get("/players/me/achievements", requirePlayer, (req, res) => {
 // par victoire, sur tous les jeux. Comme les classements, elle ne montre ni les profils
 // cachés ni les profils anonymes.
 router.get("/players/:id/card", (req, res) => {
-  const target = playersRepo.findById(req.params.id);
-  if (!target || target.isHidden || target.isAnonymous) return res.status(404).json({ error: "Player not found" });
-  expireOverdueGames();
-  const normal = players.playerStats(target, "normal");
-  const hard = players.playerStats(target, "hard");
-  const times = [normal.bestSeconds, hard.bestSeconds].filter((t) => t !== null && t !== undefined);
-  const climb = achievements.playerClimb(target);
-  res.json({
-    player: { id: target.id, name: target.name, avatar: target.avatar, color: target.color },
-    wins: climb.berries,
-    falls: climb.chapters.reduce((sum, c) => sum + c.deaths, 0),
-    streak: Math.max(normal.streak.current, hard.streak.current),
-    bestTime: times.length ? Math.min(...times) : null,
-    stamps: achievements.playerAchievements(target).filter((a) => a.earned).map((a) => a.id),
-    chapter: climb.chapter,
-    trophies: trophies.playerTrophies(target.id)
-  });
+  const card = playerCard.publicCard(playersRepo.findById(req.params.id));
+  if (!card) return res.status(404).json({ error: "Player not found" });
+  res.json(card);
 });
 
 module.exports = router;
