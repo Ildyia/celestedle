@@ -19,6 +19,7 @@ import { openPanel, panelOpen } from "./menu-panels.js";
 import { createJournal } from "./journal.js";
 import { SKY_CHOICES, applySky, skySetting, startSky } from "./sky.js";
 import { STAMPS, TICKET_SLOTS, earnedStamps, stampSvg, setAchievements } from "./stamps.js";
+import { freshNews, loadMailbox, mailboxKey, mailboxOpen, openMailbox } from "./mailbox.js";
 
 const LAST_GAME_KEY = "celestedle_menu_game";
 
@@ -680,22 +681,29 @@ function prefetchGame() {
   document.head.append(el("link", { attrs: { rel: "prefetch", href: page } }));
 }
 
-// ===== Carte postale d'accueil =====
-// Comme les cartes postales qui ouvrent les chapitres du jeu : montrée une
-// fois, en quittant l'écran titre, puis on arrive sur les fichiers.
+// ===== Boîte aux lettres (js/mailbox.js) =====
+// En quittant l'écran titre, une annonce récente pas encore lue s'ouvre seule,
+// comme les cartes postales qui ouvrent les chapitres du jeu ; on arrive
+// ensuite sur les fichiers.
 function leaveTitle() {
-  if (storage.get(KEYS.welcomeSeen)) return go("files");
-  byId("postcard").hidden = false;
-  byId("postcard-close").focus();
+  const news = freshNews();
+  if (!news) return go("files");
+  playSound("confirm");
+  openMailbox(news, { closed: () => go("files") });
 }
 
-function closePostcard() {
-  storage.set(KEYS.welcomeSeen, "true");
-  byId("postcard").hidden = true;
-  go("files");
+function openMail() {
+  playSound("confirm");
+  openMailbox();
 }
 
-const postcardOpen = () => !byId("postcard").hidden;
+// Nombre de lettres non lues, sur le bouton de l'écran des jeux
+function showUnread(count) {
+  const badge = byId("mail-badge");
+  badge.hidden = count === 0;
+  badge.textContent = String(count);
+  byId("to-mail").setAttribute("aria-label", count ? `Mailbox, ${count} unread` : "Mailbox");
+}
 
 // API injoignable : même carte postale, avec un bouton pour réessayer
 setUnavailableHandler(() => {
@@ -819,7 +827,7 @@ const HINTS = {
   // Écran titre : le rond « C » remplace la touche, et clignote
   title: [[null, "Start"]],
   files: [["↑↓", "Move"], ["Enter", "Confirm"], ["Esc", "Back"]],
-  modes: [["←→", "Game"], ["↑↓", "Side"], ["Enter", "Climb"], ["J", "Journal"], ["M", "Map"], ["D", "Duel"], ["O", "Options"], ["B", "Bug"], ["Esc", "Back"]],
+  modes: [["←→", "Game"], ["↑↓", "Side"], ["Enter", "Climb"], ["J", "Journal"], ["M", "Map"], ["D", "Duel"], ["L", "Mail"], ["O", "Options"], ["B", "Bug"], ["Esc", "Back"]],
   options: [["↑↓", "Move"], ["Enter", "Change"], ["Esc", "Back"]]
 };
 
@@ -859,6 +867,7 @@ const KEY_HANDLERS = {
     d: openDuels,
     o: openOptions,
     b: openReport,
+    l: openMail,
     Escape: () => go("files")
   },
   options: {
@@ -888,10 +897,11 @@ document.addEventListener("keydown", (event) => {
   // Fenêtre ouverte (profil, classements, bug) : elle gère son clavier
   if (panelOpen()) return;
   if (!byId("api-down").hidden) return;
-  if (postcardOpen()) {
-    if (["Enter", " ", "Escape"].includes(event.key)) {
+  if (mailboxOpen()) {
+    if (["Escape", "ArrowUp", "ArrowDown", "l", "L"].includes(event.key)) {
       event.preventDefault();
-      closePostcard();
+      keySound(event.key);
+      mailboxKey(event.key);
     }
     return;
   }
@@ -944,7 +954,7 @@ document.addEventListener("keydown", (event) => {
 
 // ===== Souris et toucher =====
 byId("title").addEventListener("click", leaveTitle);
-byId("postcard-close").addEventListener("click", closePostcard);
+byId("to-mail").addEventListener("click", openMail);
 byId("api-down-retry").addEventListener("click", () => location.reload());
 byId("climb").addEventListener("click", climb);
 for (const type of ["pointerenter", "focus", "touchstart"]) byId("climb").addEventListener(type, prefetchGame, { passive: true });
@@ -1318,7 +1328,7 @@ let chapterCard = null;
 const chapterCardOpen = () => Boolean(chapterCard && !chapterCard.hidden);
 
 async function announceChapter() {
-  if (!pendingChapter || chapterCardOpen() || screen === "title" || postcardOpen() || !byId("api-down").hidden) return;
+  if (!pendingChapter || chapterCardOpen() || screen === "title" || mailboxOpen() || !byId("api-down").hidden) return;
   const { from, to, berries } = pendingChapter;
   const chapter = CHAPTERS[to - 1];
   const rewards = ((await api.profileOptions().catch(() => null))?.rewards ?? []).filter((r) => r.chapter > from && r.chapter <= to);
@@ -1400,7 +1410,9 @@ async function start() {
     loadProfileStats();
     loadGames();
     showStaffLinks();
+    loadMailbox();
   });
+  loadMailbox(showUnread);
   showClimb(null);
   await player.load();
   showStaffLinks();

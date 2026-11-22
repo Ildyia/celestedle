@@ -676,3 +676,44 @@ body:not([data-screen="title"]) .moon-flag { display: none; }
 .moon-flag:hover .cloth, .moon-flag:focus-visible .cloth { fill: #ffd98a; }
 @keyframes moon-flag-wave { 50% { transform: skewY(6deg) scaleX(.92); } }
 body.perf .moon-flag .cloth { animation: none; }
+
+/* ===== Boîte aux lettres (js/mailbox.js) ===== */
+/* Liste des lettres à gauche, la lettre ouverte en carte postale à droite */
+.mailbox {
+  position: relative; width: min(980px, 100%); max-height: 92vh;
+  display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: 22px; align-items: start;
+}
+.mailbox-side { display: grid; gap: 12px; align-content: start; min-width: 0; max-height: 88vh; }
+.mailbox-side h2 { font-size: 30px; color: #fff; }
+.mailbox-list { display: grid; gap: 6px; overflow-y: auto; padding: 4px; }
+.mailbox-item {
+  display: grid; gap: 2px; text-align: left; padding: 10px 12px; border-radius: 8px; cursor: pointer;
+  color: #fff; background: rgba(0, 0, 0, .35); border: 2px solid rgba(255, 255, 255, .25); font: inherit;
+}
+.mailbox-item strong { font-size: 15px; line-height: 1.3; }
+.mailbox-item small { font-size: 12.5px; opacity: .75; }
+.mailbox-item:hover, .mailbox-item:focus-visible { border-color: #fff; outline: none; }
+.mailbox-item[aria-current="true"] { background: rgba(255, 255, 255, .16); border-color: #ffd98a; }
+.mailbox-item.unread strong::after { content: ""; display: inline-block; width: 8px; height: 8px; margin-left: 8px; border-radius: 50%; background: #ffd98a; vertical-align: middle; }
+.mailbox-empty { color: #fff; opacity: .8; }
+.mailbox-letter { width: 100%; max-height: 88vh; }
+.mailbox-letter .postcard-stamp { background: #8a6cc4; }
+.mailbox-date { font-size: 13px; color: #7a7290; margin-bottom: 4px; }
+.mailbox-letter a { color: #5a4a8a; }
+.mailbox-close {
+  position: absolute; top: -14px; right: -10px; width: 36px; height: 36px; border-radius: 50%; z-index: 2;
+  font-size: 22px; line-height: 1; color: #fff; background: #3a3350; border: 2px solid rgba(255, 255, 255, .6); cursor: pointer;
+}
+.mailbox-close:hover, .mailbox-close:focus-visible { background: #52496e; outline: none; border-color: #fff; }
+/* Pastille du bouton de l'écran des jeux */
+.mail-badge {
+  min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: #e0475b; color: #fff;
+  font-size: 12px; line-height: 20px; text-align: center;
+}
+@media (max-width: 760px) {
+  .mailbox { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .mailbox-side { max-height: none; }
+  .mailbox-list { grid-auto-flow: column; grid-auto-columns: minmax(180px, 70%); overflow-x: auto; overflow-y: hidden; }
+  .mailbox-letter { max-height: 62vh; }
+  .mailbox-close { top: -6px; right: 0; }
+}

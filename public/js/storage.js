@@ -17,7 +17,9 @@ export const KEYS = {
   sounds: "celestedle_sounds",
   welcomeSeen: "celestedle_welcome_v4",
   seenStamps: "celestedle_seen_stamps",
-  seenChapter: "celestedle_seen_chapter"
+  seenChapter: "celestedle_seen_chapter",
+  // Lettres lues sans profil (avec un profil, c'est le serveur qui sait)
+  mailRead: "celestedle_mail_read"
 };
 
 // Clés de la v1, supprimées au premier chargement de la 2.0

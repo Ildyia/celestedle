@@ -39,6 +39,10 @@ module.exports = {
     privateChannelId:
       process.env.DISCORD_PRIVATE_CHANNEL_ID || "1534616690287972498",
     // Rôle mentionné par le récap de minuit (« ping word reset »)
-    resetRoleId: process.env.DISCORD_RESET_ROLE_ID || "1535840476068974622"
+    resetRoleId: process.env.DISCORD_RESET_ROLE_ID || "1535840476068974622",
+    // Boîte aux lettres : salon et rôle des annonces, tant que l'admin
+    // (Settings) n'en a pas choisi
+    mailChannelId: process.env.DISCORD_MAIL_CHANNEL_ID || "",
+    mailRoleId: process.env.DISCORD_MAIL_ROLE_ID || ""
   }
 };

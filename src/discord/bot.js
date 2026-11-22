@@ -13,6 +13,7 @@ const reports = require("../services/reports");
 const players = require("../services/players");
 const embeds = require("./embeds");
 const recapPoster = require("./recap-poster");
+const mail = require("../services/mail");
 const { todayParis } = require("../utils/dates");
 
 const PUBLIC_CHANNEL_KEY = "discord_public_channel_id";
@@ -147,6 +148,27 @@ function createBot() {
     await interaction.reply({ content: "Configured!", flags: MessageFlags.Ephemeral });
   }
 
+  // Boîte aux lettres : une annonce postée dans le salon réglé, le rôle mentionné
+  async function mailPosted(letter, { channelId, roleId }) {
+    const channel = await client.channels.fetch(channelId);
+    const message = await channel.send({
+      content: roleId ? `<@&${roleId}>` : undefined,
+      embeds: [embeds.mailEmbed(letter, config.siteUrl)],
+      allowedMentions: { parse: [], roles: roleId ? [roleId] : [] }
+    });
+    return { channelId, messageId: message.id };
+  }
+
+  async function mailUpdated(letter) {
+    const message = await fetchMessage(letter.discordChannelId, letter.discordMessageId);
+    await message?.edit({ embeds: [embeds.mailEmbed(letter, config.siteUrl)] });
+  }
+
+  async function mailDeleted(letter) {
+    const message = await fetchMessage(letter.discordChannelId, letter.discordMessageId);
+    await message?.delete();
+  }
+
   // Récap de minuit : seul le rôle choisi est mentionné, jamais un joueur
   async function sendRecap(channelId, recapEmbeds, roleId) {
     const channel = await client.channels.fetch(channelId);
@@ -244,7 +266,7 @@ function createBot() {
 
   client.on("error", (err) => console.error("[DISCORD] Erreur client :", err.message));
 
-  return { client, reportCreated, reportUpdated, reportDeleted };
+  return { client, reportCreated, reportUpdated, reportDeleted, mailPosted, mailUpdated, mailDeleted };
 }
 
 // Démarre le bot si un token est configuré, et le branche sur les reports
@@ -259,6 +281,7 @@ function startBot() {
     reportUpdated: bot.reportUpdated,
     reportDeleted: bot.reportDeleted
   });
+  mail.setNotifier({ mailPosted: bot.mailPosted, mailUpdated: bot.mailUpdated, mailDeleted: bot.mailDeleted });
   bot.client.login(config.discord.token).catch((err) => {
     console.error("[DISCORD] Connexion impossible :", err.message);
   });

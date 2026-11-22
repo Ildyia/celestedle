@@ -127,6 +127,7 @@
         <button type="button" id="to-journal"><img src="assets/illustration/journal.png" alt="" />Journal</button>
         <button type="button" id="to-map"><img src="assets/menu/marker.png" alt="" />Map</button>
         <button type="button" id="to-duel"><img src="assets/entities/badeline.png" alt="" />Duel</button>
+        <button type="button" id="to-mail" aria-label="Mailbox"><img src="assets/illustration/feather.png" alt="" />Mailbox<span class="mail-badge" id="mail-badge" hidden></span></button>
         <button type="button" id="to-options"><img src="assets/illustration/options.png" alt="" />Options</button>
         <button type="button" id="to-report"><img src="assets/illustration/wtf.png" alt="" />Report a bug</button>
         <button type="button" id="to-admin" hidden><img src="assets/illustration/pico8.png" alt="" />Admin</button>
@@ -153,32 +154,8 @@
       </div>
     </div>
 
-    <!-- Carte postale d'annonce de la mise à jour, comme celles qui ouvrent
-         les chapitres du jeu. Affichée une fois, en quittant l'écran titre
-         (clé celestedle_welcome_v4 : à changer pour la remontrer à tous).
-         Texte à modifier librement ici. -->
-    <div id="postcard" class="postcard-wrap" hidden>
-      <div class="postcard" role="dialog" aria-modal="true" aria-labelledby="postcard-title">
-        <div class="postcard-stamp"><img src="assets/illustration/start.png" alt="" /></div>
-        <div class="postcard-postmark" aria-hidden="true"></div>
-        <div class="postcard-text">
-          <h2 id="postcard-title">A big update for Celestedle!</h2>
-          <p>Hey everyone! Here's what's new on the mountain:</p>
-          <ul>
-            <li><strong>Celeste-style menus</strong>: your profile is a save ticket, you pick a game on the mountain, and the sky follows your time of day.</li>
-            <li><strong>Chapters</strong>: every win is a strawberry that takes you higher, from Forsaken City all the way to the moon. Each chapter unlocks a character's portraits and a new colour for your file. Open the <strong>Map</strong> to see your climb.</li>
-            <li><strong>Stamps</strong>: secret achievements to collect on your ticket. Get them all for a golden file!</li>
-            <li><strong>Duels</strong>: race another climber on the same random element, in a public or private room.</li>
-            <li><strong>Journal</strong>: your progress, strawberries and deaths per chapter, and every ranking. Click a name to see their file.</li>
-            <li><strong>Trophies</strong>: finish a day first in a mode, or a week first overall, and it shows in the rankings.</li>
-          </ul>
-          <p>The old look is still there: Options, Modern game pages.</p>
-          <p class="postcard-note">A word on how this was made: most of the code for this update was written by an AI. The ideas, the design choices and every decision about the game are human.</p>
-          <p class="postcard-sign">Thanks for climbing with me!<br />— Amélia / Ildyia</p>
-        </div>
-        <button type="button" class="postcard-btn" id="postcard-close"><span class="press-disc"></span>Let's climb!</button>
-      </div>
-    </div>
+    <!-- La carte postale d'annonce de la mise à jour est devenue la première
+         lettre de la boîte aux lettres (js/mailbox.js, migration 018). -->
 
     <!-- API injoignable : même carte postale, autre message -->
     <div id="api-down" class="postcard-wrap" hidden>

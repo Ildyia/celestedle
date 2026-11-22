@@ -11,6 +11,7 @@ import { ReportsTab } from "./reports.js";
 import { ConnectionsTab } from "./connections.js";
 import { TeamTab } from "./team.js";
 import { PlayersTab } from "./players.js";
+import { MailboxTab } from "./mailbox.js";
 import { bindSettings } from "./settings.js";
 
 const message = byId("admin-message");
@@ -33,6 +34,7 @@ const connectionsTab = new ConnectionsTab({ notify });
 const team = new TeamTab({ notify });
 const playersTab = new PlayersTab({ notify, getRole: () => currentRole });
 const loadSettings = bindSettings({ notify });
+const mailbox = new MailboxTab({ notify });
 
 const TABS = {
   overview: () => renderOverview({ notify }),
@@ -44,7 +46,8 @@ const TABS = {
   connections: () => connectionsTab.load(),
   settings: () => loadSettings(),
   team: () => team.load(),
-  players: () => playersTab.load()
+  players: () => playersTab.load(),
+  mailbox: () => mailbox.load()
 };
 
 const ROLE_LABELS = { owner: "Owner", administrator: "Administrator" };
@@ -74,6 +77,7 @@ const NAV = [
     label: "Community",
     pages: [
       { id: "players", label: "Players" },
+      { id: "mailbox", label: "Mailbox" },
       { id: "reports", label: "Reports" },
       { id: "team", label: "Team", ownerOnly: true }
     ]

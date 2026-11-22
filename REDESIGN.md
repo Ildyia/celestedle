@@ -162,3 +162,26 @@ accepte `role` pour en choisir un autre et `no-ping` pour ne mentionner
 personne. Données : `src/services/recap.js` ;
 messages : `src/discord/recap-embeds.js` ; minuit : `src/discord/recap-poster.js`.
 Adresse du site dans les liens : `SITE_URL` (par défaut celestedle.vercel.app).
+
+### Boîte aux lettres (étape 1 : annonces)
+
+Bouton « Mailbox » (touche L) sur l'écran des jeux, avec le nombre de lettres
+non lues. La boîte s'ouvre en carte postale : la liste à gauche (en bandeau
+sur téléphone), la lettre ouverte à droite ; ↑↓ changent de lettre, Échap
+ferme. En quittant l'écran titre, une annonce de moins de 14 jours pas encore
+lue s'ouvre seule (elle remplace l'ancienne carte postale d'accueil, devenue
+la première lettre, `welcome-v4`, migration 018 ; déjà vue = déjà lue).
+Une lettre est lue dès qu'on l'ouvre : côté serveur avec un profil
+(`mail_reads`), dans le navigateur sans profil.
+
+Admin, Community → Mailbox : titre, lettre (même Markdown que Discord :
+paragraphes, listes « - », **gras**, *italique*, [lien](https://…)), aperçu
+en direct comme dans le jeu, case « Also post it on Discord ». Les lettres
+envoyées : nombre de lecteurs, Edit (met aussi à jour le message Discord),
+Delete (le supprime aussi). Le salon et le rôle Discord se règlent dans
+Settings (ou `DISCORD_MAIL_CHANNEL_ID` / `DISCORD_MAIL_ROLE_ID`) ; sans salon,
+les lettres restent sur le site. La lettre n'est jamais interprétée comme du
+HTML (js/letter-format.js construit le DOM).
+
+Préparé pour la suite : `kind` 'poll' et 'reply', `player_id` pour une lettre
+à un seul joueur (déjà visible de lui seul).

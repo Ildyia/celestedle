@@ -657,3 +657,20 @@ body::before {
 .insights-col i { width: 100%; border-radius: 4px 4px 0 0; min-height: 1px; }
 .insights-axis { font-size: 11px; opacity: .65; text-align: center; padding-top: 4px; }
 .insights-outcomes { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: 14px; }
+
+/* Boîte aux lettres : le formulaire à gauche, l'aperçu en carte postale à droite */
+.mail-compose { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.mail-compose .element-form { position: static; }
+.mail-preview-col { display: grid; gap: 8px; min-width: 0; }
+.mail-preview {
+  padding: 24px 28px; border-radius: 6px; color: #3a3350; background: linear-gradient(160deg, #f7f0de, #eee2c6);
+  box-shadow: 0 0 0 5px #fbf6ea, 0 12px 30px rgba(0, 0, 0, .35); overflow-wrap: anywhere;
+}
+.mail-preview h2 { font-size: 24px; margin: 0 0 10px; color: #3a3350; }
+.mail-preview p, .mail-preview li { font-size: 15px; line-height: 1.55; }
+.mail-preview p + p, .mail-preview ul + p, .mail-preview p + ul { margin-top: 10px; }
+.mail-preview ul { margin: 8px 0 0 18px; display: grid; gap: 4px; }
+.mail-preview a { color: #5a4a8a; }
+.mail-preview-date { font-size: 13px; color: #7a7290; }
+.row-actions { display: flex; gap: 6px; justify-content: flex-end; white-space: nowrap; }
+@media (max-width: 900px) { .mail-compose { grid-template-columns: minmax(0, 1fr); } }

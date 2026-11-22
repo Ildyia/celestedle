@@ -119,4 +119,17 @@ function parseCustomId(customId) {
   return null;
 }
 
-module.exports = { publicEmbed, privateEmbed, voteButtons, statusButtons, parseCustomId, truncate };
+// Boîte aux lettres : l'annonce entière (Discord lit le même Markdown que le
+// site : listes, gras, liens), coupée si elle dépasse la limite d'un embed
+const DESCRIPTION_LIMIT = 4096;
+function mailEmbed(letter, siteUrl) {
+  return {
+    title: `📮 ${truncate(letter.title, 250)}`,
+    url: siteUrl,
+    color: 0xb88cff,
+    description: truncate(letter.body, DESCRIPTION_LIMIT),
+    footer: { text: "Also in your mailbox on Celestedle" }
+  };
+}
+
+module.exports = { mailEmbed, publicEmbed, privateEmbed, voteButtons, statusButtons, parseCustomId, truncate };

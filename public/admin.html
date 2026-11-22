@@ -306,6 +306,46 @@
           </div>
         </section>
 
+        <!-- Boîte aux lettres (js/admin/mailbox.js, /api/admin/mail) -->
+        <section id="tab-mailbox" class="admin-panel" role="tabpanel" hidden>
+          <div class="mail-compose">
+            <form id="mail-form" class="admin-card element-form">
+              <h3 id="mail-form-title">New letter</h3>
+              <div class="form-group">
+                <label for="mail-title">Title</label>
+                <input type="text" id="mail-title" class="bug-input" maxlength="120" required placeholder="e.g. A big update for Celestedle!" />
+              </div>
+              <div class="form-group">
+                <label for="mail-body">Letter</label>
+                <textarea id="mail-body" class="bug-input" rows="12" maxlength="4000" required></textarea>
+                <p class="small-subtext">
+                  Same formatting as Discord: an empty line between paragraphs,
+                  "- " for a list, **bold**, *italic*, [text](https://link).
+                </p>
+              </div>
+              <div class="form-group form-inline" id="mail-discord-row">
+                <input type="checkbox" id="mail-discord" checked />
+                <label for="mail-discord" id="mail-discord-label">Also post it on Discord</label>
+              </div>
+              <div class="modal-actions">
+                <button type="button" id="mail-cancel-btn" class="btn-secondary" hidden>Cancel</button>
+                <button type="submit" id="mail-submit-btn" class="btn-primary">Send to everyone</button>
+              </div>
+            </form>
+            <div class="mail-preview-col">
+              <p class="small-subtext">Preview, as players see it in their mailbox:</p>
+              <article id="mail-preview" class="mail-preview"></article>
+            </div>
+          </div>
+          <h3 class="admin-subtitle">Sent letters</h3>
+          <div class="admin-table-wrapper">
+            <table class="admin-table">
+              <thead><tr><th>Letter</th><th>Sent</th><th>Read by</th><th>Discord</th><th></th></tr></thead>
+              <tbody id="mail-body-list"></tbody>
+            </table>
+          </div>
+        </section>
+
         <section id="tab-settings" class="admin-panel" role="tabpanel" hidden>
           <form id="settings-form" class="admin-card settings-form">
             <div class="form-group">
@@ -335,6 +375,24 @@
               <p class="small-subtext">
                 Changes apply right away, including to games in progress:
                 a shorter time limit can end a game that has already started.
+              </p>
+            </fieldset>
+
+            <fieldset class="checkbox-grid settings-group">
+              <legend>Discord: mailbox announcements</legend>
+              <div class="form-group">
+                <label for="mail-channel-id">Channel ID</label>
+                <input type="text" id="mail-channel-id" class="bug-input" inputmode="numeric" pattern="\d{5,25}" placeholder="Right-click the channel → Copy Channel ID" />
+              </div>
+              <div class="form-group">
+                <label for="mail-role-id">Role to ping (optional)</label>
+                <input type="text" id="mail-role-id" class="bug-input" inputmode="numeric" pattern="\d{5,25}" placeholder="Server settings → Roles → right-click → Copy Role ID" />
+              </div>
+              <p class="small-subtext">
+                Letters sent from the Mailbox page can be posted in this channel,
+                pinging this role. Leave the channel empty to keep letters on the
+                site only. IDs show up in Discord once Developer Mode is on
+                (User Settings → Advanced).
               </p>
             </fieldset>
 

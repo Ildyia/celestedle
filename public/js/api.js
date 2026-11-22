@@ -69,6 +69,10 @@ export const api = {
   elements: () => request("GET", "/elements", { auth: false }),
   aliases: () => request("GET", "/aliases", { auth: false }),
 
+  // Boîte aux lettres (js/mailbox.js)
+  mail: () => request("GET", "/mail"),
+  readMail: (id) => request("POST", `/mail/${id}/read`),
+
   createPlayer: () => request("POST", "/players", { auth: false }),
   me: (token) =>
     request("GET", "/players/me", token ? { auth: false, headers: { "X-Player-Token": token } } : {}),
