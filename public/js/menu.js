@@ -86,6 +86,7 @@ function slotActions() {
     // Avatar, couleur, Discord, visibilité : la fenêtre de profil complète
     { label: "Edit profile", run: () => openPanel("profile").catch((err) => showToast(err.message)) },
     { label: editing === "code" ? "Hide recovery code" : "Recovery code", run: () => startEditing(editing === "code" ? null : "code") },
+    ...(isStaff() ? [{ label: "Admin", run: () => (location.href = "admin.html") }] : []),
     {
       label: "Delete",
       run: () => {
@@ -964,6 +965,7 @@ onSwipe(byId("modes"), (step) => games.length > 1 && selectGame(gameIndex + step
 onSwipe(byId("journal"), (step) => journal.flip(step));
 byId("to-options").addEventListener("click", openOptions);
 byId("to-report").addEventListener("click", openReport);
+byId("to-admin").addEventListener("click", () => (location.href = "admin.html"));
 byId("to-journal").addEventListener("click", openJournal);
 byId("to-map").addEventListener("click", openMap);
 // Retour aux fichiers, comme Échap
@@ -1069,11 +1071,39 @@ function showMoonCamp(chapter, arriving = false) {
   camp.className = `moon-camp ${reached ? "here" : chapter === CHAPTERS.length - 1 ? "next" : "ahead"}${reached && arriving ? " arriving" : ""}`;
 }
 
+// ===== Équipe admin =====
+// Accès à l'administration dès que le profil chargé est de l'équipe : bouton
+// de l'écran des jeux, action du ticket, et, pour rire, un drapeau planté sur
+// la lune de l'écran titre. Rien de tout ça pour les autres joueurs.
+const isStaff = () => ["owner", "administrator"].includes(player.profile?.role);
+
+function showStaffLinks() {
+  byId("to-admin").hidden = !isStaff();
+  byId("moon-flag").hidden = !isStaff();
+  placeMoonFlag();
+}
+
+// Le pied du mât sur le bord éclairé du croissant, en haut à gauche ; même
+// opacité que la lune (elle s'efface sur certains écrans)
+function placeMoonFlag() {
+  const flag = byId("moon-flag");
+  if (flag.hidden) return;
+  const moon = byId("moon");
+  const box = moon.getBoundingClientRect();
+  flag.style.setProperty("--x", `${box.left + box.width * 0.2}px`);
+  flag.style.setProperty("--y", `${box.top + box.height * 0.2}px`);
+  flag.style.setProperty("--h", `${box.height * 0.34}px`);
+  const opacity = Number(getComputedStyle(moon).opacity);
+  flag.style.opacity = String(opacity);
+  flag.style.pointerEvents = opacity < 0.2 ? "none" : "";
+}
+
 // Le sentier du ciel suit la lune : elle et la montagne bougent chacune de
 // leur côté (écrans, caméra, taille de la fenêtre). On revise pendant leurs
 // transitions, image par image, puis on s'arrête.
 let followUntil = 0;
 function aimMoonNow() {
+  placeMoonFlag();
   // Le sentier finit sur le numéro du repère, sous la pointe de l'épingle
   const label = document.querySelector("#moon .moon-camp i");
   const svg = document.querySelector(".mountain-art .trail");
@@ -1369,9 +1399,11 @@ async function start() {
   player.onChange(() => {
     loadProfileStats();
     loadGames();
+    showStaffLinks();
   });
   showClimb(null);
   await player.load();
+  showStaffLinks();
   // Sans jeton, player.load ne prévient pas : on charge quand même les jeux
   if (!player.profile) loadGames();
   // Retour d'une page de jeu (index.html#modes) : droit au choix du jeu, sans

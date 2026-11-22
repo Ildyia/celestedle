@@ -74,6 +74,17 @@
       <div id="dim"></div>
     </div>
 
+    <!-- Équipe admin seulement (menu.js, showStaffLinks) : un petit drapeau
+         planté sur la lune, sur l'écran titre, qui mène à l'administration.
+         Hors de #scene : sinon l'écran, devant, le rendrait inaccessible au
+         clic ; menu.js le recale sur la lune quand elle bouge. -->
+    <a id="moon-flag" class="moon-flag" href="admin.html" title="Someone planted a flag up here…" aria-label="Admin" hidden>
+      <svg viewBox="0 0 40 56" aria-hidden="true">
+        <line x1="4" y1="54" x2="4" y2="4" stroke="#16142f" stroke-width="3" stroke-linecap="round" />
+        <rect class="cloth" x="5" y="5" width="30" height="18" />
+      </svg>
+    </a>
+
     <!-- Titre -->
     <section id="title" class="screen">
       <h1 class="outlined">CELESTEDLE</h1>
@@ -118,6 +129,7 @@
         <button type="button" id="to-duel"><img src="assets/entities/badeline.png" alt="" />Duel</button>
         <button type="button" id="to-options"><img src="assets/illustration/options.png" alt="" />Options</button>
         <button type="button" id="to-report"><img src="assets/illustration/wtf.png" alt="" />Report a bug</button>
+        <button type="button" id="to-admin" hidden><img src="assets/illustration/pico8.png" alt="" />Admin</button>
       </div>
     </section>
 

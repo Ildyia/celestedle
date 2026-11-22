@@ -663,3 +663,16 @@ body:not(.chapter-cam) :is(.trail, .moon-camp) { opacity: 0; }
 @media (hover: none) and (pointer: coarse) {
   body:not([data-screen="title"]) .hints { display: none; }
 }
+
+/* ===== Équipe admin : drapeau sur la lune, écran titre seulement ===== */
+/* Posé par menu.js (placeMoonFlag) : --x, --y = pied du mât, --h = hauteur */
+.moon-flag {
+  position: fixed; left: var(--x); top: var(--y); z-index: 4; width: calc(var(--h) * .72); height: var(--h);
+  transform: translate(-8%, -100%) rotate(-14deg); transform-origin: 8% 100%;
+}
+body:not([data-screen="title"]) .moon-flag { display: none; }
+.moon-flag svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.moon-flag .cloth { fill: #b88cff; transform-origin: 5px 14px; animation: moon-flag-wave 2.4s ease-in-out infinite; }
+.moon-flag:hover .cloth, .moon-flag:focus-visible .cloth { fill: #ffd98a; }
+@keyframes moon-flag-wave { 50% { transform: skewY(6deg) scaleX(.92); } }
+body.perf .moon-flag .cloth { animation: none; }

@@ -130,3 +130,14 @@ l'autre ne recharge rien.
 
 `/admin` redirige vers `admin.html` : l'administration s'ouvre sans passer par
 le jeu (connexion par le code de récupération du profil si besoin).
+
+### Accès à l'admin depuis le menu (équipe seulement)
+
+Pour un profil propriétaire ou administrateur, et lui seul : action « Admin »
+dans le ticket de l'écran des fichiers, bouton « Admin » en bas de l'écran des
+jeux, et un petit drapeau violet planté sur la lune de l'écran titre (clic =
+admin). Le drapeau est hors de `#scene` (les écrans, devant, bloqueraient le
+clic) et recalé sur la lune par `placeMoonFlag` (menu.js), à chaque
+mouvement de la lune ; il n'est montré que sur l'écran titre, où rien ne le
+recouvre. L'accès reste vérifié par le serveur : ces liens ne donnent aucun
+droit.
