@@ -72,7 +72,7 @@ export const api = {
   // Boîte aux lettres (js/mailbox.js)
   mail: () => request("GET", "/mail"),
   readMail: (id) => request("POST", `/mail/${id}/read`),
-  votePoll: (id, choices) => request("POST", `/mail/${id}/vote`, { body: { choices } }),
+  votePoll: (id, choices, texts = {}) => request("POST", `/mail/${id}/vote`, { body: { choices, ...texts } }),
 
   createPlayer: () => request("POST", "/players", { auth: false }),
   me: (token) =>

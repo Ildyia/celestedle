@@ -19,7 +19,7 @@ export class MailboxTab {
     this.form = byId("mail-form");
     document.querySelectorAll("[data-mail-kind]").forEach((b) => b.addEventListener("click", () => this.setKind(b.dataset.mailKind)));
     byId("mail-add-option").addEventListener("click", () => this.addOption(""));
-    byId("mail-multiple").addEventListener("change", () => this.preview());
+    for (const id of ["mail-multiple", "mail-allow-other", "mail-allow-comments"]) byId(id).addEventListener("change", () => this.preview());
     this.resetOptions();
     this.form.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -54,6 +54,8 @@ export class MailboxTab {
     this.addOption("");
     this.addOption("");
     byId("mail-multiple").checked = false;
+    byId("mail-allow-other").checked = false;
+    byId("mail-allow-comments").checked = false;
     byId("mail-closes").value = "";
   }
 
@@ -113,13 +115,31 @@ export class MailboxTab {
       poll
         ? el("div", { className: "mail-preview-poll" }, [
             el("p", { className: "mail-preview-date", text: multiple ? "Pick as many as you like." : "Pick one." }),
-            ...(this.options().length ? this.options() : ["Answer 1", "Answer 2"]).map((label) =>
+            ...[...(this.options().length ? this.options() : ["Answer 1", "Answer 2"]), ...(byId("mail-allow-other").checked ? ["Other: …"] : [])].map((label) =>
               el("label", { className: "mail-preview-choice" }, [el("input", { attrs: { type: multiple ? "checkbox" : "radio", disabled: true } }), label])
-            )
+            ),
+            byId("mail-allow-comments").checked ? el("p", { className: "mail-preview-date", text: "+ a box for a comment to the team" }) : null
           ])
         : null
     ];
     byId("mail-preview").replaceChildren(...nodes.filter(Boolean));
+  }
+
+  // Réponses « Other » et commentaires, sans nom, dépliables
+  pollTexts(letter) {
+    const texts = letter.texts ?? [];
+    return ["other", "comment"]
+      .filter((kind) => (kind === "other" ? letter.poll.allowOther : letter.poll.allowComments))
+      .map((kind) => {
+        const list = texts.filter((t) => t.kind === kind);
+        const label = `${kind === "other" ? '"Other" answers' : "Comments"} (${list.length})`;
+        return el("details", { className: "mail-poll-texts" }, [
+          el("summary", { text: label }),
+          list.length
+            ? el("ul", {}, list.map((t) => el("li", {}, [el("span", { text: t.text }), el("small", { className: "small-subtext", text: ` · ${formatDate(t.at)}` })])))
+            : el("p", { className: "small-subtext", text: "Nothing yet." })
+        ]);
+      });
   }
 
   // Résultats d'un sondage dans la liste des envois
@@ -148,7 +168,8 @@ export class MailboxTab {
         el("td", {}, [
           el("span", { className: "small-subtext mail-kind-label", text: letter.kind === "poll" ? "Poll" : letter.topic === "patch-notes" ? "Patch notes" : "Announcement" }),
           el("strong", { text: letter.title }),
-          letter.poll ? this.pollSummary(letter) : null
+          letter.poll ? this.pollSummary(letter) : null,
+          ...(letter.poll ? this.pollTexts(letter) : [])
         ]),
         el("td", { text: formatDate(letter.createdAt) }),
         el("td", { text: `${letter.reads} player${letter.reads === 1 ? "" : "s"}` }),
@@ -197,7 +218,14 @@ export class MailboxTab {
       } else {
         const closes = byId("mail-closes").value;
         const poll = this.kind === "poll"
-          ? { kind: "poll", options: this.options(), multiple: byId("mail-multiple").checked, closesAt: closes ? new Date(closes).toISOString() : null }
+          ? {
+              kind: "poll",
+              options: this.options(),
+              multiple: byId("mail-multiple").checked,
+              allowOther: byId("mail-allow-other").checked,
+              allowComments: byId("mail-allow-comments").checked,
+              closesAt: closes ? new Date(closes).toISOString() : null
+            }
           : { topic: this.kind };
         const sent = await admin.sendMail({ ...letter, ...poll, discord: byId("mail-discord").checked });
         this.notify(`"${sent.title}" sent${sent.discordMessageId ? " and posted on Discord" : ""}.`);

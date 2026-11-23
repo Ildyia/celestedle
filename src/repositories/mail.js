@@ -4,7 +4,8 @@ const db = require("../db");
 const COLUMNS = `m.id, m.kind, m.slug, m.title, m.body, m.player_id AS playerId, m.author_id AS authorId,
   m.discord_channel_id AS discordChannelId, m.discord_message_id AS discordMessageId,
   m.created_at AS createdAt, m.updated_at AS updatedAt,
-  m.multiple, m.closes_at AS closesAt, m.discord_closed AS discordClosed, m.topic, m.about`;
+  m.multiple, m.closes_at AS closesAt, m.discord_closed AS discordClosed, m.topic, m.about,
+  m.allow_other AS allowOther, m.allow_comments AS allowComments`;
 
 const stmts = {
   // Courrier visible d'un joueur (ou de tous, playerId NULL), le plus récent d'abord
@@ -22,8 +23,8 @@ const stmts = {
   `),
   find: db.prepare(`SELECT ${COLUMNS} FROM mail m WHERE m.id = ?`),
   insert: db.prepare(`
-    INSERT INTO mail (kind, topic, about, title, body, player_id, author_id, multiple, closes_at, created_at, updated_at)
-    VALUES (@kind, @topic, @about, @title, @body, @playerId, @authorId, @multiple, @closesAt, @at, @at)
+    INSERT INTO mail (kind, topic, about, title, body, player_id, author_id, multiple, closes_at, allow_other, allow_comments, created_at, updated_at)
+    VALUES (@kind, @topic, @about, @title, @body, @playerId, @authorId, @multiple, @closesAt, @allowOther, @allowComments, @at, @at)
   `),
   insertOption: db.prepare("INSERT INTO poll_options (mail_id, position, label) VALUES (?, ?, ?)"),
   options: db.prepare("SELECT position, label FROM poll_options WHERE mail_id = ? ORDER BY position"),
@@ -41,6 +42,14 @@ const stmts = {
       AND m.closes_at IS NOT NULL AND m.closes_at <= ?
   `),
   setDiscordClosed: db.prepare("UPDATE mail SET discord_closed = 1 WHERE id = ?"),
+  // Textes d'un sondage : réponse « Other » et commentaire de chaque votant
+  textOf: db.prepare("SELECT text FROM poll_texts WHERE mail_id = ? AND voter = ? AND kind = ?"),
+  setText: db.prepare(`
+    INSERT INTO poll_texts (mail_id, voter, kind, text, updated_at) VALUES (@mailId, @voter, @kind, @text, @at)
+    ON CONFLICT (mail_id, voter, kind) DO UPDATE SET text = @text, updated_at = @at
+  `),
+  clearText: db.prepare("DELETE FROM poll_texts WHERE mail_id = ? AND voter = ? AND kind = ?"),
+  texts: db.prepare("SELECT kind, text, updated_at AS at FROM poll_texts WHERE mail_id = ? ORDER BY updated_at DESC"),
   // Réponses personnelles déjà envoyées, par ce à quoi elles répondent
   byAbout: db.prepare(`SELECT ${COLUMNS} FROM mail m WHERE m.about = ? LIMIT 1`),
   repliesLike: db.prepare(`
@@ -60,7 +69,15 @@ const find = (id) => stmts.find.get(id) ?? null;
 
 // Une lettre, et pour un sondage ses cases, d'un seul coup
 const insert = db.transaction((mail, options = []) => {
-  const id = stmts.insert.run({ closesAt: null, topic: null, about: null, ...mail, multiple: mail.multiple ? 1 : 0 }).lastInsertRowid;
+  const id = stmts.insert.run({
+    closesAt: null,
+    topic: null,
+    about: null,
+    ...mail,
+    multiple: mail.multiple ? 1 : 0,
+    allowOther: mail.allowOther ? 1 : 0,
+    allowComments: mail.allowComments ? 1 : 0
+  }).lastInsertRowid;
   options.forEach((label, position) => stmts.insertOption.run(id, position, label));
   return find(id);
 });
@@ -81,6 +98,13 @@ const setVote = db.transaction((mailId, voter, positions, at) => {
 });
 
 const close = (id, at) => stmts.close.run({ id, at });
+const textOf = (mailId, voter, kind) => stmts.textOf.get(mailId, voter, kind)?.text ?? null;
+// text vide ou null : le texte est retiré
+function setText(mailId, voter, kind, text, at) {
+  if (text) stmts.setText.run({ mailId, voter, kind, text, at });
+  else stmts.clearText.run(mailId, voter, kind);
+}
+const texts = (mailId) => stmts.texts.all(mailId);
 const closedOnDiscord = (now) => stmts.closedOnDiscord.all(now);
 const setDiscordClosed = (id) => stmts.setDiscordClosed.run(id);
 const findAbout = (about) => stmts.byAbout.get(about) ?? null;
@@ -101,5 +125,6 @@ const markRead = (mailId, playerId, at) => stmts.markRead.run(mailId, playerId, 
 
 module.exports = {
   listFor, listPublic, find, insert, update, setDiscord, remove, markRead,
-  options, results, choicesOf, setVote, close, closedOnDiscord, setDiscordClosed, findAbout, repliesTo
+  options, results, choicesOf, setVote, close, closedOnDiscord, setDiscordClosed, findAbout, repliesTo,
+  textOf, setText, texts
 };

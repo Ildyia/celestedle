@@ -30,6 +30,9 @@ const SNOWFLAKE = /^\d{5,25}$/;
 const OPTIONS_MIN = 2;
 const OPTIONS_MAX = 10;
 const OPTION_MAX = 80;
+// Réponse libre « Other » : sa case est la position OTHER dans poll_votes
+const OTHER = -1;
+const TEXT_MAX = 300;
 
 // Le bot Discord s'enregistre ici au démarrage ; sans bot, rien n'est envoyé.
 // mailPosted renvoie { channelId, messageId } du message posté.
@@ -104,13 +107,20 @@ function pollView(mail, voter, { all = false } = {}) {
   const myChoices = voter ? repo.choicesOf(mail.id, voter) : [];
   const show = all || closed || myChoices.length > 0;
   const { counts, voters } = show ? repo.results(mail.id) : { counts: new Map(), voters: null };
+  const options = repo.options(mail.id);
+  if (mail.allowOther) options.push({ position: OTHER, label: "Other" });
   return {
     multiple: Boolean(mail.multiple),
     closesAt: mail.closesAt,
     closed,
+    allowOther: Boolean(mail.allowOther),
+    allowComments: Boolean(mail.allowComments),
     myChoices,
+    // Ce que ce votant a écrit (lui seul le revoit ; l'équipe, sans son nom)
+    myOther: voter && mail.allowOther ? repo.textOf(mail.id, voter, "other") : null,
+    myComment: voter && mail.allowComments ? repo.textOf(mail.id, voter, "comment") : null,
     voters,
-    options: repo.options(mail.id).map((o) => ({ position: o.position, label: o.label, votes: show ? counts.get(o.position) ?? 0 : null }))
+    options: options.map((o) => ({ position: o.position, label: o.label, votes: show ? counts.get(o.position) ?? 0 : null }))
   };
 }
 
@@ -142,7 +152,7 @@ function markRead(player, id) {
   return { ok: true };
 }
 
-function validatePoll({ options, multiple, closesAt } = {}) {
+function validatePoll({ options, multiple, closesAt, allowOther, allowComments } = {}) {
   const labels = (Array.isArray(options) ? options : []).map((o) => String(o ?? "").trim()).filter(Boolean);
   if (labels.length < OPTIONS_MIN || labels.length > OPTIONS_MAX) throw new HttpError(400, `A poll needs ${OPTIONS_MIN} to ${OPTIONS_MAX} answers.`);
   if (labels.some((l) => l.length > OPTION_MAX)) throw new HttpError(400, `Each answer must be ${OPTION_MAX} characters at most.`);
@@ -154,7 +164,7 @@ function validatePoll({ options, multiple, closesAt } = {}) {
     if (at <= new Date()) throw new HttpError(400, "The closing date must be in the future.");
     end = at.toISOString();
   }
-  return { options: labels, multiple: Boolean(multiple), closesAt: end };
+  return { options: labels, multiple: Boolean(multiple), closesAt: end, allowOther: Boolean(allowOther), allowComments: Boolean(allowComments) };
 }
 
 // Une erreur Discord ne doit jamais faire échouer l'action de l'admin
@@ -170,7 +180,11 @@ async function relay(event, mail, ...args) {
 /** Admin : le courrier pour tous, avec le nombre de lecteurs et les résultats des sondages. */
 function listForAdmin() {
   return {
-    letters: repo.listPublic().map((mail) => ({ ...mail, poll: mail.kind === "poll" ? pollView(mail, null, { all: true }) : null })),
+    letters: repo.listPublic().map((mail) =>
+      mail.kind === "poll"
+        ? { ...mail, poll: pollView(mail, null, { all: true }), texts: repo.texts(mail.id) }
+        : { ...mail, poll: null, texts: [] }
+    ),
     discord: discordSettings()
   };
 }
@@ -186,7 +200,19 @@ async function send(author, input = {}) {
   const topic = kind === "news" ? (TOPICS.includes(input.topic) ? input.topic : "announcement") : null;
   const poll = kind === "poll" ? validatePoll(input) : { options: [], multiple: false, closesAt: null };
   const mail = repo.insert(
-    { kind, topic, title, body, playerId: null, authorId: author.id, multiple: poll.multiple, closesAt: poll.closesAt, at: nowIso() },
+    {
+      kind,
+      topic,
+      title,
+      body,
+      playerId: null,
+      authorId: author.id,
+      multiple: poll.multiple,
+      closesAt: poll.closesAt,
+      allowOther: poll.allowOther,
+      allowComments: poll.allowComments,
+      at: nowIso()
+    },
     poll.options
   );
   const target = discordTarget(mail);
@@ -316,6 +342,7 @@ function openPoll(id) {
 
 function checkChoices(mail, choices) {
   const positions = new Set(repo.options(mail.id).map((o) => o.position));
+  if (mail.allowOther) positions.add(OTHER);
   const picked = [...new Set((Array.isArray(choices) ? choices : []).map(Number))];
   if (!picked.length) throw new HttpError(400, "Pick at least one answer.");
   if (picked.some((p) => !positions.has(p))) throw new HttpError(400, "Unknown answer.");
@@ -323,10 +350,33 @@ function checkChoices(mail, choices) {
   return picked.sort((a, b) => a - b);
 }
 
-/** Vote du site : les cases cochées remplacent le vote d'avant. */
-function vote(player, id, choices) {
+// Texte libre : 1 à TEXT_MAX caractères, ou null pour « rien »
+function cleanText(value, what) {
+  const text = String(value ?? "").trim();
+  if (text.length > TEXT_MAX) throw new HttpError(400, `Your ${what} must be ${TEXT_MAX} characters at most.`);
+  return text || null;
+}
+
+// Les cases, la réponse « Other » (exigée si sa case est cochée) et le
+// commentaire d'un votant, d'un coup
+function saveVote(mail, voter, choices, { other, comment } = {}, { keepComment = false } = {}) {
+  const at = nowIso();
+  const picked = choices.length ? checkChoices(mail, choices) : [];
+  const otherText = picked.includes(OTHER) ? cleanText(other, "answer") : null;
+  if (picked.includes(OTHER) && !otherText) throw new HttpError(400, 'Write your own answer for "Other".');
+  repo.setVote(mail.id, voter, picked, at);
+  if (mail.allowOther) repo.setText(mail.id, voter, "other", otherText, at);
+  if (mail.allowComments && !keepComment) repo.setText(mail.id, voter, "comment", cleanText(comment, "comment"), at);
+}
+
+/**
+ * Vote du site : les cases cochées remplacent le vote d'avant ; other : le
+ * texte de la case « Other » ; comment : le commentaire (vide : retiré).
+ */
+function vote(player, id, choices, texts = {}) {
   const mail = openPoll(id);
-  repo.setVote(mail.id, playerVoter(player), checkChoices(mail, choices), nowIso());
+  if (!Array.isArray(choices) || !choices.length) throw new HttpError(400, "Pick at least one answer.");
+  saveVote(mail, playerVoter(player), choices, texts);
   repo.markRead(mail.id, player.id, nowIso());
   if (mail.discordMessageId) relay("pollVoted", repo.find(mail.id));
   return toPublic({ ...repo.find(mail.id), readAt: nowIso() }, player);
@@ -348,11 +398,42 @@ function voteFromDiscord(id, user, position) {
   const voter = discordVoter(user);
   const mine = repo.choicesOf(mail.id, voter);
   const next = mail.multiple ? (mine.includes(position) ? mine.filter((p) => p !== position) : [...mine, position]) : [position];
-  // Plus aucune case : le vote est retiré
-  repo.setVote(mail.id, voter, next.length ? checkChoices(mail, next) : [], nowIso());
+  // Plus aucune case : le vote est retiré ; la réponse « Other » est gardée
+  // tant que sa case reste cochée
+  saveVote(mail, voter, next, { other: repo.textOf(mail.id, voter, "other") }, { keepComment: true });
   const updated = repo.find(mail.id);
   relay("pollVoted", updated);
   return { mail: updated, poll: pollView(updated, voter) };
+}
+
+/**
+ * Fenêtre Discord « Other… » : sa réponse, et sa case cochée (en plus des
+ * autres s'il y en a plusieurs, à la place sinon).
+ */
+function otherFromDiscord(id, user, text) {
+  const mail = openPoll(id);
+  if (!mail.allowOther) throw new HttpError(400, "This poll has no \"Other\" answer.");
+  const voter = discordVoter(user);
+  const mine = repo.choicesOf(mail.id, voter);
+  const next = mail.multiple ? [...new Set([...mine, OTHER])] : [OTHER];
+  saveVote(mail, voter, next, { other: text }, { keepComment: true });
+  const updated = repo.find(mail.id);
+  relay("pollVoted", updated);
+  return { mail: updated, poll: pollView(updated, voter) };
+}
+
+/** Fenêtre Discord « Comment » : son commentaire (vide : retiré). */
+function commentFromDiscord(id, user, text) {
+  const mail = openPoll(id);
+  if (!mail.allowComments) throw new HttpError(400, "This poll takes no comments.");
+  const voter = discordVoter(user);
+  repo.setText(mail.id, voter, "comment", cleanText(text, "comment"), nowIso());
+  return { mail, poll: pollView(mail, voter) };
+}
+
+/** Le texte déjà écrit par ce compte Discord (pour préremplir la fenêtre). */
+function discordText(id, user, kind) {
+  return repo.textOf(Number(id), discordVoter(user), kind);
 }
 
 /** Admin : ferme un sondage maintenant. */
@@ -374,6 +455,10 @@ async function closeDuePolls() {
 const findLetter = (id) => repo.find(Number(id));
 
 module.exports = {
+  OTHER,
+  otherFromDiscord,
+  commentFromDiscord,
+  discordText,
   sendPersonal,
   replyToReport,
   replyToSuggestion,

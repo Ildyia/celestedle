@@ -339,13 +339,22 @@
                   <input type="checkbox" id="mail-multiple" />
                   <label for="mail-multiple">Players can tick several answers</label>
                 </div>
+                <div class="form-group form-inline">
+                  <input type="checkbox" id="mail-allow-other" />
+                  <label for="mail-allow-other">Add an "Other…" answer players write themselves</label>
+                </div>
+                <div class="form-group form-inline">
+                  <input type="checkbox" id="mail-allow-comments" />
+                  <label for="mail-allow-comments">Let players leave a comment</label>
+                </div>
                 <div class="form-group">
                   <label for="mail-closes">Closes (optional, your local time)</label>
                   <input type="datetime-local" id="mail-closes" class="bug-input" />
                 </div>
                 <p class="small-subtext">
                   Players see the results once they've voted. Answers can't be
-                  changed after sending. A Discord account linked to a profile
+                  changed after sending. "Other" answers and comments are only
+                  read here, without the player's name. A Discord account linked to a profile
                   (Discord tag) votes as that profile, never twice.
                 </p>
               </fieldset>

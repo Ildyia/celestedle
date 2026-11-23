@@ -19,7 +19,8 @@ router.post("/mail/:id/read", requirePlayer, (req, res) => {
 });
 
 router.post("/mail/:id/vote", requirePlayer, voteLimit, (req, res) => {
-  res.json(mail.vote(req.player, req.params.id, req.body?.choices));
+  const { choices, other, comment } = req.body || {};
+  res.json(mail.vote(req.player, req.params.id, choices, { other, comment }));
 });
 
 router.post("/admin/mail/:id/close", requireStaff, limitedAction("close_poll", (req) => req.params.id), async (req, res) => {

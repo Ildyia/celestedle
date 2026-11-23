@@ -319,3 +319,10 @@ la boîte de son destinataire, et rien n'en part sur Discord.
   quittant l'écran titre (avant une annonce récente).
 Colonne `mail.about` (« report:<id> », « report:<id>:fixed »,
 « suggestion:<id> », « suggestion:<id>:added », migration 022).
+
+## Sondages : réponse « Autre » et commentaires
+
+- Deux cases à la création d'un sondage : `allowOther` (option « Other » avec un texte libre, position `-1`) et `allowComments` (commentaire facultatif pour l'équipe).
+- Les textes sont rangés dans `poll_texts` (migration 023, genres `other` / `comment`), un par votant ; ils ne sont jamais montrés aux autres joueurs.
+- Sur Discord, boutons « Other… » et « Comment » qui ouvrent une fenêtre de saisie.
+- Côté admin, la ligne du sondage affiche les réponses « Other » et les commentaires dans deux blocs dépliables.

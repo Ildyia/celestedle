@@ -69,10 +69,10 @@ const formatClose = (iso) =>
 
 // ===== Sondages =====
 // Le profil est créé au premier vote, comme au premier essai d'une partie
-async function submitVote(letter, choices) {
+async function submitVote(letter, choices, texts) {
   try {
     await player.ensure();
-    await api.votePoll(letter.id, choices);
+    await api.votePoll(letter.id, choices, texts);
   } catch (err) {
     showToast(err.message);
     return;
@@ -95,6 +95,8 @@ function pollResults(letter) {
         el("span", { className: "poll-track", attrs: { "aria-hidden": "true" } }, [el("i", { attrs: { style: `width: ${share}%` } })])
       ]);
     }),
+    poll.myOther ? el("p", { className: "poll-note", text: `Your answer: “${poll.myOther}”` }) : null,
+    poll.myComment ? el("p", { className: "poll-note", text: `Your comment: “${poll.myComment}”` }) : null,
     el("p", {
       className: "poll-note",
       text: `${voters} climber${voters === 1 ? "" : "s"} voted, on the site and on Discord. ` +
@@ -111,26 +113,56 @@ function pollResults(letter) {
   ]);
 }
 
+// Case « Other » : cochée, son champ de texte s'ouvre ; le vote demande un texte
+const OTHER = -1;
+
 function pollForm(letter) {
   const { poll } = letter;
   const type = poll.multiple ? "checkbox" : "radio";
   const button = el("button", { className: "postcard-btn", attrs: { type: "submit", disabled: !poll.myChoices.length }, text: poll.myChoices.length ? "Update my vote" : "Vote" });
+  const otherText = el("input", {
+    className: "poll-other-text",
+    attrs: { type: "text", maxlength: "300", placeholder: "Your own answer", "aria-label": "Your own answer", value: poll.myOther ?? "" }
+  });
+  const comment = poll.allowComments
+    ? el("textarea", { className: "poll-comment", attrs: { maxlength: "300", rows: "2", placeholder: "A comment for the team (optional, only we read it)", "aria-label": "Comment for the team" } })
+    : null;
+  if (comment) comment.value = poll.myComment ?? "";
+  const choice = (o) =>
+    el("label", { className: `poll-choice${o.position === OTHER ? " poll-other" : ""}` }, [
+      el("input", { attrs: { type, name: `poll-${letter.id}`, value: String(o.position), checked: poll.myChoices.includes(o.position) } }),
+      el("span", { text: o.position === OTHER ? "Other:" : o.label }),
+      o.position === OTHER ? otherText : null
+    ]);
   const form = el("form", { className: "poll-form" }, [
     el("p", { className: "poll-note", text: (poll.multiple ? "Pick as many as you like." : "Pick one.") + (poll.closesAt ? ` Closes ${formatClose(poll.closesAt)}.` : "") }),
-    ...poll.options.map((o) =>
-      el("label", { className: "poll-choice" }, [
-        el("input", { attrs: { type, name: `poll-${letter.id}`, value: String(o.position), checked: poll.myChoices.includes(o.position) } }),
-        el("span", { text: o.label })
-      ])
-    ),
+    ...poll.options.map(choice),
+    comment,
     button
   ]);
-  form.addEventListener("change", () => (button.disabled = !form.querySelector("input:checked")));
+  const otherBox = () => form.querySelector(`input[value="${OTHER}"]`);
+  const update = () => {
+    const picked = [...form.querySelectorAll("input[name]:checked")];
+    const otherPicked = Boolean(otherBox()?.checked);
+    otherText.disabled = !otherPicked && Boolean(otherBox());
+    button.disabled = !picked.length || (otherPicked && !otherText.value.trim());
+  };
+  form.addEventListener("change", update);
+  otherText.addEventListener("input", update);
+  // Écrire dans le champ coche « Other »
+  otherText.addEventListener("focus", () => {
+    if (otherBox() && !otherBox().checked) {
+      otherBox().checked = true;
+      update();
+    }
+  });
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     button.disabled = true;
-    submitVote(letter, [...form.querySelectorAll("input:checked")].map((input) => Number(input.value)));
+    const choices = [...form.querySelectorAll("input[name]:checked")].map((input) => Number(input.value));
+    submitVote(letter, choices, { other: choices.includes(OTHER) ? otherText.value.trim() : null, comment: comment ? comment.value.trim() : undefined });
   });
+  update();
   return form;
 }
 

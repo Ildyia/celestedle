@@ -237,6 +237,23 @@ function createBot() {
   }
 
   // Bouton d'un sondage : le vote, puis ses choix et les résultats, pour lui seul
+  // « Other… » ou « Comment » : le bouton ouvre la fenêtre (préremplie avec
+  // ce qu'il avait écrit), la fenêtre envoyée enregistre le texte
+  async function handlePollText(interaction, { kind, modal, mailId }) {
+    const reply = (content) => interaction.reply({ content, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+    if (!modal) return interaction.showModal(embeds.pollTextModal(kind, mailId, mail.discordText(mailId, interaction.user, kind)));
+    const text = interaction.fields.getTextInputValue("text");
+    let result;
+    try {
+      result = kind === "other" ? mail.otherFromDiscord(mailId, interaction.user, text) : mail.commentFromDiscord(mailId, interaction.user, text);
+    } catch (err) {
+      return reply(err.status ? err.message : "Something went wrong.");
+    }
+    if (kind === "comment") return reply(text.trim() ? "Thanks! Your comment went to the Celestedle team." : "Your comment was removed.");
+    const { poll } = result;
+    return reply(`Your answer "${text.trim()}" counts as **Other**. Only the team reads it.\n\n${embeds.resultLines(poll)}\n\n${poll.voters} climber${poll.voters === 1 ? "" : "s"} voted so far.`);
+  }
+
   async function handlePollVote(interaction, { mailId, position }) {
     const reply = (content) => interaction.reply({ content, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
     let result;
@@ -489,7 +506,14 @@ function createBot() {
       if (interaction.isChatInputCommand() && interaction.commandName === "passcode") {
         return await handlePasscode(interaction);
       }
+      if (interaction.isModalSubmit()) {
+        const pollText = embeds.parsePollTextId(interaction.customId);
+        if (pollText?.modal) return await handlePollText(interaction, pollText);
+        return;
+      }
       if (!interaction.isButton()) return;
+      const pollText = embeds.parsePollTextId(interaction.customId);
+      if (pollText && !pollText.modal) return await handlePollText(interaction, pollText);
       const pollVote = embeds.parsePollId(interaction.customId);
       if (pollVote) return await handlePollVote(interaction, pollVote);
       const action = embeds.parseCustomId(interaction.customId);

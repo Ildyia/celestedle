@@ -707,3 +707,7 @@ body::before {
 .reply-preview { margin: 4px 0 10px; padding: 16px 20px; }
 .reply-preview h2 { font-size: 20px; }
 .reply-note { margin-top: 4px; }
+.mail-poll-texts { margin-top: 6px; font-size: 13px; }
+.mail-poll-texts summary { cursor: pointer; color: var(--text-muted); }
+.mail-poll-texts ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; max-height: 240px; overflow: auto; }
+.mail-poll-texts li span { overflow-wrap: anywhere; }

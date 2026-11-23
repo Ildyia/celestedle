@@ -235,3 +235,47 @@ test("réponses personnelles : à l'auteur d'une suggestion de tag", async () =>
   const after = (await api.request("GET", "/api/mail", { token: author.token })).data.letters.filter((l) => l.kind === "reply");
   assert.equal(after.length, 2, "écartée : pas de lettre");
 });
+
+test("sondage : réponse « Other » et commentaire, lus par l'équipe sans nom, sur le site comme sur Discord", async () => {
+  const sent = await api.request("POST", "/api/admin/mail", {
+    token: owner,
+    body: { title: "Next game?", body: "x", kind: "poll", options: ["Quiz", "Puzzle"], allowOther: true, allowComments: true }
+  });
+  const id = sent.data.id;
+  const alice = await api.newPlayer();
+  const vote = (token, body) => api.request("POST", `/api/mail/${id}/vote`, { token, body });
+
+  assert.equal((await vote(alice.token, { choices: [mail.OTHER] })).status, 400, "Other sans texte");
+  assert.equal((await vote(alice.token, { choices: [0], comment: "x".repeat(301) })).status, 400);
+  const voted = await vote(alice.token, { choices: [mail.OTHER], other: "A rhythm game", comment: "Love the mailbox!" });
+  assert.equal(voted.status, 200, JSON.stringify(voted.data));
+  assert.equal(voted.data.poll.myOther, "A rhythm game");
+  assert.equal(voted.data.poll.myComment, "Love the mailbox!");
+  assert.deepEqual(voted.data.poll.options.map((o) => [o.label, o.votes]), [["Quiz", 0], ["Puzzle", 0], ["Other", 1]]);
+
+  // Changer pour une vraie réponse efface le texte « Other » ; le commentaire reste s'il est renvoyé
+  const changed = await vote(alice.token, { choices: [1], comment: "Love the mailbox!" });
+  assert.equal(changed.data.poll.myOther, null);
+
+  // Discord : un compte sans profil, par les fenêtres « Other… » et « Comment »
+  const user = { id: "321", username: "discord-only", discriminator: "0" };
+  const other = mail.otherFromDiscord(id, user, "A racing game");
+  assert.deepEqual(other.poll.myChoices, [mail.OTHER]);
+  mail.commentFromDiscord(id, user, "More polls please");
+  assert.equal(mail.discordText(id, user, "comment"), "More polls please");
+  // Un bouton de réponse (une seule case) remplace « Other » et efface son texte
+  mail.voteFromDiscord(id, user, 0);
+  assert.equal(mail.discordText(id, user, "other"), null);
+  assert.equal(mail.discordText(id, user, "comment"), "More polls please", "le commentaire reste");
+
+  const listed = (await api.request("GET", "/api/admin/mail", { token: owner })).data.letters.find((l) => l.id === id);
+  assert.deepEqual(listed.texts.map((t) => t.kind).sort(), ["comment", "comment"]);
+  assert.ok(listed.texts.some((t) => t.text === "Love the mailbox!"));
+  assert.ok(listed.texts.every((t) => !("voter" in t)), "sans nom");
+
+  // Sondage sans ces options : refusé
+  const plain = await api.request("POST", "/api/admin/mail", { token: owner, body: { title: "Plain", body: "x", kind: "poll", options: ["A", "B"] } });
+  assert.equal((await vote(alice.token, { choices: [mail.OTHER], other: "Hi" })).status === 200, true);
+  assert.equal((await api.request("POST", `/api/mail/${plain.data.id}/vote`, { token: alice.token, body: { choices: [mail.OTHER], other: "Hi" } })).status, 400);
+  assert.throws(() => mail.commentFromDiscord(plain.data.id, user, "hi"), /no comments/);
+});

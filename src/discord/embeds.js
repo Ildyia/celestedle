@@ -166,15 +166,52 @@ function pollEmbed(letter, poll, siteUrl) {
   };
 }
 
-// Un bouton par case, 5 par ligne ; rien une fois fermé
+// Un bouton par case, 5 par ligne, puis « Other… » et « Comment » s'il y a
+// lieu (ils ouvrent une fenêtre pour écrire) ; rien une fois fermé
 function pollButtons(letter, poll) {
   if (poll.closed) return [];
+  const buttons = poll.options
+    .filter((o) => o.position >= 0)
+    .map((o, i) => ({ type: 2, style: 2, custom_id: `poll:${letter.id}:${o.position}`, label: truncate(o.label, 80), emoji: { name: NUMBERS[i] } }));
+  if (poll.allowOther) buttons.push({ type: 2, style: 2, custom_id: `poll-other:${letter.id}`, label: "Other…", emoji: { name: "✏️" } });
+  if (poll.allowComments) buttons.push({ type: 2, style: 1, custom_id: `poll-comment:${letter.id}`, label: "Comment", emoji: { name: "💬" } });
   const rows = [];
-  poll.options.forEach((o, i) => {
+  buttons.forEach((button, i) => {
     if (i % 5 === 0) rows.push({ type: 1, components: [] });
-    rows.at(-1).components.push({ type: 2, style: 2, custom_id: `poll:${letter.id}:${o.position}`, label: truncate(o.label, 80), emoji: { name: NUMBERS[i] } });
+    rows.at(-1).components.push(button);
   });
   return rows;
+}
+
+// Fenêtre pour écrire sa réponse « Other » ou son commentaire
+function pollTextModal(kind, mailId, value) {
+  const other = kind === "other";
+  return {
+    custom_id: `poll-${kind}-modal:${mailId}`,
+    title: other ? "Your own answer" : "A comment for the team",
+    components: [
+      {
+        type: 1,
+        components: [
+          {
+            type: 4,
+            custom_id: "text",
+            label: other ? "Your answer" : "Only the Celestedle team reads it",
+            style: other ? 1 : 2,
+            max_length: 300,
+            required: other,
+            ...(value ? { value } : {})
+          }
+        ]
+      }
+    ]
+  };
+}
+
+// « poll-other:12 », « poll-comment-modal:12 »… → { kind, modal, mailId }
+function parsePollTextId(customId) {
+  const match = /^poll-(other|comment)(-modal)?:(\d+)$/.exec(customId);
+  return match ? { kind: match[1], modal: Boolean(match[2]), mailId: Number(match[3]) } : null;
 }
 
 function parsePollId(customId) {
@@ -182,4 +219,4 @@ function parsePollId(customId) {
   return match ? { mailId: Number(match[1]), position: Number(match[2]) } : null;
 }
 
-module.exports = { pollEmbed, pollButtons, parsePollId, resultLines, mailEmbed, publicEmbed, privateEmbed, voteButtons, statusButtons, parseCustomId, truncate };
+module.exports = { pollEmbed, pollButtons, parsePollId, pollTextModal, parsePollTextId, resultLines, mailEmbed, publicEmbed, privateEmbed, voteButtons, statusButtons, parseCustomId, truncate };
