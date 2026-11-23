@@ -70,10 +70,14 @@ export const admin = {
   connectionsAccess: () => request("GET", "/connections-access"),
   setConnectionsAccess: (access) => request("PUT", "/admin/connections/access", { access }),
   connectionSuggestions: () => request("GET", "/admin/connections/suggestions"),
-  deleteConnectionSuggestion: (id) => request("DELETE", `/admin/connections/suggestions/${id}`),
+  // added : nom du tag créé à partir de la suggestion (son auteur reçoit une lettre)
+  deleteConnectionSuggestion: (id, added) =>
+    request("DELETE", `/admin/connections/suggestions/${id}${added ? `?added=${encodeURIComponent(added)}` : ""}`),
+  replyToSuggestion: (id, letter) => request("POST", `/admin/connections/suggestions/${id}/reply`, letter),
   connectionPuzzles: () => request("GET", "/admin/connections/puzzles"),
   regenerateConnectionPuzzle: (date, mode) => request("POST", `/admin/connections/puzzles/${date}/regenerate`, { mode }),
   reports: () => request("GET", "/admin/reports"),
+  replyToReport: (id, letter) => request("POST", `/admin/reports/${encodeURIComponent(id)}/reply`, letter),
   setReportStatus: (id, status) => request("PATCH", `/admin/reports/${encodeURIComponent(id)}`, { status }),
   deleteReport: (id) => request("DELETE", `/admin/reports/${encodeURIComponent(id)}`),
   purgeClosedReports: () => request("POST", "/admin/reports/purge-closed"),

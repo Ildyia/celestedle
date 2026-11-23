@@ -137,10 +137,20 @@ function vote(reportId, voterId, isUp, origin = "web") {
 
 function setStatus(reportId, status, origin = "web") {
   if (!STATUSES.includes(status)) throw new HttpError(400, `Unknown status "${status}".`);
-  if (!reportsRepo.exists(reportId)) throw new HttpError(404, "Report not found.");
+  const before = reportsRepo.findById(reportId);
+  if (!before) throw new HttpError(404, "Report not found.");
   reportsRepo.setStatus(reportId, status);
   const report = reportsRepo.findById(reportId);
   notify("reportUpdated", report, origin);
+  // Corrigé : son auteur reçoit une lettre (une seule fois). Chargé ici : la
+  // boîte aux lettres lit les reports, l'inverse ferait une boucle.
+  if (status === "fixed" && before.status !== "fixed") {
+    try {
+      require("./mail").reportFixed(report);
+    } catch (err) {
+      console.error(`[MAIL] Lettre du report ${report.id} :`, err.message);
+    }
+  }
   return report;
 }
 

@@ -1,4 +1,5 @@
 const express = require("express");
+const mail = require("../../services/mail");
 const connections = require("../../services/connections");
 const { requireStaff, requirePlaytester, limitedAction } = require("../../middleware/admin-auth");
 const { rateLimit } = require("../../middleware/rate-limit");
@@ -73,12 +74,21 @@ router.post("/connections/tag-suggestions", requirePlayer, suggestLimit, (req, r
   res.status(201).json(connections.suggestTag(req.player, req.body || {}));
 });
 
+// Avec les lettres déjà envoyées à leur auteur
 router.get("/admin/connections/suggestions", (req, res) => {
-  res.json(connections.listSuggestions());
+  const replies = mail.repliesTo("suggestion");
+  res.json(connections.listSuggestions().map((s) => ({ ...s, replies: replies[s.id] ?? [] })));
 });
 
-// Suggestion traitée (tag créé) ou écartée
+// Lettre personnelle à l'auteur de la suggestion, dans sa boîte aux lettres
+router.post("/admin/connections/suggestions/:id/reply", limitedAction("reply_suggestion", (req) => req.params.id), (req, res) => {
+  res.status(201).json(mail.replyToSuggestion(req.player, req.params.id, req.body || {}));
+});
+
+// Suggestion traitée (tag créé) ou écartée. ?added=<nom du tag> : devenue
+// un tag, son auteur reçoit une lettre (rien quand elle est écartée)
 router.delete("/admin/connections/suggestions/:id", (req, res) => {
+  if (req.query.added) mail.suggestionAdded(req.params.id, String(req.query.added));
   connections.deleteSuggestion(Number(req.params.id));
   res.status(204).end();
 });

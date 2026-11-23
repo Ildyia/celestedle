@@ -299,3 +299,23 @@ Les grilles déjà tirées gardent leurs libellés « Found in ». Simulé sur 6
 jours avec les 18 tags du 23/11 : 60 grilles A-Side sans faux groupe sur 60,
 0,03 s par grille (0,9 s avant), les 99 éléments sortis, élément le plus
 fréquent 1,9 × la moyenne (2,3 × avant). Tests : `test/connections-chapters.test.js`.
+
+### Boîte aux lettres (étape 3 : réponses personnelles)
+
+Une lettre « Just for you » (kind « reply », `player_id`) ne se voit que dans
+la boîte de son destinataire, et rien n'en part sur Discord.
+
+- Admin, Reports : bouton « Reply » sous l'auteur d'un report (s'il avait un
+  profil) ; fenêtre avec titre, lettre et aperçu. Sous l'auteur, ce qui lui a
+  été envoyé et s'il l'a lu.
+- Report passé à « Fixed » (depuis l'admin ou les boutons Discord) : lettre
+  automatique « Your bug report is fixed! » qui rappelle ce qu'il avait écrit,
+  une seule fois par report.
+- Admin, Connections → Tags, suggestions : « Reply » ; et quand un tag est
+  créé à partir d'une suggestion, lettre automatique « Your tag idea is in
+  the game! » (avec le nom du tag s'il a changé). Une suggestion écartée
+  (« Dismiss ») n'envoie rien.
+- Dans le jeu, une réponse personnelle pas encore lue s'ouvre seule en
+  quittant l'écran titre (avant une annonce récente).
+Colonne `mail.about` (« report:<id> », « report:<id>:fixed »,
+« suggestion:<id> », « suggestion:<id>:added », migration 022).

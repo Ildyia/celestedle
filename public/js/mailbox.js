@@ -13,7 +13,7 @@ import { showToast } from "./toast.js";
 const FRESH_DAYS = 14;
 const STAMPS = { "patch-notes": "assets/illustration/options.png", news: "assets/illustration/feather.png", poll: "assets/illustration/typing.png", reply: "assets/illustration/love.png" };
 
-const KIND_LABELS = { "patch-notes": "Patch notes", announcement: "Announcement", poll: "Poll" };
+const KIND_LABELS = { "patch-notes": "Patch notes", announcement: "Announcement", poll: "Poll", reply: "Just for you" };
 let letters = [];
 let current = null;
 let onChange = () => {};
@@ -43,10 +43,14 @@ export async function loadMailbox(listener) {
   return letters;
 }
 
-/** L'annonce récente non lue à montrer en arrivant, ou null. */
+/**
+ * La lettre à montrer en arrivant, ou null : une réponse personnelle pas
+ * encore lue, sinon une annonce récente pas encore lue.
+ */
 export function freshNews() {
   const since = Date.now() - FRESH_DAYS * 86400000;
-  return letters.find((l) => l.kind === "news" && !isRead(l) && Date.parse(l.createdAt) >= since) ?? null;
+  const unread = letters.filter((l) => !isRead(l) && Date.parse(l.createdAt) >= since);
+  return unread.find((l) => l.kind === "reply") ?? unread.find((l) => l.kind === "news") ?? null;
 }
 
 function markRead(letter) {
@@ -169,7 +173,7 @@ function render() {
         el("div", { className: "postcard-stamp" }, [el("img", { attrs: { src: STAMPS[current.topic] ?? STAMPS[current.kind] ?? STAMPS.news, alt: "" } })]),
         el("div", { className: "postcard-postmark", attrs: { "aria-hidden": "true" } }),
         el("div", { className: "postcard-text" }, [
-          el("p", { className: "mailbox-date", text: [KIND_LABELS[current.kind === "poll" ? "poll" : current.topic], formatDate(current.createdAt)].filter(Boolean).join(" · ") }),
+          el("p", { className: "mailbox-date", text: [KIND_LABELS[current.kind === "news" ? current.topic : current.kind], formatDate(current.createdAt)].filter(Boolean).join(" · ") }),
           el("h2", { attrs: { id: "mailbox-title" }, text: current.title }),
           ...renderLetter(current.body),
           current.poll ? pollBlock(current) : null

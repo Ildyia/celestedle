@@ -171,3 +171,67 @@ test("sondage à plusieurs cases sur Discord : un bouton coche ou décoche", () 
   assert.deepEqual(removed.myChoices, []);
   assert.equal(mail.pollView(mailRepo.find(letter.id), null, { all: true }).voters, 0);
 });
+
+test("réponses personnelles : à l'auteur d'un report, lettre automatique une seule fois quand il est corrigé", async () => {
+  const reports = require("../src/services/reports");
+  const alice = await api.newPlayer();
+  const bob = await api.newPlayer();
+  const created = await api.request("POST", "/api/reports", { token: alice.token, body: { bugType: "Other", description: "The kevin block has the wrong colour", elementName: "kevin" } });
+  assert.equal(created.status, 201, JSON.stringify(created.data));
+  const id = created.data.id;
+
+  assert.equal((await api.request("POST", `/api/admin/reports/${id}/reply`, { token: bob.token, body: { body: "Hi" } })).status, 403);
+  assert.equal((await api.request("POST", `/api/admin/reports/${id}/reply`, { token: owner, body: { body: " " } })).status, 400);
+  const reply = await api.request("POST", `/api/admin/reports/${id}/reply`, { token: owner, body: { body: "Thanks, looking into it!" } });
+  assert.equal(reply.status, 201, JSON.stringify(reply.data));
+  assert.match(reply.data.title, /About your bug report on kevin/i);
+
+  const lettersOf = async (token) => (await api.request("GET", "/api/mail", { token })).data.letters.filter((l) => l.kind === "reply");
+  assert.equal((await lettersOf(alice.token)).length, 1);
+  assert.equal((await lettersOf(bob.token)).length, 0, "personne d'autre ne la voit");
+
+  // Corrigé (depuis l'admin, puis à nouveau depuis Discord) : une seule lettre automatique
+  await api.request("PATCH", `/api/admin/reports/${id}`, { token: owner, body: { status: "fixed" } });
+  reports.setStatus(id, "working", "discord-private");
+  reports.setStatus(id, "fixed", "discord-private");
+  const mine = await lettersOf(alice.token);
+  const fixed = mine.filter((l) => l.title === "Your bug report is fixed!");
+  assert.equal(fixed.length, 1);
+  assert.match(fixed[0].body, /\*\*kevin\*\*/);
+  assert.match(fixed[0].body, /wrong colour/);
+
+  const listed = (await api.request("GET", "/api/admin/reports", { token: owner })).data.reports.find((r) => r.id === id);
+  assert.deepEqual(listed.replies.map((r) => r.auto), [false, true]);
+
+  // Report sans profil : personne à qui répondre, et pas de lettre automatique
+  const anonymous = await api.request("POST", "/api/reports", { body: { bugType: "Other", description: "No profile here" } });
+  assert.equal((await api.request("POST", `/api/admin/reports/${anonymous.data.id}/reply`, { token: owner, body: { body: "Hi" } })).status, 409);
+  assert.equal(reports.setStatus(anonymous.data.id, "fixed").status, "fixed");
+});
+
+test("réponses personnelles : à l'auteur d'une suggestion de tag", async () => {
+  const author = await api.newPlayer();
+  await api.request("PUT", `/api/admin/players/${author.player.id}/playtester`, { token: owner, body: { enabled: true } });
+  const suggested = await api.request("POST", "/api/connections/tag-suggestions", { token: author.token, body: { label: "Shiny things", elements: "gem, key", note: "" } });
+  assert.equal(suggested.status, 201, JSON.stringify(suggested.data));
+  const sent = await api.request("POST", `/api/admin/connections/suggestions/${suggested.data.id}/reply`, { token: owner, body: { body: "Great idea, added!" } });
+  assert.equal(sent.status, 201, JSON.stringify(sent.data));
+  assert.equal(sent.data.title, 'About your tag idea "Shiny things"');
+  const listed = (await api.request("GET", "/api/admin/connections/suggestions", { token: owner })).data.find((s) => s.id === suggested.data.id);
+  assert.equal(listed.hasAuthor, true);
+  assert.equal(listed.replies.length, 1);
+  const letters = (await api.request("GET", "/api/mail", { token: author.token })).data.letters;
+  assert.ok(letters.some((l) => l.kind === "reply" && l.personal && l.body === "Great idea, added!"));
+
+  // Devenue un tag : lettre automatique (une fois) ; écartée : rien
+  const deleted = await api.request("DELETE", `/api/admin/connections/suggestions/${suggested.data.id}?added=${encodeURIComponent("Shiny")}`, { token: owner });
+  assert.equal(deleted.status, 204);
+  const added = (await api.request("GET", "/api/mail", { token: author.token })).data.letters.filter((l) => l.title === "Your tag idea is in the game!");
+  assert.equal(added.length, 1);
+  assert.match(added[0].body, /\*\*Shiny things\*\*.*as \*\*Shiny\*\*/);
+
+  const other = await api.request("POST", "/api/connections/tag-suggestions", { token: author.token, body: { label: "Loud things", elements: "", note: "" } });
+  await api.request("DELETE", `/api/admin/connections/suggestions/${other.data.id}`, { token: owner });
+  const after = (await api.request("GET", "/api/mail", { token: author.token })).data.letters.filter((l) => l.kind === "reply");
+  assert.equal(after.length, 2, "écartée : pas de lettre");
+});

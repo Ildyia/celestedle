@@ -11,6 +11,7 @@ const { MODE_IDS } = require("../../services/modes");
 const staff = require("../../services/staff");
 const connections = require("../../services/connections");
 const players = require("../../services/players");
+const mail = require("../../services/mail");
 const sprites = require("../../services/sprites");
 const { requireStaff, requireOwner, limitedAction } = require("../../middleware/admin-auth");
 const { requirePlayer } = require("../../middleware/player");
@@ -208,8 +209,15 @@ router.get("/admin/export/db.json", (req, res) => {
   res.json(elementsRepo.exportAsDbJson());
 });
 
+// Avec les lettres déjà envoyées à son auteur (réponses, lettre « fixed »)
 router.get("/admin/reports", (req, res) => {
-  res.json({ statuses: reports.STATUSES, reports: reports.listAll() });
+  const replies = mail.repliesTo("report");
+  res.json({ statuses: reports.STATUSES, reports: reports.listAll().map((r) => ({ ...r, replies: replies[r.id] ?? [] })) });
+});
+
+// Lettre personnelle à l'auteur du report, dans sa boîte aux lettres
+router.post("/admin/reports/:id/reply", limitedAction("reply_report", (req) => req.params.id), (req, res) => {
+  res.status(201).json(mail.replyToReport(req.player, req.params.id, req.body || {}));
 });
 
 router.patch("/admin/reports/:id", limitedAction("report_status", (req) => req.params.id), (req, res) => {

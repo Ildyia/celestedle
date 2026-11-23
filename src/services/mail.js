@@ -10,6 +10,9 @@ const repo = require("../repositories/mail");
 const settingsRepo = require("../repositories/settings");
 const { HttpError } = require("../utils/http-error");
 const players = require("./players");
+const playersRepo = require("../repositories/players");
+const reportsRepo = require("../repositories/reports");
+const connectionsRepo = require("../repositories/connections");
 const { nowIso } = require("../utils/dates");
 
 const TITLE_MAX = 120;
@@ -214,6 +217,95 @@ async function remove(id) {
   return { ok: true };
 }
 
+// ===== Réponses personnelles =====
+// Une lettre pour un seul joueur : réponse de l'équipe à son report de bug ou
+// à sa suggestion de tag, ou la lettre automatique d'un report corrigé. Rien
+// sur Discord : c'est privé.
+function sendPersonal({ playerId, about, title, body, authorId = null }) {
+  const clean = validate({ title, body });
+  if (!playersRepo.findById(playerId)) throw new HttpError(409, "This player's profile no longer exists.");
+  return repo.insert({ kind: "reply", about, ...clean, playerId, authorId, at: nowIso() });
+}
+
+const shorten = (text, max = 300) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
+
+/** Admin : répondre à l'auteur d'un report. */
+function replyToReport(author, reportId, input = {}) {
+  const report = reportsRepo.findById(reportId);
+  if (!report) throw new HttpError(404, "Report not found.");
+  const playerId = reportsRepo.authorOf(reportId);
+  if (!playerId) throw new HttpError(409, "This report was sent without a profile: there's no one to answer.");
+  return sendPersonal({
+    playerId,
+    about: `report:${report.id}`,
+    title: input.title || `About your bug report${report.elementName ? ` on ${report.elementName}` : ""}`,
+    body: input.body,
+    authorId: author.id
+  });
+}
+
+/** Admin : répondre à l'auteur d'une suggestion de tag. */
+function replyToSuggestion(author, suggestionId, input = {}) {
+  const suggestion = connectionsRepo.findSuggestion(Number(suggestionId));
+  if (!suggestion) throw new HttpError(404, "Unknown suggestion.");
+  if (!suggestion.playerId) throw new HttpError(409, "This suggestion's profile no longer exists.");
+  return sendPersonal({
+    playerId: suggestion.playerId,
+    about: `suggestion:${suggestion.id}`,
+    title: input.title || `About your tag idea "${suggestion.label}"`,
+    body: input.body,
+    authorId: author.id
+  });
+}
+
+/**
+ * Report passé à « Fixed » : une lettre automatique à son auteur, une seule
+ * fois par report (même s'il repasse par un autre statut).
+ */
+function reportFixed(report) {
+  const playerId = reportsRepo.authorOf(report.id);
+  const about = `report:${report.id}:fixed`;
+  if (!playerId || repo.findAbout(about) || !playersRepo.findById(playerId)) return null;
+  return repo.insert({
+    kind: "reply",
+    about,
+    title: "Your bug report is fixed!",
+    body:
+      `Thanks for your report${report.elementName ? ` about **${report.elementName}**` : ""}: it's fixed now.\n\n` +
+      `*What you told us:* ${shorten(report.description)}\n\n` +
+      "Keep them coming, every report makes the mountain a little better. 🍓\n— The Celestedle team",
+    playerId,
+    authorId: null,
+    at: nowIso()
+  });
+}
+
+/**
+ * Suggestion devenue un tag : une lettre automatique à son auteur, une seule
+ * fois. tagLabel : le nom du tag créé (il peut différer de l'idée).
+ */
+function suggestionAdded(suggestionId, tagLabel) {
+  const suggestion = connectionsRepo.findSuggestion(Number(suggestionId));
+  const about = `suggestion:${suggestionId}:added`;
+  if (!suggestion?.playerId || repo.findAbout(about) || !playersRepo.findById(suggestion.playerId)) return null;
+  const renamed = tagLabel && tagLabel.trim().toLowerCase() !== suggestion.label.trim().toLowerCase();
+  return repo.insert({
+    kind: "reply",
+    about,
+    title: "Your tag idea is in the game!",
+    body:
+      `Thanks for suggesting **${suggestion.label}**! It's now a Connections tag${renamed ? ` (as **${tagLabel.trim()}**)` : ""}, ` +
+      "so it can show up as a group in the daily grids.\n\n" +
+      "Keep the ideas coming! 🧩\n— The Celestedle team",
+    playerId: suggestion.playerId,
+    authorId: null,
+    at: nowIso()
+  });
+}
+
+/** Admin : réponses déjà envoyées, par report ou par suggestion. */
+const repliesTo = (kind) => Object.fromEntries(repo.repliesTo(kind));
+
 // ===== Sondages =====
 function openPoll(id) {
   const mail = repo.find(Number(id));
@@ -282,6 +374,12 @@ async function closeDuePolls() {
 const findLetter = (id) => repo.find(Number(id));
 
 module.exports = {
+  sendPersonal,
+  replyToReport,
+  replyToSuggestion,
+  reportFixed,
+  suggestionAdded,
+  repliesTo,
   setDiscordDestination,
   findLetter,
   vote,

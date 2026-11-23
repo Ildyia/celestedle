@@ -1,6 +1,7 @@
 import { spriteUrl } from "../api.js";
 import { el, byId, clear } from "../dom.js";
 import { admin } from "./client.js";
+import { openReply, repliesNote } from "./reply.js";
 
 const KIND_LABELS = { type: "Type", colour: "Colour", shape: "Shape", chapter: "Chapter", tag: "Tag" };
 
@@ -250,7 +251,16 @@ export class ConnectionsTab {
           ]),
           suggestion.elements ? el("p", { text: `Elements: ${suggestion.elements}` }) : null,
           suggestion.note ? el("p", { className: "small-subtext", text: `How to decide: ${suggestion.note}` }) : null,
+          repliesNote(suggestion.replies),
           el("div", { className: "modal-actions" }, [
+            suggestion.hasAuthor
+              ? el("button", {
+                  className: "btn-secondary btn-small",
+                  text: "Reply",
+                  attrs: { type: "button", title: `Write to ${suggestion.playerName} in their mailbox` },
+                  on: { click: () => this.replySuggestion(suggestion) }
+                })
+              : null,
             el("button", {
               className: "btn-secondary btn-small",
               text: "Dismiss",
@@ -270,6 +280,20 @@ export class ConnectionsTab {
   }
 
   // Formulaire prérempli : les noms cités qui correspondent à un élément sont cochés
+  // Lettre personnelle à l'auteur de la suggestion
+  replySuggestion(suggestion) {
+    openReply({
+      heading: `Reply to ${suggestion.playerName}`,
+      context: `Tag idea: ${suggestion.label}${suggestion.elements ? ` (${suggestion.elements})` : ""}`,
+      title: `About your tag idea "${suggestion.label}"`,
+      send: async (letter) => {
+        await admin.replyToSuggestion(suggestion.id, letter);
+        this.notify(`Letter sent to ${suggestion.playerName}.`);
+        await this.load();
+      }
+    });
+  }
+
   editFromSuggestion(suggestion) {
     this.edit(null);
     this.fromSuggestion = suggestion;
@@ -408,8 +432,11 @@ export class ConnectionsTab {
       const saved = this.editing
         ? await admin.updateConnectionTag(this.editing.id, payload)
         : await admin.createConnectionTag(payload);
-      this.notify(`Tag "${saved.label}" saved.`);
-      if (this.fromSuggestion) await admin.deleteConnectionSuggestion(this.fromSuggestion.id).catch(() => {});
+      const suggestion = this.fromSuggestion;
+      if (suggestion) await admin.deleteConnectionSuggestion(suggestion.id, saved.label).catch(() => {});
+      this.notify(
+        `Tag "${saved.label}" saved.${suggestion?.hasAuthor ? ` ${suggestion.playerName} gets a letter: their idea is in the game.` : ""}`
+      );
       await this.load();
       this.edit(this.tags.find((t) => t.id === saved.id));
     } catch (err) {

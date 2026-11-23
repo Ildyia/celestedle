@@ -83,6 +83,12 @@ function create(report) {
   return findById(report.id);
 }
 
+const authorStmt = db.prepare("SELECT player_id AS playerId FROM reports WHERE id = ?");
+/** Profil qui a fait le report, ou null (sans profil, ou profil supprimé). */
+function authorOf(id) {
+  return authorStmt.get(id)?.playerId ?? null;
+}
+
 function exists(id) {
   return Boolean(stmts.exists.get(id));
 }
@@ -137,6 +143,7 @@ module.exports = {
   findById,
   listOpen,
   listAll,
+  authorOf,
   toggleVote,
   setStatus,
   setDiscordIds

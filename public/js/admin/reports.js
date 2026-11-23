@@ -1,5 +1,6 @@
 import { el, byId } from "../dom.js";
 import { admin } from "./client.js";
+import { openReply, repliesNote } from "./reply.js";
 
 const STATUS_LABELS = {
   new: "New",
@@ -101,8 +102,30 @@ export class ReportsTab {
       el("div", { text: report.reporter.name }),
       report.reporter.discordTag
         ? el("div", { className: "badge", text: `Discord: ${report.reporter.discordTag}` })
-        : el("div", { className: "small-subtext", text: "no Discord" })
+        : el("div", { className: "small-subtext", text: "no Discord" }),
+      el("button", {
+        className: "btn-secondary btn-small reply-btn",
+        text: "Reply",
+        attrs: { type: "button", title: `Write to ${report.reporter.name} in their mailbox` },
+        on: { click: () => this.reply(report) }
+      }),
+      repliesNote(report.replies)
     ]);
+  }
+
+  // Lettre personnelle à l'auteur, dans sa boîte aux lettres du jeu
+  reply(report) {
+    openReply({
+      heading: `Reply to ${report.reporter.name}`,
+      context: `${report.id}${report.elementName ? ` · ${report.elementName}` : ""}: ${report.description}`,
+      title: `About your bug report${report.elementName ? ` on ${report.elementName}` : ""}`,
+      send: async (letter) => {
+        await admin.replyToReport(report.id, letter);
+        report.replies = [...(report.replies ?? []), { auto: false, read: false }];
+        this.notify(`Letter sent to ${report.reporter.name}.`);
+        this.render();
+      }
+    });
   }
 
   statusSelect(report) {
@@ -114,9 +137,13 @@ export class ReportsTab {
         on: {
           change: async (e) => {
             try {
+              const before = report.status;
               await admin.setReportStatus(report.id, e.target.value);
               report.status = e.target.value;
-              this.notify(`${report.id} : ${STATUS_LABELS[report.status]}.`);
+              // Corrigé : le serveur écrit à son auteur (une seule fois)
+              const letter = report.status === "fixed" && before !== "fixed" && report.reporter && !(report.replies ?? []).some((r) => r.auto);
+              if (letter) report.replies = [...(report.replies ?? []), { auto: true, read: false }];
+              this.notify(`${report.id} : ${STATUS_LABELS[report.status]}.${letter ? ` ${report.reporter.name} gets a "fixed" letter in their mailbox.` : ""}`);
               this.render();
             } catch (err) {
               this.notify(err.message, true);

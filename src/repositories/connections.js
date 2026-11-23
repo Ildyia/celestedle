@@ -28,6 +28,7 @@ const stmts = {
     ORDER BY s.created_at DESC, s.id DESC
   `),
   deleteSuggestion: db.prepare("DELETE FROM connection_tag_suggestions WHERE id = ?"),
+  suggestion: db.prepare("SELECT id, label, player_id AS playerId FROM connection_tag_suggestions WHERE id = ?"),
   addMember: db.prepare("INSERT INTO connection_tag_elements (tag_id, element_id) VALUES (?, ?)"),
   deleteTag: db.prepare("DELETE FROM connection_tags WHERE id = ?"),
 
@@ -170,8 +171,13 @@ function listSuggestions() {
     elements: row.elements,
     note: row.note,
     playerName: row.player_name,
+    hasAuthor: Boolean(row.player_id),
     createdAt: row.created_at
   }));
+}
+
+function findSuggestion(id) {
+  return stmts.suggestion.get(id) ?? null;
 }
 
 function deleteSuggestion(id) {
@@ -259,6 +265,7 @@ module.exports = {
   addSuggestion,
   listSuggestions,
   deleteSuggestion,
+  findSuggestion,
   findPuzzle,
   createPuzzleIfMissing,
   replacePuzzle,
