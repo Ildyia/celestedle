@@ -627,7 +627,7 @@ test("indices : chacun une fois, 3 en normal et 1 en Hard, comptés au classemen
   assert.equal((await hint("kinds")).status, 409, "partie finie");
 });
 
-test("générateur : un seul groupe « Found in … » en normal ; le worker tire la même grille", async () => {
+test("générateur : un seul groupe chapitre en normal ; le worker tire la même grille", async () => {
   const elements = elementsRepo.listActive();
   const options = { maxTags: 1, maxPerKind: { chapter: 1 } };
   for (let seed = 1; seed <= 30; seed++) {

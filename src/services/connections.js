@@ -44,7 +44,8 @@ function seedFor(key) {
   return crypto.createHash("sha256").update(`connections|${key}|${config.randomSeed ?? ""}`).digest().readUInt32LE(0);
 }
 
-// Mode normal : un seul groupe « Found in … » (les plus durs à deviner)
+// Mode normal : un seul groupe chapitre (« First appears in … » ou
+// « Appears in … », les plus durs à deviner)
 const MAX_PER_KIND = { normal: { chapter: 1 }, hard: {} };
 
 // Variété : ce qui est sorti les RECENT_DAYS jours avant `date` (les deux

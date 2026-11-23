@@ -275,3 +275,27 @@ Dans le jeu, la lettre dit sa sorte au-dessus du titre ; sur Discord, 🛠️
 pour les notes de mise à jour, 📮 pour les annonces, 🗳️ pour les sondages.
 Colonne `mail.topic` (migration 021) ; la carte postale de la mise à jour
 devient des notes de mise à jour.
+
+### Connections : groupes de chapitre « First appears in » et « Appears in »
+
+« Found in X » comptait tout ce qui passe au moins une fois par X : 34
+éléments pour Golden Ridge, surtout des éléments présents partout (madeline,
+tiles, spikes…). Une grille avec snowball, wind, move block et green booster
+(typiques de 4A) n'était pas refusée, parce que spinners, aussi dans 4A,
+faisait 5 cases : une « fausse piste permise » que personne ne voyait.
+
+Deux familles, même sorte `chapter` (donc un seul groupe chapitre par grille
+en A-Side), calculées depuis `lieu` dans `buildCategories` :
+- **First appears in X** (`chapter:first:x`) : premier chapitre de l'élément
+  dans l'ordre des A-Sides (`CHAPTER_ORDER`). Les B-Sides ne sont pas
+  distinguées : un élément vu en 1B compte pour City.
+- **Appears in X, Y…** (`chapter:in:x+y`) : exactement ces chapitres, sans
+  limite de nombre. Au-delà de 3 chapitres, s'il n'en manque qu'un ou deux :
+  « every chapter except Prologue ».
+- Deux catégories aux mêmes membres (« First appears in Farewell » et
+  « Appears in Farewell ») : seule « Appears in » reste.
+
+Les grilles déjà tirées gardent leurs libellés « Found in ». Simulé sur 60
+jours avec les 18 tags du 23/11 : 60 grilles A-Side sans faux groupe sur 60,
+0,03 s par grille (0,9 s avant), les 99 éléments sortis, élément le plus
+fréquent 1,9 × la moyenne (2,3 × avant). Tests : `test/connections-chapters.test.js`.

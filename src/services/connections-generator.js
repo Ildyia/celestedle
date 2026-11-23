@@ -22,9 +22,47 @@ function capitalize(text) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+// Ordre des chapitres dans le jeu (A-Sides), pour « First appears in »
+const CHAPTER_ORDER = ["prologue", "city", "site", "resort", "ridge", "temple", "reflection", "summit", "core", "farewell"];
+
+// Les chapitres d'un élément dans l'ordre du jeu, sans doublon ; un chapitre
+// inconnu vient après, dans l'ordre donné
+function sortChapters(lieu) {
+  const rank = (l) => (CHAPTER_ORDER.includes(l) ? CHAPTER_ORDER.indexOf(l) : CHAPTER_ORDER.length);
+  return [...new Set(lieu)]
+    .map((l, i) => ({ l, i }))
+    .sort((a, b) => rank(a.l) - rank(b.l) || a.i - b.i)
+    .map((x) => x.l);
+}
+
+function joinNames(names) {
+  return names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)}` : names[0];
+}
+
+// « Ridge, Summit and Farewell » ; une longue liste qui ne laisse de côté
+// qu'un ou deux chapitres devient « every chapter except Prologue »
+function chapterList(chapters) {
+  const missing = CHAPTER_ORDER.filter((c) => !chapters.includes(c));
+  const allKnown = chapters.every((c) => CHAPTER_ORDER.includes(c));
+  if (chapters.length > 3 && allKnown && missing.length <= 2) {
+    return missing.length ? `every chapter except ${joinNames(missing.map(capitalize))}` : "every chapter";
+  }
+  return joinNames(chapters.map(capitalize));
+}
+
 // Catégories : { key, kind, label, members: Set<id> }. usable = peut servir de
 // groupe ; les autres (tags incomplets) comptent seulement dans la
 // vérification d'unicité.
+// Chapitres, deux familles (même sorte « chapter », donc un seul groupe
+// chapitre par grille en A-Side) :
+// - « First appears in X » : premier chapitre de l'élément dans l'ordre du jeu ;
+// - « Appears in X, Y… » : exactement ces chapitres-là, ni plus ni moins.
+// Avant, « Found in X » comptait tout ce qui passe une fois par X : 34
+// éléments pour Golden Ridge, surtout des éléments présents partout, et 4
+// éléments typiques de 4A n'étaient pas un faux groupe dès qu'un 5e (spinners)
+// passait aussi par là.
+// Deux catégories de chapitre aux mêmes membres (« First appears in Farewell »
+// et « Appears in Farewell ») n'en font qu'une : on garde « Appears in ».
 function buildCategories(elements, tags = []) {
   const map = new Map();
   const add = (key, kind, label, id) => {
@@ -35,7 +73,17 @@ function buildCategories(elements, tags = []) {
     add(`type:${e.type}`, "type", capitalize(e.type), e.id);
     add(`shape:${e.shape}`, "shape", capitalize(e.shape), e.id);
     for (const c of e.couleur) add(`colour:${c}`, "colour", capitalize(c), e.id);
-    for (const l of e.lieu) add(`chapter:${l}`, "chapter", `Found in ${capitalize(l)}`, e.id);
+    const chapters = sortChapters(e.lieu);
+    if (chapters.length) {
+      add(`chapter:first:${chapters[0]}`, "chapter", `First appears in ${capitalize(chapters[0])}`, e.id);
+      add(`chapter:in:${chapters.join("+")}`, "chapter", `Appears in ${chapterList(chapters)}`, e.id);
+    }
+  }
+  const exact = new Set(
+    [...map.values()].filter((c) => c.key.startsWith("chapter:in:")).map((c) => [...c.members].sort((a, b) => a - b).join())
+  );
+  for (const c of [...map.values()]) {
+    if (c.key.startsWith("chapter:first:") && exact.has([...c.members].sort((a, b) => a - b).join())) map.delete(c.key);
   }
   const activeIds = new Set(elements.map((e) => e.id));
   for (const tag of tags) {
@@ -290,7 +338,8 @@ const PHASE_ATTEMPTS = 1500;
 const PHASE_MS = 3000;
 
 // maxPerKind : nombre de groupes au plus par sorte (chapter, colour…), en plus
-// de MAX_SAME_KIND (ex. { chapter: 1 } : un seul groupe « Found in … »)
+// de MAX_SAME_KIND (ex. { chapter: 1 } : un seul groupe chapitre, « First
+// appears in … » ou « Appears in … »)
 // stats : pour le diagnostic des tags (voir diagnoseTags)
 function generatePuzzle(
   elements,
@@ -475,6 +524,9 @@ function diagnoseTags(elements, tags, options, { trials = 30, budgetMs = 15000 }
 }
 
 module.exports = {
+  CHAPTER_ORDER,
+  chapterList,
+  sortChapters,
   diagnoseTags,
   GROUP_SIZE,
   hasObviousDecoy,
