@@ -54,6 +54,7 @@ export const admin = {
   editMail: (id, letter) => request("PUT", `/admin/mail/${id}`, letter),
   deleteMail: (id) => request("DELETE", `/admin/mail/${id}`),
   closePoll: (id) => request("POST", `/admin/mail/${id}/close`),
+  progression: (days) => request("GET", `/admin/progression${days ? `?days=${days}` : ""}`),
   insights: (days) => request("GET", `/admin/insights${days ? `?days=${days}` : ""}`),
   setSecret: (mode, action, elementName) => request("POST", "/admin/secret", { mode, action, elementName }),
   elements: () => request("GET", "/admin/elements"),

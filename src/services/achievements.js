@@ -175,7 +175,11 @@ const ACHIEVEMENTS = [
 ];
 
 function playerAchievements(player) {
-  const games = allGames(player.id);
+  return achievementsOf(allGames(player.id));
+}
+
+// Achievements calculés sur des parties déjà chargées (allGames)
+function achievementsOf(games) {
   // Pas encore gagné : le nom seul sert d'indice, la description reste cachée
   return ACHIEVEMENTS.map(({ id, name, description, progress }) => {
     const [current, goal] = progress(games);
@@ -189,4 +193,4 @@ function playerClimb(player) {
   return climbOf(allGames(player.id));
 }
 
-module.exports = { ACHIEVEMENTS, playerAchievements, playerClimb };
+module.exports = { ACHIEVEMENTS, allGames, achievementsOf, playerAchievements, playerClimb };

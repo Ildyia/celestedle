@@ -6,6 +6,7 @@ import { renderOverview } from "./overview.js";
 import { renderHistory } from "./history.js";
 import { WordsTab } from "./words.js";
 import { InsightsTab } from "./insights.js";
+import { ProgressionTab } from "./progression.js";
 import { ElementsTab } from "./elements.js";
 import { ReportsTab } from "./reports.js";
 import { ConnectionsTab } from "./connections.js";
@@ -28,6 +29,7 @@ export function notify(text, isError = false) {
 
 const words = new WordsTab();
 const insights = new InsightsTab();
+const progressionTab = new ProgressionTab();
 const elements = new ElementsTab({ notify });
 const reports = new ReportsTab({ notify });
 const connectionsTab = new ConnectionsTab({ notify });
@@ -41,6 +43,7 @@ const TABS = {
   history: () => renderHistory(),
   words: () => words.load(),
   insights: () => insights.load(),
+  progression: () => progressionTab.load(),
   elements: () => elements.load(),
   reports: () => reports.load(),
   connections: () => connectionsTab.load(),
@@ -62,6 +65,7 @@ const NAV = [
     label: "Stats",
     pages: [
       { id: "insights", label: "Insights" },
+      { id: "progression", label: "Progression" },
       { id: "history", label: "History" },
       { id: "words", label: "Words" }
     ]

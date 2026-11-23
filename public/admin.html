@@ -106,6 +106,18 @@
           <div id="insights" class="insights-grid"></div>
         </section>
 
+        <!-- Où en sont les joueurs : chapitres, tampons (js/admin/progression.js, /api/admin/progression) -->
+        <section id="tab-progression" class="admin-panel" role="tabpanel" hidden>
+          <div class="admin-toolbar">
+            <div class="insights-period" role="group" aria-label="Players">
+              <button type="button" data-progress-days="7" aria-pressed="false">Active this week</button>
+              <button type="button" data-progress-days="30" aria-pressed="false">Active this month</button>
+              <button type="button" data-progress-days="" aria-pressed="true">Everyone</button>
+            </div>
+          </div>
+          <div id="progression" class="insights-grid"></div>
+        </section>
+
         <section id="tab-words" class="admin-panel" role="tabpanel" hidden>
           <div class="admin-toolbar">
             <input type="search" id="words-search" class="bug-input" placeholder="Search a word" aria-label="Search a word" />

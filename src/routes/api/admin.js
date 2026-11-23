@@ -3,6 +3,7 @@ const elementsRepo = require("../../repositories/elements");
 const playersRepo = require("../../repositories/players");
 const statsRepo = require("../../repositories/stats");
 const insightsRepo = require("../../repositories/insights");
+const { progression } = require("../../services/progression");
 const daily = require("../../services/daily");
 const reports = require("../../services/reports");
 const { expireOverdueGames } = require("../../services/games");
@@ -89,6 +90,14 @@ router.get("/admin/insights", (req, res) => {
   const days = Number(req.query.days);
   const since = Number.isInteger(days) && days > 0 ? addDays(todayParis(), -(days - 1)) : "0000-01-01";
   res.json(insightsRepo.insights(since));
+});
+
+// Progression : chapitres, fraises, tampons. days : joueurs actifs sur
+// les 7 ou 30 derniers jours, ou tous (absent)
+router.get("/admin/progression", (req, res) => {
+  const days = Number(req.query.days);
+  const since = Number.isInteger(days) && days > 0 ? addDays(todayParis(), -(days - 1)) : "0000-01-01";
+  res.json(progression(since));
 });
 
 // Fiche d'un élément (éditeur et onglet Insights) ; days : 7, 30 ou tout (absent)

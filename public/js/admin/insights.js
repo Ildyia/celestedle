@@ -8,18 +8,18 @@ import { admin } from "./client.js";
 import { renderElementInsights } from "./element-insights.js";
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-const pct = (part, total) => (total ? `${Math.round((part / total) * 100)}%` : "-");
+export const pct = (part, total) => (total ? `${Math.round((part / total) * 100)}%` : "-");
 const HINT_NAMES = { opposite: "Opposite", secret_info: "Secret info", truth_and_lies: "Truth & lies", info: "Element Info" };
 const STATUS_NAMES = { won: "Won", lost: "Lost", forfeit: "Gave up" };
 const CX_HINT_NAMES = { kinds: "Kinds", category: "Category", pair: "Pair" };
 const KIND_NAMES = { type: "Type", colour: "Colour", shape: "Shape", chapter: "Chapter", tag: "Tag" };
 const SIDES = { normal: "A-Side", hard: "B-Side" };
 
-function card(title, note, ...content) {
+export function card(title, note, ...content) {
   return el("section", { className: "admin-card insights-card" }, [el("h3", { text: title }), note ? el("p", { className: "small-subtext", text: note }) : null, ...content]);
 }
 
-const empty = (text = "No games in this period.") => el("p", { className: "small-subtext", text });
+export const empty = (text = "No games in this period.") => el("p", { className: "small-subtext", text });
 
 // Un élément cité dans une carte : un clic ouvre sa fiche en haut de l'onglet
 let openEntity = () => {};
@@ -41,7 +41,7 @@ function openersTable(rows) {
   ]);
 }
 
-const wide = (node) => {
+export const wide = (node) => {
   node.classList.add("wide");
   return node;
 };
@@ -78,7 +78,7 @@ function bestOpenersTable(rows, minGames) {
 }
 
 // Barres horizontales : libellé, barre, valeur
-function hbars(rows, { label, value, format = String, title = (r) => `${label(r)}: ${format(value(r))}`, none }) {
+export function hbars(rows, { label, value, format = String, title = (r) => `${label(r)}: ${format(value(r))}`, none }) {
   if (!rows.length) return empty(none);
   const max = Math.max(1, ...rows.map(value));
   return el(
@@ -95,7 +95,7 @@ function hbars(rows, { label, value, format = String, title = (r) => `${label(r)
 }
 
 // Colonnes verticales : une par valeur de l'axe, les étiquettes en dessous
-function columns(values, labels, { title }) {
+export function columns(values, labels, { title }) {
   const max = Math.max(1, ...values);
   if (!values.some(Boolean)) return empty();
   return el("div", { className: "insights-columns", attrs: { style: `--n: ${values.length}` } }, [
