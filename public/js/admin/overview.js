@@ -131,16 +131,18 @@ export async function renderOverview({ notify }) {
     0
   );
 
+  // Le site (Vercel) peut être mis à jour avant le serveur : sans ces
+  // chiffres, on garde l'ancien total plutôt que de casser la page
   const p = data.players;
   byId("overview-kpis").replaceChildren(
     kpi("Date", data.date),
     kpi("Games today", players),
-    kpi(
-      `Active · ${p.activeDays} days`,
-      p.active,
-      `${p.activeRegistered} registered · ${p.active - p.activeRegistered} anonymous`
-    ),
-    kpi("Registered profiles", p.registered, `out of ${p.total} created, the rest never saved`),
+    ...(p
+      ? [
+          kpi(`Active · ${p.activeDays} days`, p.active, `${p.activeRegistered} registered · ${p.active - p.activeRegistered} anonymous`),
+          kpi("Registered profiles", p.registered, `out of ${p.total} created, the rest never saved`)
+        ]
+      : [kpi("Profiles created", data.totalPlayers)]),
     kpi("Repeat delay", `${data.repeatDelayDays} d`)
   );
   byId("overview-modes").replaceChildren(
