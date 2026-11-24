@@ -66,8 +66,6 @@ router.get("/admin/overview", (req, res) => {
   res.json({
     date,
     totalPlayers: playersRepo.count(),
-    // Actifs : profils vus sur le site ces 30 derniers jours
-    players: { ...playersRepo.breakdown(new Date(Date.now() - 30 * 86400000).toISOString()), activeDays: 30 },
     repeatDelayDays: daily.getRepeatDelay(),
     modes: Object.fromEntries(
       MODE_IDS.map((mode) => [
@@ -288,6 +286,11 @@ router.post("/admin/team", requireOwner, (req, res) => {
 
 router.delete("/admin/team/:playerId", requireOwner, (req, res) => {
   res.json(staff.revokeAdministrator(req.player, req.params.playerId));
+});
+
+// Profils : total, enregistrés, actifs (vus sur le site ces 30 derniers jours)
+router.get("/admin/players/counts", (req, res) => {
+  res.json({ ...playersRepo.breakdown(new Date(Date.now() - 30 * 86400000).toISOString()), activeDays: 30 });
 });
 
 // Joueurs : recherche par identifiant, pseudo ou tag Discord

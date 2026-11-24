@@ -125,10 +125,15 @@
     border-color 0.15s ease;
 }
 
+/* Image à la taille de la case (plus seulement 48 px) : les petits sprites
+   restent nets en pixel art */
 .cx-tile img {
-  width: 48px;
-  height: 48px;
+  width: 58%;
+  height: auto;
+  aspect-ratio: 1;
+  min-height: 0;
   object-fit: contain;
+  image-rendering: pixelated;
 }
 
 .cx-tile:hover {
@@ -275,8 +280,7 @@
   }
 
   .cx-tile img {
-    width: 34px;
-    height: 34px;
+    width: 62%;
   }
 }
 

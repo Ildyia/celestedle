@@ -426,7 +426,7 @@ test("admin : tableau de bord, éditeur et réglages", async () => {
   assert.ok(overview.data.modes.normal.secret.nom);
   assert.ok(overview.data.modes.hard.stats.players >= 1);
   // Profils : total, enregistrés, actifs sur 30 jours (les profils de ce test viennent d'être vus)
-  const counts = overview.data.players;
+  const { data: counts } = await api.request("GET", "/api/admin/players/counts", { headers });
   assert.equal(counts.total, overview.data.totalPlayers);
   assert.ok(counts.registered <= counts.total && counts.activeRegistered <= counts.active);
   assert.ok(counts.active >= 1);

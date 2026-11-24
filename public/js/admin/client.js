@@ -88,6 +88,7 @@ export const admin = {
   grantAdmin: (playerId) => request("POST", "/admin/team", { playerId }),
   revokeAdmin: (playerId) => request("DELETE", `/admin/team/${encodeURIComponent(playerId)}`),
   audit: () => request("GET", "/admin/audit"),
+  playerCounts: () => request("GET", "/admin/players/counts"),
   searchPlayers: (q) => request("GET", `/admin/players?q=${encodeURIComponent(q)}`),
   deletePlayer: (id) => request("DELETE", `/admin/players/${encodeURIComponent(id)}`),
   setPlaytester: (id, enabled) => request("PUT", `/admin/players/${encodeURIComponent(id)}/playtester`, { enabled })

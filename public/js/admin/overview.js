@@ -6,7 +6,7 @@ import { admin } from "./client.js";
 const MODE_LABELS = { normal: "Normal mode", hard: "Hard mode" };
 const KIND_LABELS = { type: "Type", colour: "Colour", shape: "Shape", chapter: "Chapter", tag: "Tag" };
 
-function kpi(label, value, note) {
+export function kpi(label, value, note) {
   return el("div", { className: "admin-kpi-card" }, [
     el("h4", { text: label }),
     el("p", { text: String(value) }),
@@ -131,18 +131,9 @@ export async function renderOverview({ notify }) {
     0
   );
 
-  // Le site (Vercel) peut être mis à jour avant le serveur : sans ces
-  // chiffres, on garde l'ancien total plutôt que de casser la page
-  const p = data.players;
   byId("overview-kpis").replaceChildren(
     kpi("Date", data.date),
     kpi("Games today", players),
-    ...(p
-      ? [
-          kpi(`Active · ${p.activeDays} days`, p.active, `${p.activeRegistered} registered · ${p.active - p.activeRegistered} anonymous`),
-          kpi("Registered profiles", p.registered, `out of ${p.total} created, the rest never saved`)
-        ]
-      : [kpi("Profiles created", data.totalPlayers)]),
     kpi("Repeat delay", `${data.repeatDelayDays} d`)
   );
   byId("overview-modes").replaceChildren(

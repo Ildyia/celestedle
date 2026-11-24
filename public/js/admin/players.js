@@ -1,5 +1,6 @@
 import { el, byId } from "../dom.js";
 import { admin } from "./client.js";
+import { kpi } from "./overview.js";
 
 const ROLE_LABELS = { owner: "Owner", administrator: "Administrator", player: "Player" };
 
@@ -18,8 +19,20 @@ export class PlayersTab {
   }
 
   async load() {
+    this.renderCounts().catch(() => {});
     this.players = await admin.searchPlayers(byId("players-search-input").value.trim());
     this.render();
+  }
+
+  // Combien de joueurs : actifs ces 30 jours, profils enregistrés, profils créés
+  // (un profil naît au premier essai, anonyme tant qu'il n'est pas enregistré)
+  async renderCounts() {
+    const c = await admin.playerCounts();
+    byId("players-kpis").replaceChildren(
+      kpi(`Active · ${c.activeDays} days`, c.active, `${c.activeRegistered} registered · ${c.active - c.activeRegistered} anonymous`),
+      kpi("Registered profiles", c.registered, "name and avatar saved"),
+      kpi("Profiles created", c.total, "anonymous ones included")
+    );
   }
 
   // Accès aux modes en test (Connections) ; l'équipe admin l'a déjà

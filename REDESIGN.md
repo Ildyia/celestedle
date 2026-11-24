@@ -339,6 +339,7 @@ Colonne `mail.about` (« report:<id> », « report:<id>:fixed »,
 - Stats → Insights devient trois pages d'un même panneau (une seule requête) : Activity (heures, duels, jour par jour), Celestedle (essais, indices, openers, mots les plus essayés), Connections (issues, indices, groupes les plus durs, pièges).
 - Openers : les deux tableaux (« les plus joués », top 15 par nombre de parties, et « les plus efficaces », top 15 par essais pour gagner) n'en font plus qu'un par side, avec **tous** les openers et toutes les colonnes, les plus joués d'abord ; le tri par colonne remplace les deux classements. Les openers de moins de 3 parties sont grisés. Greens et Clues affichent 0.0 au lieu de « - ».
 
-## Admin : chiffres des profils sur Today
+## Admin : chiffres des profils, images de Connections
 
-- La case « Profiles created » (tous les profils jamais créés, anonymes compris : un profil naît au premier essai) est remplacée par deux cases : « Active · 30 days » (profils vus sur le site ces 30 jours, enregistrés / anonymes) et « Registered profiles » (sur le total créé).
+- Les chiffres des profils quittent Today pour le haut de Community → Players (`GET /api/admin/players/counts`) : « Active · 30 days » (profils vus sur le site ces 30 jours, enregistrés / anonymes), « Registered profiles » et « Profiles created » (anonymes compris : un profil naît au premier essai).
+- Connections : l'image de chaque case prend 58 % de sa largeur (62 % sur téléphone) au lieu de 48 px fixes, en pixel art net.
