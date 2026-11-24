@@ -10,16 +10,6 @@ const { verdictFor, CATEGORIES } = require("../services/compare");
 const LIMIT = 15;
 
 const stmts = {
-  // Premier essai de chaque partie (Celestedle), par mode
-  openers: db.prepare(`
-    SELECT e.name, COUNT(*) AS games, SUM(s.status = 'won') AS wins, ROUND(AVG(s.tries), 1) AS avgTries
-    FROM game_summaries s
-    JOIN guesses gu ON gu.game_id = s.id
-      AND gu.position = (SELECT MIN(position) FROM guesses WHERE game_id = s.id)
-    JOIN elements e ON e.id = gu.element_id
-    WHERE s.mode = @mode AND s.date >= @since AND s.status <> 'playing'
-    GROUP BY e.id ORDER BY games DESC, wins DESC LIMIT ${LIMIT}
-  `),
   // Tous les essais, tous modes de Celestedle
   mostGuessed: db.prepare(`
     SELECT e.name, COUNT(*) AS times
@@ -110,13 +100,15 @@ const stmts = {
   `)
 };
 
-// Openers joués dans moins de parties que ça : pas classés (trop peu pour dire)
+// Openers joués dans moins de parties que ça : montrés, mais signalés comme
+// trop peu joués pour juger de leur efficacité
 const MIN_OPENER_GAMES = 3;
 
 /**
- * Openers les plus efficaces d'un mode : victoires, essais moyens pour gagner
- * (indices compris, comme au classement), et ce que le premier essai apprend
- * en moyenne : catégories vertes, et indices (vertes ou jaunes).
+ * Tous les openers d'un mode (premier essai des parties finies), les plus
+ * joués d'abord : victoires, essais moyens pour gagner (indices compris, comme
+ * au classement), et ce que le premier essai apprend en moyenne : catégories
+ * vertes, et indices (vertes ou jaunes). L'admin trie le tableau à son idée.
  */
 function openerEfficiency(mode, since) {
   const elements = new Map();
@@ -142,7 +134,6 @@ function openerEfficiency(mode, since) {
   }
   const round = (n) => Math.round(n * 10) / 10;
   return [...byOpener.values()]
-    .filter((r) => r.games >= MIN_OPENER_GAMES)
     .map((r) => ({
       name: r.name,
       games: r.games,
@@ -151,8 +142,7 @@ function openerEfficiency(mode, since) {
       greens: round(r.greens / r.games),
       clues: round(r.clues / r.games)
     }))
-    .sort((a, b) => (a.avgTries ?? Infinity) - (b.avgTries ?? Infinity) || b.wins / b.games - a.wins / a.games || b.games - a.games)
-    .slice(0, LIMIT);
+    .sort((a, b) => b.games - a.games || b.wins - a.wins || a.name.localeCompare(b.name));
 }
 
 // Grilles trouvées dans moins de joueurs que ça : pas classées (trop peu de
@@ -240,8 +230,7 @@ function insights(since) {
 
   return {
     since,
-    openers: byMode(stmts.openers),
-    bestOpeners: { normal: openerEfficiency("normal", since), hard: openerEfficiency("hard", since), minGames: MIN_OPENER_GAMES },
+    openers: { normal: openerEfficiency("normal", since), hard: openerEfficiency("hard", since), minGames: MIN_OPENER_GAMES },
     mostGuessed: stmts.mostGuessed.all({ since }),
     tries: byMode(stmts.tries),
     outcomes: byMode(stmts.outcomes),

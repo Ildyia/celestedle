@@ -3,7 +3,6 @@
 // dans le texte quand elle compte ; le détail est dans des tableaux.
 import { spriteUrl } from "../api.js";
 import { el, byId } from "../dom.js";
-import { formatNumber } from "../format.js";
 import { admin } from "./client.js";
 import { renderElementInsights } from "./element-insights.js";
 
@@ -32,48 +31,46 @@ function wordCell(name) {
   return el("td", { className: "insights-word" }, [el("img", { attrs: { src: spriteUrl(name), alt: "", loading: "lazy" } }), entityButton(name)]);
 }
 
-// Tableau des openers d'un mode
-function openersTable(rows) {
-  if (!rows.length) return empty();
-  return el("table", { className: "admin-table compact" }, [
-    el("thead", {}, [el("tr", {}, ["Opener", "Games", "Won", "Avg. tries"].map((t) => el("th", { text: t })))]),
-    el("tbody", {}, rows.map((r) => el("tr", {}, [wordCell(r.name), el("td", { text: String(r.games) }), el("td", { text: pct(r.wins, r.games) }), el("td", { text: formatNumber(r.avgTries) })])))
-  ]);
-}
-
 export const wide = (node) => {
   node.classList.add("wide");
   return node;
 };
 
-// Openers les plus efficaces d'un mode : les moins d'essais pour gagner d'abord
-function bestOpenersTable(rows, minGames) {
-  if (!rows.length) return empty(`No opener played in ${minGames} finished games or more in this period.`);
-  return el("table", { className: "admin-table compact" }, [
-    el("thead", {}, [
-      el("tr", {}, [
-        el("th", { text: "Opener" }),
-        el("th", { text: "Games" }),
-        el("th", { text: "Won" }),
-        el("th", { text: "Avg. tries", attrs: { title: "Tries to win, a hint counts as a try" } }),
-        el("th", { text: "Greens", attrs: { title: "Categories right on the first guess, on average" } }),
-        el("th", { text: "Clues", attrs: { title: "Categories right or partly right (green or yellow) on the first guess, on average" } })
-      ])
-    ]),
-    el(
-      "tbody",
-      {},
-      rows.map((r) =>
+// Moyenne où 0 a un sens (formatNumber affiche « - » pour 0)
+const decimal = (n) => (n === null || n === undefined ? "-" : n.toFixed(1));
+
+// Tous les openers d'un mode, les plus joués d'abord ; un clic sur une colonne
+// trie autrement (Avg. tries : les plus efficaces). Ceux joués dans trop peu de
+// parties sont grisés : leur moyenne ne veut pas dire grand-chose.
+function openersTable(rows, minGames) {
+  if (!rows.length) return empty();
+  return el("div", { className: "insights-scroll" }, [
+    el("table", { className: "admin-table compact" }, [
+      el("thead", {}, [
         el("tr", {}, [
-          wordCell(r.name),
-          el("td", { text: String(r.games) }),
-          el("td", { text: pct(r.wins, r.games) }),
-          el("td", { text: r.avgTries === null ? "-" : formatNumber(r.avgTries) }),
-          el("td", { text: formatNumber(r.greens) }),
-          el("td", { text: formatNumber(r.clues) })
+          el("th", { text: "Opener" }),
+          el("th", { text: "Games" }),
+          el("th", { text: "Won" }),
+          el("th", { text: "Avg. tries", attrs: { title: "Tries to win, a hint counts as a try (won games only)" } }),
+          el("th", { text: "Greens", attrs: { title: "Categories right on the first guess, on average, out of 4" } }),
+          el("th", { text: "Clues", attrs: { title: "Categories right or partly right (green or yellow) on the first guess, on average, out of 4" } })
         ])
+      ]),
+      el(
+        "tbody",
+        {},
+        rows.map((r) =>
+          el("tr", { className: r.games < minGames ? "insights-few" : "", attrs: r.games < minGames ? { title: `Only ${r.games} game${r.games === 1 ? "" : "s"}: too few to judge` } : {} }, [
+            wordCell(r.name),
+            el("td", { text: String(r.games) }),
+            el("td", { text: pct(r.wins, r.games), attrs: { "data-sort": String(r.wins / r.games) } }),
+            el("td", { text: r.avgTries === null ? "-" : decimal(r.avgTries) }),
+            el("td", { text: decimal(r.greens) }),
+            el("td", { text: decimal(r.clues) })
+          ])
+        )
       )
-    )
+    ])
   ]);
 }
 
@@ -260,16 +257,14 @@ export class InsightsTab {
       ),
       wide(
         card(
-          "Most effective openers",
-          `Openers of ${data.bestOpeners.minGames}+ finished games, fewest tries to win first. Greens and clues: what the first guess tells, on average, out of 4 categories (green, or green and yellow).`,
+          "Openers",
+          `Every first guess of a finished game, most played first. Click a column to sort: Avg. tries shows the most effective. Greens and clues: what the first guess tells, on average, out of 4 categories. Greyed out: fewer than ${data.openers.minGames} games, too few to judge.`,
           el("div", { className: "insights-split" }, [
-            el("div", {}, [el("h4", { text: "A-Side" }), bestOpenersTable(data.bestOpeners.normal, data.bestOpeners.minGames)]),
-            el("div", {}, [el("h4", { text: "B-Side" }), bestOpenersTable(data.bestOpeners.hard, data.bestOpeners.minGames)])
+            el("div", {}, [el("h4", { text: `A-Side · ${data.openers.normal.length} openers` }), openersTable(data.openers.normal, data.openers.minGames)]),
+            el("div", {}, [el("h4", { text: `B-Side · ${data.openers.hard.length} openers` }), openersTable(data.openers.hard, data.openers.minGames)])
           ])
         )
       ),
-      card("Openers · A-Side", "Most played first guesses, with how those games ended.", openersTable(data.openers.normal)),
-      card("Openers · B-Side", null, openersTable(data.openers.hard)),
       card("Most guessed", "Every guess, both sides.", hbars(data.mostGuessed, { label: (r) => entityButton(r.name), title: (r) => `${capitalize(r.name)}: ${r.times}`, value: (r) => r.times }))
     );
 

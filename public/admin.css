@@ -728,3 +728,8 @@ body::before {
 .admin-table:not(.sortable) thead th:not(:empty):not([data-nosort]):hover { background-color: #1e293b; }
 .admin-table:not(.sortable) thead th[aria-sort="ascending"]::after { content: " ▲"; }
 .admin-table:not(.sortable) thead th[aria-sort="descending"]::after { content: " ▼"; }
+
+/* Openers : tous les mots, le tableau défile dans la carte */
+.insights-scroll { max-height: 460px; overflow: auto; }
+.insights-scroll thead th { position: sticky; top: 0; z-index: 1; }
+.admin-table tr.insights-few { opacity: 0.5; }
