@@ -436,7 +436,9 @@
           <form id="players-search-form" class="admin-toolbar">
             <input type="search" id="players-search-input" class="bug-input" placeholder="Name, player ID or Discord tag" aria-label="Search a player" />
             <button type="submit" class="btn-primary">Search</button>
+            <label class="admin-check"><input type="checkbox" id="players-all" /> Show anonymous profiles</label>
           </form>
+          <p id="players-shown" class="small-subtext"></p>
           <p class="small-subtext">
             A player who lost their profile can get a new code with the Discord
             bot's /passcode command, if their Discord tag is filled in. Only the
@@ -446,7 +448,7 @@
           <div class="admin-table-wrapper">
             <table class="admin-table">
               <thead>
-                <tr><th>Name</th><th>Player ID</th><th>Discord</th><th>Role</th><th>Games</th><th>Last visit</th><th></th></tr>
+                <tr><th>Name</th><th>Player ID</th><th>Discord</th><th>Role</th><th>Games</th><th>Created</th><th>Last visit</th><th></th></tr>
               </thead>
               <tbody id="players-body"></tbody>
             </table>

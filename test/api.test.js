@@ -625,6 +625,16 @@ test("suppression : par le joueur, ou par le propriétaire seulement", async () 
   const found = await api.request("GET", "/api/admin/players?q=to_delete", { headers });
   assert.equal(found.data[0].id, target.player.id);
 
+  // Sans recherche : tous les profils enregistrés, sans limite ; les anonymes avec all=1
+  const anonymous = await api.newPlayer();
+  const registered = (await api.request("GET", "/api/admin/players?q=", { headers })).data;
+  assert.ok(registered.some((p) => p.id === target.player.id));
+  assert.ok(registered.every((p) => !p.isAnonymous));
+  const everyone = (await api.request("GET", "/api/admin/players?q=&all=1", { headers })).data;
+  assert.ok(everyone.some((p) => p.id === anonymous.player.id));
+  assert.ok(everyone.length > registered.length);
+  assert.equal((await api.request("GET", `/api/admin/players?q=${anonymous.player.id}`, { headers })).data[0].id, anonymous.player.id, "la recherche trouve aussi les anonymes");
+
   const helper = await api.newPlayer();
   await api.request("POST", "/api/admin/team", { headers, body: { playerId: helper.player.id } });
   const byAdmin = await api.request("DELETE", `/api/admin/players/${target.player.id}`, { headers: { "X-Player-Token": helper.token } });

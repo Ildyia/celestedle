@@ -18,12 +18,19 @@ const stmts = {
   byDiscordTag: db.prepare("SELECT * FROM players WHERE discord_tag = ? COLLATE NOCASE"),
   // Profils liés à un compte Discord (rôles de chapitre du bot), cachés compris
   withDiscordTag: db.prepare("SELECT * FROM players WHERE discord_tag IS NOT NULL AND is_anonymous = 0"),
+  // Liste de l'admin : recherche (tout le monde) ou, sans recherche, les
+  // profils enregistrés (@all = 1 : anonymes compris). Parties de Celestedle
+  // et de Connections (grilles du jour, pas l'entraînement).
   search: db.prepare(`
-    SELECT p.*, (SELECT COUNT(*) FROM games g WHERE g.player_id = p.id) AS games
+    SELECT p.*,
+           (SELECT COUNT(*) FROM games g WHERE g.player_id = p.id)
+           + (SELECT COUNT(*) FROM connection_games c WHERE c.player_id = p.id AND c.date NOT LIKE 'practice%') AS games
     FROM players p
-    WHERE p.id = @q OR p.name LIKE @like ESCAPE '\\' OR p.discord_tag LIKE @like ESCAPE '\\'
+    WHERE CASE WHEN @q = ''
+      THEN (@all = 1 OR p.is_anonymous = 0)
+      ELSE p.id = @q OR p.name LIKE @like ESCAPE '\\' OR p.discord_tag LIKE @like ESCAPE '\\'
+    END
     ORDER BY p.last_seen_at DESC
-    LIMIT 50
   `),
   // Ses votes ne sont pas liés par une clé étrangère : on les retire à part
   removeVotes: db.prepare("DELETE FROM report_votes WHERE voter_id = ?"),
@@ -92,11 +99,12 @@ function withDiscordTag() {
   return stmts.withDiscordTag.all().map(toPlayer);
 }
 
-function search(query) {
+/** Joueurs de l'admin : `query` cherche partout ; sans elle, les enregistrés (anonymes aussi si `all`). */
+function search(query, { all = false } = {}) {
   const q = String(query ?? "").trim();
   return stmts.search
     // % et _ cherchés tels quels
-    .all({ q, like: `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%` })
+    .all({ q, all: all ? 1 : 0, like: `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%` })
     .map((row) => ({ ...toPlayer(row), lastSeenAt: row.last_seen_at, games: row.games }));
 }
 

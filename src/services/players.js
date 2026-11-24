@@ -166,7 +166,7 @@ module.exports = {
   resetToken,
   findByDiscordUser,
   deletePlayer,
-  search: (query) => playersRepo.search(query),
+  search: (query, options) => playersRepo.search(query, options),
   findByToken,
   updateProfile,
   playerStats,

@@ -343,3 +343,4 @@ Colonne `mail.about` (« report:<id> », « report:<id>:fixed »,
 
 - Les chiffres des profils quittent Today pour le haut de Community → Players (`GET /api/admin/players/counts`) : « Active · 30 days » (profils vus sur le site ces 30 jours, enregistrés / anonymes), « Registered profiles » et « Profiles created » (anonymes compris : un profil naît au premier essai).
 - Connections : l'image de chaque case prend 58 % de sa largeur (62 % sur téléphone) au lieu de 48 px fixes, en pixel art net.
+- Community → Players : la liste n'est plus limitée aux 50 derniers vus. Sans recherche, tous les profils enregistrés ; la case « Show anonymous profiles » ajoute les anonymes ; une recherche (nom, ID, tag Discord) porte sur tout le monde. « Games » compte aussi les grilles du jour de Connections ; nouvelles colonne « Created » et étiquettes « anonymous » / « hidden ».

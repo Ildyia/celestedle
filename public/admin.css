@@ -740,3 +740,6 @@ body::before {
 .insights-scroll { max-height: 460px; overflow: auto; }
 .insights-scroll thead th { position: sticky; top: 0; z-index: 1; }
 .admin-table tr.insights-few { opacity: 0.5; }
+
+/* Case à cocher dans une barre d'outils (Players : profils anonymes) */
+.admin-check { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; }

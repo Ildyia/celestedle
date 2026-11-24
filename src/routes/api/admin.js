@@ -293,9 +293,10 @@ router.get("/admin/players/counts", (req, res) => {
   res.json({ ...playersRepo.breakdown(new Date(Date.now() - 30 * 86400000).toISOString()), activeDays: 30 });
 });
 
-// Joueurs : recherche par identifiant, pseudo ou tag Discord
+// Joueurs : recherche par identifiant, pseudo ou tag Discord (tout le monde) ;
+// sans recherche, les profils enregistrés, et les anonymes avec all=1
 router.get("/admin/players", (req, res) => {
-  res.json(players.search(req.query.q));
+  res.json(players.search(req.query.q, { all: req.query.all === "1" }));
 });
 
 // Donne ou retire l'accès aux modes en test

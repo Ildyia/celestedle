@@ -16,11 +16,17 @@ export class PlayersTab {
       e.preventDefault();
       this.load().catch((err) => this.notify(err.message, true));
     });
+    byId("players-all").addEventListener("change", () => this.load().catch((err) => this.notify(err.message, true)));
   }
 
   async load() {
     this.renderCounts().catch(() => {});
-    this.players = await admin.searchPlayers(byId("players-search-input").value.trim());
+    const query = byId("players-search-input").value.trim();
+    const all = byId("players-all").checked;
+    this.players = await admin.searchPlayers(query, all);
+    byId("players-shown").textContent = query
+      ? `${this.players.length} player${this.players.length === 1 ? "" : "s"} matching "${query}" (anonymous profiles included).`
+      : `${this.players.length} ${all ? "profiles, anonymous ones included" : "registered profiles"}. Click a column to sort.`;
     this.render();
   }
 
@@ -99,7 +105,11 @@ export class PlayersTab {
     byId("players-body").replaceChildren(
       ...this.players.map((player) =>
         el("tr", {}, [
-          el("td", { text: player.name }),
+          el("td", {}, [
+            player.name,
+            player.isAnonymous ? el("span", { className: "badge", text: "anonymous", attrs: { title: "Never saved: created on the first guess" } }) : null,
+            player.isHidden ? el("span", { className: "badge", text: "hidden", attrs: { title: "Hidden from the leaderboards" } }) : null
+          ]),
           el("td", {}, [el("code", { text: player.id })]),
           el("td", { text: player.discordTag ?? "-" }),
           el("td", { className: "row-actions" }, [
@@ -107,6 +117,7 @@ export class PlayersTab {
             player.isPlaytester ? el("span", { className: "badge admin", text: "Playtester" }) : null
           ]),
           el("td", { className: "num", text: String(player.games) }),
+          el("td", { text: player.createdAt?.slice(0, 10) ?? "-" }),
           el("td", { text: player.lastSeenAt?.replace("T", " ").slice(0, 16) ?? "-" }),
           el("td", { className: "row-actions" }, [this.playtesterButton(player), this.deleteButton(player)])
         ])
