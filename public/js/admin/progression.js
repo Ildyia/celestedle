@@ -113,7 +113,7 @@ export class ProgressionTab {
     document.querySelectorAll("[data-progress-days]").forEach((b) =>
       b.addEventListener("click", () => {
         this.days = b.dataset.progressDays;
-        this.load();
+        this.load().catch((err) => byId("progression").replaceChildren(el("p", { className: "small-subtext", text: `Couldn't load the progression: ${err.message}` })));
       })
     );
   }

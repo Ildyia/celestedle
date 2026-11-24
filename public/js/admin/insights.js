@@ -152,7 +152,7 @@ export class InsightsTab {
     document.querySelectorAll("[data-days]").forEach((b) =>
       b.addEventListener("click", () => {
         this.days = b.dataset.days;
-        this.load();
+        this.load().catch((err) => this.fail(err));
       })
     );
     const search = byId("insights-element");
@@ -204,6 +204,13 @@ export class InsightsTab {
     const data = await admin.elementInsights(element.id, this.days);
     if (this.entity !== element) return;
     card.replaceChildren(head, ...renderElementInsights(data));
+  }
+
+  // Échec du chargement : le dire dans chaque page plutôt que rester sur « Loading… »
+  fail(err) {
+    for (const part of ["activity", "celestedle", "connections"]) {
+      byId(`insights-${part}`).replaceChildren(el("p", { className: "small-subtext", text: `Couldn't load the insights: ${err.message}` }));
+    }
   }
 
   async load() {
