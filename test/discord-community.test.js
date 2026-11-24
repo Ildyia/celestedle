@@ -56,7 +56,8 @@ test("rappel : seulement pour un compte lié, à l'heure choisie, les jours où 
 
 test("/profile : la fiche publique, jamais celle d'un profil caché", () => {
   const ben = linked("Ben Profile", "ben.profile");
-  win(ben.id, addDays(today, -3));
+  // Aujourd'hui : une victoire de la semaine passée le ferait champion (👑)
+  win(ben.id, today);
   linked("Hidden Ben", "ben.profile", { isHidden: true });
   const visible = community.publicProfiles(user("ben.profile"));
   assert.deepEqual(visible.map((p) => p.name), ["Ben Profile"]);

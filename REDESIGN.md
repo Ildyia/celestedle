@@ -330,4 +330,5 @@ Colonne `mail.about` (« report:<id> », « report:<id>:fixed »,
 ## Admin : page Progression (Stats)
 
 - `GET /api/admin/progression?days=` (services/progression.js) : recalculé à partir des parties, comme les tampons. `days` garde les joueurs dont la dernière partie est récente (7 ou 30 jours), sinon tous ceux qui ont fini une partie.
+- Seuls les profils enregistrés comptent : les anonymes (jamais enregistrés) faisaient des doublons.
 - Résumé (joueurs, fraises moyennes, chapitre médian, tampons moyens, taux de victoire), répartition par chapitre actuel, chapitres atteints avec le temps médian pour y arriver, tampons du plus facile au plus dur (et, pour ceux à paliers, où en sont les autres), tampons par joueur, et les 15 joueurs les plus avancés (profils cachés compris, marqués).

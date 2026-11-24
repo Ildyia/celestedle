@@ -21,6 +21,10 @@ test("progression : chapitres, tampons, joueurs les plus avancés et filtre des 
   const beginner = players.createPlayer().player;
   const old = players.createPlayer().player;
   players.createPlayer(); // jamais joué : pas compté
+  // Profils enregistrés ; un anonyme qui a joué n'est pas compté
+  for (const p of [climber, beginner, old]) db.prepare("UPDATE players SET is_anonymous = 0 WHERE id = ?").run(p.id);
+  const anonymous = players.createPlayer().player;
+  for (let i = 1; i <= 9; i++) game(anonymous.id, day(i));
   // climber : 6 victoires d'affilée (Old Site, à 5 fraises), une chute
   for (let i = 1; i <= 6; i++) game(climber.id, day(i));
   game(climber.id, day(7), false);
@@ -28,7 +32,8 @@ test("progression : chapitres, tampons, joueurs les plus avancés et filtre des 
   game(old.id, "2026-01-10");
 
   const all = progression();
-  assert.equal(all.players, 3);
+  assert.equal(all.players, 3, "l'anonyme est écarté");
+  assert.ok(all.furthest.every((p) => p.id !== anonymous.id));
   assert.equal(all.furthest[0].id, climber.id);
   assert.deepEqual([all.furthest[0].berries, all.furthest[0].falls, all.furthest[0].chapterName], [6, 1, "Old Site"]);
   assert.equal(all.chapters[1].reached, 2, "Forsaken City : climber et old");

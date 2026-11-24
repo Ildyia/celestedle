@@ -8,9 +8,11 @@ const { CHAPTERS, climbOf } = require("./chapters");
 
 const TOP = 15;
 
-// Joueurs qui ont terminé au moins une partie, avec la date de la dernière
+// Joueurs enregistrés qui ont terminé au moins une partie, avec la date de la
+// dernière. Les profils anonymes (jamais enregistrés) sont écartés : un même
+// joueur en laisse souvent plusieurs (autre appareil, navigateur vidé).
 const playedStmt = db.prepare(`
-  SELECT p.id, p.name, p.avatar, p.color, p.is_hidden AS isHidden, p.is_anonymous AS isAnonymous, MAX(d.date) AS lastPlayed
+  SELECT p.id, p.name, p.avatar, p.color, p.is_hidden AS isHidden, MAX(d.date) AS lastPlayed
   FROM players p
   JOIN (
     SELECT player_id, date FROM game_summaries WHERE status <> 'playing'
@@ -18,6 +20,7 @@ const playedStmt = db.prepare(`
     UNION ALL SELECT player_id, CASE WHEN date LIKE 'hard:%' THEN substr(date, 6) ELSE date END
       FROM connection_games WHERE status <> 'playing' AND date NOT LIKE 'practice%'
   ) d ON d.player_id = p.id
+  WHERE p.is_anonymous = 0
   GROUP BY p.id
 `);
 
@@ -88,7 +91,7 @@ function progression(since = "0000-01-01") {
     .slice(0, TOP)
     .map((p) => ({
       id: p.player.id,
-      name: p.player.isAnonymous ? null : p.player.name,
+      name: p.player.name,
       avatar: p.player.avatar,
       color: p.player.color,
       isHidden: p.player.isHidden === 1,

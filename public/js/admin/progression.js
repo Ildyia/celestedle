@@ -16,7 +16,7 @@ function summary(data) {
   const s = data.summary;
   const tile = (value, label, title) => el("div", { className: "progress-tile", attrs: title ? { title } : {} }, [el("strong", { text: value }), el("span", { text: label })]);
   return el("div", { className: "progress-tiles" }, [
-    tile(String(data.players), "climbers", "Players with at least one finished game"),
+    tile(String(data.players), "climbers", "Registered players with at least one finished game"),
     tile(s.avgBerries === null ? "-" : formatNumber(s.avgBerries), "strawberries on average", `Median: ${s.medianBerries ?? "-"}, best: ${s.maxBerries ?? "-"}`),
     tile(s.medianChapter ?? "-", "median chapter", "Half the climbers are at this chapter or below"),
     tile(s.avgStamps === null ? "-" : `${formatNumber(s.avgStamps)} / ${data.stamps.total}`, "stamps on average"),
@@ -93,7 +93,7 @@ function furthestTable(rows) {
           el("td", { text: String(i + 1) }),
           el("td", { className: "progress-player" }, [
             el("img", { attrs: { src: avatarUrl(r.avatar), alt: "", style: `border-color: ${r.color}` } }),
-            el("span", { text: r.name ?? `Anonymous #${r.id}` }),
+            el("span", { text: r.name }),
             r.isHidden ? el("span", { className: "badge", text: "hidden", attrs: { title: "Hidden from the leaderboards" } }) : null
           ]),
           el("td", { text: r.chapterName }),
@@ -126,7 +126,7 @@ export class ProgressionTab {
     const data = await admin.progression(this.days);
     clear(box);
     box.append(
-      wide(card("Where the climbers are", this.days ? `Players whose last game is from the last ${this.days} days.` : "Every player with a finished game.", summary(data))),
+      wide(card("Where the climbers are", this.days ? `Players whose last game is from the last ${this.days} days.` : "Every registered player with a finished game (profiles never saved are left out).", summary(data))),
       card(
         "Current chapter",
         "How many climbers stand at each chapter right now.",
@@ -139,7 +139,7 @@ export class ProgressionTab {
         "How many stamps each climber has.",
         columns(data.stamps.histogram, data.stamps.histogram.map((_, k) => String(k)), { title: (l, v) => `${v} climber${v === 1 ? "" : "s"} with ${l} stamp${l === "1" ? "" : "s"}` })
       ),
-      wide(card("Furthest climbers", "Most strawberries; hidden profiles included, anonymous ones show their ID.", scroll(furthestTable(data.furthest))))
+      wide(card("Furthest climbers", "Most strawberries; hidden profiles included.", scroll(furthestTable(data.furthest))))
     );
   }
 }
