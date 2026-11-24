@@ -148,6 +148,13 @@
   font-variant-numeric: tabular-nums;
 }
 
+.admin-kpi-note {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
 .admin-modes {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));

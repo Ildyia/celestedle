@@ -6,8 +6,12 @@ import { admin } from "./client.js";
 const MODE_LABELS = { normal: "Normal mode", hard: "Hard mode" };
 const KIND_LABELS = { type: "Type", colour: "Colour", shape: "Shape", chapter: "Chapter", tag: "Tag" };
 
-function kpi(label, value) {
-  return el("div", { className: "admin-kpi-card" }, [el("h4", { text: label }), el("p", { text: String(value) })]);
+function kpi(label, value, note) {
+  return el("div", { className: "admin-kpi-card" }, [
+    el("h4", { text: label }),
+    el("p", { text: String(value) }),
+    note ? el("small", { className: "admin-kpi-note", text: note }) : null
+  ]);
 }
 
 function stat(label, value) {
@@ -127,10 +131,16 @@ export async function renderOverview({ notify }) {
     0
   );
 
+  const p = data.players;
   byId("overview-kpis").replaceChildren(
     kpi("Date", data.date),
     kpi("Games today", players),
-    kpi("Profiles created", data.totalPlayers),
+    kpi(
+      `Active · ${p.activeDays} days`,
+      p.active,
+      `${p.activeRegistered} registered · ${p.active - p.activeRegistered} anonymous`
+    ),
+    kpi("Registered profiles", p.registered, `out of ${p.total} created, the rest never saved`),
     kpi("Repeat delay", `${data.repeatDelayDays} d`)
   );
   byId("overview-modes").replaceChildren(

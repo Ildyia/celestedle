@@ -28,7 +28,15 @@ const stmts = {
   // Ses votes ne sont pas liés par une clé étrangère : on les retire à part
   removeVotes: db.prepare("DELETE FROM report_votes WHERE voter_id = ?"),
   remove: db.prepare("DELETE FROM players WHERE id = ?"),
-  count: db.prepare("SELECT COUNT(*) AS n FROM players")
+  count: db.prepare("SELECT COUNT(*) AS n FROM players"),
+  // Profils par sorte : enregistrés ou anonymes, et vus depuis @since
+  breakdown: db.prepare(`
+    SELECT COUNT(*) AS total,
+           COALESCE(SUM(is_anonymous = 0), 0) AS registered,
+           COALESCE(SUM(last_seen_at >= @since), 0) AS active,
+           COALESCE(SUM(is_anonymous = 0 AND last_seen_at >= @since), 0) AS activeRegistered
+    FROM players
+  `)
 };
 
 function toPlayer(row) {
@@ -107,6 +115,11 @@ function count() {
   return stmts.count.get().n;
 }
 
+/** { total, registered, active, activeRegistered } ; actifs : vus depuis `since` (ISO). */
+function breakdown(since) {
+  return stmts.breakdown.get({ since });
+}
+
 module.exports = {
   create,
   findByTokenHash,
@@ -119,5 +132,6 @@ module.exports = {
   setPlaytester,
   remove,
   touch,
-  count
+  count,
+  breakdown
 };

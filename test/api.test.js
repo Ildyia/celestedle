@@ -425,6 +425,12 @@ test("admin : tableau de bord, éditeur et réglages", async () => {
   const overview = await api.request("GET", "/api/admin/overview", { headers });
   assert.ok(overview.data.modes.normal.secret.nom);
   assert.ok(overview.data.modes.hard.stats.players >= 1);
+  // Profils : total, enregistrés, actifs sur 30 jours (les profils de ce test viennent d'être vus)
+  const counts = overview.data.players;
+  assert.equal(counts.total, overview.data.totalPlayers);
+  assert.ok(counts.registered <= counts.total && counts.activeRegistered <= counts.active);
+  assert.ok(counts.active >= 1);
+  assert.equal(counts.activeDays, 30);
 
   const history = await api.request("GET", "/api/admin/history", { headers });
   assert.equal(history.data.legacy[0].word, "spring");

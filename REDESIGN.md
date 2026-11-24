@@ -338,3 +338,7 @@ Colonne `mail.about` (« report:<id> », « report:<id>:fixed »,
 - Tous les tableaux de l'admin se trient d'un clic sur l'intitulé d'une colonne (js/admin/table-sort.js, un seul écouteur pour la page). Nombres, durées et dates d'abord du plus grand / plus récent, texte de A à Z ; un second clic inverse ; cellules vides toujours en bas. Une cellule peut donner sa valeur de tri dans `data-sort`. Words et Reports gardent leur propre tri.
 - Stats → Insights devient trois pages d'un même panneau (une seule requête) : Activity (heures, duels, jour par jour), Celestedle (essais, indices, openers, mots les plus essayés), Connections (issues, indices, groupes les plus durs, pièges).
 - Openers : les deux tableaux (« les plus joués », top 15 par nombre de parties, et « les plus efficaces », top 15 par essais pour gagner) n'en font plus qu'un par side, avec **tous** les openers et toutes les colonnes, les plus joués d'abord ; le tri par colonne remplace les deux classements. Les openers de moins de 3 parties sont grisés. Greens et Clues affichent 0.0 au lieu de « - ».
+
+## Admin : chiffres des profils sur Today
+
+- La case « Profiles created » (tous les profils jamais créés, anonymes compris : un profil naît au premier essai) est remplacée par deux cases : « Active · 30 days » (profils vus sur le site ces 30 jours, enregistrés / anonymes) et « Registered profiles » (sur le total créé).
