@@ -37,12 +37,12 @@ function chaptersTable(data) {
     el(
       "tbody",
       {},
-      data.chapters.map((c) =>
+      data.chapters.map((c, i) =>
         el("tr", {}, [
-          el("td", { text: c.name }),
+          el("td", { text: c.name, attrs: { "data-sort": String(i) } }),
           el("td", { text: `${c.berries} 🍓` }),
           el("td", { text: `${pct(c.reached, data.players)} (${c.reached})` }),
-          el("td", { text: c.reached ? days(c.medianDays) : "-" })
+          el("td", { text: c.reached ? days(c.medianDays) : "-", attrs: c.reached ? { "data-sort": String(c.medianDays) } : {} })
         ])
       )
     )
@@ -96,7 +96,7 @@ function furthestTable(rows) {
             el("span", { text: r.name }),
             r.isHidden ? el("span", { className: "badge", text: "hidden", attrs: { title: "Hidden from the leaderboards" } }) : null
           ]),
-          el("td", { text: r.chapterName }),
+          el("td", { text: r.chapterName, attrs: { "data-sort": String(r.chapter) } }),
           el("td", { text: String(r.berries) }),
           el("td", { text: String(r.falls) }),
           el("td", { text: String(r.stamps) }),

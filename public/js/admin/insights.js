@@ -2,7 +2,7 @@
 // Barres d'une seule teinte (une seule série chacune), valeur au survol et
 // dans le texte quand elle compte ; le détail est dans des tableaux.
 import { spriteUrl } from "../api.js";
-import { el, byId, clear } from "../dom.js";
+import { el, byId } from "../dom.js";
 import { formatNumber } from "../format.js";
 import { admin } from "./client.js";
 import { renderElementInsights } from "./element-insights.js";
@@ -211,48 +211,16 @@ export class InsightsTab {
 
   async load() {
     document.querySelectorAll("[data-days]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.days === this.days)));
-    const box = byId("insights");
-    clear(box);
-    box.append(el("p", { className: "small-subtext", text: "Loading…" }));
+    const boxes = ["activity", "celestedle", "connections"].map((part) => byId(`insights-${part}`));
+    for (const box of boxes) box.replaceChildren(el("p", { className: "small-subtext", text: "Loading…" }));
     this.loadElements().catch(() => {});
     if (this.entity) this.renderEntity();
     const data = await admin.insights(this.days);
-    clear(box);
+    const [activity, celestedle, cx] = boxes;
     const hintsTotal = data.gamesWithHints;
-    box.append(
-      card("Openers · A-Side", "First guess of each finished game, with how those games ended.", openersTable(data.openers.normal)),
-      card("Openers · B-Side", null, openersTable(data.openers.hard)),
-      wide(
-        card(
-          "Most effective openers",
-          `Openers of ${data.bestOpeners.minGames}+ finished games, fewest tries to win first. Greens and clues: what the first guess tells, on average, out of 4 categories (green, or green and yellow).`,
-          el("div", { className: "insights-split" }, [
-            el("div", {}, [el("h4", { text: "A-Side" }), bestOpenersTable(data.bestOpeners.normal, data.bestOpeners.minGames)]),
-            el("div", {}, [el("h4", { text: "B-Side" }), bestOpenersTable(data.bestOpeners.hard, data.bestOpeners.minGames)])
-          ])
-        )
-      ),
-      card("Most guessed", "Every guess, both sides of Celestedle.", hbars(data.mostGuessed, { label: (r) => entityButton(r.name), title: (r) => `${capitalize(r.name)}: ${r.times}`, value: (r) => r.times })),
-      card("Wins by tries · A-Side", "A hint counts as a try.", triesColumns(data.tries.normal), outcomes(data.outcomes.normal)),
-      card("Wins by tries · B-Side", null, triesColumns(data.tries.hard), outcomes(data.outcomes.hard)),
-      card(
-        "Hints · Celestedle",
-        `${pct(hintsTotal.withHints ?? 0, hintsTotal.games)} of finished games used at least one hint.`,
-        hbars(data.hints, { label: (r) => HINT_NAMES[r.type] ?? r.type, value: (r) => r.uses, none: "No hint used in this period." })
-      ),
-      cxModeCard("normal", data.connections.modes.normal),
-      cxModeCard("hard", data.connections.modes.hard),
-      card("Hardest Connections groups", "Lowest share of players who found the group (grids with 3 players or more).", hardestTable(data.connections.hardest)),
-      card(
-        "Connections decoys",
-        "Entities most often put in a wrong group of 4.",
-        hbars(data.connections.decoys, { label: (r) => entityButton(r.name), title: (r) => `${capitalize(r.name)}: ${r.times}`, value: (r) => r.times, none: "No mistakes in this period." })
-      ),
-      card(
-        "Connections hints",
-        null,
-        hbars(data.connections.hints, { label: (r) => CX_HINT_NAMES[r.type] ?? r.type, value: (r) => r.uses, none: "No hint used in this period." })
-      ),
+
+    // Activité : quand et combien on joue
+    activity.replaceChildren(
       card(
         "When people finish",
         "Finished Celestedle and Connections games by hour, Paris time.",
@@ -267,17 +235,59 @@ export class InsightsTab {
           el("span", {}, [el("strong", { text: String(data.duels.private ?? 0) }), " private"])
         ])
       ),
-      card(
-        "Day by day",
-        "Games started each day; players across all games.",
-        data.days.length
-          ? el("table", { className: "admin-table compact" }, [
-              el("thead", {}, [el("tr", {}, ["Date", "Players", "Celestedle", "Connections"].map((t) => el("th", { text: t })))]),
-              el("tbody", {}, data.days.map((d) => el("tr", {}, [d.date, d.players, d.celestedle, d.connections].map((v) => el("td", { text: String(v) })))))
-            ])
-          : empty()
+      wide(
+        card(
+          "Day by day",
+          "Games started each day; players across all games.",
+          data.days.length
+            ? el("table", { className: "admin-table compact" }, [
+                el("thead", {}, [el("tr", {}, ["Date", "Players", "Celestedle", "Connections"].map((t) => el("th", { text: t })))]),
+                el("tbody", {}, data.days.map((d) => el("tr", {}, [d.date, d.players, d.celestedle, d.connections].map((v) => el("td", { text: String(v) })))))
+              ])
+            : empty()
+        )
       )
     );
-    box.lastElementChild.classList.add("wide");
+
+    // Celestedle : issues, openers, mots, indices
+    celestedle.replaceChildren(
+      card("Wins by tries · A-Side", "A hint counts as a try.", triesColumns(data.tries.normal), outcomes(data.outcomes.normal)),
+      card("Wins by tries · B-Side", null, triesColumns(data.tries.hard), outcomes(data.outcomes.hard)),
+      card(
+        "Hints",
+        `${pct(hintsTotal.withHints ?? 0, hintsTotal.games)} of finished games used at least one hint.`,
+        hbars(data.hints, { label: (r) => HINT_NAMES[r.type] ?? r.type, value: (r) => r.uses, none: "No hint used in this period." })
+      ),
+      wide(
+        card(
+          "Most effective openers",
+          `Openers of ${data.bestOpeners.minGames}+ finished games, fewest tries to win first. Greens and clues: what the first guess tells, on average, out of 4 categories (green, or green and yellow).`,
+          el("div", { className: "insights-split" }, [
+            el("div", {}, [el("h4", { text: "A-Side" }), bestOpenersTable(data.bestOpeners.normal, data.bestOpeners.minGames)]),
+            el("div", {}, [el("h4", { text: "B-Side" }), bestOpenersTable(data.bestOpeners.hard, data.bestOpeners.minGames)])
+          ])
+        )
+      ),
+      card("Openers · A-Side", "Most played first guesses, with how those games ended.", openersTable(data.openers.normal)),
+      card("Openers · B-Side", null, openersTable(data.openers.hard)),
+      card("Most guessed", "Every guess, both sides.", hbars(data.mostGuessed, { label: (r) => entityButton(r.name), title: (r) => `${capitalize(r.name)}: ${r.times}`, value: (r) => r.times }))
+    );
+
+    // Connections : issues, groupes difficiles, pièges, indices
+    cx.replaceChildren(
+      cxModeCard("normal", data.connections.modes.normal),
+      cxModeCard("hard", data.connections.modes.hard),
+      card(
+        "Hints",
+        null,
+        hbars(data.connections.hints, { label: (r) => CX_HINT_NAMES[r.type] ?? r.type, value: (r) => r.uses, none: "No hint used in this period." })
+      ),
+      wide(card("Hardest groups", "Lowest share of players who found the group (grids with 3 players or more).", hardestTable(data.connections.hardest))),
+      card(
+        "Decoys",
+        "Entities most often put in a wrong group of 4.",
+        hbars(data.connections.decoys, { label: (r) => entityButton(r.name), title: (r) => `${capitalize(r.name)}: ${r.times}`, value: (r) => r.times, none: "No mistakes in this period." })
+      )
+    );
   }
 }

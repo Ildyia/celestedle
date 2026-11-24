@@ -722,3 +722,9 @@ body::before {
 .mail-poll-texts summary { cursor: pointer; color: var(--text-muted); }
 .mail-poll-texts ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; max-height: 240px; overflow: auto; }
 .mail-poll-texts li span { overflow-wrap: anywhere; }
+
+/* Tri générique des tableaux (js/admin/table-sort.js) */
+.admin-table:not(.sortable) thead th:not(:empty):not([data-nosort]) { cursor: pointer; user-select: none; }
+.admin-table:not(.sortable) thead th:not(:empty):not([data-nosort]):hover { background-color: #1e293b; }
+.admin-table:not(.sortable) thead th[aria-sort="ascending"]::after { content: " ▲"; }
+.admin-table:not(.sortable) thead th[aria-sort="descending"]::after { content: " ▼"; }

@@ -332,3 +332,8 @@ Colonne `mail.about` (« report:<id> », « report:<id>:fixed »,
 - `GET /api/admin/progression?days=` (services/progression.js) : recalculé à partir des parties, comme les tampons. `days` garde les joueurs dont la dernière partie est récente (7 ou 30 jours), sinon tous ceux qui ont fini une partie.
 - Seuls les profils enregistrés comptent : les anonymes (jamais enregistrés) faisaient des doublons.
 - Résumé (joueurs, fraises moyennes, chapitre médian, tampons moyens, taux de victoire), répartition par chapitre actuel, chapitres atteints avec le temps médian pour y arriver, tampons du plus facile au plus dur (et, pour ceux à paliers, où en sont les autres), tampons par joueur, et les 15 joueurs les plus avancés (profils cachés compris, marqués).
+
+## Admin : tri des tableaux et Insights en trois pages
+
+- Tous les tableaux de l'admin se trient d'un clic sur l'intitulé d'une colonne (js/admin/table-sort.js, un seul écouteur pour la page). Nombres, durées et dates d'abord du plus grand / plus récent, texte de A à Z ; un second clic inverse ; cellules vides toujours en bas. Une cellule peut donner sa valeur de tri dans `data-sort`. Words et Reports gardent leur propre tri.
+- Stats → Insights devient trois pages d'un même panneau (une seule requête) : Activity (heures, duels, jour par jour), Celestedle (essais, indices, openers, mots les plus essayés), Connections (issues, indices, groupes les plus durs, pièges).

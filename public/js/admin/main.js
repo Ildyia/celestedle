@@ -7,6 +7,7 @@ import { renderHistory } from "./history.js";
 import { WordsTab } from "./words.js";
 import { InsightsTab } from "./insights.js";
 import { ProgressionTab } from "./progression.js";
+import { enableTableSort } from "./table-sort.js";
 import { ElementsTab } from "./elements.js";
 import { ReportsTab } from "./reports.js";
 import { ConnectionsTab } from "./connections.js";
@@ -38,6 +39,8 @@ const playersTab = new PlayersTab({ notify, getRole: () => currentRole });
 const loadSettings = bindSettings({ notify });
 const mailbox = new MailboxTab({ notify });
 
+enableTableSort();
+
 const TABS = {
   overview: () => renderOverview({ notify }),
   history: () => renderHistory(),
@@ -64,7 +67,10 @@ const NAV = [
     id: "stats",
     label: "Stats",
     pages: [
-      { id: "insights", label: "Insights" },
+      // Insights en trois pages d'un même panneau (data-part), chargé une fois
+      { id: "activity", label: "Activity", panel: "insights", part: "activity" },
+      { id: "celestedle", label: "Celestedle", panel: "insights", part: "celestedle" },
+      { id: "connections", label: "Connections", panel: "insights", part: "connections" },
       { id: "progression", label: "Progression" },
       { id: "history", label: "History" },
       { id: "words", label: "Words" }
@@ -133,6 +139,9 @@ async function show({ group, page }) {
   });
   document.querySelectorAll("[data-cx]").forEach((node) => {
     node.hidden = node.dataset.cx !== page.cx;
+  });
+  document.querySelectorAll("[data-part]").forEach((node) => {
+    node.hidden = node.dataset.part !== page.part;
   });
   // Changer de page dans le même panneau (Connections) ne recharge rien
   if (loadedPanel === panel) return;
