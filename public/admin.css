@@ -396,9 +396,22 @@
   gap: 12px;
 }
 
+/* Formulaire d'un tag : reste à l'écran à côté du tableau des tags */
+#cx-tag-form {
+  position: sticky;
+  top: 12px;
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+}
+
 @media (max-width: 900px) {
   .elements-layout {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  #cx-tag-form {
+    position: static;
+    max-height: none;
   }
 
   .element-side {

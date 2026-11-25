@@ -66,6 +66,13 @@ export class ConnectionsTab {
     if (errors.length) this.notify(`Couldn't load ${errors.join("; ")}`, true);
   }
 
+  // Après un enregistrement : seulement les tags (pas les grilles ni les
+  // suggestions), pour que la page ne bouge pas
+  async reloadTags() {
+    this.tags = await admin.connectionTags();
+    this.renderTags();
+  }
+
   // Export des tags en JSON (pour tester le générateur ailleurs) : éléments
   // donnés par leur nom, les identifiants pouvant changer d'une base à l'autre
   exportTags() {
@@ -405,7 +412,11 @@ export class ConnectionsTab {
     this.form.hidden = false;
     this.renderElements();
     this.renderTags();
-    byId("cx-tag-label").focus();
+    // Sans faire défiler la page : le formulaire suit le défilement à côté du
+    // tableau ; sur un écran étroit (formulaire au-dessus), on va le chercher
+    byId("cx-tag-label").focus({ preventScroll: true });
+    const box = this.form.getBoundingClientRect();
+    if (box.bottom < 0 || box.top > window.innerHeight) this.form.scrollIntoView({ block: "nearest" });
   }
 
   closeForm() {
@@ -466,7 +477,7 @@ export class ConnectionsTab {
       this.notify(
         `Tag "${saved.label}" saved.${suggestion?.hasAuthor ? ` ${suggestion.playerName} gets a letter: their idea is in the game.` : ""}`
       );
-      await this.load();
+      await this.reloadTags();
       this.edit(this.tags.find((t) => t.id === saved.id));
     } catch (err) {
       this.notify(err.message, true);
@@ -484,7 +495,7 @@ export class ConnectionsTab {
       await admin.deleteConnectionTag(this.editing.id);
       this.notify(`Tag "${this.editing.label}" deleted.`);
       this.closeForm();
-      await this.load();
+      await this.reloadTags();
     } catch (err) {
       this.notify(err.message, true);
     }
