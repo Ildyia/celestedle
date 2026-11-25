@@ -15,7 +15,8 @@ import { player } from "./player.js";
 import { initNextWordTimer } from "./timer.js";
 import { keySound, playSound } from "./sound.js";
 
-const SIDES = { normal: "A-Side · Normal", hard: "B-Side · Hard" };
+const SIDES = { normal: "A-Side · Normal", hard: "B-Side · Hard", custom: "C-Side · Playtest" };
+const SIDE_NAMES = { normal: "A-Side", hard: "B-Side", custom: "C-Side" };
 
 // Actions de la page, selon ce qu'elle propose (Celestedle et Techs ont des
 // fenêtres Rankings et Options ; Connections a son classement dans la page)
@@ -227,7 +228,11 @@ function showPauseView(view) {
 
 function pauseItems() {
   if (pause?.view === "options") return optionItems();
-  const other = currentMode() === "hard" ? "normal" : "hard";
+  // Les autres côtés proposés par la page (la C-Side de Connections seulement
+  // si le joueur y a accès : son bouton est alors visible)
+  const others = [...document.querySelectorAll("#mode-switch [data-mode]")]
+    .filter((btn) => !btn.hidden && btn.dataset.mode !== currentMode())
+    .map((btn) => btn.dataset.mode);
   const item = (label, action) => {
     const run = findAction(action);
     return run && { label, run: () => (closePause(), run()) };
@@ -237,13 +242,13 @@ function pauseItems() {
     item("Rules", "rules"),
     item("Rankings", "rankings"),
     { label: "Options", run: () => showPauseView("options") },
-    {
-      label: `Switch to ${other === "hard" ? "B-Side" : "A-Side"}`,
+    ...others.map((other) => ({
+      label: `Switch to ${SIDE_NAMES[other] ?? other}`,
       run: () => {
         closePause();
         document.querySelector(`#mode-switch [data-mode='${other}']`)?.click();
       }
-    },
+    })),
     { label: "Return to menu", run: () => (location.href = "index.html#modes") }
   ].filter(Boolean);
 }
@@ -353,18 +358,19 @@ const endedModes = new Map();
 function updateTabTitle() {
   if (!document.documentElement.classList.contains("ui-modern")) return;
   const mode = currentMode();
-  const side = mode === "hard" ? "B-Side" : "A-Side";
+  const side = SIDE_NAMES[mode] ?? "A-Side";
   const mark = endedModes.has(mode) ? (endedModes.get(mode) ? "✓ " : "✗ ") : "";
   document.title = `${mark}${gameName()} · ${side}`;
 }
 
 function showEnd(detail) {
-  if (!detail.practice) endedModes.set(detail.side === "b" ? "hard" : "normal", detail.status === "won");
+  const SIDE_MODES = { a: "normal", b: "hard", c: "custom" };
+  if (!detail.practice) endedModes.set(SIDE_MODES[detail.side] ?? "normal", detail.status === "won");
   updateTabTitle();
   if (!document.documentElement.classList.contains("ui-modern")) return;
   closePause();
   const won = detail.status === "won";
-  const side = detail.side === "b" ? "B-Side" : "A-Side";
+  const side = { a: "A-Side", b: "B-Side", c: "C-Side" }[detail.side] ?? "A-Side";
   const kicker = `${gameName()} · ${side}${detail.practice ? " · Practice" : ""}`;
 
   const stats = detail.stats.map((stat, i) => {
@@ -393,12 +399,13 @@ function showEnd(detail) {
   });
   const rankings = findAction("rankings");
   // L'autre côté du même jeu, en un clic (pas depuis une partie d'entraînement)
-  const otherMode = detail.side === "b" ? "normal" : "hard";
+  // Depuis la B-Side ou la C-Side, on propose l'A-Side ; depuis l'A-Side, la B-Side
+  const otherMode = detail.side === "a" ? "hard" : "normal";
   const otherSwitch = detail.practice ? null : document.querySelector(`#mode-switch [data-mode='${otherMode}']`);
   const actions = [
     share,
     otherSwitch &&
-      el("button", { className: "m-end-btn", text: `Go to ${otherMode === "hard" ? "B-Side" : "A-Side"}`, attrs: { type: "button" }, on: { click: () => (closeEnd(), otherSwitch.click()) } }),
+      el("button", { className: "m-end-btn", text: `Go to ${SIDE_NAMES[otherMode]}`, attrs: { type: "button" }, on: { click: () => (closeEnd(), otherSwitch.click()) } }),
     rankings && el("button", { className: "m-end-btn", text: "Rankings", attrs: { type: "button" }, on: { click: () => (closeEnd(), rankings()) } }),
     el("a", { className: "m-end-btn", text: "Menu", attrs: { href: "index.html#modes" } }),
     el("button", { className: "m-end-btn", text: "Close", attrs: { type: "button" }, on: { click: closeEnd } })

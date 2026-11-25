@@ -17,7 +17,7 @@ const playedStmt = db.prepare(`
   JOIN (
     SELECT player_id, date FROM game_summaries WHERE status <> 'playing'
     UNION ALL SELECT player_id, date FROM tech_game_summaries WHERE status <> 'playing'
-    UNION ALL SELECT player_id, CASE WHEN date LIKE 'hard:%' THEN substr(date, 6) ELSE date END
+    UNION ALL SELECT player_id, substr(date, instr(date, ':') + 1)
       FROM connection_games WHERE status <> 'playing' AND date NOT LIKE 'practice%'
   ) d ON d.player_id = p.id
   WHERE p.is_anonymous = 0

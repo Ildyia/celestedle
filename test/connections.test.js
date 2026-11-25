@@ -213,7 +213,7 @@ test("admin : tags, éléments à classer, aperçu et régénération des grille
   assert.equal(saved.data.elementIds.length, 4);
 
   const puzzles = await api.request("GET", "/api/admin/connections/puzzles", { token });
-  assert.equal(puzzles.data.length, 6, "3 jours, normal et Hard");
+  assert.equal(puzzles.data.length, 9, "3 jours, Normal, Hard et C-Side");
   assert.deepEqual(puzzles.data.slice(0, 2).map((p) => p.mode), ["normal", "hard"]);
   assert.equal(puzzles.data[0].groups.length, 4);
 
@@ -437,7 +437,7 @@ test("générateur : un tag qui couvre presque tout le catalogue ne bloque plus 
   }
 });
 
-test("générateur : avec beaucoup de tags liés aux types, le mode normal reste sans faux groupe et a un ou deux tags", () => {
+test("générateur : avec beaucoup de tags liés aux types, le mode normal reste sans faux groupe et a au moins un tag", () => {
   const elements = elementsRepo.listActive();
   const types = [...new Set(elements.map((e) => e.type))];
   const random = seededRandom(5);
@@ -453,11 +453,10 @@ test("générateur : avec beaucoup de tags liés aux types, le mode normal reste
   });
   const categories = buildCategories(elements, tags);
   for (let seed = 1; seed <= 10; seed++) {
-    // Comme le mode normal : un groupe tag au moins, deux au plus
+    // Comme le mode normal : un groupe tag au moins (plus de maximum)
     const puzzle = generatePuzzle(elements, tags, seededRandom(seed), { minTags: 1 });
     assert.equal(puzzle.rule, "strict", `grille ${seed}`);
-    const tagGroups = puzzle.groups.filter((g) => g.kind === "tag").length;
-    assert.ok(tagGroups >= 1 && tagGroups <= 2, `grille ${seed} : ${tagGroups} tag(s)`);
+    assert.ok(puzzle.groups.some((g) => g.kind === "tag"), `grille ${seed} : sans tag`);
     const chosen = puzzle.groups.map((g) => categories.find((c) => c.key === g.key));
     const ordered = puzzle.groups.flatMap((g) => g.elementIds);
     assert.equal(hasObviousDecoy(ordered, chosen, categories), false);
@@ -769,4 +768,49 @@ test("générateur : difficulté des tags pondérée selon le mode, au moins un 
   assert.ok(a.seen[1] > a.seen[2], `Normal : le facile d'abord (${JSON.stringify(a.seen)})`);
   const b = count(hard);
   assert.ok(b.seen[2] > b.seen[1], `Hard : le difficile d'abord (${JSON.stringify(b.seen)})`);
+});
+
+test("C-Side : réservée aux playtesters, grilles de tags seulement, sans indice « kinds »", async () => {
+  const token = await owner();
+  // 6 tags disjoints de 6 éléments : de quoi tirer une grille sans ambiguïté
+  const ids = elementsRepo.listActive().map((e) => e.id);
+  const created = [];
+  for (let i = 0; i < 6; i++) {
+    const res = await api.request("POST", "/api/admin/connections/tags", {
+      token,
+      body: { label: `C-Side tag ${i}`, elementIds: ids.slice(i * 6, i * 6 + 6) }
+    });
+    assert.equal(res.status, 201);
+    created.push(res.data);
+  }
+
+  // Joueur sans accès : Connections en playtest, et la C-Side aussi
+  const outsider = await api.newPlayer();
+  assert.equal((await api.request("GET", "/api/connections?mode=custom", { token: outsider.token })).status, 403);
+
+  const tester = await api.newPlayer();
+  await api.request("PUT", `/api/admin/players/${tester.player.id}/playtester`, { token, body: { enabled: true } });
+  const access = await api.request("GET", "/api/connections-access", { token: tester.token });
+  assert.deepEqual(access.data.cside, { access: "playtest", canPlay: true });
+
+  const state = await api.request("GET", "/api/connections?mode=custom", { token: tester.token });
+  assert.equal(state.status, 200);
+  assert.equal(state.data.mode, "custom");
+  assert.deepEqual(state.data.hintTypes, ["category", "pair"]);
+  assert.equal(state.data.maxHints, 2);
+  // Grille de tags seulement (vue côté admin)
+  const grid = connections.getPuzzle(undefined, "custom");
+  assert.ok(grid.groups.every((g) => g.kind === "tag"));
+
+  const kinds = await api.request("POST", "/api/connections/hint", { token: tester.token, body: { type: "kinds", mode: "custom" } });
+  assert.equal(kinds.status, 400);
+  const category = await api.request("POST", "/api/connections/hint", { token: tester.token, body: { type: "category", mode: "custom" } });
+  assert.equal(category.status, 200);
+
+  // Fermée : même les playtesters ne la voient plus
+  assert.equal((await api.request("PUT", "/api/admin/connections/cside-access", { token, body: { access: "closed" } })).status, 200);
+  assert.equal((await api.request("GET", "/api/connections?mode=custom", { token: tester.token })).status, 403);
+  await api.request("PUT", "/api/admin/connections/cside-access", { token, body: { access: "playtest" } });
+
+  for (const t of created) await api.request("DELETE", `/api/admin/connections/tags/${t.id}`, { token });
 });

@@ -4,6 +4,9 @@
 export const KEYS = {
   playerToken: "celestedle_player_token",
   mode: "celestedle_mode",
+  // C-Side de Connections (playtest) choisie : "1" ; le mode commun reste
+  // normal ou hard pour les autres jeux
+  cxCside: "celestedle_cx_cside",
   synonyms: "celestedle_synonyms",
   disclaimerSeen: "celestedle_disclaimer_seen_v3",
   colorblind: "celestedle_colorblind",

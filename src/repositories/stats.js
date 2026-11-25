@@ -77,7 +77,7 @@ const stmts = {
     UNION ALL
     SELECT g.player_id,
            CASE WHEN g.date LIKE 'hard:%' THEN 'cx-hard' ELSE 'cx-normal' END,
-           CASE WHEN g.date LIKE 'hard:%' THEN substr(g.date, 6) ELSE g.date END,
+           substr(g.date, instr(g.date, ':') + 1),
            g.status = 'won',
            -- Un indice compte comme une erreur
            (SELECT COUNT(*) FROM connection_attempts a WHERE a.game_id = g.id AND a.group_index IS NULL)
@@ -106,13 +106,14 @@ const stmts = {
       FROM (
         SELECT g.player_id AS playerId,
                CASE WHEN g.date LIKE 'hard:%' THEN 'cx-hard' ELSE 'cx-normal' END AS board,
-               CASE WHEN g.date LIKE 'hard:%' THEN substr(g.date, 6) ELSE g.date END AS date,
+               substr(g.date, instr(g.date, ':') + 1) AS date,
                (SELECT COUNT(*) FROM connection_attempts a WHERE a.game_id = g.id AND a.group_index IS NULL)
                  + (SELECT COUNT(*) FROM connection_hints h WHERE h.game_id = g.id) AS cost,
                julianday(g.finished_at) - julianday(g.started_at) AS seconds,
                g.finished_at
         FROM connection_games g JOIN players p ON p.id = g.player_id
-        WHERE g.status = 'won' AND ${LISTED_SQL} AND g.date NOT LIKE 'practice%'
+        -- C-Side (custom:…) : en test, hors trophées
+        WHERE g.status = 'won' AND ${LISTED_SQL} AND g.date NOT LIKE 'practice%' AND g.date NOT LIKE 'custom:%'
       )
       WHERE date < @today
     )
@@ -143,10 +144,11 @@ const stmts = {
     WHERE s.player_id = @playerId AND s.status <> 'playing'
   `),
   // Grilles du jour de Connections (pas les grilles d'entraînement) : la date
-  // est « AAAA-MM-JJ » en Normal, « hard:AAAA-MM-JJ » en Hard. Les erreurs
+  // est « AAAA-MM-JJ » en Normal, « hard:AAAA-MM-JJ » en Hard,
+  // « custom:AAAA-MM-JJ » en C-Side. Les erreurs
   // tiennent lieu d'essais.
   playerConnectionGames: db.prepare(`
-    SELECT CASE WHEN g.date LIKE 'hard:%' THEN substr(g.date, 6) ELSE g.date END AS date,
+    SELECT substr(g.date, instr(g.date, ':') + 1) AS date,
            g.status,
            (SELECT COUNT(*) FROM connection_attempts a WHERE a.game_id = g.id AND a.group_index IS NULL) AS tries,
            (SELECT COUNT(*) FROM connection_hints h WHERE h.game_id = g.id) AS hints,
@@ -154,7 +156,7 @@ const stmts = {
            CAST(ROUND((julianday(g.finished_at) - julianday(g.started_at)) * 86400) AS INTEGER) AS seconds
     FROM connection_games g
     WHERE g.player_id = @playerId AND g.status <> 'playing'
-      AND CASE WHEN @mode = 'hard' THEN g.date LIKE 'hard:%' ELSE g.date NOT LIKE '%:%' END
+      AND CASE WHEN @mode = 'normal' THEN g.date NOT LIKE '%:%' ELSE g.date LIKE @mode || ':%' END
     ORDER BY 1
   `),
 

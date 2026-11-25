@@ -216,6 +216,21 @@
               <option value="public">Open to everyone</option>
             </select>
           </div>
+          <div class="form-group cx-access">
+            <label for="cx-cside-access">Who can play the C-Side (grids made only of tags)</label>
+            <select id="cx-cside-access" class="bug-input">
+              <option value="staff">Admin team only</option>
+              <option value="playtest">Playtest: playtesters and admin team</option>
+              <option value="public">Open to everyone</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+          <p class="small-subtext">
+            The C-Side has 2 hints (no "Kinds", which would always say Tag),
+            no decoy groups between tags, and doesn't count for rankings,
+            trophies, strawberries or stamps while it's being tested. It also
+            needs access to Connections.
+          </p>
           </div>
 
           <div data-cx="grids" class="admin-panel">
@@ -223,7 +238,7 @@
             <a class="btn-secondary" href="connections.html" target="_blank" rel="noopener">Open the game page</a>
           </div>
           <h3 class="admin-subtitle">Grids for today and the next 2 days</h3>
-          <p class="small-subtext">Normal: no decoy groups. Hard: decoys allowed, only a unique solution is guaranteed.</p>
+          <p class="small-subtext">Normal: no decoy groups. Hard: decoys allowed, only a unique solution is guaranteed. C-Side: tags only, no decoy groups.</p>
           <div id="cx-puzzles" class="cx-admin-puzzles"></div>
           </div>
 

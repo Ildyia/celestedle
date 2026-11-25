@@ -14,13 +14,26 @@ const router = express.Router();
 
 // Qui peut jouer, pour afficher ou non le lien et le badge de test ; les
 // grilles d'entraînement sont réservées à l'équipe admin
+// cside : la C-Side (grilles de tags seulement), avec son propre accès
 router.get("/connections-access", (req, res) => {
-  res.json({ access: staff.connectionsAccess(), canPlay: staff.canPlaytest(req.player), canPractice: staff.isStaff(req.player) });
+  res.json({
+    access: staff.connectionsAccess(),
+    canPlay: staff.canPlaytest(req.player),
+    canPractice: staff.isStaff(req.player),
+    cside: { access: staff.csideAccess(), canPlay: staff.canPlayCside(req.player) }
+  });
 });
 
 function checkPractice(req, practice) {
   if (practice && !staff.isStaff(req.player)) throw new HttpError(403, "Practice grids are for the admin team.");
   return practice;
+}
+
+// La C-Side (mode « custom ») a son propre accès, en plus de celui du jeu
+function checkSide(req, mode = "normal") {
+  if (mode !== "custom" || staff.canPlayCside(req.player)) return mode;
+  if (!req.player) throw new HttpError(401, "Sign in with your player profile first.");
+  throw new HttpError(403, "The C-Side is only open to playtesters for now.");
 }
 
 // Le jeu est ouvert selon le réglage d'accès, la gestion à l'équipe admin
@@ -30,19 +43,19 @@ router.use("/admin/connections", requireStaff);
 // ?mode=normal|hard ; ?practice=1 : grille d'entraînement du joueur au lieu
 // de la grille du jour
 router.get("/connections", (req, res) => {
-  const options = { mode: req.query.mode ?? "normal", practice: checkPractice(req, req.query.practice === "1") };
+  const options = { mode: checkSide(req, req.query.mode ?? "normal"), practice: checkPractice(req, req.query.practice === "1") };
   res.json({ ...connections.getState(req.player, options), nextGridInMs: msUntilNextDay() });
 });
 
 router.post("/connections/guess", requirePlayer, (req, res) => {
   const { names, mode = "normal", practice, gridId } = req.body || {};
-  const options = { mode, practice: checkPractice(req, practice === true), gridId: typeof gridId === "string" ? gridId : undefined };
+  const options = { mode: checkSide(req, mode), practice: checkPractice(req, practice === true), gridId: typeof gridId === "string" ? gridId : undefined };
   res.json(connections.guess(req.player, names, options));
 });
 
 router.post("/connections/hint", requirePlayer, (req, res) => {
   const { type, mode = "normal", practice, gridId } = req.body || {};
-  const options = { mode, practice: checkPractice(req, practice === true), gridId: typeof gridId === "string" ? gridId : undefined };
+  const options = { mode: checkSide(req, mode), practice: checkPractice(req, practice === true), gridId: typeof gridId === "string" ? gridId : undefined };
   res.json(connections.useHint(req.player, type, options));
 });
 
@@ -51,22 +64,22 @@ router.post("/connections/hint", requirePlayer, (req, res) => {
 const practiceLimit = rateLimit({ name: "connections-practice", windowMs: 60 * 1000, max: 30 });
 router.post("/connections/practice", requirePlayer, practiceLimit, async (req, res) => {
   checkPractice(req, true);
-  res.json(await connections.newPracticePuzzle(req.player, req.body?.mode ?? "normal"));
+  res.json(await connections.newPracticePuzzle(req.player, checkSide(req, req.body?.mode ?? "normal")));
 });
 
 // Statistiques du joueur sur les grilles du jour (journal du menu) ;
 // « tries » compte les erreurs
 router.get("/connections/me/stats", requirePlayer, (req, res) => {
-  const mode = req.query.mode === "hard" ? "hard" : "normal";
+  const mode = checkSide(req, ["hard", "custom"].includes(req.query.mode) ? req.query.mode : "normal");
   res.json({ mode, ...players.summarizeGames(statsRepo.playerConnectionGames(req.player.id, mode)) });
 });
 
 router.get("/connections/stats", (req, res) => {
-  res.json(connections.communityStats(req.query.mode ?? "normal"));
+  res.json(connections.communityStats(checkSide(req, req.query.mode ?? "normal")));
 });
 
 router.get("/connections/leaderboard", (req, res) => {
-  res.json({ top: connections.leaderboard(req.player?.id, req.query.mode ?? "normal") });
+  res.json({ top: connections.leaderboard(req.player?.id, checkSide(req, req.query.mode ?? "normal")) });
 });
 
 const suggestLimit = rateLimit({ name: "connections-suggest", windowMs: 10 * 60 * 1000, max: 5 });
@@ -95,6 +108,10 @@ router.delete("/admin/connections/suggestions/:id", (req, res) => {
 
 router.put("/admin/connections/access", limitedAction("connections_access", (req) => req.body?.access), (req, res) => {
   res.json({ access: staff.setConnectionsAccess(req.body?.access) });
+});
+
+router.put("/admin/connections/cside-access", limitedAction("cside_access", (req) => req.body?.access), (req, res) => {
+  res.json({ access: staff.setCsideAccess(req.body?.access) });
 });
 
 // Tags : les éléments cochés l'ont, les autres non

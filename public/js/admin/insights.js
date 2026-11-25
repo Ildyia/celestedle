@@ -12,7 +12,7 @@ const HINT_NAMES = { opposite: "Opposite", secret_info: "Secret info", truth_and
 const STATUS_NAMES = { won: "Won", lost: "Lost", forfeit: "Gave up" };
 const CX_HINT_NAMES = { kinds: "Kinds", category: "Category", pair: "Pair" };
 const KIND_NAMES = { type: "Type", colour: "Colour", shape: "Shape", chapter: "Chapter", tag: "Tag" };
-const SIDES = { normal: "A-Side", hard: "B-Side" };
+const SIDES = { normal: "A-Side", hard: "B-Side", custom: "C-Side" };
 
 export function card(title, note, ...content) {
   return el("section", { className: "admin-card insights-card" }, [el("h3", { text: title }), note ? el("p", { className: "small-subtext", text: note }) : null, ...content]);
@@ -279,6 +279,8 @@ export class InsightsTab {
     cx.replaceChildren(
       cxModeCard("normal", data.connections.modes.normal),
       cxModeCard("hard", data.connections.modes.hard),
+      // C-Side (en test) : seulement si quelqu'un y a joué sur la période
+      data.connections.modes.custom ? cxModeCard("custom", data.connections.modes.custom) : null,
       card(
         "Hints",
         null,

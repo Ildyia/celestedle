@@ -5,6 +5,8 @@ import { openReply, repliesNote } from "./reply.js";
 
 // Difficulté d'un tag (poids dans le générateur : services/connections.js)
 const DIFFICULTY_LABELS = { 1: "Easy", 2: "Medium", 3: "Hard" };
+// Modes des grilles (custom : la C-Side, en test)
+const CX_MODES = { normal: "Normal", hard: "Hard", custom: "C-Side" };
 
 const KIND_LABELS = { type: "Type", colour: "Colour", shape: "Shape", chapter: "Chapter", tag: "Tag" };
 
@@ -22,6 +24,7 @@ export class ConnectionsTab {
     this.form = byId("cx-tag-form");
     byId("new-tag-btn").addEventListener("click", () => this.edit(null));
     byId("cx-access").addEventListener("change", (e) => this.setAccess(e.target));
+    byId("cx-cside-access").addEventListener("change", (e) => this.setCsideAccess(e.target));
     byId("cx-tag-cancel-btn").addEventListener("click", () => this.closeForm());
     byId("cx-tag-search").addEventListener("input", () => this.renderElements());
     byId("cx-tag-delete-btn").addEventListener("click", () => this.remove());
@@ -38,7 +41,10 @@ export class ConnectionsTab {
   async load() {
     admin
       .connectionsAccess()
-      .then(({ access }) => (byId("cx-access").value = access))
+      .then(({ access, cside }) => {
+        byId("cx-access").value = access;
+        if (cside) byId("cx-cside-access").value = cside.access;
+      })
       .catch((err) => this.notify(`Couldn't load access: ${err.message}`, true));
     const [tags, elements, puzzles, suggestions] = await Promise.allSettled([
       admin.connectionTags(),
@@ -111,8 +117,11 @@ export class ConnectionsTab {
       (s.failed ? `, ${s.failed} impossible` : "") +
       (name === "A-Side" ? ` · ${s.rules.strict} without any decoy, ${s.rules.relaxed} with a fallback rule (a colour, shape or chapter decoy allowed)` : "");
     box.append(
-      el("p", { className: "small-subtext", text: line("A-Side", summary.normal) }),
-      el("p", { className: "small-subtext", text: line("B-Side", summary.hard) })
+      ...[
+        el("p", { className: "small-subtext", text: line("A-Side", summary.normal) }),
+        el("p", { className: "small-subtext", text: line("B-Side", summary.hard) }),
+        summary.custom ? el("p", { className: "small-subtext", text: line("C-Side", summary.custom) }) : null
+      ].filter(Boolean)
     );
     const total = rejected(summary.normal);
     const blocks = (t) => t.decoy + t.incompatible;
@@ -164,6 +173,18 @@ export class ConnectionsTab {
     }
   }
 
+  async setCsideAccess(select) {
+    const labels = { staff: "admin team only", playtest: "open to playtesters", public: "open to everyone", closed: "closed" };
+    try {
+      const { access } = await admin.setCsideAccess(select.value);
+      this.notify(`The C-Side is now ${labels[access]}.`);
+    } catch (err) {
+      this.notify(err.message, true);
+      const { cside } = await admin.connectionsAccess();
+      if (cside) select.value = cside.access;
+    }
+  }
+
   renderPuzzles(puzzles) {
     const container = byId("cx-puzzles");
     clear(container);
@@ -171,7 +192,7 @@ export class ConnectionsTab {
       ...puzzles.map((puzzle) =>
         puzzle.error
           ? el("div", { className: "admin-card cx-admin-puzzle" }, [
-              el("strong", { text: `${puzzle.date} ${puzzle.mode === "hard" ? "Hard" : "Normal"}` }),
+              el("strong", { text: `${puzzle.date} ${CX_MODES[puzzle.mode] ?? puzzle.mode}` }),
               el("p", { className: "text-wrong", text: `Can't show this grid: ${puzzle.error}` }),
               el("button", {
                 className: "btn-secondary btn-small",
@@ -183,7 +204,7 @@ export class ConnectionsTab {
           : el("div", { className: "admin-card cx-admin-puzzle" }, [
           el("div", { className: "cx-admin-puzzle-head" }, [
             el("strong", { text: puzzle.date }),
-            el("span", { className: `badge cx-mode-${puzzle.mode}`, text: puzzle.mode === "hard" ? "Hard" : "Normal" }),
+            el("span", { className: `badge cx-mode-${puzzle.mode}`, text: CX_MODES[puzzle.mode] ?? puzzle.mode }),
             // Mode normal tiré avec une règle assouplie : faux groupes possibles
             puzzle.mode === "normal" && ["relaxed", "none"].includes(puzzle.rule)
               ? el("span", {
@@ -225,7 +246,7 @@ export class ConnectionsTab {
     }
     try {
       const puzzle = await admin.regenerateConnectionPuzzle(date, mode);
-      this.notify(`New ${mode === "hard" ? "Hard" : "Normal"} grid for ${date} (v${puzzle.version}).`);
+      this.notify(`New ${CX_MODES[mode] ?? mode} grid for ${date} (v${puzzle.version}).`);
       this.renderPuzzles(await admin.connectionPuzzles());
     } catch (err) {
       this.notify(err.message, true);

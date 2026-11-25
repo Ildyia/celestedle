@@ -350,3 +350,11 @@ Colonne `mail.about` (« report:<id> », « report:<id>:fixed »,
 - Chaque tag a une difficulté (migration 024, `connection_tags.difficulty` : 1 facile, 2 moyen par défaut, 3 difficile), réglée dans le formulaire du tag (admin, Connections → Tags) et affichée dans le tableau. Modifier un tag sans la renvoyer la garde ; l'export et `scripts/import-tags.js` la reprennent.
 - Le générateur pèse les tags selon leur difficulté et le mode (`TAG_WEIGHTS` dans services/connections.js) : A-Side ×2 facile, ×1 moyen, ×0,35 difficile ; B-Side ×0,5 / ×1 / ×2.
 - A-Side : plus de limite d'un tag par grille ; au moins un groupe tag (`minTags`), deux au plus comme en B-Side. Si aucune grille n'est possible avec un tag, le générateur en tire une sans plutôt que rien. Avec ~30 tags, la plupart des grilles A-Side ont deux groupes tag.
+
+## Connections : plus de limite de tags, C-Side en playtest
+
+- Plus aucune limite de tags par grille, dans tous les modes (`maxTags` vaut 4 par défaut). L'A-Side garde son minimum d'un groupe tag.
+- **C-Side** (mode `custom`) : une troisième grille par jour (clé `custom:date`, entraînement `practice-custom:id`), faite seulement de tags. Les types, couleurs, formes et chapitres ne comptent plus du tout, ni comme groupes ni comme faux groupes (`customOnly` dans le générateur). Pas de faux groupe entre tags. Toutes difficultés au même poids. 2 indices, Category et Pair (« Kinds » dirait 4 fois « Tag »).
+- Accès à part (`staff.js`, réglage `connections_cside_access`, variable `CONNECTIONS_CSIDE_ACCESS`) : playtest par défaut, en plus de l'accès à Connections ; réglable dans l'admin, Connections → Access. Le bouton « C-Side » de la page n'apparaît qu'aux joueurs qui y ont accès ; le choix est gardé dans `celestedle_cx_cside` (le mode commun aux jeux reste normal ou hard).
+- Variété : la C-Side ne compte que son propre historique, plus les grilles A et B du jour (pour ne pas reprendre leurs tags le même jour) ; A et B ne voient pas la C-Side.
+- Hors classements, trophées, fraises et tampons pendant le test (les jeux de la C-Side ne sont lus ni par `achievements.allGames` ni par les classements). Les insights de l'admin l'affichent à part (« Connections · C-Side ») quand quelqu'un y a joué. Sans assez de tags complets pour une grille, le joueur reçoit un message (503) et la page revient à l'A-Side.

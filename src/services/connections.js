@@ -9,20 +9,26 @@ const { GROUP_SIZE, GROUP_COUNT, buildCategories, generatePuzzle, seededRandom }
 const { generateInWorker, diagnoseInWorker } = require("./connections-worker");
 
 const MAX_MISTAKES = 4;
-const MODES = ["normal", "hard"];
+// custom : la C-Side, des grilles faites seulement de tags, en test (accès à
+// part, voir staff.js « cside »), hors classements, trophées et tampons
+const MODES = ["normal", "hard", "custom"];
 
 // Indices, du plus léger au plus fort, chacun une fois par partie. Ils ne font
 // pas perdre, mais comptent comme une erreur dans les classements.
 // kinds : la sorte de chaque groupe ; category : le nom d'un groupe pas encore
 // trouvé (le tag d'abord) ; pair : 2 cases qui vont ensemble
+// C-Side : pas de « kinds », qui y donnerait 4 fois « Tag »
 const HINT_TYPES = ["kinds", "category", "pair"];
-const MAX_HINTS = { normal: 3, hard: 1 };
+const MODE_HINTS = { normal: HINT_TYPES, hard: HINT_TYPES, custom: ["category", "pair"] };
+const MAX_HINTS = { normal: 3, hard: 1, custom: 2 };
 // Tags : au moins un groupe tag par grille en Normal (au plus la limite
 // commune, 2, dans les deux modes ; en Hard un tag n'est imposé qu'une grille
 // sur deux). Poids selon la difficulté du tag (1 facile, 2 moyen, 3 difficile) :
 // le Normal tire plus souvent les tags faciles, le Hard les difficiles.
-const MIN_TAGS = { normal: 1, hard: 0 };
-const TAG_WEIGHTS = { normal: { 1: 2, 2: 1, 3: 0.35 }, hard: { 1: 0.5, 2: 1, 3: 2 } };
+// (Sans limite de tags par grille : les 4 groupes peuvent en être.)
+// C-Side : que des tags, toutes difficultés au même poids.
+const MIN_TAGS = { normal: 1, hard: 0, custom: 0 };
+const TAG_WEIGHTS = { normal: { 1: 2, 2: 1, 3: 0.35 }, hard: { 1: 0.5, 2: 1, 3: 2 }, custom: null };
 const TAG_DIFFICULTIES = [1, 2, 3];
 
 // Normal : grilles sans faux groupe. Hard : faux groupes permis (seule
@@ -34,14 +40,14 @@ function checkMode(mode = "normal") {
 
 // Clé d'une grille dans connection_puzzles.date (et connection_games.date) :
 // la date pour la grille du jour en normal (comme avant le mode Hard),
-// « hard:date » en Hard, « practice:id » / « practice-hard:id » pour
-// l'entraînement d'un joueur
+// « hard:date » en Hard, « custom:date » en C-Side, « practice:id » /
+// « practice-hard:id » / « practice-custom:id » pour l'entraînement d'un joueur
 function dailyKey(mode, date) {
-  return mode === "hard" ? `hard:${date}` : date;
+  return mode === "normal" ? date : `${mode}:${date}`;
 }
 
 function practiceKey(mode, playerId) {
-  return mode === "hard" ? `practice-hard:${playerId}` : `practice:${playerId}`;
+  return mode === "normal" ? `practice:${playerId}` : `practice-${mode}:${playerId}`;
 }
 
 // Même grille pour tout le monde un jour donné (et pour une même graine)
@@ -51,11 +57,14 @@ function seedFor(key) {
 
 // Mode normal : un seul groupe chapitre (« First appears in … » ou
 // « Appears in … », les plus durs à deviner)
-const MAX_PER_KIND = { normal: { chapter: 1 }, hard: {} };
+const MAX_PER_KIND = { normal: { chapter: 1 }, hard: {}, custom: {} };
 
-// Variété : ce qui est sorti les RECENT_DAYS jours avant `date` (les deux
-// modes), pesant d'autant plus que c'est récent (RECENT_DECAY par jour), et
-// la grille de l'autre mode du même jour, si elle existe déjà
+// Variété : ce qui est sorti les RECENT_DAYS jours avant `date`, pesant
+// d'autant plus que c'est récent (RECENT_DECAY par jour), et les grilles des
+// autres modes du même jour, si elles existent déjà. Normal et Hard comptent
+// l'un pour l'autre ; la C-Side (en test, peu de joueurs) ne compte que son
+// propre historique, plus les grilles du jour des deux autres (pour ne pas
+// reprendre leurs tags le même jour).
 const RECENT_DAYS = 30;
 const RECENT_DECAY = 0.85;
 function recentFor(date, mode) {
@@ -70,10 +79,12 @@ function recentFor(date, mode) {
     }
     for (const g of puzzle.groups) recent.categories.set(g.key, (recent.categories.get(g.key) ?? 0) + weight);
   };
-  add(repo.findPuzzle(dailyKey(mode === "hard" ? "normal" : "hard", date)), 1);
+  const sameDay = mode === "custom" ? ["normal", "hard"] : [mode === "hard" ? "normal" : "hard"];
+  const history = mode === "custom" ? ["custom"] : ["normal", "hard"];
+  for (const m of sameDay) add(repo.findPuzzle(dailyKey(m, date)), 1);
   for (let ago = 1; ago <= RECENT_DAYS; ago++) {
     const day = addDays(date, -ago);
-    for (const m of MODES) add(repo.findPuzzle(dailyKey(m, day)), RECENT_DECAY ** (ago - 1));
+    for (const m of history) add(repo.findPuzzle(dailyKey(m, day)), RECENT_DECAY ** (ago - 1));
   }
   return recent;
 }
@@ -83,6 +94,7 @@ function recentFor(date, mode) {
 function generateOptions(mode, date = todayParis()) {
   return {
     allowDecoys: mode === "hard",
+    customOnly: mode === "custom",
     minTags: MIN_TAGS[mode],
     tagWeights: TAG_WEIGHTS[mode],
     maxPerKind: MAX_PER_KIND[mode],
@@ -100,10 +112,23 @@ function generateAsync(mode, seed, date = todayParis()) {
   return generateInWorker(elementsRepo.listActive(), repo.listTags(), seed, generateOptions(mode, date));
 }
 
+// C-Side sans grille possible (pas assez de tags complets) : un message pour
+// le joueur plutôt qu'une erreur serveur
+function csideError(err, mode) {
+  if (mode !== "custom" || err instanceof HttpError) return err;
+  return new HttpError(503, "There aren't enough complete tags for a C-Side grid yet.");
+}
+
 function getPuzzle(date = todayParis(), mode = "normal") {
   const key = dailyKey(checkMode(mode), date);
   // Normalement déjà tirée en avance (prepareUpcoming) ; sinon, sur place
-  return repo.findPuzzle(key) ?? repo.createPuzzleIfMissing(key, generate(mode, seededRandom(seedFor(key)), date), nowIso());
+  const existing = repo.findPuzzle(key);
+  if (existing) return existing;
+  try {
+    return repo.createPuzzleIfMissing(key, generate(mode, seededRandom(seedFor(key)), date), nowIso());
+  } catch (err) {
+    throw csideError(err, mode);
+  }
 }
 
 // Grille d'un jour, tirée dans le worker si elle n'existe pas encore : la même
@@ -127,7 +152,9 @@ async function prepareUpcoming() {
       try {
         await ensurePuzzle(addDays(today, i), mode);
       } catch (err) {
-        console.error(`[ERROR] Connections ${mode} ${addDays(today, i)}`, err);
+        // C-Side sans assez de tags : attendu tant qu'elle est en test
+        if (mode === "custom") console.warn(`[WARN] Connections C-Side ${addDays(today, i)}: ${err.message}`);
+        else console.error(`[ERROR] Connections ${mode} ${addDays(today, i)}`, err);
       }
     }
   }
@@ -149,11 +176,23 @@ async function regeneratePuzzle(date, mode = "normal") {
 // la grille commune
 function getPracticePuzzle(playerId, mode) {
   const key = practiceKey(mode, playerId);
-  return repo.findPuzzle(key) ?? repo.createPuzzleIfMissing(key, generate(mode, Math.random), nowIso());
+  const existing = repo.findPuzzle(key);
+  if (existing) return existing;
+  try {
+    return repo.createPuzzleIfMissing(key, generate(mode, Math.random), nowIso());
+  } catch (err) {
+    throw csideError(err, mode);
+  }
 }
 
 async function newPracticePuzzle(player, mode = "normal") {
-  repo.replacePuzzle(practiceKey(checkMode(mode), player.id), await generateAsync(mode, null), nowIso());
+  let puzzle;
+  try {
+    puzzle = await generateAsync(checkMode(mode), null);
+  } catch (err) {
+    throw csideError(err, mode);
+  }
+  repo.replacePuzzle(practiceKey(mode, player.id), puzzle, nowIso());
   return getState(player, { mode, practice: true });
 }
 
@@ -239,6 +278,7 @@ function buildState(puzzle, game, { mode, practice, reset = false }) {
     maxMistakes: MAX_MISTAKES,
     mistakes: attempts.filter((a) => a.groupIndex === null).length,
     maxHints: MAX_HINTS[mode],
+    hintTypes: MODE_HINTS[mode],
     hints: hints.map((hint) => hintView(hint, puzzle, elementsById)),
     tiles: puzzle.tiles.filter((id) => !foundIds.has(id)).map((id) => tileOf(elementsById.get(id))),
     found: foundIndexes.map((i) => groupView(puzzle.groups[i], elementsById)),
@@ -331,6 +371,7 @@ const guess = db.transaction((player, names, { mode = "normal", practice = false
 const useHint = db.transaction((player, type, { mode = "normal", practice = false, gridId, random = Math.random } = {}) => {
   checkMode(mode);
   if (!HINT_TYPES.includes(type)) throw new HttpError(400, `Unknown hint "${type}".`);
+  if (!MODE_HINTS[mode].includes(type)) throw new HttpError(400, `No "${type}" hint in this mode.`);
   const puzzle = puzzleFor(player, mode, practice);
   if (gridId !== undefined && gridId !== `${puzzle.date}#${puzzle.version}`) {
     throw new HttpError(409, practice ? "This grid was replaced: here is the new one." : "A new grid is out: here it is!", {
@@ -532,7 +573,7 @@ async function tagDiagnostics() {
     .slice(0, 8);
 
   const summary = (r) => ({ trials: r.trials, failed: r.failed, rules: r.rules, ms: r.ms, rejected: r.rejected });
-  return { summary: { normal: summary(reports.normal), hard: summary(reports.hard) }, tags: rows, others };
+  return { summary: Object.fromEntries(MODES.map((mode) => [mode, summary(reports[mode])])), tags: rows, others };
 }
 
 function puzzlePreview(date, mode = "normal") {

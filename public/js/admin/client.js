@@ -70,6 +70,7 @@ export const admin = {
   deleteConnectionTag: (id) => request("DELETE", `/admin/connections/tags/${id}`),
   connectionsAccess: () => request("GET", "/connections-access"),
   setConnectionsAccess: (access) => request("PUT", "/admin/connections/access", { access }),
+  setCsideAccess: (access) => request("PUT", "/admin/connections/cside-access", { access }),
   connectionSuggestions: () => request("GET", "/admin/connections/suggestions"),
   // added : nom du tag créé à partir de la suggestion (son auteur reçoit une lettre)
   deleteConnectionSuggestion: (id, added) =>

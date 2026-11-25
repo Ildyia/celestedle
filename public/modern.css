@@ -138,6 +138,8 @@ html.ui-modern {
   }
   & #modern-side::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--m-side-a); }
   & #modern-side[data-mode="hard"]::before { background: var(--m-side-b); }
+  /* C-Side (Connections, en test) : violet, comme les cassettes */
+  & #modern-side[data-mode="custom"]::before { background: #b06ad8; }
   & .hard-rules { color: var(--m-muted); text-shadow: var(--m-shadow); }
 }
 

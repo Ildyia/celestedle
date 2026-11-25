@@ -2093,6 +2093,11 @@ input[type="checkbox"]:not(.switch input):checked::after {
   background: var(--color-wrong);
 }
 
+/* C-Side de Connections (playtest) */
+#mode-switch button[data-mode="custom"][aria-pressed="true"] {
+  background: #8e4fc0;
+}
+
 #mode-switch button:disabled {
   opacity: 0.4;
   cursor: not-allowed !important;

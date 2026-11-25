@@ -28,6 +28,8 @@ module.exports = {
   // Accès à Connections tant que l'admin ne l'a pas réglé : staff, playtest
   // ou public (la bêta, dont la base repart de zéro, l'ouvre ainsi à tous)
   connectionsAccess: process.env.CONNECTIONS_ACCESS || "",
+  // C-Side de Connections (grilles de tags seulement) : playtest par défaut
+  connectionsCsideAccess: process.env.CONNECTIONS_CSIDE_ACCESS || "",
 
   // Adresse publique du jeu (liens des messages du bot)
   siteUrl: process.env.SITE_URL || "https://celestedle.vercel.app/",

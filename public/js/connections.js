@@ -24,8 +24,11 @@ const HINT_NAMES = { kinds: "Kinds", category: "Category", pair: "Pair" };
 const CONFIRM_MS = 3000;
 const MODE_NOTES = {
   normal: "Normal: every group is clear-cut, no decoy groups.",
-  hard: "Hard: decoy groups are allowed (4 tiles can look like a group and not be one). Mark tiles with colours to plan ahead."
+  hard: "Hard: decoy groups are allowed (4 tiles can look like a group and not be one). Mark tiles with colours to plan ahead.",
+  custom: "C-Side (playtest): every group is a custom category, no type, colour, shape or chapter. 2 hints. Not counted in rankings yet."
 };
+// Nom du mode dans le partage et les statistiques
+const MODE_NAMES = { normal: "", hard: "Hard", custom: "C-Side" };
 
 function hintsText(count) {
   return count ? ` and ${count} hint${count === 1 ? "" : "s"}` : "";
@@ -78,7 +81,13 @@ class ConnectionsGame {
   async setMode(mode) {
     if (mode === this.mode || this.busy) return;
     this.mode = mode;
-    storage.set(KEYS.mode, mode);
+    // La C-Side n'existe que dans Connections : le mode commun aux jeux reste
+    // normal ou hard
+    if (mode === "custom") storage.set(KEYS.cxCside, "1");
+    else {
+      storage.set(KEYS.mode, mode);
+      storage.remove(KEYS.cxCside);
+    }
     this.resetLocal();
     await this.load();
   }
@@ -134,6 +143,12 @@ class ConnectionsGame {
       byId("cx-suggest-btn").hidden = false;
       this.loadBoard();
     } catch (err) {
+      // C-Side sans grille possible (pas assez de tags) : retour à l'A-Side
+      if (this.mode === "custom" && err instanceof ApiError && err.status === 503) {
+        showToast(err.message, FEEDBACK_MS);
+        await this.setMode("normal");
+        return;
+      }
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
         byId("cx-locked").hidden = false;
         byId("mode-switch").hidden = true;
@@ -243,13 +258,15 @@ class ConnectionsGame {
   }
 
   renderHints() {
-    const { hints, maxHints, status } = this.state;
+    const { hints, maxHints, status, hintTypes } = this.state;
     const playing = status === "playing";
     const left = Math.max(0, maxHints - hints.length);
     byId("cx-hints").hidden = !playing;
     byId("cx-hints-left").textContent = left ? `Hints left: ${left}` : "No hints left";
     document.querySelectorAll("[data-cx-hint]").forEach((btn) => {
       const type = btn.dataset.cxHint;
+      // C-Side : pas d'indice « Kinds »
+      btn.hidden = Boolean(hintTypes) && !hintTypes.includes(type);
       const used = hints.some((h) => h.type === type);
       btn.disabled = used || left === 0 || this.busy;
       btn.classList.toggle("confirming", this.confirming === type);
@@ -304,7 +321,7 @@ class ConnectionsGame {
     const { status, solution, mistakes, hints, elapsedSeconds } = this.state;
     byId("cx-end").hidden = status === "playing";
     announceEnd(`${this.mode}-${this.practice ? "practice" : "daily"}`, status, () => ({
-      side: this.mode === "hard" ? "b" : "a",
+      side: { normal: "a", hard: "b", custom: "c" }[this.mode],
       practice: this.practice,
       stats: [
         { icon: "skull", value: mistakes, label: mistakes === 1 ? "Mistake" : "Mistakes" },
@@ -375,7 +392,7 @@ class ConnectionsGame {
   async loadStats() {
     try {
       const stats = await api.connectionsStats(this.mode);
-      byId("cx-stats-mode").textContent = this.mode === "hard" ? "(Hard)" : "";
+      byId("cx-stats-mode").textContent = MODE_NAMES[this.mode] ? `(${MODE_NAMES[this.mode]})` : "";
       byId("cx-stats-wins").textContent = stats.wins ?? 0;
       byId("cx-stats-rate").textContent = stats.winRate === null ? "-" : `${stats.winRate}%`;
       byId("cx-stats-mistakes").textContent = stats.avgMistakes ?? "-";
@@ -422,7 +439,7 @@ class ConnectionsGame {
     const outcome =
       status === "won" ? `solved with ${mistakes} mistake${mistakes === 1 ? "" : "s"}${hintsText(hints.length)}` : "not solved";
     const grid = attempts.map((levels) => levels.map((level) => SHARE_EMOJI[level]).join("")).join("\n");
-    const name = `Celestedle Connections${this.mode === "hard" ? " Hard" : ""}`;
+    const name = `Celestedle Connections${MODE_NAMES[this.mode] ? ` ${MODE_NAMES[this.mode]}` : ""}`;
     const title = this.state.practice ? `${name} (practice)` : `${name} ${date}`;
     const bulbs = hints.length ? `\n${"💡".repeat(hints.length)}` : "";
     const legend = hints.length ? `${SHARE_LEGEND}, 💡 per hint` : SHARE_LEGEND;
@@ -469,12 +486,14 @@ async function init() {
   initOptions();
   await player.load();
   initGameTabs("connections");
-  // Grilles d'entraînement : équipe admin seulement
-  api
-    .connectionsAccess()
-    .then(({ canPractice }) => (byId("cx-grid-switch").hidden = !canPractice))
-    .catch(() => {});
-  await new ConnectionsGame().load();
+  // Grilles d'entraînement : équipe admin seulement ; C-Side : selon son accès
+  const access = await api.connectionsAccess().catch(() => null);
+  byId("cx-grid-switch").hidden = !access?.canPractice;
+  const cside = Boolean(access?.cside?.canPlay);
+  document.querySelector("[data-cx-mode='custom']").hidden = !cside;
+  const game = new ConnectionsGame();
+  if (cside && storage.get(KEYS.cxCside) === "1") game.mode = "custom";
+  await game.load();
 }
 
 document.addEventListener("DOMContentLoaded", init);

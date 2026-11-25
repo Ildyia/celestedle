@@ -2,7 +2,7 @@
 // et dans l'onglet Insights (recherche d'un élément).
 import { el } from "../dom.js";
 
-const SIDES = { normal: "A-Side", hard: "B-Side" };
+const SIDES = { normal: "A-Side", hard: "B-Side", custom: "C-Side" };
 const KIND_NAMES = { type: "Type", colour: "Colour", shape: "Shape", chapter: "Chapter", tag: "Tag" };
 const pct = (part, total) => (total ? `${Math.round((part / total) * 100)}%` : "-");
 

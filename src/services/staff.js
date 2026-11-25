@@ -24,7 +24,9 @@ function isStaff(player) {
 const GAME_ACCESS = ["staff", "playtest", "public", "closed"];
 // standard : accès sans réglage ni variable d'environnement
 const ACCESS_SETTINGS = {
-  connections: { key: "connections_access", fallback: () => config.connectionsAccess, standard: "public" }
+  connections: { key: "connections_access", fallback: () => config.connectionsAccess, standard: "public" },
+  // C-Side de Connections : en plus de l'accès à Connections
+  cside: { key: "connections_cside_access", fallback: () => config.connectionsCsideAccess, standard: "playtest" }
 };
 
 function accessSetting(game) {
@@ -65,6 +67,9 @@ function canPlay(game, player) {
 const connectionsAccess = () => gameAccess("connections");
 const setConnectionsAccess = (access) => setGameAccess("connections", access);
 const canPlaytest = (player) => canPlay("connections", player);
+const csideAccess = () => gameAccess("cside");
+const setCsideAccess = (access) => setGameAccess("cside", access);
+const canPlayCside = (player) => canPlay("connections", player) && canPlay("cside", player);
 
 // Enregistré au journal par la route (modification comptée dans le quota)
 function setPlaytester(playerId, enabled) {
@@ -163,6 +168,9 @@ module.exports = {
   DEFAULT_DAILY_LIMIT,
   isStaff,
   canPlaytest,
+  csideAccess,
+  setCsideAccess,
+  canPlayCside,
   canPlay,
   gameAccess,
   setGameAccess,

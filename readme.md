@@ -45,6 +45,7 @@ Useful environment variables (`.env`):
 | `PERMANENT_OWNER_TOKEN` | Beta only: recovery code of a profile recreated as owner at startup (16+ characters) |
 | `PERMANENT_OWNER_NAME` | Name of that profile (default `Amélia`) |
 | `CONNECTIONS_ACCESS` | Who can play Connections until the admin changes it: `staff`, `playtest` or `public` (default) |
+| `CONNECTIONS_CSIDE_ACCESS` | Who can play the Connections C-Side (grids made only of tags) until the admin changes it: `staff`, `playtest` (default), `public` or `closed` |
 
 The home page is the Celeste-style menu (`index.html`); the main game is `celestedle.html`. See `REDESIGN.md` for how the menus and the Modern interface are built, and `docs/GUIDE.md` for the project tour (in French).
 

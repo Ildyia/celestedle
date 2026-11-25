@@ -3,7 +3,7 @@ import { el, byId } from "../dom.js";
 import { formatDuration, formatNumber } from "../format.js";
 import { admin } from "./client.js";
 
-const MODE_LABELS = { normal: "Normal mode", hard: "Hard mode" };
+const MODE_LABELS = { normal: "Normal mode", hard: "Hard mode", custom: "C-Side (playtest)" };
 const KIND_LABELS = { type: "Type", colour: "Colour", shape: "Shape", chapter: "Chapter", tag: "Tag" };
 
 export function kpi(label, value, note) {
@@ -76,7 +76,7 @@ function modeCard(mode, { secret, stats }, { notify, refresh }) {
 // Connections : grille du jour, chiffres et régénération
 function connectionsCard(mode, { puzzle, stats }, { notify, refresh }) {
   const regenerate = async () => {
-    if (!window.confirm(`Draw another ${mode === "hard" ? "Hard" : "Normal"} grid? Today's games start over.`)) return;
+    if (!window.confirm(`Draw another ${MODE_LABELS[mode]} grid? Today's games start over.`)) return;
     try {
       await admin.regenerateConnectionPuzzle(puzzle.date, mode);
       notify(`Connections ${MODE_LABELS[mode]}: new grid. Games in progress start over.`);

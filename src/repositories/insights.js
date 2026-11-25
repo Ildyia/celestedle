@@ -42,23 +42,23 @@ const stmts = {
     UNION ALL
     SELECT finished_at FROM connection_games
     WHERE finished_at IS NOT NULL AND date NOT LIKE 'practice%'
-      AND (CASE WHEN date LIKE 'hard:%' THEN substr(date, 6) ELSE date END) >= @since
+      AND (substr(date, instr(date, ':') + 1)) >= @since
   `),
   // Parties et joueurs par jour, par jeu
   daily: db.prepare(`
     SELECT date, 'celestedle' AS game, COUNT(*) AS games, COUNT(DISTINCT player_id) AS players
     FROM games WHERE date >= @since GROUP BY date
     UNION ALL
-    SELECT CASE WHEN date LIKE 'hard:%' THEN substr(date, 6) ELSE date END AS day, 'connections', COUNT(*), COUNT(DISTINCT player_id)
+    SELECT substr(date, instr(date, ':') + 1) AS day, 'connections', COUNT(*), COUNT(DISTINCT player_id)
     FROM connection_games WHERE date NOT LIKE 'practice%'
-      AND (CASE WHEN date LIKE 'hard:%' THEN substr(date, 6) ELSE date END) >= @since
+      AND (substr(date, instr(date, ':') + 1)) >= @since
     GROUP BY day
   `),
   // Joueurs distincts par jour, tous jeux confondus
   players: db.prepare(`
     SELECT day, COUNT(DISTINCT player_id) AS players FROM (
       SELECT date AS day, player_id FROM games
-      UNION ALL SELECT CASE WHEN date LIKE 'hard:%' THEN substr(date, 6) ELSE date END, player_id
+      UNION ALL SELECT substr(date, instr(date, ':') + 1), player_id
       FROM connection_games WHERE date NOT LIKE 'practice%'
     ) WHERE day >= @since GROUP BY day
   `),
@@ -69,19 +69,19 @@ const stmts = {
            (SELECT COUNT(*) FROM connection_hints h WHERE h.game_id = g.id) AS hints
     FROM connection_games g JOIN connection_puzzles p ON p.date = g.date
     WHERE g.status <> 'playing' AND g.date NOT LIKE 'practice%'
-      AND (CASE WHEN g.date LIKE 'hard:%' THEN substr(g.date, 6) ELSE g.date END) >= @since
+      AND (substr(g.date, instr(g.date, ':') + 1)) >= @since
   `),
   cxAttempts: db.prepare(`
     SELECT a.game_id AS gameId, a.group_index AS groupIndex, a.element_ids AS elementIds
     FROM connection_attempts a JOIN connection_games g ON g.id = a.game_id
     WHERE g.status <> 'playing' AND g.date NOT LIKE 'practice%'
-      AND (CASE WHEN g.date LIKE 'hard:%' THEN substr(g.date, 6) ELSE g.date END) >= @since
+      AND (substr(g.date, instr(g.date, ':') + 1)) >= @since
   `),
   cxHints: db.prepare(`
     SELECT h.type, COUNT(*) AS uses
     FROM connection_hints h JOIN connection_games g ON g.id = h.game_id
     WHERE g.date NOT LIKE 'practice%'
-      AND (CASE WHEN g.date LIKE 'hard:%' THEN substr(g.date, 6) ELSE g.date END) >= @since
+      AND (substr(g.date, instr(g.date, ':') + 1)) >= @since
     GROUP BY h.type ORDER BY uses DESC
   `),
   elementNames: db.prepare("SELECT id, name FROM elements"),
@@ -147,6 +147,11 @@ function openerEfficiency(mode, since) {
 
 // Grilles trouvées dans moins de joueurs que ça : pas classées (trop peu de
 // parties pour dire si un groupe est dur)
+// Clé d'une grille du jour de Connections : « date » (Normal), « hard:date »,
+// « custom:date » (C-Side)
+const modeOfKey = (key) => (key.includes(":") ? key.slice(0, key.indexOf(":")) : "normal");
+const dayOfKey = (key) => key.slice(key.indexOf(":") + 1);
+
 const MIN_PLAYERS = 3;
 const KIND_NAMES = ["type", "shape", "colour", "chapter", "tag"];
 
@@ -171,7 +176,7 @@ function connectionsInsights(since) {
   const modes = {};
   const groups = new Map();
   for (const g of games) {
-    const mode = g.date.startsWith("hard:") ? "hard" : "normal";
+    const mode = modeOfKey(g.date);
     const m = (modes[mode] ??= { outcomes: { won: 0, lost: 0 }, mistakes: [0, 0, 0, 0, 0], hints: 0, kinds: {} });
     const { found, mistakes } = byGame.get(g.id);
     m.outcomes[g.status] = (m.outcomes[g.status] ?? 0) + 1;
@@ -184,7 +189,7 @@ function connectionsInsights(since) {
       k.seen++;
       if (found.has(index)) k.found++;
       const id = `${g.date}|${index}`;
-      const row = groups.get(id) ?? { date: g.date.replace("hard:", ""), mode, label: group.label, kind, players: 0, found: 0 };
+      const row = groups.get(id) ?? { date: dayOfKey(g.date), mode, label: group.label, kind, players: 0, found: 0 };
       row.players++;
       if (found.has(index)) row.found++;
       groups.set(id, row);
@@ -286,7 +291,7 @@ const elementStmts = {
     SELECT COUNT(*) AS times
     FROM connection_attempts a JOIN connection_games g ON g.id = a.game_id, json_each(a.element_ids) j
     WHERE a.group_index IS NULL AND j.value = @id AND g.date NOT LIKE 'practice%'
-      AND (CASE WHEN g.date LIKE 'hard:%' THEN substr(g.date, 6) ELSE g.date END) >= @since
+      AND (substr(g.date, instr(g.date, ':') + 1)) >= @since
   `),
   tags: db.prepare(`
     SELECT t.label FROM connection_tags t JOIN connection_tag_elements te ON te.tag_id = t.id
@@ -313,7 +318,7 @@ function groupsFound(key) {
 function elementInsights(id, today, since = "0000-01-01") {
   const grids = elementStmts.cxGroups
     .all({ id })
-    .map((g) => ({ ...g, day: g.date.replace("hard:", ""), mode: g.date.startsWith("hard:") ? "hard" : "normal" }))
+    .map((g) => ({ ...g, day: dayOfKey(g.date), mode: modeOfKey(g.date) }))
     .filter((g) => g.day <= today && g.day >= since)
     .map((g) => ({
       date: g.day,

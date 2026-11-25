@@ -352,7 +352,11 @@ function generatePuzzle(
   random = Math.random,
   {
     allowDecoys = false,
-    maxTags = MAX_SAME_KIND,
+    // Plus de limite de tags par grille (les 4 groupes peuvent en être)
+    maxTags = GROUP_COUNT,
+    // C-Side : seulement des tags, groupes comme faux groupes (les attributs
+    // ne comptent plus du tout)
+    customOnly = false,
     minTags = 0,
     tagWeights = null,
     maxPerKind = {},
@@ -362,14 +366,14 @@ function generatePuzzle(
 ) {
   const rules = allowDecoys ? ["none"] : ["strict", "relaxed", "none"];
   for (const rule of rules) {
-    const puzzle = tryGenerate(elements, tags, random, rule, stats, { maxTags, minTags, tagWeights, maxPerKind }, recent);
+    const puzzle = tryGenerate(elements, tags, random, rule, stats, { maxTags, minTags, tagWeights, maxPerKind, customOnly }, recent);
     if (puzzle) return { ...puzzle, rule };
   }
   // Aucune grille avec le tag imposé : mieux vaut une grille sans tag que pas
   // de grille du tout
   if (minTags > 0) {
     for (const rule of rules) {
-      const puzzle = tryGenerate(elements, tags, random, rule, stats, { maxTags, minTags: 0, tagWeights, maxPerKind }, recent);
+      const puzzle = tryGenerate(elements, tags, random, rule, stats, { maxTags, minTags: 0, tagWeights, maxPerKind, customOnly }, recent);
       if (puzzle) return { ...puzzle, rule };
     }
   }
@@ -403,12 +407,12 @@ function noPuzzleError(elements, tags, stats) {
 // un tag peut sortir comme n'importe quelle catégorie.
 const TAG_CHANCE = 0.5;
 
-function tryGenerate(elements, tags, random, rule, stats, { maxTags, minTags = 0, tagWeights = null, maxPerKind }, recent) {
+function tryGenerate(elements, tags, random, rule, stats, { maxTags, minTags = 0, tagWeights = null, maxPerKind, customOnly = false }, recent) {
   // Un tag qui ne peut pas servir de groupe (hors limites ou incomplet) ne
   // compte pas non plus dans la vérification : un tag qui couvre presque tout
   // le catalogue rendait toutes les combinaisons de 4 cases valides, et plus
   // aucune grille n'avait une seule solution
-  const categories = buildCategories(elements, tags).filter((c) => c.kind !== "tag" || c.usable);
+  const categories = buildCategories(elements, tags).filter((c) => (customOnly ? c.kind === "tag" && c.usable : c.kind !== "tag" || c.usable));
   const usable = categories.filter((c) => c.usable);
   const usableTags = usable.filter((c) => c.kind === "tag");
 
