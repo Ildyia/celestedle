@@ -93,7 +93,9 @@ function buildCategories(elements, tags = []) {
       kind: "tag",
       label: tag.label,
       members: new Set(members),
-      usable: tag.unreviewedIds.length === 0
+      usable: tag.unreviewedIds.length === 0,
+      // 1 facile, 2 moyen, 3 difficile (voir tagWeights dans generatePuzzle)
+      difficulty: tag.difficulty ?? 2
     });
   }
   for (const category of map.values()) {
@@ -299,8 +301,11 @@ function findDecoy(tiles, chosen, categories, rule = "strict") {
 // Grille { groups: [{ key, kind, label, level, elementIds }], tiles: [16 ids] }.
 // level (0 à 3) donne seulement la couleur du groupe, tirée au hasard : elle
 // ne dit rien de sa difficulté.
-// Un groupe tag est imposé quand un tag complet le permet ; maxTags limite
-// leur nombre (1 en normal : un tag ne se devine pas sans le connaître).
+// Tags : minTags groupes tag au moins quand un tag complet le permet (1 en
+// A-Side : chaque grille a sa catégorie maison ; 0 en B-Side, où un tag n'est
+// imposé qu'une grille sur TAG_CHANCE), maxTags au plus.
+// tagWeights : poids d'un tag selon sa difficulté ({ 1: …, 2: …, 3: … }) :
+// l'A-Side tire plus souvent les tags faciles, la B-Side les difficiles.
 // Mode normal : pas de faux groupe ; si aucune grille stricte n'est trouvée
 // (rare), on accepte un « faux groupe parfait » plutôt que de ne pas avoir de
 // grille. Mode Hard (allowDecoys) : faux groupes permis, seule l'unicité de
@@ -345,12 +350,28 @@ function generatePuzzle(
   elements,
   tags,
   random = Math.random,
-  { allowDecoys = false, maxTags = MAX_SAME_KIND, maxPerKind = {}, recent = null, stats = { incompatible: 0, decoy: 0, multiple: 0 } } = {}
+  {
+    allowDecoys = false,
+    maxTags = MAX_SAME_KIND,
+    minTags = 0,
+    tagWeights = null,
+    maxPerKind = {},
+    recent = null,
+    stats = { incompatible: 0, decoy: 0, multiple: 0 }
+  } = {}
 ) {
   const rules = allowDecoys ? ["none"] : ["strict", "relaxed", "none"];
   for (const rule of rules) {
-    const puzzle = tryGenerate(elements, tags, random, rule, stats, { maxTags, maxPerKind }, recent);
+    const puzzle = tryGenerate(elements, tags, random, rule, stats, { maxTags, minTags, tagWeights, maxPerKind }, recent);
     if (puzzle) return { ...puzzle, rule };
+  }
+  // Aucune grille avec le tag imposé : mieux vaut une grille sans tag que pas
+  // de grille du tout
+  if (minTags > 0) {
+    for (const rule of rules) {
+      const puzzle = tryGenerate(elements, tags, random, rule, stats, { maxTags, minTags: 0, tagWeights, maxPerKind }, recent);
+      if (puzzle) return { ...puzzle, rule };
+    }
   }
   throw noPuzzleError(elements, tags, stats);
 }
@@ -382,7 +403,7 @@ function noPuzzleError(elements, tags, stats) {
 // un tag peut sortir comme n'importe quelle catégorie.
 const TAG_CHANCE = 0.5;
 
-function tryGenerate(elements, tags, random, rule, stats, { maxTags, maxPerKind }, recent) {
+function tryGenerate(elements, tags, random, rule, stats, { maxTags, minTags = 0, tagWeights = null, maxPerKind }, recent) {
   // Un tag qui ne peut pas servir de groupe (hors limites ou incomplet) ne
   // compte pas non plus dans la vérification : un tag qui couvre presque tout
   // le catalogue rendait toutes les combinaisons de 4 cases valides, et plus
@@ -417,15 +438,18 @@ function tryGenerate(elements, tags, random, rule, stats, { maxTags, maxPerKind 
     // Une catégorie qui vient d'échouer (pour cette grille) perd aussi du poids :
     // sinon une catégorie impossible à remplir, jamais sortie donc « neuve »,
     // était retirée sans fin
+    // Un tag pèse aussi selon sa difficulté et le mode (tagWeights)
     category: (c) =>
-      Math.max(freshness.get(c.key), 1e-6) / (1 + 3 * (recent?.categories?.get(c.key) ?? 0)) ** CAT_POW / (1 + (failures.get(c.key) ?? 0)) ** 2,
+      (Math.max(freshness.get(c.key), 1e-6) / (1 + 3 * (recent?.categories?.get(c.key) ?? 0)) ** CAT_POW / (1 + (failures.get(c.key) ?? 0)) ** 2) *
+      (c.kind === "tag" ? (tagWeights?.[c.difficulty] ?? 1) : 1),
     element: (id) => Math.max(element(id), 1e-6)
   };
 
-  // Un groupe tag n'est imposé qu'une grille sur TAG_CHANCE environ :
-  // imposé chaque jour, les quelques tags complets revenaient sans cesse.
-  // Les autres jours, un tag peut sortir comme n'importe quelle catégorie.
-  const imposeTag = usableTags.length > 0 && random() < TAG_CHANCE;
+  // Avec minTags, un groupe tag est imposé à chaque essai. Sinon il ne l'est
+  // qu'une grille sur TAG_CHANCE environ (imposé chaque jour avec peu de
+  // tags, les mêmes revenaient sans cesse) ; les autres jours, un tag peut
+  // sortir comme n'importe quelle catégorie.
+  const imposeTag = usableTags.length > 0 && (minTags > 0 || random() < TAG_CHANCE);
   const candidates = [];
   // D'abord sans les éléments trop sortis (poids nul), sur autant de jeux de
   // catégories qu'il faut ; s'il n'y a vraiment aucune grille sans eux, on
@@ -450,11 +474,15 @@ function tryGenerate(elements, tags, random, rule, stats, { maxTags, maxPerKind 
   for (const phaseWeigh of phases) {
   const open = usable.filter((c) => !phaseWeigh.skip?.(c));
   const openTags = open.filter((c) => c.kind === "tag");
+  // Tag imposé mais tous écartés dans cette recherche (sortis la veille) : on
+  // passe à la recherche suivante, moins stricte
+  if (minTags > 0 && imposeTag && !openTags.length) continue;
   const fullSearchUntil = Date.now() + FULL_SEARCH_MS;
   const phaseUntil = phaseWeigh.ms ? Date.now() + phaseWeigh.ms : Infinity;
   for (let attempt = 0; attempt < (phaseWeigh.attempts ?? MAX_ATTEMPTS) && candidates.length < CANDIDATES && Date.now() < phaseUntil; attempt++) {
-    // La moitié des essais sans tag imposé, si aucun tirage avec tag n'aboutit
-    const withTag = imposeTag && attempt < (phaseWeigh.attempts ?? MAX_ATTEMPTS) / 2;
+    // Sans minimum, la moitié des essais sans tag imposé, si aucun tirage
+    // avec tag n'aboutit
+    const withTag = imposeTag && (minTags > 0 || attempt < (phaseWeigh.attempts ?? MAX_ATTEMPTS) / 2);
     const first = withTag && openTags.length ? weightedShuffle(openTags, weigh.category, random).slice(0, 1) : [];
     // Au plus 2 groupes de la même sorte, pour varier (pas 3 groupes couleur)
     const chosen = [...first];

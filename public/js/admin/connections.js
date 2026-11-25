@@ -3,6 +3,9 @@ import { el, byId, clear } from "../dom.js";
 import { admin } from "./client.js";
 import { openReply, repliesNote } from "./reply.js";
 
+// Difficulté d'un tag (poids dans le générateur : services/connections.js)
+const DIFFICULTY_LABELS = { 1: "Easy", 2: "Medium", 3: "Hard" };
+
 const KIND_LABELS = { type: "Type", colour: "Colour", shape: "Shape", chapter: "Chapter", tag: "Tag" };
 
 // Connections : relecture des grilles à venir et édition des tags
@@ -67,6 +70,7 @@ export class ConnectionsTab {
       tags: this.tags.map((tag) => ({
         label: tag.label,
         description: tag.description,
+        difficulty: tag.difficulty,
         elements: named(tag.elementIds),
         unreviewed: named(tag.unreviewedIds)
       }))
@@ -306,6 +310,7 @@ export class ConnectionsTab {
     this.checked = new Set(this.elements.filter((e) => cited.has(e.nom.toLowerCase())).map((e) => e.id));
     byId("cx-tag-label").value = suggestion.label;
     byId("cx-tag-description").value = suggestion.note;
+    byId("cx-tag-difficulty").value = "2";
     this.renderElements();
     this.form.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -324,7 +329,7 @@ export class ConnectionsTab {
     const body = byId("cx-tags-body");
     clear(body);
     if (this.tags.length === 0) {
-      body.append(el("tr", {}, [el("td", { text: "No tags yet.", attrs: { colspan: 3 } })]));
+      body.append(el("tr", {}, [el("td", { text: "No tags yet.", attrs: { colspan: 4 } })]));
       return;
     }
     body.append(
@@ -356,6 +361,7 @@ export class ConnectionsTab {
               })
             ]),
             el("td", { text: String(count) }),
+            el("td", { text: DIFFICULTY_LABELS[tag.difficulty] ?? "-", attrs: { "data-sort": String(tag.difficulty ?? 2) } }),
             el("td", {}, [el("span", state)])
           ]
         );
@@ -371,6 +377,7 @@ export class ConnectionsTab {
     byId("cx-tag-form-title").textContent = tag ? `Edit "${tag.label}"` : "New tag";
     byId("cx-tag-label").value = tag?.label ?? "";
     byId("cx-tag-description").value = tag?.description ?? "";
+    byId("cx-tag-difficulty").value = String(tag?.difficulty ?? 2);
     byId("cx-tag-search").value = "";
     byId("cx-tag-delete-btn").hidden = !tag;
     byId("cx-tag-delete-btn").textContent = "Delete";
@@ -426,6 +433,7 @@ export class ConnectionsTab {
     const payload = {
       label: byId("cx-tag-label").value.trim(),
       description: byId("cx-tag-description").value.trim(),
+      difficulty: Number(byId("cx-tag-difficulty").value),
       elementIds: [...this.checked]
     };
     try {

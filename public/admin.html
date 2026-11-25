@@ -250,11 +250,17 @@
             (a type, a colour, a tag…) unless they are one of its groups; 5 or
             more are allowed, the player sees one has to go.
           </p>
+          <p class="small-subtext">
+            Every A-Side grid has at least one tag group (two at most, like
+            B-Side). The difficulty of a tag weighs on the draw: A-Side picks
+            easy tags more often and hard ones rarely, B-Side the other way
+            round.
+          </p>
           <div class="elements-layout">
             <div class="admin-table-wrapper">
               <table class="admin-table">
                 <thead>
-                  <tr><th>Tag</th><th>Elements</th><th>Status</th></tr>
+                  <tr><th>Tag</th><th>Elements</th><th>Difficulty</th><th>Status</th></tr>
                 </thead>
                 <tbody id="cx-tags-body"></tbody>
               </table>
@@ -268,6 +274,14 @@
               <div class="form-group">
                 <label for="cx-tag-description">Definition (for the team)</label>
                 <textarea id="cx-tag-description" class="bug-input" maxlength="300" rows="2" placeholder="What exactly counts, to settle edge cases"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="cx-tag-difficulty">Difficulty</label>
+                <select id="cx-tag-difficulty" class="bug-input">
+                  <option value="1">Easy: comes out more often in A-Side</option>
+                  <option value="2" selected>Medium</option>
+                  <option value="3">Hard: comes out more often in B-Side</option>
+                </select>
               </div>
               <div class="form-group">
                 <label for="cx-tag-search">Elements with this tag <span id="cx-tag-count" class="small-subtext"></span></label>

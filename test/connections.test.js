@@ -437,7 +437,7 @@ test("générateur : un tag qui couvre presque tout le catalogue ne bloque plus 
   }
 });
 
-test("générateur : avec beaucoup de tags liés aux types, le mode normal reste sans faux groupe et a un tag au plus", () => {
+test("générateur : avec beaucoup de tags liés aux types, le mode normal reste sans faux groupe et a un ou deux tags", () => {
   const elements = elementsRepo.listActive();
   const types = [...new Set(elements.map((e) => e.type))];
   const random = seededRandom(5);
@@ -453,10 +453,11 @@ test("générateur : avec beaucoup de tags liés aux types, le mode normal reste
   });
   const categories = buildCategories(elements, tags);
   for (let seed = 1; seed <= 10; seed++) {
-    // Comme le mode normal : un seul groupe tag au plus
-    const puzzle = generatePuzzle(elements, tags, seededRandom(seed), { maxTags: 1 });
+    // Comme le mode normal : un groupe tag au moins, deux au plus
+    const puzzle = generatePuzzle(elements, tags, seededRandom(seed), { minTags: 1 });
     assert.equal(puzzle.rule, "strict", `grille ${seed}`);
-    assert.ok(puzzle.groups.filter((g) => g.kind === "tag").length <= 1);
+    const tagGroups = puzzle.groups.filter((g) => g.kind === "tag").length;
+    assert.ok(tagGroups >= 1 && tagGroups <= 2, `grille ${seed} : ${tagGroups} tag(s)`);
     const chosen = puzzle.groups.map((g) => categories.find((c) => c.key === g.key));
     const ordered = puzzle.groups.flatMap((g) => g.elementIds);
     assert.equal(hasObviousDecoy(ordered, chosen, categories), false);
@@ -720,4 +721,52 @@ test("générateur : un élément trop sorti (plafond) n'est plus pioché, la gr
     if (puzzle.tiles.includes(oshiro.id)) withOshiro++;
   }
   assert.equal(withOshiro, 0, "Oshiro au-dessus du plafond : jamais pioché quand on peut s'en passer");
+});
+
+test("tags : difficulté enregistrée, gardée si elle n'est pas renvoyée, refusée hors de 1 à 3", async () => {
+  const token = await owner();
+  const ids = elementsRepo.listActive().slice(0, 6).map((e) => e.id);
+  const created = await api.request("POST", "/api/admin/connections/tags", { token, body: { label: "Difficulty test", elementIds: ids, difficulty: 3 } });
+  assert.equal(created.status, 201);
+  assert.equal(created.data.difficulty, 3);
+  // Sans difficulté dans la modification : on garde la sienne
+  const renamed = await api.request("PUT", `/api/admin/connections/tags/${created.data.id}`, { token, body: { label: "Difficulty test 2", elementIds: ids } });
+  assert.equal(renamed.data.difficulty, 3);
+  const bad = await api.request("PUT", `/api/admin/connections/tags/${created.data.id}`, { token, body: { label: "Difficulty test 2", elementIds: ids, difficulty: 5 } });
+  assert.equal(bad.status, 400);
+  // Un nouveau tag sans difficulté est moyen
+  const plain = await api.request("POST", "/api/admin/connections/tags", { token, body: { label: "Difficulty default", elementIds: ids } });
+  assert.equal(plain.data.difficulty, 2);
+  for (const t of [created.data, plain.data]) await api.request("DELETE", `/api/admin/connections/tags/${t.id}`, { token });
+});
+
+test("générateur : difficulté des tags pondérée selon le mode, au moins un tag en Normal", () => {
+  const elements = elementsRepo.listActive();
+  // Deux tags de même forme (mêmes types mélangés), l'un facile, l'autre difficile
+  const byType = new Map();
+  for (const e of elements) byType.set(e.type, [...(byType.get(e.type) ?? []), e.id]);
+  const pools = [...byType.values()];
+  const pick = (offset) => pools.flatMap((ids) => ids.slice(offset, offset + 2)).slice(0, 8);
+  const tags = [
+    { id: 1, label: "Easy tag", difficulty: 1, elementIds: pick(0), unreviewedIds: [] },
+    { id: 2, label: "Hard tag", difficulty: 3, elementIds: pick(2), unreviewedIds: [] }
+  ];
+  const normal = { minTags: 1, tagWeights: { 1: 2, 2: 1, 3: 0.35 }, maxPerKind: { chapter: 1 } };
+  const hard = { allowDecoys: true, tagWeights: { 1: 0.5, 2: 1, 3: 2 } };
+  const count = (options) => {
+    const seen = { 1: 0, 2: 0 };
+    let withoutTag = 0;
+    for (let seed = 1; seed <= 40; seed++) {
+      const puzzle = generatePuzzle(elements, tags, seededRandom(seed), options);
+      const keys = puzzle.groups.filter((g) => g.kind === "tag").map((g) => Number(g.key.split(":")[1]));
+      if (!keys.length) withoutTag++;
+      for (const k of keys) seen[k]++;
+    }
+    return { seen, withoutTag };
+  };
+  const a = count(normal);
+  assert.equal(a.withoutTag, 0, "Normal : toujours un tag");
+  assert.ok(a.seen[1] > a.seen[2], `Normal : le facile d'abord (${JSON.stringify(a.seen)})`);
+  const b = count(hard);
+  assert.ok(b.seen[2] > b.seen[1], `Hard : le difficile d'abord (${JSON.stringify(b.seen)})`);
 });

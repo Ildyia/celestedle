@@ -31,7 +31,7 @@ for (const tag of tags) {
     else unknown.add(name);
   }
   if (tag.unreviewed?.length) console.warn(`« ${tag.label} » : ${tag.unreviewed.length} élément(s) pas encore classé(s) dans l'export`);
-  connections.saveTag(existing.get(tag.label.toLowerCase()) ?? null, { label: tag.label, description: tag.description ?? "", elementIds });
+  connections.saveTag(existing.get(tag.label.toLowerCase()) ?? null, { label: tag.label, description: tag.description ?? "", difficulty: tag.difficulty ?? 2, elementIds });
   imported++;
 }
 console.log(`${imported} tag(s) importé(s).`);

@@ -10,10 +10,10 @@ const stmts = {
     FROM connection_tags t JOIN elements e ON e.is_active = 1 AND e.created_at > t.reviewed_at
   `),
   insertTag: db.prepare(`
-    INSERT INTO connection_tags (label, description) VALUES (@label, @description)
+    INSERT INTO connection_tags (label, description, difficulty) VALUES (@label, @description, @difficulty)
   `),
   updateTag: db.prepare(`
-    UPDATE connection_tags SET label = @label, description = @description,
+    UPDATE connection_tags SET label = @label, description = @description, difficulty = @difficulty,
       reviewed_at = datetime('now')
     WHERE id = @id
   `),
@@ -118,6 +118,8 @@ function toTag(row, members, unreviewed) {
     id: row.id,
     label: row.label,
     description: row.description,
+    // 1 facile, 2 moyen, 3 difficile (poids dans le générateur selon le mode)
+    difficulty: row.difficulty,
     elementIds: members.get(row.id) ?? [],
     // Éléments jamais classés pour ce tag : il ne sert pas tant qu'il en reste
     unreviewedIds: unreviewed.get(row.id) ?? [],
@@ -145,11 +147,11 @@ function findTag(id) {
 }
 
 // Enregistrer un tag le passe en revue : les éléments non cochés ne l'ont pas
-const saveTag = db.transaction((id, { label, description, elementIds }) => {
+const saveTag = db.transaction((id, { label, description, difficulty, elementIds }) => {
   if (id === null) {
-    id = Number(stmts.insertTag.run({ label, description }).lastInsertRowid);
+    id = Number(stmts.insertTag.run({ label, description, difficulty }).lastInsertRowid);
   } else {
-    stmts.updateTag.run({ id, label, description });
+    stmts.updateTag.run({ id, label, description, difficulty });
   }
   stmts.clearMembers.run(id);
   for (const elementId of elementIds) stmts.addMember.run(id, elementId);

@@ -17,8 +17,13 @@ const MODES = ["normal", "hard"];
 // trouvé (le tag d'abord) ; pair : 2 cases qui vont ensemble
 const HINT_TYPES = ["kinds", "category", "pair"];
 const MAX_HINTS = { normal: 3, hard: 1 };
-// Normal : un seul groupe tag par grille (en Hard, la limite commune)
-const MAX_TAGS = { normal: 1, hard: undefined };
+// Tags : au moins un groupe tag par grille en Normal (au plus la limite
+// commune, 2, dans les deux modes ; en Hard un tag n'est imposé qu'une grille
+// sur deux). Poids selon la difficulté du tag (1 facile, 2 moyen, 3 difficile) :
+// le Normal tire plus souvent les tags faciles, le Hard les difficiles.
+const MIN_TAGS = { normal: 1, hard: 0 };
+const TAG_WEIGHTS = { normal: { 1: 2, 2: 1, 3: 0.35 }, hard: { 1: 0.5, 2: 1, 3: 2 } };
+const TAG_DIFFICULTIES = [1, 2, 3];
 
 // Normal : grilles sans faux groupe. Hard : faux groupes permis (seule
 // l'unicité de la solution compte), les cases peuvent être pré-coloriées.
@@ -76,7 +81,13 @@ function recentFor(date, mode) {
 // Options du générateur pour un mode, avec ce qui est sorti avant `date`
 // (variété : voir generatePuzzle)
 function generateOptions(mode, date = todayParis()) {
-  return { allowDecoys: mode === "hard", maxTags: MAX_TAGS[mode], maxPerKind: MAX_PER_KIND[mode], recent: recentFor(date, mode) };
+  return {
+    allowDecoys: mode === "hard",
+    minTags: MIN_TAGS[mode],
+    tagWeights: TAG_WEIGHTS[mode],
+    maxPerKind: MAX_PER_KIND[mode],
+    recent: recentFor(date, mode)
+  };
 }
 
 function generate(mode, random, date = todayParis()) {
@@ -382,7 +393,8 @@ function leaderboard(playerId, mode = "normal") {
 
 // Admin : tags et aperçu des grilles
 
-function validateTag(input) {
+// existing : le tag modifié, dont on garde la difficulté si elle n'est pas donnée
+function validateTag(input, existing = null) {
   const label = String(input.label ?? "").trim();
   if (label.length < 2 || label.length > 60) throw new HttpError(400, "The tag name must be 2 to 60 characters.");
   const description = String(input.description ?? "").trim().slice(0, 300);
@@ -390,13 +402,16 @@ function validateTag(input) {
   const elementIds = [...new Set(Array.isArray(input.elementIds) ? input.elementIds.map(Number) : [])];
   const unknown = elementIds.find((id) => !activeIds.has(id));
   if (unknown !== undefined) throw new HttpError(400, `Unknown element id ${unknown}.`);
-  return { label, description, elementIds };
+  const difficulty = input.difficulty === undefined || input.difficulty === null ? (existing?.difficulty ?? 2) : Number(input.difficulty);
+  if (!TAG_DIFFICULTIES.includes(difficulty)) throw new HttpError(400, "The difficulty must be 1 (easy), 2 (medium) or 3 (hard).");
+  return { label, description, difficulty, elementIds };
 }
 
 function saveTag(id, input) {
-  if (id !== null && !repo.findTag(id)) throw new HttpError(404, "Unknown tag.");
+  const existing = id === null ? null : repo.findTag(id);
+  if (id !== null && !existing) throw new HttpError(404, "Unknown tag.");
   try {
-    return repo.saveTag(id, validateTag(input));
+    return repo.saveTag(id, validateTag(input, existing));
   } catch (err) {
     if (err.code === "SQLITE_CONSTRAINT_UNIQUE") throw new HttpError(409, "A tag with this name already exists.");
     throw err;

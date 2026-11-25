@@ -344,3 +344,9 @@ Colonne `mail.about` (« report:<id> », « report:<id>:fixed »,
 - Les chiffres des profils quittent Today pour le haut de Community → Players (`GET /api/admin/players/counts`) : « Active · 30 days » (profils vus sur le site ces 30 jours, enregistrés / anonymes), « Registered profiles » et « Profiles created » (anonymes compris : un profil naît au premier essai).
 - Connections : l'image de chaque case prend 58 % de sa largeur (62 % sur téléphone) au lieu de 48 px fixes, en pixel art net.
 - Community → Players : la liste n'est plus limitée aux 50 derniers vus. Sans recherche, tous les profils enregistrés ; la case « Show anonymous profiles » ajoute les anonymes ; une recherche (nom, ID, tag Discord) porte sur tout le monde. « Games » compte aussi les grilles du jour de Connections ; nouvelles colonne « Created » et étiquettes « anonymous » / « hidden ».
+
+## Connections : difficulté des tags, au moins un tag en A-Side
+
+- Chaque tag a une difficulté (migration 024, `connection_tags.difficulty` : 1 facile, 2 moyen par défaut, 3 difficile), réglée dans le formulaire du tag (admin, Connections → Tags) et affichée dans le tableau. Modifier un tag sans la renvoyer la garde ; l'export et `scripts/import-tags.js` la reprennent.
+- Le générateur pèse les tags selon leur difficulté et le mode (`TAG_WEIGHTS` dans services/connections.js) : A-Side ×2 facile, ×1 moyen, ×0,35 difficile ; B-Side ×0,5 / ×1 / ×2.
+- A-Side : plus de limite d'un tag par grille ; au moins un groupe tag (`minTags`), deux au plus comme en B-Side. Si aucune grille n'est possible avec un tag, le générateur en tire une sans plutôt que rien. Avec ~30 tags, la plupart des grilles A-Side ont deux groupes tag.
