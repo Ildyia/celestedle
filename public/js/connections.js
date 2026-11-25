@@ -19,13 +19,13 @@ const SHARE_LEGEND = "One row per guess, one colour per group";
 const MARKS_KEY = "celestedle_cx_marks";
 const MARK_COUNT = 4;
 const FEEDBACK_MS = 4000;
-const HINT_NAMES = { kinds: "Kinds", category: "Category", pair: "Pair" };
+const HINT_NAMES = { kinds: "Kinds", category: "Category", pair: "Pair", split: "Split" };
 // Un indice compte comme une erreur au classement : deuxième clic pour confirmer
 const CONFIRM_MS = 3000;
 const MODE_NOTES = {
   normal: "Normal: every group is clear-cut, no decoy groups.",
   hard: "Hard: decoy groups are allowed (4 tiles can look like a group and not be one). Mark tiles with colours to plan ahead.",
-  custom: "C-Side (playtest): every group is a custom category, no type, colour, shape or chapter. 2 hints. Not counted in rankings yet."
+  custom: "C-Side (playtest): every group is a custom category, no type, colour, shape or chapter. 2 hints (Split shows one tile from each group). Not counted in rankings yet."
 };
 // Nom du mode dans le partage et les statistiques
 const MODE_NAMES = { normal: "", hard: "Hard", custom: "C-Side" };
@@ -311,8 +311,8 @@ class ConnectionsGame {
     byId("cx-hints-left").textContent = left ? `Hints left: ${left}` : "No hints left";
     document.querySelectorAll("[data-cx-hint]").forEach((btn) => {
       const type = btn.dataset.cxHint;
-      // C-Side : pas d'indice « Kinds »
-      btn.hidden = Boolean(hintTypes) && !hintTypes.includes(type);
+      // Indices du mode : Kinds en A/B-Side, Split en C-Side
+      btn.hidden = hintTypes ? !hintTypes.includes(type) : type === "split";
       const used = hints.some((h) => h.type === type);
       btn.disabled = used || left === 0 || this.busy;
       btn.classList.toggle("confirming", this.confirming === type);
@@ -327,6 +327,7 @@ class ConnectionsGame {
   hintText(hint) {
     if (hint.type === "kinds") return `Kinds: ${hint.kinds.map((k) => KIND_LABELS[k] ?? k).join(" · ")}`;
     if (hint.type === "category") return `Category: ${hint.label} (${KIND_LABELS[hint.kind] ?? hint.kind})`;
+    if (hint.type === "split") return `Split: ${hint.tiles.map((t) => capitalize(t.nom)).join(", ")} are all in different groups`;
     return `Pair: ${hint.tiles.map((t) => capitalize(t.nom)).join(" + ")} go together`;
   }
 

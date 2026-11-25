@@ -17,9 +17,10 @@ const MODES = ["normal", "hard", "custom"];
 // pas perdre, mais comptent comme une erreur dans les classements.
 // kinds : la sorte de chaque groupe ; category : le nom d'un groupe pas encore
 // trouvé (le tag d'abord) ; pair : 2 cases qui vont ensemble
-// C-Side : pas de « kinds », qui y donnerait 4 fois « Tag »
-const HINT_TYPES = ["kinds", "category", "pair"];
-const MODE_HINTS = { normal: HINT_TYPES, hard: HINT_TYPES, custom: ["category", "pair"] };
+// C-Side : « split » (une case de chaque groupe restant) à la place de
+// « kinds », qui y donnerait 4 fois « Tag »
+const HINT_TYPES = ["kinds", "category", "pair", "split"];
+const MODE_HINTS = { normal: ["kinds", "category", "pair"], hard: ["kinds", "category", "pair"], custom: ["split", "category", "pair"] };
 const MAX_HINTS = { normal: 3, hard: 1, custom: 2 };
 // Tags : au moins un groupe tag par grille en Normal (au plus la limite
 // commune, 2, dans les deux modes ; en Hard un tag n'est imposé qu'une grille
@@ -232,6 +233,7 @@ function hintView(hint, puzzle, elementsById) {
     const group = puzzle.groups[hint.groupIndex];
     return { type: "category", label: group.label, kind: group.kind };
   }
+  if (hint.type === "split") return { type: "split", tiles: hint.elementIds.map((id) => tileOf(elementsById.get(id))) };
   return { type: "pair", tiles: hint.elementIds.map((id) => tileOf(elementsById.get(id))) };
 }
 
@@ -244,6 +246,11 @@ function pick(list, random) {
 function drawHint(type, puzzle, found, used, random) {
   if (type === "kinds") return {};
   const left = puzzle.groups.map((g, i) => i).filter((i) => !found.has(i));
+  // Une case de chaque groupe pas encore trouvé, dans le désordre
+  if (type === "split") {
+    const ids = left.map((i) => pick(puzzle.groups[i].elementIds, random));
+    return { elementIds: ids.sort(() => random() - 0.5) };
+  }
   if (type === "category") {
     const tags = left.filter((i) => puzzle.groups[i].kind === "tag");
     return { groupIndex: pick(tags.length ? tags : left, random) };

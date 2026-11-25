@@ -10,7 +10,7 @@ const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 export const pct = (part, total) => (total ? `${Math.round((part / total) * 100)}%` : "-");
 const HINT_NAMES = { opposite: "Opposite", secret_info: "Secret info", truth_and_lies: "Truth & lies", info: "Element Info" };
 const STATUS_NAMES = { won: "Won", lost: "Lost", forfeit: "Gave up" };
-const CX_HINT_NAMES = { kinds: "Kinds", category: "Category", pair: "Pair" };
+const CX_HINT_NAMES = { kinds: "Kinds", category: "Category", pair: "Pair", split: "Split" };
 const KIND_NAMES = { type: "Type", colour: "Colour", shape: "Shape", chapter: "Chapter", tag: "Tag" };
 const SIDES = { normal: "A-Side", hard: "B-Side", custom: "C-Side" };
 

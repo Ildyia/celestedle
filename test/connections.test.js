@@ -796,7 +796,7 @@ test("C-Side : réservée aux playtesters, grilles de tags seulement, sans indic
   const state = await api.request("GET", "/api/connections?mode=custom", { token: tester.token });
   assert.equal(state.status, 200);
   assert.equal(state.data.mode, "custom");
-  assert.deepEqual(state.data.hintTypes, ["category", "pair"]);
+  assert.deepEqual(state.data.hintTypes, ["split", "category", "pair"]);
   assert.equal(state.data.maxHints, 2);
   // Grille de tags seulement (vue côté admin)
   const grid = connections.getPuzzle(undefined, "custom");
@@ -804,6 +804,15 @@ test("C-Side : réservée aux playtesters, grilles de tags seulement, sans indic
 
   const kinds = await api.request("POST", "/api/connections/hint", { token: tester.token, body: { type: "kinds", mode: "custom" } });
   assert.equal(kinds.status, 400);
+  // Split : une case de chaque groupe, toutes dans des groupes différents
+  const split = await api.request("POST", "/api/connections/hint", { token: tester.token, body: { type: "split", mode: "custom" } });
+  assert.equal(split.status, 200);
+  const shown = split.data.state.hints.find((h) => h.type === "split").tiles.map((t) => t.nom);
+  assert.equal(shown.length, 4);
+  const groupOf = (nom) => grid.groups.findIndex((g) => g.elementIds.some((id) => elementsRepo.findById(id).nom === nom));
+  assert.equal(new Set(shown.map(groupOf)).size, 4);
+  // Pas de « split » hors de la C-Side
+  assert.equal((await api.request("POST", "/api/connections/hint", { token: tester.token, body: { type: "split", mode: "normal" } })).status, 400);
   const category = await api.request("POST", "/api/connections/hint", { token: tester.token, body: { type: "category", mode: "custom" } });
   assert.equal(category.status, 200);
 
