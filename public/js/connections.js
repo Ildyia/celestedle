@@ -189,6 +189,15 @@ class ConnectionsGame {
     container.append(
       ...groups.map((group) =>
         el("div", { className: `cx-group level-${group.level}` }, [
+          // Groupe vu (trouvé ou révélé) : on peut y signaler une erreur
+          group.index === undefined
+            ? null
+            : el("button", {
+                className: "cx-group-report",
+                text: "⚑",
+                attrs: { type: "button", title: "Report a mistake in this group", "aria-label": `Report a mistake in "${group.label}"` },
+                on: { click: () => this.openReport(group) }
+              }),
           el("p", { className: "cx-group-label" }, [
             el("strong", { text: group.label }),
             el("span", { className: "cx-group-kind", text: KIND_LABELS[group.kind] ?? "" })
@@ -197,6 +206,43 @@ class ConnectionsGame {
         ])
       )
     );
+  }
+
+  // Fenêtre « Report a mistake » pour un groupe vu
+  openReport(group) {
+    this.reporting = group;
+    byId("cx-report-group").textContent = `"${group.label}": ${group.members.map((m) => capitalize(m.nom)).join(", ")}`;
+    byId("cx-report-extra").replaceChildren(...group.members.map((m) => el("option", { text: capitalize(m.nom), attrs: { value: m.nom } })));
+    byId("cx-report-form").reset();
+    syncReportIssue();
+    openModal("cx-report-modal");
+  }
+
+  async sendReport(e) {
+    e.preventDefault();
+    const group = this.reporting;
+    if (!group) return;
+    const issue = document.querySelector("[name='cx-report-issue']:checked").value;
+    const element = issue === "extra" ? byId("cx-report-extra").value : byId("cx-report-missing").value.trim();
+    if (!element) return showToast("Which element?", FEEDBACK_MS);
+    const button = byId("cx-report-submit");
+    button.disabled = true;
+    try {
+      await api.connectionsReportGroup({
+        mode: this.mode,
+        practice: this.practice,
+        groupIndex: group.index,
+        issue,
+        element,
+        note: byId("cx-report-note").value.trim()
+      });
+      closeModal("cx-report-modal");
+      showToast("Thanks! The team will check this group.", FEEDBACK_MS);
+    } catch (err) {
+      showToast(err.message, FEEDBACK_MS);
+    } finally {
+      button.disabled = false;
+    }
   }
 
   renderGrid() {
@@ -454,6 +500,24 @@ class ConnectionsGame {
   }
 }
 
+// Fenêtre de signalement : seul le champ de l'option choisie est actif
+function syncReportIssue() {
+  const issue = document.querySelector("[name='cx-report-issue']:checked")?.value ?? "extra";
+  byId("cx-report-extra").disabled = issue !== "extra";
+  byId("cx-report-missing").disabled = issue !== "missing";
+}
+
+// Noms des éléments, pour le champ « missing »
+function fillReportNames() {
+  api
+    .elements()
+    .then((data) => {
+      const list = Array.isArray(data) ? data : (data.elements ?? []);
+      byId("cx-report-names").replaceChildren(...list.map((e) => el("option", { attrs: { value: e.nom } })));
+    })
+    .catch(() => {});
+}
+
 // Idée de tag envoyée à l'équipe admin
 async function sendSuggestion(e) {
   e.preventDefault();
@@ -492,6 +556,9 @@ async function init() {
   const cside = Boolean(access?.cside?.canPlay);
   document.querySelector("[data-cx-mode='custom']").hidden = !cside;
   const game = new ConnectionsGame();
+  document.querySelectorAll("[name='cx-report-issue']").forEach((r) => r.addEventListener("change", syncReportIssue));
+  byId("cx-report-form").addEventListener("submit", (e) => game.sendReport(e));
+  fillReportNames();
   if (cside && storage.get(KEYS.cxCside) === "1") game.mode = "custom";
   await game.load();
 }

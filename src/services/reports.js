@@ -6,7 +6,7 @@ const { MODE_IDS } = require("./modes");
 const { todayParis } = require("../utils/dates");
 const { HttpError } = require("../utils/http-error");
 
-const BUG_TYPES = ["Error in hints", "Wrong element data", "Typo / Grammar", "Technical Bug", "Other"];
+const BUG_TYPES = ["Error in hints", "Wrong element data", "Wrong category (Connections)", "Typo / Grammar", "Technical Bug", "Other"];
 const STATUSES = ["new", "working", "fixed", "cant_reproduce", "wrong"];
 const MAX_DESCRIPTION = 1000;
 

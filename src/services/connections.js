@@ -214,8 +214,10 @@ function tileOf(element) {
   return { nom: element.nom };
 }
 
-function groupView(group, elementsById) {
+// index : place du groupe dans la grille (pour le signaler, voir reportGroup)
+function groupView(group, elementsById, index) {
   return {
+    index,
     label: group.label,
     kind: group.kind,
     level: group.level,
@@ -281,12 +283,12 @@ function buildState(puzzle, game, { mode, practice, reset = false }) {
     hintTypes: MODE_HINTS[mode],
     hints: hints.map((hint) => hintView(hint, puzzle, elementsById)),
     tiles: puzzle.tiles.filter((id) => !foundIds.has(id)).map((id) => tileOf(elementsById.get(id))),
-    found: foundIndexes.map((i) => groupView(puzzle.groups[i], elementsById)),
+    found: foundIndexes.map((i) => groupView(puzzle.groups[i], elementsById, i)),
     // Pour le partage : couleur du groupe de chaque case proposée
     attempts: attempts.map((a) => a.elementIds.map((id) => puzzle.groups.find((g) => g.elementIds.includes(id)).level)),
     startedAt: game?.started_at ?? null,
     elapsedSeconds: game ? secondsBetween(game.started_at, now) : 0,
-    solution: finished ? puzzle.groups.map((g) => groupView(g, elementsById)) : null
+    solution: finished ? puzzle.groups.map((g, i) => groupView(g, elementsById, i)) : null
   };
 }
 
@@ -430,6 +432,32 @@ function leaderboard(playerId, mode = "normal") {
     hints: row.hints,
     seconds: row.seconds
   }));
+}
+
+// Signalement d'une erreur dans un groupe (un élément de trop, ou qui
+// manque), par un joueur qui l'a vu : trouvé, ou révélé en fin de partie.
+// Il devient un report comme les autres (Discord, page Reports de l'admin,
+// réponse et lettre quand c'est corrigé), masqué comme spoiler le jour même.
+const REPORT_ISSUES = { extra: "shouldn't be in it", missing: "should be in it" };
+const MODE_REPORT_NAMES = { normal: "A-Side", hard: "B-Side", custom: "C-Side" };
+function reportGroup(player, { mode = "normal", practice = false, groupIndex, issue, element, note = "" } = {}) {
+  checkMode(mode);
+  if (!REPORT_ISSUES[issue]) throw new HttpError(400, "Say whether an element is extra or missing.");
+  const state = getState(player, { mode, practice });
+  const index = Number(groupIndex);
+  const seen = [...state.found, ...(state.solution ?? [])].find((g) => g.index === index);
+  if (!seen) throw new HttpError(403, "Find this group first.");
+  const group = puzzleFor(player, mode, practice).groups[index];
+  const target = elementsRepo.findByName(String(element ?? "").trim());
+  if (!target) throw new HttpError(400, "Unknown element.");
+  const inGroup = group.elementIds.includes(target.id);
+  if (issue === "extra" && !inGroup) throw new HttpError(400, `${target.nom} isn't in this group.`);
+  if (issue === "missing" && inGroup) throw new HttpError(400, `${target.nom} is already in this group.`);
+  const kind = group.kind === "tag" ? `tag #${group.key.split(":")[1]}` : group.kind;
+  const where = `Connections ${MODE_REPORT_NAMES[mode]} ${practice ? "practice grid" : state.date}`;
+  const text = String(note ?? "").trim().slice(0, 300);
+  const description = `${where} · "${group.label}" (${kind}): ${target.nom} ${REPORT_ISSUES[issue]}.${text ? ` ${text}` : ""}`;
+  return require("./reports").create({ bugType: "Wrong category (Connections)", description, isSpoiler: !practice }, player);
 }
 
 // Admin : tags et aperçu des grilles
@@ -594,6 +622,7 @@ function puzzlePreview(date, mode = "normal") {
 }
 
 module.exports = {
+  reportGroup,
   MAX_MISTAKES,
   MODES,
   getPuzzle,

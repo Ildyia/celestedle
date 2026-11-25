@@ -358,3 +358,9 @@ Colonne `mail.about` (« report:<id> », « report:<id>:fixed »,
 - Accès à part (`staff.js`, réglage `connections_cside_access`, variable `CONNECTIONS_CSIDE_ACCESS`) : playtest par défaut, en plus de l'accès à Connections ; réglable dans l'admin, Connections → Access. Le bouton « C-Side » de la page n'apparaît qu'aux joueurs qui y ont accès ; le choix est gardé dans `celestedle_cx_cside` (le mode commun aux jeux reste normal ou hard).
 - Variété : la C-Side ne compte que son propre historique, plus les grilles A et B du jour (pour ne pas reprendre leurs tags le même jour) ; A et B ne voient pas la C-Side.
 - Hors classements, trophées, fraises et tampons pendant le test (les jeux de la C-Side ne sont lus ni par `achievements.allGames` ni par les classements). Les insights de l'admin l'affichent à part (« Connections · C-Side ») quand quelqu'un y a joué. Sans assez de tags complets pour une grille, le joueur reçoit un message (503) et la page revient à l'A-Side.
+
+## Connections : signaler une erreur dans un groupe
+
+- Chaque groupe vu par le joueur (trouvé, ou révélé en fin de partie) a un petit drapeau ⚑ : « Report a mistake » ouvre une fenêtre pour dire qu'un élément n'a rien à y faire (choisi parmi les membres) ou qu'un élément manque (nom à taper, avec la liste des éléments), plus une raison facultative.
+- `POST /api/connections/report-group` (`connections.reportGroup`) : le serveur relit la grille, refuse un groupe pas encore vu (403) ou un élément incohérent (400), et crée un report ordinaire, type « Wrong category (Connections) », avec le côté, la date, le nom du groupe et le numéro du tag (« tag #12 »). Il passe donc par Discord, la page Reports de l'admin, les réponses et la lettre automatique quand il est corrigé. Masqué comme spoiler le jour même (sauf grilles d'entraînement). 5 par 10 minutes au plus.
+- Les groupes renvoyés au joueur portent leur `index` dans la grille.

@@ -82,6 +82,21 @@ router.get("/connections/leaderboard", (req, res) => {
   res.json({ top: connections.leaderboard(req.player?.id, checkSide(req, req.query.mode ?? "normal")) });
 });
 
+// Erreur dans un groupe déjà vu (élément de trop ou qui manque) : un report
+const reportLimit = rateLimit({ name: "connections-report", windowMs: 10 * 60 * 1000, max: 5 });
+router.post("/connections/report-group", requirePlayer, reportLimit, (req, res) => {
+  const { mode = "normal", practice, groupIndex, issue, element, note } = req.body || {};
+  const report = connections.reportGroup(req.player, {
+    mode: checkSide(req, mode),
+    practice: checkPractice(req, practice === true),
+    groupIndex,
+    issue,
+    element,
+    note
+  });
+  res.status(201).json({ id: report.id });
+});
+
 const suggestLimit = rateLimit({ name: "connections-suggest", windowMs: 10 * 60 * 1000, max: 5 });
 router.post("/connections/tag-suggestions", requirePlayer, suggestLimit, (req, res) => {
   res.status(201).json(connections.suggestTag(req.player, req.body || {}));

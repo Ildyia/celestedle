@@ -90,6 +90,7 @@ export const api = {
 
   connections: (mode = "normal", practice = false) =>
     request("GET", `/connections?mode=${mode}${practice ? "&practice=1" : ""}`),
+  connectionsReportGroup: (report) => request("POST", "/connections/report-group", { body: report }),
   connectionsGuess: (names, mode = "normal", practice = false, gridId) =>
     request("POST", "/connections/guess", { body: { names, mode, practice, gridId } }),
   connectionsHint: (type, mode = "normal", practice = false, gridId) =>

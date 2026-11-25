@@ -814,3 +814,35 @@ test("C-Side : réservée aux playtesters, grilles de tags seulement, sans indic
 
   for (const t of created) await api.request("DELETE", `/api/admin/connections/tags/${t.id}`, { token });
 });
+
+test("signaler un groupe : seulement une fois vu, devient un report masqué comme spoiler", async () => {
+  const { token, player } = await api.newPlayer();
+  await api.request("PUT", `/api/admin/players/${player.id}/playtester`, { token: await owner(), body: { enabled: true } });
+  const puzzle = connections.getPuzzle(undefined, "normal");
+  const name = (id) => elementsRepo.findById(id).nom;
+  const member = name(puzzle.groups[0].elementIds[0]);
+  const report = (body) => api.request("POST", "/api/connections/report-group", { token, body: { mode: "normal", groupIndex: 0, ...body } });
+
+  // Partie pas commencée : le groupe n'a pas été vu
+  assert.equal((await report({ issue: "extra", element: member })).status, 403);
+
+  // 4 erreurs (une case de chaque groupe) : la partie est perdue, tout est révélé
+  for (let i = 0; i < 4; i++) {
+    const wrong = puzzle.groups.map((g) => name(g.elementIds[i]));
+    const res = await api.request("POST", "/api/connections/guess", { token, body: { names: wrong, mode: "normal" } });
+    assert.equal(res.status, 200);
+  }
+  const state = await api.request("GET", "/api/connections?mode=normal", { token });
+  assert.equal(state.data.status, "lost");
+  assert.equal(state.data.solution[0].index, 0);
+
+  assert.equal((await report({ issue: "missing", element: member })).status, 400, "déjà dans le groupe");
+  assert.equal((await report({ issue: "wrong", element: member })).status, 400);
+  const sent = await report({ issue: "extra", element: member, note: "It doesn't fit" });
+  assert.equal(sent.status, 201);
+  const list = await api.request("GET", "/api/reports");
+  const created = list.data.reports.find((r) => r.id === sent.data.id);
+  assert.equal(created.bugType, "Wrong category (Connections)");
+  assert.equal(created.isSpoiler, true);
+  assert.match(created.description, new RegExp(`"${puzzle.groups[0].label}".*${member} shouldn't be in it\\. It doesn't fit`));
+});

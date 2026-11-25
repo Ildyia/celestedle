@@ -275,6 +275,34 @@
         </form>
       </div>
     </div>
+
+    <!-- Erreur dans un groupe déjà vu (POST /connections/report-group) -->
+    <div id="cx-report-modal" class="rules-modal hidden">
+      <div class="rules-content bug-modal-content modal-narrow">
+        <button type="button" class="close-modal-btn" data-close-modal="cx-report-modal" aria-label="Close">&times;</button>
+        <form id="cx-report-form" class="rules-content-static">
+          <h2>Report a mistake</h2>
+          <p id="cx-report-group" class="cx-report-group"></p>
+          <div class="form-group cx-report-issue">
+            <label><input type="radio" name="cx-report-issue" value="extra" checked /> This element shouldn't be in it</label>
+            <select id="cx-report-extra" class="bug-input" aria-label="Element that shouldn't be in it"></select>
+          </div>
+          <div class="form-group cx-report-issue">
+            <label><input type="radio" name="cx-report-issue" value="missing" /> This element is missing from it</label>
+            <input type="text" id="cx-report-missing" class="bug-input" list="cx-report-names" placeholder="Element name" aria-label="Element missing from it" disabled />
+            <datalist id="cx-report-names"></datalist>
+          </div>
+          <div class="form-group">
+            <label for="cx-report-note">Why? (optional)</label>
+            <textarea id="cx-report-note" class="bug-input" maxlength="300" rows="2"></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" data-close-modal="cx-report-modal">Cancel</button>
+            <button type="submit" id="cx-report-submit" class="btn-primary">Send</button>
+          </div>
+        </form>
+      </div>
+    </div>
     <script type="module" src="js/connections.js"></script>
   </body>
 </html>

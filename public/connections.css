@@ -63,6 +63,7 @@
 }
 
 .cx-group {
+  position: relative;
   border-radius: 10px;
   padding: 12px 14px;
   color: #11162b;
@@ -507,3 +508,22 @@ body.colorblind .cx-tile.mark-1::after { background: var(--cx-mark-1); }
 body.colorblind .cx-tile.mark-2::after { background: var(--cx-mark-2); }
 body.colorblind .cx-tile.mark-3::after { background: var(--cx-mark-3); }
 body.colorblind .cx-swatch[aria-pressed="true"] { border-color: #11162b; outline: 2px solid #fff; }
+
+/* Signaler une erreur dans un groupe vu */
+.cx-group-report {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  border: 0;
+  background: transparent;
+  color: rgba(17, 22, 43, 0.55);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 4px;
+  cursor: pointer;
+}
+.cx-group-report:hover,
+.cx-group-report:focus-visible { color: #11162b; }
+.cx-report-group { font-weight: 600; }
+.cx-report-issue label { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.cx-report-issue .bug-input:disabled { opacity: 0.45; }
