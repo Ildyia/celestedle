@@ -2095,7 +2095,8 @@ input[type="checkbox"]:not(.switch input):checked::after {
 
 /* C-Side de Connections (playtest) */
 #mode-switch button[data-mode="custom"][aria-pressed="true"] {
-  background: #8e4fc0;
+  background: #f2c230;
+  color: #2b2100;
 }
 
 #mode-switch button:disabled {
@@ -2805,7 +2806,10 @@ html.duel:not(.duel-started) :is(#game-status, #guess-form, #guesses-table, #act
 .duel-actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
 .duel-actions .duel-back { margin: 0; }
 
-/* C-Side de Connections (playtest) : accents violets sur la page */
+/* C-Side de Connections (playtest) : accents jaunes sur la page, texte
+   foncé sur les fonds jaunes pour rester lisible */
 html[data-side="c"] {
-  --color-indigo: #9b5de5;
+  --color-indigo: #f2c230;
+  --color-indigo-hover: #d9a91c;
+  & :is(.btn-primary, .segmented button[aria-pressed="true"], .suggestion-item:hover, .suggestion-item.selected, .cx-tile[aria-pressed="true"], .cx-rules-num) { color: #2b2100; }
 }

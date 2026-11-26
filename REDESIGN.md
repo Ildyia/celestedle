@@ -365,8 +365,8 @@ Colonne `mail.about` (« report:<id> », « report:<id>:fixed »,
 - `POST /api/connections/report-group` (`connections.reportGroup`) : le serveur relit la grille, refuse un groupe pas encore vu (403) ou un élément incohérent (400), et crée un report ordinaire, type « Wrong category (Connections) », avec le côté, la date, le nom du groupe et le numéro du tag (« tag #12 »). Il passe donc par Discord, la page Reports de l'admin, les réponses et la lettre automatique quand il est corrigé. Masqué comme spoiler le jour même (sauf grilles d'entraînement). 5 par 10 minutes au plus.
 - Les groupes renvoyés au joueur portent leur `index` dans la grille.
 
-## C-Side dans le menu, en violet ; « Contact the team »
+## C-Side dans le menu, en jaune ; « Contact the team »
 
 - Menu, sélection de chapitre : un troisième onglet « C-Side · Playtest » pour Connections, visible seulement pour qui y a accès (`cside.canPlay` de `/connections-access`). ↑ ↓ et Tab passent d'un côté à l'autre parmi ceux du jeu ; Climb écrit `celestedle_cx_cside` (le mode commun reste normal ou hard). Le journal et les duels restent en A/B.
-- Violet (`--side-c: #9b5de5`) : onglet, bouton Climb et livre du menu ; sur la page Connections en C-Side, `html[data-side="c"]` passe les accents en violet (Classic et Modern).
+- Jaune doré (`--side-c: #f2c230`, texte foncé `--side-c-ink` dessus) : onglet, bouton Climb et livre du menu ; sur la page Connections en C-Side, `html[data-side="c"]` passe les accents en jaune (Classic et Modern).
 - « Contact the team » (Camp du menu, js/contact.js) : un message à l'équipe en dehors des reports (question, idée, problème, autre), profil requis, 3 par 10 minutes. Table `contact_messages` (migration 026), `services/contact.js`, routes `/api/contact` et `/api/admin/contact`. Le bot le signale dans le salon privé des reports. Admin : Community → Messages (répondre par lettre personnelle, `mail.about = contact:<id>`, ce qui marque le message comme traité ; rouvrir ; supprimer).
