@@ -26,6 +26,8 @@
   --accent: #d1366a;
   --side-a: #5aa8e8;
   --side-b: #e0475b;
+  /* C-Side de Connections (playtest) : violet, comme les cassettes */
+  --side-c: #9b5de5;
   --moon: #f4f0ff;
   --flag: #e0475b;
   --ease-out: cubic-bezier(.2, .8, .2, 1);

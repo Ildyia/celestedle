@@ -13,6 +13,7 @@ const reports = require("../services/reports");
 const players = require("../services/players");
 const embeds = require("./embeds");
 const recapPoster = require("./recap-poster");
+const contact = require("../services/contact");
 const mail = require("../services/mail");
 const community = require("../services/discord-community");
 const playerCard = require("../services/player-card");
@@ -119,6 +120,27 @@ function createBot() {
       components: embeds.statusButtons(report.id)
     });
     reports.setDiscordIds(report.id, publicMsg.id, privateMsg.id);
+  }
+
+  // Message d'un joueur à l'équipe (« Contact the team ») : dans le salon
+  // privé des reports, à lire et à traiter dans l'admin (Community → Messages)
+  async function contactCreated(message) {
+    const { privateId } = channelIds();
+    if (!privateId) return;
+    const channel = await client.channels.fetch(privateId);
+    const author = message.playerName ? `${message.playerName}${message.discordTag ? ` (${message.discordTag})` : ""}` : "Unknown player";
+    await channel.send({
+      embeds: [
+        {
+          title: `✉ Message to the team · ${contact.TOPIC_LABELS[message.topic] ?? message.topic}`,
+          description: message.body.slice(0, 4000),
+          color: 0x9b5de5,
+          footer: { text: `${author} · answer it in the admin, Community → Messages` },
+          timestamp: message.createdAt
+        }
+      ],
+      allowedMentions: { parse: [] }
+    });
   }
 
   // Vote ou statut changé : on met à jour les messages, sauf celui sur lequel
@@ -531,7 +553,7 @@ function createBot() {
 
   client.on("error", (err) => console.error("[DISCORD] Erreur client :", err.message));
 
-  return { client, reportCreated, reportUpdated, reportDeleted, mailPosted, mailUpdated, mailDeleted, pollVoted, pollClosed };
+  return { client, reportCreated, reportUpdated, reportDeleted, contactCreated, mailPosted, mailUpdated, mailDeleted, pollVoted, pollClosed };
 }
 
 // Démarre le bot si un token est configuré, et le branche sur les reports
@@ -546,6 +568,7 @@ function startBot() {
     reportUpdated: bot.reportUpdated,
     reportDeleted: bot.reportDeleted
   });
+  contact.setNotifier({ contactCreated: bot.contactCreated });
   mail.setNotifier({
     mailPosted: bot.mailPosted,
     mailUpdated: bot.mailUpdated,

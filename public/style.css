@@ -2804,3 +2804,8 @@ html.duel:not(.duel-started) :is(#game-status, #guess-form, #guesses-table, #act
 .duel-result.lost h2 { color: #fca5a5 !important; }
 .duel-actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
 .duel-actions .duel-back { margin: 0; }
+
+/* C-Side de Connections (playtest) : accents violets sur la page */
+html[data-side="c"] {
+  --color-indigo: #9b5de5;
+}

@@ -215,6 +215,7 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
 .book { --tint: var(--side-a); border: 3px solid color-mix(in srgb, var(--tint) 45%, #000);
   background: linear-gradient(160deg, color-mix(in srgb, var(--tint) 14%, var(--paper)), var(--paper) 65%); }
 .book:has(.climb.b) { --tint: var(--side-b); }
+.book:has(.climb.c) { --tint: var(--side-c); }
 .book h3 { color: color-mix(in srgb, var(--tint) 45%, #fff); }
 .book .chapter { font-size: 15px; letter-spacing: 3px; opacity: .6; }
 .book h3 { font-size: 40px; margin: 4px 0 10px; }
@@ -228,6 +229,7 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
 .tab { border: none; padding: 8px 14px 14px; border-radius: 6px 6px 0 0; font-size: 15px; color: #fff; cursor: pointer; transform: translateY(6px); transition: transform .15s; }
 .tab.a { background: var(--side-a); }
 .tab.b { background: var(--side-b); }
+.tab.c { background: var(--side-c); }
 .tab.active { transform: translateY(0); }
 .book .record { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0 20px; }
 .book .record div { background: rgba(0,0,0,.25); border-radius: 6px; padding: 10px 8px; text-align: center; font-size: 13px; }
@@ -236,6 +238,7 @@ body.perf .slot.golden .card::after { animation: none; display: none; }
 .climb { display: block; margin: 0 auto; font-size: 26px; border: none; padding: 10px 30px; border-radius: 6px; cursor: pointer; color: #fff; }
 .climb.a { background: var(--side-a); box-shadow: 0 5px 0 #3b7bb3; }
 .climb.b { background: var(--side-b); box-shadow: 0 5px 0 #a52d3e; }
+.climb.c { background: var(--side-c); box-shadow: 0 5px 0 #6a35a8; }
 .climb:active { transform: translateY(3px); box-shadow: none; }
 .corner { position: absolute; left: 4vw; right: 4vw; bottom: 9vh; display: flex; flex-wrap: wrap; align-content: flex-end; gap: 14px; }
 /* Écran large : le livre est à droite, à la hauteur des boutons ; ils

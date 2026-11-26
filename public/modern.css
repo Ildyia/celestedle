@@ -368,3 +368,9 @@ html.ui-modern {
    animation sur les pages de jeu */
 html.ui-modern.perf .m-moon-glow { display: none; }
 html.ui-modern.perf :is(.m-cloth, .m-end-card, .m-end-emblem, .m-end-stat, #modern-pause, #modern-end) { animation: none !important; }
+
+/* C-Side de Connections (playtest) : accents violets (boutons, cases choisies) */
+html.ui-modern[data-side="c"] {
+  --m-side-a: #9b5de5;
+  --color-indigo: #9b5de5;
+}

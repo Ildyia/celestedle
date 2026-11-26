@@ -7,6 +7,7 @@ import { renderHistory } from "./history.js";
 import { WordsTab } from "./words.js";
 import { InsightsTab } from "./insights.js";
 import { ProgressionTab } from "./progression.js";
+import { MessagesTab } from "./messages.js";
 import { enableTableSort } from "./table-sort.js";
 import { ElementsTab } from "./elements.js";
 import { ReportsTab } from "./reports.js";
@@ -38,6 +39,7 @@ const team = new TeamTab({ notify });
 const playersTab = new PlayersTab({ notify, getRole: () => currentRole });
 const loadSettings = bindSettings({ notify });
 const mailbox = new MailboxTab({ notify });
+const messagesTab = new MessagesTab({ notify });
 
 enableTableSort();
 
@@ -53,7 +55,8 @@ const TABS = {
   settings: () => loadSettings(),
   team: () => team.load(),
   players: () => playersTab.load(),
-  mailbox: () => mailbox.load()
+  mailbox: () => mailbox.load(),
+  messages: () => messagesTab.load()
 };
 
 const ROLE_LABELS = { owner: "Owner", administrator: "Administrator" };
@@ -88,6 +91,7 @@ const NAV = [
     pages: [
       { id: "players", label: "Players" },
       { id: "mailbox", label: "Mailbox" },
+      { id: "messages", label: "Messages" },
       { id: "reports", label: "Reports" },
       { id: "team", label: "Team", ownerOnly: true }
     ]

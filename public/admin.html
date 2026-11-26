@@ -329,6 +329,21 @@
           </div>
         </section>
 
+        <!-- Messages des joueurs à l'équipe (js/admin/messages.js, /api/admin/contact) -->
+        <section id="tab-messages" class="admin-panel" role="tabpanel" hidden>
+          <p class="small-subtext">
+            Messages sent from the menu (Camp → Contact the team). Your answer
+            goes to the player's mailbox, and the message is then marked as
+            done.
+          </p>
+          <div class="admin-table-wrapper">
+            <table class="admin-table">
+              <thead><tr><th>Message</th><th>From</th><th>Sent</th><th>Status</th><th></th></tr></thead>
+              <tbody id="messages-body"></tbody>
+            </table>
+          </div>
+        </section>
+
         <section id="tab-reports" class="admin-panel" role="tabpanel" hidden>
           <div class="admin-toolbar">
             <select id="reports-status-filter" class="bug-input" aria-label="Filter by status">

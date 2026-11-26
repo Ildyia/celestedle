@@ -14,6 +14,7 @@ router.use(require("./reports"));
 router.use(require("./connections"));
 router.use(require("./duels"));
 router.use(require("./mail"));
+router.use(require("./contact"));
 router.use(require("./admin"));
 router.use(notFound);
 

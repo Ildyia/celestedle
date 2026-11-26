@@ -16,6 +16,7 @@ import { createDuel, duelUrl, openRooms } from "./duel.js";
 import { CHAPTERS, aimAtMoon, chapterProgress, previewChapter, trailSvg } from "./chapters.js";
 import { initNextWordTimer } from "./timer.js";
 import { openPanel, panelOpen } from "./menu-panels.js";
+import { openContact } from "./contact.js";
 import { createJournal } from "./journal.js";
 import { SKY_CHOICES, applySky, skySetting, startSky } from "./sky.js";
 import { STAMPS, TICKET_SLOTS, earnedStamps, stampSvg, setAchievements } from "./stamps.js";
@@ -511,10 +512,12 @@ const GAMES = [
     title: "Connections",
     icon: "assets/entities/summit-gems.png",
     page: "connections.html",
-    modes: { a: "normal", b: "hard" },
+    // c : la C-Side, seulement pour qui y a accès (csideAllowed)
+    modes: { a: "normal", b: "hard", c: "custom" },
     desc: {
       a: "Sort 16 entities into 4 hidden groups. 4 mistakes allowed, 3 hints.",
-      b: "Decoys everywhere and a single hint. 4 mistakes allowed."
+      b: "Decoys everywhere and a single hint. 4 mistakes allowed.",
+      c: "Playtest: only custom categories, no types, colours, shapes or chapters. 2 hints. Not counted in rankings yet."
     },
     access: () => api.connectionsAccess(),
     state: (mode) => api.connections(mode),
@@ -548,7 +551,15 @@ let gameIndex = 0;
 let selected = 0;
 const entries = () => [...games, DUEL, CAMP];
 const current = () => entries()[selected] ?? games[0];
-let side = storage.get(KEYS.mode) === "hard" ? "b" : "a";
+// C-Side choisie la dernière fois (Connections seulement, voir sidesOf)
+let side = storage.get(KEYS.cxCside) === "1" ? "c" : storage.get(KEYS.mode) === "hard" ? "b" : "a";
+let csideAllowed = false;
+const SIDE_LABELS = { a: "A-SIDE", b: "B-SIDE", c: "C-SIDE" };
+// Côtés proposés pour une entrée : la C-Side n'existe que pour un jeu qui en a
+// une (Connections) et pour qui y a accès
+const sidesOf = (entry) => (entry?.modes?.c && csideAllowed ? ["a", "b", "c"] : ["a", "b"]);
+// Côté affiché : la C-Side retombe sur l'A-Side ailleurs
+const shownSide = (entry = current()) => (sidesOf(entry).includes(side) ? side : "a");
 const rulesCache = new Map();
 // Évite qu'une réponse lente écrase l'affichage d'un autre jeu
 let bookRequest = 0;
@@ -558,7 +569,9 @@ async function loadGames() {
     GAMES.map(async (game) => {
       if (!game.access) return { game, canPlay: true, access: "public" };
       try {
-        return { game, ...(await game.access()) };
+        const access = await game.access();
+        if (game.id === "connections") csideAllowed = Boolean(access.cside?.canPlay);
+        return { game, ...access };
       } catch {
         return { game, canPlay: false };
       }
@@ -591,6 +604,13 @@ function selectGame(index) {
 function selectSide(next) {
   side = next;
   renderModes();
+}
+
+// ↑ ↓ et Tab : côté précédent ou suivant parmi ceux du jeu
+function stepSide(step) {
+  const list = sidesOf(current());
+  const i = list.indexOf(shownSide());
+  selectSide(list[(i + step + list.length) % list.length]);
 }
 
 // Rangée d'icônes : les jeux, Duel, puis Camp (avec les lettres non lues)
@@ -630,8 +650,13 @@ function renderModes() {
 
   byId("mode-label").textContent = entry.playtest ? `${entry.title} · playtest` : entry.title;
   byId("book-title").textContent = entry.title;
-  for (const tab of byId("tabs").children) tab.classList.toggle("active", tab.dataset.side === side);
-  byId("climb").className = `climb ${side}`;
+  const sides = entry.kind ? ["a", "b"] : sidesOf(entry);
+  const shown = sides.includes(side) ? side : "a";
+  for (const tab of byId("tabs").children) {
+    tab.hidden = !sides.includes(tab.dataset.side);
+    tab.classList.toggle("active", tab.dataset.side === shown);
+  }
+  byId("climb").className = `climb ${shown}`;
   const today = byId("book-today");
   today.textContent = "";
   today.className = "today";
@@ -639,7 +664,7 @@ function renderModes() {
   bookRequest++;
 
   if (kind === "duel") {
-    byId("book-chapter").textContent = `DUEL · ${side === "a" ? "A-SIDE" : "B-SIDE"}`;
+    byId("book-chapter").textContent = `DUEL · ${SIDE_LABELS[shown]}`;
     byId("book-desc").textContent = entry.desc;
     byId("climb").textContent = "Create a duel";
     renderDuelChoice();
@@ -652,10 +677,10 @@ function renderModes() {
     renderCamp();
     return;
   }
-  byId("book-chapter").textContent = `GAME ${selected + 1} · ${side === "a" ? "A-SIDE" : "B-SIDE"}`;
-  byId("book-desc").textContent = entry.desc[side];
+  byId("book-chapter").textContent = `GAME ${selected + 1} · ${SIDE_LABELS[shown]}`;
+  byId("book-desc").textContent = entry.desc[shown];
   byId("climb").textContent = "Climb";
-  fillBook(entry, entry.modes[side]);
+  fillBook(entry, entry.modes[shown]);
 }
 
 // ===== Camp =====
@@ -667,6 +692,7 @@ const CAMP_ITEMS = [
   { id: "mail", label: "Mailbox", icon: "assets/illustration/feather.png", key: "L", run: () => openMail(), count: () => unreadMail },
   { id: "options", label: "Options", icon: "assets/illustration/options.png", key: "O", run: () => openOptions() },
   { id: "report", label: "Report a bug", icon: "assets/illustration/wtf.png", key: "B", run: () => openReport() },
+  { id: "contact", label: "Contact the team", icon: "assets/illustration/love.png", run: () => openContact() },
   { id: "admin", label: "Admin", icon: "assets/illustration/pico8.png", run: () => (location.href = "admin.html"), visible: () => isStaff() }
 ];
 let campIndex = 0;
@@ -712,7 +738,7 @@ async function fillBook(game, mode) {
   ]);
   if (request !== bookRequest) return;
 
-  if (rules) byId("book-desc").textContent = `${game.desc[side]} ${rulesSentence(rules, game.hintNames)}`;
+  if (rules) byId("book-desc").textContent = `${game.desc[shownSide(game)]} ${rulesSentence(rules, game.hintNames)}`;
 
   const today = byId("book-today");
   const status = state?.status;
@@ -774,7 +800,7 @@ async function loadRecords(game, mode) {
 function climb() {
   const entry = current();
   if (entry.kind === "duel") {
-    createDuel({ mode: side === "a" ? "normal" : "hard", isPublic: duelChoice.isPublic }).catch((err) => showToast(err.message));
+    createDuel({ mode: shownSide() === "b" ? "hard" : "normal", isPublic: duelChoice.isPublic }).catch((err) => showToast(err.message));
     return;
   }
   if (entry.kind === "camp") {
@@ -783,7 +809,14 @@ function climb() {
   }
   // Les trois pages de jeu lisent le même réglage KEYS.mode ("normal" ou
   // "hard") au chargement : il suffit de l'écrire avant d'y aller.
-  storage.set(KEYS.mode, side === "a" ? "normal" : "hard");
+  // La C-Side (Connections) a son propre réglage : le mode commun aux jeux
+  // reste normal ou hard
+  const chosen = shownSide(entry);
+  if (chosen === "c") storage.set(KEYS.cxCside, "1");
+  else {
+    storage.set(KEYS.mode, chosen === "a" ? "normal" : "hard");
+    storage.remove(KEYS.cxCside);
+  }
   location.href = entry.page;
 }
 
@@ -834,7 +867,8 @@ function openReport() {
 }
 
 // ===== Journal (js/journal.js) =====
-const journal = createJournal({ getContext: () => ({ games, gameIndex, side }), onPlayer: openPlayerCard });
+// Le journal ne connaît que l'A-Side et la B-Side (la C-Side est hors classements)
+const journal = createJournal({ getContext: () => ({ games, gameIndex, side: side === "c" ? "a" : side }), onPlayer: openPlayerCard });
 const journalOpen = () => journal.isOpen();
 function openJournal() {
   journal.open();
@@ -982,9 +1016,9 @@ const KEY_HANDLERS = {
   modes: {
     ArrowLeft: () => selectGame(selected - 1),
     ArrowRight: () => selectGame(selected + 1),
-    ArrowUp: () => (current().kind === "camp" ? moveCamp(-1) : selectSide("a")),
-    ArrowDown: () => (current().kind === "camp" ? moveCamp(1) : selectSide("b")),
-    Tab: () => current().kind !== "camp" && selectSide(side === "a" ? "b" : "a"),
+    ArrowUp: () => (current().kind === "camp" ? moveCamp(-1) : stepSide(-1)),
+    ArrowDown: () => (current().kind === "camp" ? moveCamp(1) : stepSide(1)),
+    Tab: () => current().kind !== "camp" && stepSide(1),
     Enter: climb,
     j: openJournal,
     m: openMap,

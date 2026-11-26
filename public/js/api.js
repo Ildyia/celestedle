@@ -115,5 +115,6 @@ export const api = {
   similarReports: (elementName, description) =>
     request("POST", "/reports/similar", { body: { elementName, description } }),
   sendReport: (report) => request("POST", "/reports", { body: report }),
+  contactTeam: (message) => request("POST", "/contact", { body: message }),
   voteReport: (id, isUp) => request("POST", `/reports/${encodeURIComponent(id)}/vote`, { body: { isUp } })
 };

@@ -161,6 +161,8 @@ class ConnectionsGame {
 
   render(state) {
     this.state = state;
+    // Couleur du côté (violet en C-Side : voir style.css et modern.css)
+    document.documentElement.dataset.side = { normal: "a", hard: "b", custom: "c" }[this.mode];
     this.loadMarks();
     document.querySelectorAll("[data-cx-mode]").forEach((btn) =>
       btn.setAttribute("aria-pressed", String(btn.dataset.cxMode === this.mode))

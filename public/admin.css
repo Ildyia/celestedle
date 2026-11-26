@@ -756,3 +756,7 @@ body::before {
 
 /* Case à cocher dans une barre d'outils (Players : profils anonymes) */
 .admin-check { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; }
+
+/* Page Messages : messages des joueurs à l'équipe */
+.contact-message p { margin: 6px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+tr.contact-done { opacity: 0.6; }
