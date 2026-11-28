@@ -50,19 +50,28 @@ function chapterList(chapters) {
   return joinNames(chapters.map(capitalize));
 }
 
+// « Appears only in Core and Farewell » : « only » dit tout de suite que la
+// liste est exacte (retour des joueurs : « Appears in » se lisait « au moins
+// là »). La forme courte se lit déjà exacte : « Appears in every chapter
+// except Prologue ».
+function appearsLabel(chapters) {
+  const list = chapterList(chapters);
+  return list.startsWith("every chapter") ? `Appears in ${list}` : `Appears only in ${list}`;
+}
+
 // Catégories : { key, kind, label, members: Set<id> }. usable = peut servir de
 // groupe ; les autres (tags incomplets) comptent seulement dans la
 // vérification d'unicité.
 // Chapitres, deux familles (même sorte « chapter », donc un seul groupe
 // chapitre par grille en A-Side) :
 // - « First appears in X » : premier chapitre de l'élément dans l'ordre du jeu ;
-// - « Appears in X, Y… » : exactement ces chapitres-là, ni plus ni moins.
+// - « Appears only in X, Y… » : exactement ces chapitres-là, ni plus ni moins.
 // Avant, « Found in X » comptait tout ce qui passe une fois par X : 34
 // éléments pour Golden Ridge, surtout des éléments présents partout, et 4
 // éléments typiques de 4A n'étaient pas un faux groupe dès qu'un 5e (spinners)
 // passait aussi par là.
 // Deux catégories de chapitre aux mêmes membres (« First appears in Farewell »
-// et « Appears in Farewell ») n'en font qu'une : on garde « Appears in ».
+// et « Appears only in Farewell ») n'en font qu'une : on garde « Appears only in ».
 function buildCategories(elements, tags = []) {
   const map = new Map();
   const add = (key, kind, label, id) => {
@@ -76,7 +85,7 @@ function buildCategories(elements, tags = []) {
     const chapters = sortChapters(e.lieu);
     if (chapters.length) {
       add(`chapter:first:${chapters[0]}`, "chapter", `First appears in ${capitalize(chapters[0])}`, e.id);
-      add(`chapter:in:${chapters.join("+")}`, "chapter", `Appears in ${chapterList(chapters)}`, e.id);
+      add(`chapter:in:${chapters.join("+")}`, "chapter", appearsLabel(chapters), e.id);
     }
   }
   const exact = new Set(
@@ -344,7 +353,7 @@ const PHASE_MS = 3000;
 
 // maxPerKind : nombre de groupes au plus par sorte (chapter, colour…), en plus
 // de MAX_SAME_KIND (ex. { chapter: 1 } : un seul groupe chapitre, « First
-// appears in … » ou « Appears in … »)
+// appears in … » ou « Appears only in … »)
 // stats : pour le diagnostic des tags (voir diagnoseTags)
 function generatePuzzle(
   elements,
@@ -557,6 +566,7 @@ function diagnoseTags(elements, tags, options, { trials = 30, budgetMs = 15000 }
 
 module.exports = {
   CHAPTER_ORDER,
+  appearsLabel,
   chapterList,
   sortChapters,
   diagnoseTags,

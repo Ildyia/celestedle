@@ -2,7 +2,7 @@
 // (n'a besoin que du générateur, pas de la base)
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { buildCategories, chapterList, hasObviousDecoy, sortChapters } = require("../src/services/connections-generator");
+const { appearsLabel, buildCategories, chapterList, hasObviousDecoy, sortChapters } = require("../src/services/connections-generator");
 
 let nextId = 1;
 const element = (lieu, extra = {}) => ({
@@ -21,7 +21,7 @@ test("chapitres : rangés dans l'ordre du jeu, sans doublon", () => {
   assert.deepEqual(sortChapters(["unknown", "core", "city"]), ["city", "core", "unknown"]);
 });
 
-test("chapitres : libellés de « Appears in »", () => {
+test("chapitres : libellés de « Appears only in »", () => {
   assert.equal(chapterList(["core"]), "Core");
   assert.equal(chapterList(["core", "farewell"]), "Core and Farewell");
   assert.equal(chapterList(["ridge", "summit", "farewell"]), "Ridge, Summit and Farewell");
@@ -30,6 +30,10 @@ test("chapitres : libellés de « Appears in »", () => {
   assert.equal(chapterList(["prologue", ...allButPrologue]), "every chapter");
   // Liste longue qui laisse de côté plus de deux chapitres : en entier
   assert.equal(chapterList(["city", "site", "resort", "ridge"]), "City, Site, Resort and Ridge");
+  // « only » sauf pour la forme courte, déjà exacte
+  assert.equal(appearsLabel(["core", "farewell"]), "Appears only in Core and Farewell");
+  assert.equal(appearsLabel(allButPrologue), "Appears in every chapter except Prologue");
+  assert.equal(appearsLabel(["prologue", ...allButPrologue]), "Appears in every chapter");
 });
 
 test("chapitres : « First appears in » = premier chapitre dans l'ordre du jeu", () => {
@@ -42,23 +46,23 @@ test("chapitres : « First appears in » = premier chapitre dans l'ordre du jeu"
   assert.deepEqual([...first.members].sort(), [snowball.id, wind.id, spinners.id].sort());
 });
 
-test("chapitres : « Appears in » = exactement ces chapitres", () => {
+test("chapitres : « Appears only in » = exactement ces chapitres", () => {
   const ridgeSummitFarewell = [0, 1, 2, 3].map(() => element(["ridge", "summit", "farewell"]));
   const snowball = element(["ridge", "summit"]);
   const spinners = element(["ridge", "temple", "reflection", "summit", "core", "farewell"]);
   const categories = chapterCategories([...ridgeSummitFarewell, snowball, spinners]);
   const exact = byKey(categories, "chapter:in:ridge+summit+farewell");
-  assert.equal(exact.label, "Appears in Ridge, Summit and Farewell");
+  assert.equal(exact.label, "Appears only in Ridge, Summit and Farewell");
   assert.deepEqual([...exact.members].sort(), ridgeSummitFarewell.map((e) => e.id).sort());
   // Plus de « Found in » : rien ne regroupe tout ce qui passe par un chapitre
   assert.equal(categories.some((c) => c.key === "chapter:ridge"), false);
 });
 
-test("chapitres : mêmes membres pour les deux familles, seul « Appears in » reste", () => {
+test("chapitres : mêmes membres pour les deux familles, seul « Appears only in » reste", () => {
   const onlyFarewell = [0, 1, 2, 3].map(() => element(["farewell"]));
   const categories = chapterCategories(onlyFarewell);
   assert.equal(byKey(categories, "chapter:first:farewell"), undefined);
-  assert.equal(byKey(categories, "chapter:in:farewell").label, "Appears in Farewell");
+  assert.equal(byKey(categories, "chapter:in:farewell").label, "Appears only in Farewell");
   // Membres différents : les deux restent
   const onlyCore = element(["core"]);
   const coreAndFarewell = element(["core", "farewell"]);
@@ -72,7 +76,7 @@ test("chapitres : 4 éléments de 4A sans être un groupe font un faux groupe, m
   // booster (tous apparus dans Golden Ridge) et spinners (6 chapitres).
   // Avec « Found in Ridge », spinners faisait 5 cases : fausse piste permise.
   // Maintenant spinners est aussi « First appears in Ridge » (5 cases, permis)
-  // mais les 4 « Appears in Ridge, Summit and Farewell » qui ne sont pas un
+  // mais les 4 « Appears only in Ridge, Summit and Farewell » qui ne sont pas un
   // groupe sont un faux groupe.
   const rsf = [0, 1, 2, 3].map(() => element(["ridge", "summit", "farewell"]));
   const groups = [0, 1, 2, 3].map((g) => [0, 1, 2, 3].map(() => element([], { type: `group${g}` })));

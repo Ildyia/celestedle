@@ -57,7 +57,7 @@ function seedFor(key) {
 }
 
 // Mode normal : un seul groupe chapitre (« First appears in … » ou
-// « Appears in … », les plus durs à deviner)
+// « Appears only in … », les plus durs à deviner)
 const MAX_PER_KIND = { normal: { chapter: 1 }, hard: {}, custom: {} };
 
 // Variété : ce qui est sorti les RECENT_DAYS jours avant `date`, pesant

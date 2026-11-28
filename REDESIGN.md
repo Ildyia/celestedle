@@ -289,7 +289,7 @@ en A-Side), calculées depuis `lieu` dans `buildCategories` :
 - **First appears in X** (`chapter:first:x`) : premier chapitre de l'élément
   dans l'ordre des A-Sides (`CHAPTER_ORDER`). Les B-Sides ne sont pas
   distinguées : un élément vu en 1B compte pour City.
-- **Appears in X, Y…** (`chapter:in:x+y`) : exactement ces chapitres, sans
+- **Appears only in X, Y…** (`chapter:in:x+y`) : exactement ces chapitres, sans
   limite de nombre. Au-delà de 3 chapitres, s'il n'en manque qu'un ou deux :
   « every chapter except Prologue ».
 - Deux catégories aux mêmes membres (« First appears in Farewell » et
